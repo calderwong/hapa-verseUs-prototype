@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { Sprite3D } from '../../../vendor/lumina/src/engine/sprite/Sprite3D.js';
 import { createCharacterSheet } from '../../../vendor/lumina/src/engine/pixel/CharacterSprites.js';
 import { territoryColors } from '../rules/economy.js';
+import { TerrainView, bandY, textLabel, standingOf } from './terrain-view.js';
 
 export const S = 1.5; // world units per member width
 const PX = 16; // ground texture pixels per member width
@@ -58,7 +59,28 @@ export class BoardView {
     this._buildLights();
     this._buildGround();
     this._buildOverlays();
+    this.terrain = new TerrainView(this.root, ctx, (x, y) => this.toWorld(x, y), S);
+    this.terrain.onOpenCells = (cells) => this._punchGround(cells);
   }
+
+  /** Repaint the surface and clear the member squares open to the sky. */
+  _punchGround(cells) {
+    const { g, base, px, py, tex } = this.groundPaint;
+    g.putImageData(base, 0, 0);
+    for (const { x, y } of cells) g.clearRect(px(x - 0.5), py(y + 0.5), PX, PX);
+    tex.needsUpdate = true;
+  }
+
+  /** Step the cutaway layer: null (all) → +3 … +1, −1 … −3 → null. */
+  stepLayer(dir) {
+    const order = [null, 3, 2, 1, -1, -2, -3];
+    const i = order.indexOf(this.terrain.cutaway);
+    const next = order[(i + dir + order.length) % order.length];
+    this.setLayer(next);
+    return next;
+  }
+
+  setLayer(band) { this.terrain.setCutaway(band, this.ground); this._layerDirty = true; }
 
   get center() { return new THREE.Vector3((this.w / 2) * S, 0, -(this.h / 2) * S); }
   get size() { return Math.max(this.w, this.h) * S; }
@@ -159,8 +181,10 @@ export class BoardView {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.magFilter = THREE.NearestFilter;
     tex.anisotropy = 4;
+    // open excavations are cut out of the surface so a pit is seen from above (alphaTest)
+    this.groundPaint = { g, base: g.getImageData(0, 0, cv.width, cv.height), px, py, tex };
     const geo = new THREE.PlaneGeometry(W * S, H * S);
-    const mat = new THREE.MeshLambertMaterial({ map: tex });
+    const mat = new THREE.MeshLambertMaterial({ map: tex, alphaTest: 0.5 });
     const ground = new THREE.Mesh(geo, mat);
     ground.rotation.x = -Math.PI / 2;
     ground.position.set((this.w / 2) * S, 0, -(this.h / 2) * S);
@@ -208,6 +232,8 @@ export class BoardView {
   /** Create or update every member sprite and party marker from a state (positions optional override). */
   sync(state, positions = null) {
     const seen = new Set();
+    this.terrain.sync(state);
+    const layer = this.terrain.cutaway;
     for (const m of Object.values(state.members)) {
       const party = state.parties[m.party];
       let spr = this.sprites.get(m.id);
@@ -228,8 +254,22 @@ export class BoardView {
       seen.add(m.id);
       const pos = positions?.[m.id] ?? [m.x, m.y];
       const w = this.toWorld(pos[0], pos[1]);
-      spr.position.set(w.x, 0.03, w.z);
-      spr.visible = m.alive || (positions?.[m.id] !== undefined && positions[m.id][2]);
+      const band = m.band ?? 1;
+      spr.position.set(w.x, bandY(band) + 0.03, w.z);
+      spr.visible = (m.alive || (positions?.[m.id] !== undefined && positions[m.id][2])) && (layer === null || band === layer);
+      // a flyer keeps a line to the floor below it, so height is never the only cue
+      const flying = party?.movementMode === 'air';
+      if (flying && !spr.userData.flyLine) {
+        const line = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1, 6), new THREE.MeshBasicMaterial({ color: 0x9fd8ff }));
+        spr.add(line);
+        spr.userData.flyLine = line;
+      }
+      if (spr.userData.flyLine) {
+        const hgt = bandY(band);
+        spr.userData.flyLine.visible = flying;
+        spr.userData.flyLine.scale.y = Math.max(0.01, hgt);
+        spr.userData.flyLine.position.y = -hgt / 2;
+      }
       spr.userData.facing = party?.facing ?? 'N';
     }
     for (const [id, spr] of this.sprites) if (!seen.has(id)) { spr.visible = false; }
@@ -239,8 +279,21 @@ export class BoardView {
       if (!mk) { mk = this._partyMarker(p); this.markers.set(p.id, mk); this.root.add(mk); }
       const pos = positions?.[`party:${p.id}`] ?? [p.x, p.y];
       const w = this.toWorld(pos[0], pos[1]);
-      mk.position.set(w.x, 0.04, w.z);
+      mk.position.set(w.x, (p.movementMode === 'air' ? 0 : bandY(p.band ?? 1)) + 0.04, w.z);
       mk.visible = p.alive && !p.retired;
+      // decisive terrain facts in words: hilltop, open pit, roofed tunnel or flying
+      const st = standingOf(state, this.ctx, p);
+      if (mk.userData.standing !== st.label) {
+        if (mk.userData.standingLabel) mk.remove(mk.userData.standingLabel);
+        mk.userData.standingLabel = null;
+        mk.userData.standing = st.label;
+        if (st.label) {
+          const lab = textLabel(st.label, { color: st.kind === 'tunnel' ? '#c6b2ff' : st.kind === 'pit' ? '#ffb08a' : st.kind === 'flying' ? '#9fd8ff' : '#f0d49a', size: 0.5 });
+          lab.position.set(0, 2.2, 1.9 * S);
+          mk.add(lab);
+          mk.userData.standingLabel = lab;
+        }
+      }
       const rot = { N: 0, E: -Math.PI / 2, S: Math.PI, W: Math.PI / 2 }[p.facing];
       mk.rotation.y = rot;
       mk.userData.empty.visible = !p.slots['5'] || !state.members[p.slots['5']]?.alive;

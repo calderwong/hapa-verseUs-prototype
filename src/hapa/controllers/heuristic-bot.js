@@ -10,7 +10,7 @@
  *  4. Counter an opposing Spell with Blue Denial when Blue can be paid.
  */
 import { xorshift32 } from '../rules/encoding.js';
-import { legalDestinations, routeOrigin, planRoute } from '../rules/movement.js';
+import { legalDestinations, routeOrigin, planPartyRoute } from '../rules/movement.js';
 import { supplyOf, planPayment } from '../rules/economy.js';
 import { other } from '../rules/state.js';
 
@@ -59,7 +59,7 @@ export class HeuristicBot {
       for (const o of options) {
         const occupant = at(o.column, o.row);
         if (occupant && occupant.owner === seat && (occupant.mount || !pawns.includes(occupant))) continue; // friendly obstruction
-        const route = planRoute(ctx, p.mount, from, o).route ?? [];
+        const route = planPartyRoute(state, ctx, p, from, o).route ?? [];
         // a friendly party blocking an intermediate node (other than a Pawn to join) makes it a poor route
         const blocker = route.slice(0, -1).map((n) => at(n.column, n.row)).find((q) => q && q.owner === seat && !pawns.includes(q));
         if (blocker) continue;

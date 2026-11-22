@@ -15,7 +15,7 @@ import { emit } from './context.js';
 import { clone } from './encoding.js';
 import { SEATS, other, livingMembers } from './state.js';
 import { activeColumnsAt, roundOf, mintAndClear, planPayment, supplyOf } from './economy.js';
-import { setDestination, simulateMovement, placeMembers, planRoute, routeOrigin, touchingPairs, contactTolerance, rearrangementError, engagementBetween } from './movement.js';
+import { setDestination, simulateMovement, placeMembers, planRoute, planPartyRoute, routeOrigin, touchingPairs, contactTolerance, rearrangementError, engagementBetween } from './movement.js';
 import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember, applyBreaches, applyCornerHelpers, returnHelpers } from './combat.js';
 import { workError, startWork, completeWork } from './terrain.js';
 
@@ -67,7 +67,7 @@ export function commandError(state, ctx, seat, cmd) {
       if (P.mountLost) return 'this party lost its mount and cannot travel';
       if (!state.activeColumns.includes(P.region.column)) return `column C${P.region.column} is not active this Tick`;
       if (!cmd.target) return 'no destination';
-      const plan = planRoute(ctx, P.mount, routeOrigin(state, ctx, P), cmd.target);
+      const plan = planPartyRoute(state, ctx, P, routeOrigin(state, ctx, P), cmd.target);
       return plan.error ?? null;
     }
     case 'change_formation': {
@@ -86,7 +86,7 @@ export function commandError(state, ctx, seat, cmd) {
       if (!P.mount || P.mountLost) return 'retreat needs a movement capability';
       if (supplyOf(P) <= 0) return 'retreat needs positive Supply';
       if (!state.activeColumns.includes(P.region.column)) return `column C${P.region.column} is not active this Tick`;
-      const plan = planRoute(ctx, P.mount, routeOrigin(state, ctx, P), cmd.target ?? {});
+      const plan = planPartyRoute(state, ctx, P, routeOrigin(state, ctx, P), cmd.target ?? {});
       return plan.error ?? null;
     }
     case 'play_ability': return abilityError(state, ctx, seat, cmd, 'ordinary_action');
@@ -427,7 +427,7 @@ function applyRetreats(state, ctx, events) {
       const vacated = { column: P.region.column, row: P.region.row };
       const origin = routeOrigin(state, ctx, A);
       const onTheWay = origin.column === vacated.column && origin.row === vacated.row; // already heading there
-      if (onTheWay || planRoute(ctx, A.mount, origin, vacated).route) {
+      if (onTheWay || planPartyRoute(state, ctx, A, origin, vacated).route) {
         A.freeFollow = { column: vacated.column, row: vacated.row };
         A.pendingFollow = { ...vacated, continueRoute: onTheWay };
       }

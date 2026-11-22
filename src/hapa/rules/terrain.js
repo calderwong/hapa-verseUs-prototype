@@ -30,6 +30,57 @@ export function exposed(state, ctx, party) {
   return true;
 }
 
+// --- surface heights, ramps and cliffs (Appendix A "Ground travel") ------------------------------
+
+/** Standing band of a territory's surface: +1 on flat ground, raised by a hill's height. */
+export const surfaceBand = (terrain, column, row) => 1 + (terrain.hills?.[`${column},${row}`] ?? 0);
+
+const rampKey = (a, b) => [`${a.column},${a.row}`, `${b.column},${b.row}`].sort().join('>');
+
+/** Is there an explicit one-band ramp link between two adjacent territories? */
+export const rampLinked = (terrain, a, b) => !!terrain.ramps?.[rampKey(a, b)];
+
+/** Why a ground step between adjacent territories is impossible, or null when connected. */
+export function groundStepError(terrain, a, b) {
+  const ha = surfaceBand(terrain, a.column, a.row), hb = surfaceBand(terrain, b.column, b.row);
+  if (ha === hb) return null;
+  if (Math.abs(ha - hb) > 1) return `a vertical cliff between R${a.row}C${a.column} and R${b.row}C${b.column} has no ordinary connection`;
+  if (!rampLinked(terrain, a, b)) return `no ramp links R${a.row}C${a.column} and R${b.row}C${b.column} (a one-band cliff)`;
+  return null;
+}
+
+/** The first impossible ground step on a route from `from`, or null. Flyers are not ground travel. */
+export function routeTerrainError(state, party, from, route) {
+  if (party.movementMode === 'air') return null;
+  let prev = from;
+  for (const n of route) {
+    const e = groundStepError(state.terrain, prev, n);
+    if (e) return e;
+    prev = n;
+  }
+  return null;
+}
+
+/**
+ * Fixture terrain: raise a territory by `height` bands (solid cubes under its 3×3 member squares)
+ * and optionally link ramps to neighbours. Parties standing there move up to the new surface.
+ */
+export function raiseTerritory(state, ctx, column, row, height, rampsTo = []) {
+  const t = state.terrain;
+  t.kind = 'volume';
+  t.hills = { ...(t.hills ?? {}), [`${column},${row}`]: height };
+  const c = ctx.geo.center(column, row), U = ctx.U;
+  for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let b = 1; b <= height; b++) {
+    t.cells[cellKey(cellOf(U, c.x) + dx, cellOf(U, c.y) + dy, b)] = { solid: true, material: 'earth', hill: true };
+  }
+  for (const n of rampsTo) t.ramps = { ...(t.ramps ?? {}), [rampKey({ column, row }, n)]: true };
+  for (const p of Object.values(state.parties)) {
+    if (!p.alive || p.region.column !== column || p.region.row !== row || p.movementMode === 'air') continue;
+    p.band = 1 + height;
+    for (const id of Object.values(p.slots)) if (id && state.members[id]) state.members[id].band = p.band;
+  }
+}
+
 const occupied = (state, ctx, x, y, band) => Object.values(state.members).some((m) => m.alive && cellOf(ctx.U, m.x) === x && cellOf(ctx.U, m.y) === y && m.band === band);
 const faceAdjacent = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(BANDS.indexOf(a.band) - BANDS.indexOf(b.band)) === 1;
 

@@ -134,3 +134,8 @@ kbd { font: 11px 'Pixelify Sans', monospace; border: 1px solid #5a6380; border-b
 .preview { margin: 6px 0; padding: 6px 8px; border: 1px dashed #8a7a5a; border-radius: 4px; }
 .fixture-tag { display: inline-block; margin-right: 8px; padding: 1px 6px; border: 1px dashed #f2c14e; color: #f2c14e; font-size: 11px; letter-spacing: 0.04em; }
 .row.fixture { align-items: center; gap: 8px; margin: 4px 0; }
+.layer-rail { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 3px; z-index: 4; }
+.layer-rail .band { min-width: 44px; padding: 3px 6px; font: 12px 'Pixelify Sans'; background: rgba(20,18,26,0.85); color: var(--fg, #e8dcc0); border: 1px solid #5a5040; cursor: pointer; }
+.layer-rail .band.on { border-color: #f2c14e; color: #f2c14e; outline: 2px solid #f2c14e; }
+.layer-rail .band small { color: var(--dim); }
+.layer-rail .ground0 { font: 10px 'Pixelify Sans'; color: #c9a86a; text-align: center; border-top: 1px solid #c9a86a; border-bottom: 1px solid #c9a86a; padding: 1px 0; }

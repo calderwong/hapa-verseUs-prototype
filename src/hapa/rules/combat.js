@@ -10,9 +10,10 @@
  */
 import { emit } from './context.js';
 import { layeredValue } from './effects.js';
+import { exposed } from './terrain.js';
 import { FACINGS, slotOffset } from './geometry.js';
 import { livingMembers, other } from './state.js';
-import { touchingPairs, contactTolerance, engagementBetween, placeMembers as placeAll } from './movement.js';
+import { touchingPairs, contactTolerance, engagementBetween, placeMembers as placeAll, speedOf } from './movement.js';
 
 const FRONT_SLOTS = [1, 2, 3], SIDE_SLOTS = [4, 6], REAR_SLOTS = [7, 8, 9];
 
@@ -177,18 +178,47 @@ function gatherHits(state, ctx, batch) {
       const ranged = (archetype(ctx, m).attacks ?? []).filter((a) => a.kind === 'ranged');
       if (!ranged.length || m.lastVolleyTick === state.tick) continue;
       for (const atk of ranged) {
-        const range = atk.range ?? ctx.profile.combat.ranged.baseRange;
-        const target = enemies.find(({ d }) => d <= range * pitch);
-        if (!target) continue;
+        let shot = null;
+        for (const t of enemies) {
+          const s = rangedShot(state, ctx, m, P, atk, t.enemy);
+          if (s.blocked || t.d > s.range * pitch) continue;
+          shot = { ...s, target: t };
+          break;
+        }
+        if (!shot) continue;
+        const { target } = shot;
         m.lastVolleyTick = state.tick;
         for (let h = 0; h < atk.hits; h++) {
-          const face = atk.face === 'above' ? 'above' : faceFrom(target.enemy.facing, m, target.enemy);
-          hits.push({ kind: 'ranged', engagement: target.E.id, source: m.id, sourceParty: P.id, attack: atk.id, channel: atk.channel, power: atk.power, ratio: [1, 1], defParty: target.enemy.id, fixed: null, face, line: `${target.enemy.id}:${face}` });
+          const face = atk.face === 'above' ? 'above' : shot.vertical ?? faceFrom(target.enemy.facing, m, target.enemy);
+          hits.push({ kind: 'ranged', engagement: target.E.id, source: m.id, sourceParty: P.id, attack: atk.id, channel: atk.channel, power: shot.power, basePower: atk.power, elevation: shot.elevation, ratio: [1, 1], defParty: target.enemy.id, fixed: null, face, line: `${target.enemy.id}:${face}` });
         }
       }
     }
   }
   return hits;
+}
+
+/**
+ * One ranged volley's geometry (Appendix A "Archer elevation" and "Terrain obstruction"): an
+ * elevation-aware attack adjusts range and power once by the sign of the height difference
+ * (target lower: +1/+1; higher: −1/−1; minimum range 1, power 0); an arcing (Above) shot needs an
+ * open sky over both shooter and target; a direct shot between different heights arrives from
+ * Above or Below.
+ */
+export function rangedShot(state, ctx, m, P, atk, enemy) {
+  const cfg = ctx.profile.combat.ranged;
+  const base = atk.range ?? cfg.baseRange;
+  const diff = Math.sign((m.band ?? P.band) - enemy.band); // +1: the target is lower
+  let range = base, power = atk.power, elevation = 'level';
+  if (atk.elevation && diff) {
+    const adj = diff > 0 ? cfg.elevation.down : cfg.elevation.up;
+    range = Math.max(cfg.elevation.minRange, base + adj[0]);
+    power = Math.max(cfg.elevation.minPower, atk.power + adj[1]);
+    elevation = diff > 0 ? 'target_lower' : 'target_higher';
+  }
+  const blocked = !!atk.needsArc && (!exposed(state, ctx, P) || !exposed(state, ctx, enemy));
+  const vertical = atk.face !== 'above' && diff ? (diff > 0 ? 'above' : 'below') : null;
+  return { range, power, elevation, blocked, vertical };
 }
 
 /**
@@ -374,7 +404,7 @@ export function openEngagements(state, ctx, events, contacts, quantum) {
     const dp = dir(P), dq = dir(Q);
     const pApproach = dp.x * normal.x + dp.y * normal.y > 0;
     const qApproach = -(dq.x * normal.x + dq.y * normal.y) > 0;
-    const speed = (p) => ctx.profile.movement.speeds[p.mount] ?? [1, 1];
+    const speed = (p) => (p.mount ? speedOf(ctx, p, state) : [1, 1]); // actual approach Speed (uphill halves it)
     state.engagementSeq = (state.engagementSeq ?? 0) + 1;
     const id = `E${state.tick}.${state.engagementSeq}`;
     const mutual = pApproach && qApproach;

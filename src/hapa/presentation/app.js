@@ -14,7 +14,7 @@ import { BoardView, COLOR_HEX, OWNER_HEX } from './board-view.js';
 import { eventLine, explainHit, memberName, partyName, fmtMana } from './explain.js';
 import { createSession, createFixtureSession, openTick } from '../rules/session.js';
 import { validatePlan, resolveTick, responseOptions } from '../rules/match.js';
-import { legalDestinations, planRoute, routeOrigin, touchingPairs, contactTolerance } from '../rules/movement.js';
+import { legalDestinations, planPartyRoute, routeOrigin, touchingPairs, contactTolerance } from '../rules/movement.js';
 import { mintForecast, nextActivation, roundOf, supplyOf } from '../rules/economy.js';
 import { stateFingerprint } from '../rules/state.js';
 import { clone } from '../rules/encoding.js';
@@ -23,6 +23,7 @@ import { ALLOCATION_POLICIES } from '../rules/combat.js';
 import { profileById, PROFILE_IDS, BASE_PROFILE } from '../../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../../fixtures/hapa/content.js';
 import { UI_FIXTURES } from '../../../fixtures/hapa/ui-fixtures.js';
+import { standingOf, fmtBand } from './terrain-view.js';
 
 const U = 1e6;
 const SUIT = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
@@ -64,6 +65,7 @@ export class VersusApp {
     r.append(this.el.overlay);
     this.el.world.append(this.el.toast = h('div', { class: 'toast' }));
     this.el.world.append(this.el.compass = h('div', { class: 'compass' }));
+    this.el.world.append(this.el.layers = h('div', { class: 'layer-rail', role: 'toolbar', 'aria-label': 'Height layers' }));
   }
 
   _initEngine() {
@@ -318,6 +320,7 @@ export class VersusApp {
       else if (k === 'm') this._showDestinations();
       else if (k === 'g') this._renderInspector();
       else if (k === 'p') this.el.plan.scrollIntoView();
+      else if (['[', ']'].includes(e.key) || ['BracketLeft', 'BracketRight'].includes(e.code)) { const b = this.view.stepLayer(e.key === ']' || e.code === 'BracketRight' ? 1 : -1); this.view.sync(this.state); this._toast(b === null ? 'All layers (surface opaque)' : `Layer ${b > 0 ? '+' : ''}${b}${b < 1 ? ' — cutaway: the surface is see-through' : ''}`); this._renderAll(); }
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => this.keys.clear());
@@ -349,7 +352,7 @@ export class VersusApp {
       if (party && party.owner === seat && pick.territory && this.seats[seat] === 'human') {
         const type = this.tool?.kind === 'retreat' ? 'retreat' : 'set_destination';
         if (this._addCommand(seat, { type, partyId: party.id, target: pick.territory })) {
-          const plan = planRoute(this.ctx, party.mount, routeOrigin(this.state, this.ctx, party), pick.territory);
+          const plan = planPartyRoute(this.state, this.ctx, party, routeOrigin(this.state, this.ctx, party), pick.territory);
           if (plan.route) this.view.showRoute(party, plan.route.map((n) => { const c = this.ctx.geo.center(n.column, n.row); return [c.x, c.y]; }));
           this._toast(`${type === 'retreat' ? 'Retreat' : 'Destination'}: R${pick.territory.row}C${pick.territory.column} (planned)`);
         }
@@ -384,7 +387,7 @@ export class VersusApp {
     }
     // plain selection
     if (pick.member && e.altKey) this.selected = { kind: 'member', id: pick.member.id };
-    else if (pick.party) this.selected = { kind: 'party', id: pick.party.id };
+    else if (pick.party) { this.selected = { kind: 'party', id: pick.party.id }; this._autoLayer(pick.party); }
     else if (pick.territory) this.selected = { kind: 'territory', ...pick.territory };
     else this.selected = null;
     this._renderAll();
@@ -450,6 +453,21 @@ export class VersusApp {
     if (party) this.view.select(this.state, party, legalDestinations(this.state, this.ctx, party));
   }
 
+  /** The layer rail (Design Companion: six bands split at Ground 0; All is a view preset). */
+  _renderLayers() {
+    const s = this.state, cut = this.view.terrain.cutaway;
+    const count = (b) => Object.values(s.parties).filter((p) => p.alive && !p.retired && (p.band ?? 1) === b).length;
+    const btn = (b) => h('button', { class: `band${cut === b ? ' on' : ''}`, 'aria-pressed': String(cut === b), title: b === null ? 'All layers' : `Show band ${fmtBand(b)} (${count(b)} parties)${b < 1 ? ' — the surface becomes see-through' : ''}`, onclick: () => { this.view.setLayer(b); this.view.sync(this.state); this._renderAll(); } },
+      b === null ? 'All' : fmtBand(b), b !== null && count(b) ? h('small', {}, ` ${count(b)}`) : null);
+    this.el.layers.replaceChildren(btn(3), btn(2), btn(1), h('div', { class: 'ground0' }, 'GROUND 0'), btn(-1), btn(-2), btn(-3), btn(null));
+  }
+
+  /** Selecting an underground party opens the cutaway at its band; a surface party restores all layers. */
+  _autoLayer(p) {
+    const want = p.band < 0 ? p.band : null;
+    if (this.view.terrain.cutaway !== want && (want !== null || this.view.terrain.cutaway < 1)) { this.view.setLayer(want); this.view.sync(this.state); }
+  }
+
   _focusSelection() {
     const s = this.selected;
     if (s?.kind === 'party') { const p = this.state.parties[s.id]; this.cam.focusOn(this.view.toWorld(p.x, p.y)); }
@@ -483,6 +501,7 @@ export class VersusApp {
     this._renderResources();
     this._renderPlan();
     this._renderEvents();
+    this._renderLayers();
     const sel = this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null;
     if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? legalDestinations(this.state, this.ctx, sel) : []);
     else if (!sel) this.view.select(this.state, null);
@@ -573,7 +592,7 @@ export class VersusApp {
     const row = (p) => {
       const living = Object.values(p.slots).filter((id) => id && s.members[id].alive).length;
       const engaged = p.state === 'engaged';
-      return h('div', { class: `rrow${this.selected?.id === p.id ? ' sel' : ''}${engaged ? ' engaged' : ''}`, onclick: () => { this.selected = { kind: 'party', id: p.id }; this._focusSelection(); this._renderAll(); } },
+      return h('div', { class: `rrow${this.selected?.id === p.id ? ' sel' : ''}${engaged ? ' engaged' : ''}`, onclick: () => { this.selected = { kind: 'party', id: p.id }; this._autoLayer(p); this._focusSelection(); this._renderAll(); } },
         h('span', { class: `dot ${p.owner.toLowerCase()}` }), h('b', {}, p.mount ? p.mount[0].toUpperCase() + p.mount.slice(1) : 'Pawn'), p.commander ? ' ★' : '',
         h('span', { class: 'dim' }, ` R${p.region.row}C${p.region.column}`), ` ${living}/9`,
         h('span', { class: 'dim' }, ` S${pts(supplyOf(p))}`), engaged ? h('span', { class: 'badge' }, '⚔') : p.state === 'moving' ? h('span', { class: 'badge' }, '→') : null);
@@ -641,7 +660,8 @@ export class VersusApp {
       h('div', {}, 'Diamonds on a territory: its Mana color(s).'),
       h('div', {}, 'Dashed gold square: a Capital.'),
       h('div', {}, 'Gold diamond under a member: a corner helper standing in the contact strip for a neighbour (it still belongs to its own party).'),
-      h('div', {}, 'Red triangle under a member: it advanced one slot into an enemy casualty\'s gap.'));
+      h('div', {}, 'Red triangle under a member: it advanced one slot into an enemy casualty\'s gap.'),
+      h('div', {}, 'Terrain labels: ▲ HILLTOP, ▽ OPEN PIT (exposed), ▭ TUNNEL (roofed, not exposed), ✈ FLYING (a line drops to the floor). [ and ] step the cutaway layer.'));
   }
 
   _partyPanel(p) {
@@ -663,6 +683,7 @@ export class VersusApp {
         h('span', {}, 'Global / home'), h('span', {}, `R${p.region.row}C${p.region.column} / R${local.row}C${local.column}`),
         h('span', {}, 'State'), h('span', {}, `${p.state}${p.mountLost ? ' (mount lost)' : ''}${engagedWith.length ? ` with ${engagedWith.map((id) => partyName(s, id)).join(', ')}` : ''}`),
         h('span', {}, 'Facing'), h('span', {}, `${p.facing}${p.turn ? ` → ${p.turn.to} at Tick end` : ''}`),
+        ...(() => { const st = standingOf(s, this.ctx, p); return [h('span', {}, 'Stands'), h('span', {}, `${st.label ?? 'surface ground'} · band ${fmtBand(p.band)} · ${st.exposed ? 'exposed (counts for income/blocking)' : 'not exposed (roofed)'}`, h('div', { class: 'dim small' }, st.note))]; })(),
         h('span', {}, 'Supply'), h('span', {}, `${pts(supplyOf(p))}${p.supply.length ? ` (${p.supply.map((x) => `${pts(x.units)} from ${x.cardId}`).join(', ')})` : ''}`),
         h('span', {}, 'Speed'), h('span', {}, p.mount ? `${this.ctx.profile.movement.speeds[p.mount].join('/')} step per Tick` : 'none (needs a Mount)'),
         h('span', {}, 'Destination'), h('span', {}, p.destination ? `R${p.destination.row}C${p.destination.column}` : '—'),

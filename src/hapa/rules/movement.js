@@ -10,7 +10,7 @@ import { emit } from './context.js';
 import { slotOffset, facingOf } from './geometry.js';
 import { livingMembers } from './state.js';
 import { supplyOf, spendSupply } from './economy.js';
-import { solidAt, cellOf } from './terrain.js';
+import { solidAt, cellOf, surfaceBand, routeTerrainError } from './terrain.js';
 
 const sign = (v) => (v > 0 ? 1 : v < 0 ? -1 : 0);
 
@@ -83,22 +83,38 @@ export function planRoute(ctx, mount, from, to) {
   }
 }
 
+/** A route for a party on the current terrain: the Mount pattern, then ground connections. */
+export function planPartyRoute(state, ctx, party, from, to) {
+  const plan = planRoute(ctx, party.mount, from, to);
+  if (plan.error) return plan;
+  const e = routeTerrainError(state, party, from, plan.route);
+  return e ? { error: e } : plan;
+}
+
 /** Legal destinations of a party (for previews). */
 export function legalDestinations(state, ctx, party) {
   if (!party.mount || !party.alive || party.retired) return [];
   const from = routeOrigin(state, ctx, party);
   const out = [];
   for (let c = 1; c <= ctx.geo.columns; c++) for (let r = 1; r <= ctx.geo.rows; r++) {
-    const p = planRoute(ctx, party.mount, from, { column: c, row: r });
+    const p = planPartyRoute(state, ctx, party, from, { column: c, row: r });
     if (p.route) out.push({ column: c, row: r, cost: p.cost });
   }
   return out;
 }
 
-/** Speed ratio of a party (Mount Speed; uphill modifiers belong to terrain). */
-export function speedOf(ctx, party) {
+/**
+ * Actual Speed ratio of a party: its Mount Speed, halved (profile `uphillSpeed`) while its current
+ * leg climbs to a higher surface. Charge uses this actual Speed.
+ */
+export function speedOf(ctx, party, state = null) {
   if (!party.mount) return [0, 1];
-  return ctx.profile.movement.speeds[party.mount];
+  const base = ctx.profile.movement.speeds[party.mount];
+  const node = party.route?.[0];
+  if (!state || !node || party.movementMode === 'air') return base;
+  if (surfaceBand(state.terrain, node.column, node.row) <= party.band) return base;
+  const up = ctx.profile.movement.uphillSpeed ?? [1, 1];
+  return [base[0] * up[0], base[1] * up[1]];
 }
 
 /** Member world position from its party anchor and slot. */
@@ -120,7 +136,7 @@ export function placeMembers(state, ctx, party) {
  */
 export function setDestination(state, ctx, events, party, target, cause) {
   const from = routeOrigin(state, ctx, party);
-  const plan = planRoute(ctx, party.mount, from, target);
+  const plan = planPartyRoute(state, ctx, party, from, target);
   if (plan.error) return { error: plan.error };
   const { geo } = ctx;
   const nodes = plan.route.map((n) => ({ ...n, ...geo.center(n.column, n.row) }));
@@ -238,7 +254,7 @@ export function simulateMovement(state, ctx, events, onContact) {
         continue;
       }
       const node = p.route[0];
-      const [num, den] = speedOf(ctx, p);
+      const [num, den] = speedOf(ctx, p, state);
       const total = pitch * num + (p.moveRemainder ?? 0);
       let step = Math.floor(total / (Q * den));
       p.moveRemainder = total % (Q * den);
@@ -330,6 +346,14 @@ export function simulateMovement(state, ctx, events, onContact) {
       // arrival at a node
       if (p.x === pr.node.x && p.y === pr.node.y) {
         p.route.shift();
+        if (p.movementMode !== 'air') {
+          const band = surfaceBand(state.terrain, pr.node.column, pr.node.row);
+          if (band !== p.band) {
+            emit(state, events, 'elevation_changed', { partyId: p.id, from: p.band, to: band, at: { column: pr.node.column, row: pr.node.row }, quantum: q });
+            p.band = band;
+            for (const id of Object.values(p.slots)) if (id && state.members[id]?.alive && !state.members[id].helperAway) state.members[id].band = band;
+          }
+        }
         if (pr.mergeTarget) {
           const r = mergeParties(state, ctx, events, p, pr.mergeTarget);
           if (r.error) emit(state, events, 'merge_failed', { partyId: p.id, pawnId: pr.mergeTarget.id, reason: r.error });
