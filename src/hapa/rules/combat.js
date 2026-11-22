@@ -9,6 +9,7 @@
  * representation (member | party_pool).
  */
 import { emit } from './context.js';
+import { layeredValue } from './effects.js';
 import { FACINGS, slotOffset } from './geometry.js';
 import { livingMembers, other } from './state.js';
 import { touchingPairs, contactTolerance, engagementBetween, placeMembers as placeAll } from './movement.js';
@@ -37,19 +38,33 @@ function memberProtections(state, ctx, m) {
 
 const covers = (p, channel, face) => p.channel === channel && (p.faces === 'all' || p.faces.includes(face));
 
-/** Explicitly party-wide protections (e.g. the Mage's ward) and Card effects, once per hit. */
-function partyWide(state, ctx, party, channel, face, sources) {
-  let total = 0;
+/**
+ * Party-scope layers for one hit: the members' explicitly party-wide protections (the Mage's ward)
+ * and Card effects. Each applies once per hit calculation, not once per contributing member.
+ */
+function partyLayers(state, ctx, party, channel, face) {
+  const layers = [];
   for (const m of livingMembers(state, party)) {
-    for (const p of memberProtections(state, ctx, m)) if (p.scope === 'party' && covers(p, channel, face)) { total += p.amount; sources.push({ source: m.id, kind: p.id, amount: p.amount, scope: 'party' }); }
+    for (const p of memberProtections(state, ctx, m)) if (p.scope === 'party' && covers(p, channel, face)) layers.push({ id: `${m.id}:${p.id}`, stage: 'add', value: p.amount, source: m.id, kind: p.id, scope: 'party' });
   }
   for (const eff of Object.values(state.effects)) {
     if (!eff.active || eff.op !== 'protection_modifier' || eff.owner !== party.owner) continue;
     if (!covers({ channel: eff.channel, faces: eff.faces }, channel, face)) continue;
     const applies = eff.scope === 'bound_party' ? eff.boundParty === party.id : eff.scope === 'column_parties' ? party.region.column === eff.column : false;
-    if (applies) { total += eff.amount; sources.push({ source: eff.id, kind: eff.definition, amount: eff.amount, scope: eff.scope }); }
+    if (applies) layers.push({ id: eff.id, stage: eff.stage ?? 'add', value: eff.amount, ratio: eff.ratio, min: eff.min, max: eff.max, createdSeq: eff.createdSeq ?? 0, dependsOn: eff.dependsOn, source: eff.id, kind: eff.definition, scope: eff.scope });
   }
-  return total;
+  return layers;
+}
+
+/** Base contributions, then the layered stages; sources list every contribution that applied. */
+function protectionTotal(base, baseSources, layers) {
+  const { value, steps } = layeredValue(base, [...layers, { id: '~floor', stage: 'limit', min: 0 }]);
+  const sources = [...baseSources];
+  for (const l of layers) {
+    const st = steps.find((x) => x.id === l.id);
+    sources.push({ source: l.source, kind: l.kind, amount: st ? st.after - st.before : 0, scope: l.scope, stage: l.stage });
+  }
+  return { total: value, sources };
 }
 
 /** Individual protection of a recipient against one hit. */
@@ -57,17 +72,16 @@ export function individualProtection(state, ctx, m, channel, face) {
   const sources = [];
   let total = 0;
   for (const p of memberProtections(state, ctx, m)) if (p.scope !== 'party' && covers(p, channel, face)) { total += p.amount; sources.push({ source: m.id, kind: p.id, amount: p.amount, scope: 'individual' }); }
-  total += partyWide(state, ctx, state.parties[m.party], channel, face, sources);
-  return { total, sources };
+  // party protection follows membership, even for a helper standing in another party's strip
+  return protectionTotal(total, sources, partyLayers(state, ctx, state.parties[m.party], channel, face));
 }
 
-/** Shared line protection: each eligible contribution on the attacked line once, plus party-wide. */
+/** Shared line protection: each eligible contribution on the attacked line once, plus party layers. */
 function lineProtection(state, ctx, party, lineMembers, channel, face) {
   const sources = [];
   let total = 0;
   for (const m of lineMembers) for (const p of memberProtections(state, ctx, m)) if (p.scope === 'line' && covers(p, channel, face)) { total += p.amount; sources.push({ source: m.id, kind: p.id, amount: p.amount, scope: 'line' }); }
-  total += partyWide(state, ctx, party, channel, face, sources);
-  return { total, sources };
+  return protectionTotal(total, sources, partyLayers(state, ctx, party, channel, face));
 }
 
 /** Residual damage (health units) of a hit: floor of exact ratio, never negative. */

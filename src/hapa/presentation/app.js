@@ -12,7 +12,7 @@ import { loadCharacterKit } from '../../../vendor/lumina/src/engine/pixel/Charac
 import { BoardCamera } from './camera.js';
 import { BoardView, COLOR_HEX, OWNER_HEX } from './board-view.js';
 import { eventLine, explainHit, memberName, partyName, fmtMana } from './explain.js';
-import { createSession, openTick } from '../rules/session.js';
+import { createSession, createFixtureSession, openTick } from '../rules/session.js';
 import { validatePlan, resolveTick, responseOptions } from '../rules/match.js';
 import { legalDestinations, planRoute, routeOrigin, touchingPairs, contactTolerance } from '../rules/movement.js';
 import { mintForecast, nextActivation, roundOf, supplyOf } from '../rules/economy.js';
@@ -22,6 +22,7 @@ import { HeuristicBot } from '../controllers/heuristic-bot.js';
 import { ALLOCATION_POLICIES } from '../rules/combat.js';
 import { profileById, PROFILE_IDS, BASE_PROFILE } from '../../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../../fixtures/hapa/content.js';
+import { UI_FIXTURES } from '../../../fixtures/hapa/ui-fixtures.js';
 
 const U = 1e6;
 const SUIT = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
@@ -98,20 +99,30 @@ export class VersusApp {
       h('div', { class: 'row' },
         h('button', { class: 'primary', onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: document.getElementById('set-A').value, B: document.getElementById('set-B').value }, seed: Number(seed.value) || 1, policies: { A: document.getElementById('set-pol-A').value, B: document.getElementById('set-pol-B').value } }) }, 'Start match'),
         h('button', { onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: 'bot', B: 'bot' }, seed: Number(seed.value) || 1, watch: true }) }, 'Watch bot vs bot')),
+      h('details', {}, h('summary', {}, 'Diagnostic fixtures (labeled, not ordinary play)'),
+        ...Object.entries(UI_FIXTURES).map(([id, f]) => h('div', { class: 'row fixture' },
+          h('button', { onclick: () => this.startMatch({ fixture: id, seats: { A: 'human', B: 'human' } }) }, f.title),
+          h('span', { class: 'dim small' }, f.description)))),
       h('details', {}, h('summary', {}, 'Controls'), h('div', { class: 'keys' },
         ...[['Left click', 'select a party, member, territory or card'], ['Right click', 'set the selected party\'s one destination'], ['1–9', 'select your hand slot (home column order)'], ['U / B / C', 'Supply, Burn or Ability with the selected card'], ['M', 'show legal destinations of the selected party'], ['G', 'formation facing tools'], ['P', 'plan comparison'], ['Ctrl/⌘ + Enter', 'Ready (freeze your plan for this pair)'], ['Esc', 'cancel the current tool'], ['Q / E', 'rotate the camera 45°'], ['Z / X', 'tilt'], ['W A S D', 'pan'], ['Wheel', 'zoom'], ['V', 'tactical view'], ['Home', 'home view'], ['F', 'focus the selection'], ['Space', 'pause playback']].map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v)))),
     ));
     this.el.overlay.hidden = false;
   }
 
-  async startMatch({ profileId = BASE_PROFILE.id, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' } }) {
+  async startMatch({ profileId = BASE_PROFILE.id, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null }) {
     this.el.overlay.hidden = true;
     await loadCharacterKit(); // crowns, helmets and the guard preset are kit parts
-    const profile = profileById(profileId);
-    this.session = createSession({
-      matchId: `local-${profileId}-${seed}-${Date.now().toString(36)}`, profile, catalog: CATALOG, seed, allocationPolicies: policies,
-      controllers: { A: { type: seats.A, revision: seats.A === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' }, B: { type: seats.B, revision: seats.B === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' } },
-    });
+    const fx = fixture ? UI_FIXTURES[fixture] : null;
+    if (fx) {
+      // a labeled diagnostic fixture: its state is prepared directly, not reached by ordinary play
+      this.session = createFixtureSession(fx.build(), { id: fixture, title: fx.title });
+    } else {
+      const profile = profileById(profileId);
+      this.session = createSession({
+        matchId: `local-${profileId}-${seed}-${Date.now().toString(36)}`, profile, catalog: CATALOG, seed, allocationPolicies: policies,
+        controllers: { A: { type: seats.A, revision: seats.A === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' }, B: { type: seats.B, revision: seats.B === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' } },
+      });
+    }
     this.ctx = this.session.ctx;
     this.seats = seats;
     this.watch = watch || (seats.A === 'bot' && seats.B === 'bot');
@@ -484,7 +495,7 @@ export class VersusApp {
     const next = s.tick + 1;
     this.el.matchbar.replaceChildren(
       h('div', { class: 'crest a' }, 'A', h('small', {}, this.seats.A === 'bot' ? 'bot' : 'human')),
-      h('div', { class: 'tick' }, h('b', {}, `Tick ${s.tick}`), ` · ${r.period === 'prologue' ? 'Prologue' : `Round ${r.round}`}`),
+      h('div', { class: 'tick' }, this.session.fixture ? h('span', { class: 'fixture-tag', title: 'This state was prepared directly as a diagnostic fixture; it did not emerge from ordinary play.' }, `FIXTURE · ${this.session.fixture.title}`) : null, h('b', {}, `Tick ${s.tick}`), ` · ${r.period === 'prologue' ? 'Prologue' : `Round ${r.round}`}`),
       h('div', { class: 'active' }, 'Active ', ...s.activeColumns.map((c) => h('span', { class: 'colchip' }, `C${c}`)), h('small', {}, ` next T${next}: ${this.ctx.profile.clock.activation[(next - 1) % 9].map((c) => `C${c}`).join('/')}`)),
       h('div', { class: 'phase' }, this.playback ? 'Resolving…' : this.pendingChoice ? `Response window · ${this.pendingChoice.req.seat} to act` : s.outcome ? 'Match over' : `Planning · you are ${this.viewSeat}`),
       h('div', { class: 'cmds' }, ...['A', 'B'].map((seat) => { const c = cmd(seat); return h('span', { class: `cmdhp ${seat.toLowerCase()}` }, `${seat} Commander ${c?.alive ? `${pts(c.hp)}/${pts(c.maxHp)} HP` : 'fallen'}`); })),
@@ -645,7 +656,7 @@ export class VersusApp {
     }
     const engagedWith = Object.values(s.engagements).filter((e) => e.active && (e.a === p.id || e.b === p.id)).map((e) => (e.a === p.id ? e.b : e.a));
     const active = s.activeColumns.includes(p.region.column);
-    const facing = (f) => h('button', { disabled: !own || !active || p.state === 'engaged', onclick: () => this._addCommand(p.owner, { type: 'change_formation', partyId: p.id, facing: f }) && this._toast(`Formation change to face ${f} planned (takes one Tick)`) }, f);
+    const facing = (f) => h('button', { disabled: !own || !active || f === p.facing || !!p.formationChange, title: p.state === 'engaged' ? 'In contact: combat keeps the old arrangement this Tick; the change fails if it would pull a touching member out of contact' : `face ${f} (one Tick)`, onclick: () => this._addCommand(p.owner, { type: 'change_formation', partyId: p.id, facing: f }) && this._toast(`Formation change to face ${f} planned (takes one Tick${p.state === 'engaged' ? '; legality is rechecked at completion' : ''})`) }, f);
     return h('div', {},
       h('h3', {}, partyName(s, p.id)),
       h('div', { class: 'kv' },

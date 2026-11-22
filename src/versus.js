@@ -7,6 +7,7 @@ const app = new VersusApp(document.getElementById('app'));
 const q = new URLSearchParams(location.search);
 if (q.has('autostart')) {
   app.startMatch({
+    fixture: q.get('fixture') ?? null,
     profileId: q.get('profile') ?? undefined,
     seats: { A: q.get('a') ?? 'human', B: q.get('b') ?? 'bot' },
     seed: Number(q.get('seed') ?? 1),

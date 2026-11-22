@@ -143,3 +143,16 @@ test('a blocked return takes the nearest legal vacant home slot (then lowest num
   assert.equal(N.slots['1'], null);
   assert.equal(s.members['A.nbr.s1'].alive, true);
 });
+
+test('the labeled corner fixture plays in a session and its replay verifies from the fixture state', async () => {
+  const { UI_FIXTURES } = await import('../../fixtures/hapa/ui-fixtures.js');
+  const { createFixtureSession, openTick, closeTick, verifyReplay } = await import('../../src/hapa/rules/session.js');
+  const sess = createFixtureSession(UI_FIXTURES.corner.build(), { id: 'corner', title: 'Corner helper' });
+  openTick(sess);
+  const r = closeTick(sess, { A: [], B: [] }, () => ({ pass: true }));
+  const steps = r.events.filter((e) => e.type === 'helper_stepped');
+  assert.deepEqual(steps.map((e) => e.memberId).sort(), ['A.left.s3', 'A.right.s1']); // both flanks
+  openTick(sess); closeTick(sess, { A: [], B: [] }, () => ({ pass: true }));
+  assert.equal(sess.replay.fixture.label, 'diagnostic fixture (not ordinary play)');
+  assert.equal(verifyReplay(sess.replay).ok, true);
+});

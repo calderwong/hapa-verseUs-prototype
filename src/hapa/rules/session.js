@@ -26,6 +26,21 @@ export function createSession(o) {
   };
 }
 
+/**
+ * A session that starts from a labeled diagnostic fixture state rather than the ordinary opening.
+ * The replay carries the fixture's initial state so verification recomputes from it.
+ * @param {{ id: string, title: string }} fixture
+ */
+export function createFixtureSession({ manifest, ctx, state }, fixture) {
+  const initialState = clone(state);
+  return {
+    manifest, ctx, state,
+    events: [],
+    fixture,
+    replay: { schemaVersion: 1, kind: 'hapa-versus-replay', manifest, fixture: { ...fixture, label: 'diagnostic fixture (not ordinary play)', initialState }, initialFingerprint: stateFingerprint(state), ticks: [] },
+  };
+}
+
 /** Mint and open planning for the next Tick. */
 export function openTick(session) {
   const ev = beginCount(session.state, session.ctx);
@@ -73,7 +88,7 @@ export function playMatch(session, controllers, { tickBudget = 400, onTick } = {
 /** Recompute a replay from its manifest and inputs; compare each Tick's checkpoint. */
 export function verifyReplay(replay) {
   const ctx = createContext(replay.manifest);
-  const state = initializeMatch(replay.manifest);
+  const state = replay.fixture?.initialState ? clone(replay.fixture.initialState) : initializeMatch(replay.manifest);
   if (stateFingerprint(state) !== replay.initialFingerprint) return { ok: false, tick: 0, reason: 'initial state differs' };
   for (const t of replay.ticks) {
     beginCount(state, ctx);

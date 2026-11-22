@@ -166,6 +166,7 @@ export function setupMajors(state, manifest, geo) {
         const id = `F.${cardId}.${i}`;
         state.effects[id] = {
           id, definition: `${def.id}@${def.revision}`, source: cardId, owner: seat, op: op.type, active: true,
+          stage: op.stage ?? 'add', createdSeq: (state.effectSeq = (state.effectSeq ?? 0) + 1),
           channel: op.channel, faces: op.faces, amount: op.amount, scope: op.scope,
           boundParty: op.scope === 'bound_party' ? `${seat}.mount.C${lc}` : null,
           column: op.scope === 'column_parties' ? column : null,

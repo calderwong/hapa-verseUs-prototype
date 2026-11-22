@@ -10,6 +10,7 @@ import { emit } from './context.js';
 import { slotOffset, facingOf } from './geometry.js';
 import { livingMembers } from './state.js';
 import { supplyOf, spendSupply } from './economy.js';
+import { solidAt, cellOf } from './terrain.js';
 
 const sign = (v) => (v > 0 ? 1 : v < 0 ? -1 : 0);
 
@@ -407,4 +408,28 @@ export function arrangementBlocked(state, ctx, party, facing) {
     for (const b of livingMembers(state, o)) for (const a of mine) if (interiorOverlap(a, b, U)) return o.id;
   }
   return null;
+}
+
+/**
+ * Legality of a rearrangement to `facing` (Appendix A "Formation and facing"): each living member
+ * exactly once with the center kept in slot 5 (a facing change preserves both), no overlap with
+ * solid terrain or another body's interior, and — in this fixture — no member relocated out of
+ * current hostile contact. Members away as helpers or breachers keep their pose.
+ * @returns {{ ok: true } | { ok: false, reason: string, blockedBy?: string, memberId?: string }}
+ */
+export function rearrangementError(state, ctx, party, facing) {
+  const U = ctx.U;
+  const tol = contactTolerance(ctx);
+  const blockedBy = arrangementBlocked(state, ctx, party, facing);
+  if (blockedBy) return { ok: false, reason: 'a member would overlap another body', blockedBy };
+  const enemies = Object.values(state.members).filter((b) => b.alive && b.owner !== party.owner);
+  const touches = (x, y) => enemies.some((b) => { const dx = Math.abs(b.x - x), dy = Math.abs(b.y - y); return dx <= U + tol && dy <= U + tol && !(dx > U && dy > U); });
+  for (const m of livingMembers(state, party)) {
+    if (m.helperAway) continue;
+    const off = slotOffset(m.slot, facing);
+    const x = party.x + off.dx * U, y = party.y + off.dy * U;
+    if (state.terrain.kind === 'volume' && solidAt(state.terrain, cellOf(U, x), cellOf(U, y), m.band)) return { ok: false, reason: 'a member would stand inside solid terrain', memberId: m.id };
+    if (touches(m.x, m.y) && !touches(x, y)) return { ok: false, reason: 'an ordinary formation change cannot move a member out of hostile contact', memberId: m.id };
+  }
+  return { ok: true };
 }

@@ -67,7 +67,7 @@ export function eventLine(state, e) {
     case 'ability_fizzled': return `Ability fizzled: ${e.reason}`;
     case 'enchantment_placed': return `${e.seat} placed a row Enchantment on R${e.row}`;
     case 'formation_changed': return `${partyName(state, e.partyId)} now faces ${e.facing}`;
-    case 'turn_failed': case 'formation_change_failed': return `${partyName(state, e.partyId)} could not turn: ${e.reason}`;
+    case 'turn_failed': case 'formation_change_failed': return `${partyName(state, e.partyId)} could not turn to ${e.facing}: ${e.reason}${e.memberId ? ` (${memberName(state, e.memberId)})` : ''}; it keeps facing ${e.kept}`;
     case 'command_rejected': return `${e.seat}'s ${e.command.type.replace('_', ' ')} rejected: ${e.reason}`;
     case 'retreated': return `${partyName(state, e.partyId)} retreated, losing ${e.lost.length} touching members${e.helpersReturned?.length ? `; ${e.helpersReturned.length} neighbouring helper${e.helpersReturned.length > 1 ? 's' : ''} returned home alive` : ''}`;
     case 'helper_stepped': return `${memberName(state, e.memberId)} stepped into the contact strip to help ${partyName(state, e.helps)} against ${partyName(state, e.against)} (no time, no Supply)`;
