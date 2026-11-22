@@ -15,7 +15,7 @@ import { emit } from './context.js';
 import { clone } from './encoding.js';
 import { SEATS, other, livingMembers } from './state.js';
 import { activeColumnsAt, roundOf, mintAndClear, planPayment, supplyOf } from './economy.js';
-import { setDestination, simulateMovement, placeMembers, planRoute, routeOrigin, touchingPairs, contactTolerance } from './movement.js';
+import { setDestination, simulateMovement, placeMembers, planRoute, routeOrigin, touchingPairs, contactTolerance, arrangementBlocked } from './movement.js';
 import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember } from './combat.js';
 
 // --- the Tick boundary ------------------------------------------------------------------------
@@ -257,6 +257,8 @@ function resolveEntry(state, ctx, events, entry) {
       else emit(state, events, 'ability_fizzled', { stackId: entry.id, reason: 'no counterable target remains' });
     } else if (op.type === 'formation_immediate') {
       if (!actor?.alive || actor.state === 'engaged') { emit(state, events, 'ability_fizzled', { stackId: entry.id, reason: 'actor engaged or gone' }); return; }
+      const blockedBy = arrangementBlocked(state, ctx, actor, entry.target.facing);
+      if (blockedBy) { emit(state, events, 'formation_change_failed', { partyId: actor.id, facing: entry.target.facing, kept: actor.facing, blockedBy, cause: entry.cardId }); return; }
       actor.facing = entry.target.facing;
       actor.formationChange = null;
       placeMembers(state, ctx, actor);
@@ -397,7 +399,7 @@ function applyRetreats(state, ctx, events) {
     const lost = [...touching].filter((id) => state.members[id].homeParty === P.id);
     for (const id of lost) killMember(state, ctx, events, state.members[id], 'retreat');
     emit(state, events, 'retreated', { partyId: P.id, lost, target: r.target });
-    for (const E of Object.values(state.engagements)) if (E.active && (E.a === P.id || E.b === P.id)) { E.active = false; E.endTick = state.tick; emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b, cause: 'retreat' }); }
+    for (const E of Object.values(state.engagements)) if (E.active && (E.a === P.id || E.b === P.id)) { E.active = false; delete state.engagements[E.id]; emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b, cause: 'retreat' }); }
     if (P.alive && P.mount && !P.mountLost) {
       P.state = 'idle';
       setDestination(state, ctx, events, P, r.target, { seat: r.seat, command: 'retreat' });
@@ -413,18 +415,18 @@ function finishTick(state, ctx, events) {
   for (const P of Object.values(state.parties)) {
     if (!P.alive || P.retired) continue;
     if (P.turn && P.turn.completeTick <= state.tick) {
-      P.facing = P.turn.to;
+      const blockedBy = arrangementBlocked(state, ctx, P, P.turn.to);
+      if (blockedBy) emit(state, events, 'turn_failed', { partyId: P.id, facing: P.turn.to, kept: P.facing, blockedBy, reason: 'a member would overlap another body' });
+      else { P.facing = P.turn.to; placeMembers(state, ctx, P); emit(state, events, 'turn_completed', { partyId: P.id, facing: P.facing }); }
       P.turn = null;
-      placeMembers(state, ctx, P);
       if (P.state === 'turning') P.state = P.route.length ? 'moving' : 'idle';
-      emit(state, events, 'turn_completed', { partyId: P.id, facing: P.facing });
     }
     if (P.formationChange && P.formationChange.completeTick <= state.tick) {
-      P.facing = P.formationChange.facing;
+      const blockedBy = arrangementBlocked(state, ctx, P, P.formationChange.facing);
+      if (blockedBy) emit(state, events, 'formation_change_failed', { partyId: P.id, facing: P.formationChange.facing, kept: P.facing, blockedBy, reason: 'a member would overlap another body' });
+      else { P.facing = P.formationChange.facing; placeMembers(state, ctx, P); emit(state, events, 'formation_changed', { partyId: P.id, facing: P.facing, immediate: false }); }
       P.formationChange = null;
-      placeMembers(state, ctx, P);
       if (P.state === 'turning') P.state = P.route.length ? 'moving' : 'idle';
-      emit(state, events, 'formation_changed', { partyId: P.id, facing: P.facing, immediate: false });
     }
   }
   refreshEngagements(state, ctx, events);

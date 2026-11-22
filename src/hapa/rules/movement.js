@@ -17,11 +17,24 @@ const sign = (v) => (v > 0 ? 1 : v < 0 ? -1 : 0);
 export function routeOrigin(state, ctx, party) {
   const { geo } = ctx;
   if (party.route.length && !atNode(ctx, party)) {
+    // a party stopped mid-edge by an obstruction may reroute from its nearest node instead
+    if ((party.blockedTick ?? -9) >= state.tick - 1) {
+      const n = nearestNode(ctx, party);
+      return { column: n.column, row: n.row, midEdge: true, back: true };
+    }
     const n = party.route[0];
     return { column: n.column, row: n.row, midEdge: true };
   }
   const r = geo.region(party.x, party.y, party.region);
   return { column: r.column, row: r.row, midEdge: false };
+}
+
+/** The territory center nearest a party's anchor (ties toward lower coordinates). */
+export function nearestNode(ctx, party) {
+  const P = ctx.geo.pitch, U = ctx.U;
+  const idx = (v) => Math.max(1, Math.round((v + 2 * U) / P));
+  const column = Math.min(ctx.geo.columns, idx(party.x)), row = Math.min(ctx.geo.rows, idx(party.y));
+  return { column, row, ...ctx.geo.center(column, row) };
 }
 
 export function atNode(ctx, party) {
@@ -110,7 +123,7 @@ export function setDestination(state, ctx, events, party, target, cause) {
   if (plan.error) return { error: plan.error };
   const { geo } = ctx;
   const nodes = plan.route.map((n) => ({ ...n, ...geo.center(n.column, n.row) }));
-  const head = from.midEdge ? [party.route[0]] : [];
+  const head = from.midEdge ? [from.back ? { column: from.column, row: from.row, ...geo.center(from.column, from.row) } : party.route[0]] : [];
   party.route = [...head, ...nodes];
   party.destination = { column: target.column, row: target.row };
   if (party.state === 'idle' || party.state === 'arrived' || party.state === 'waiting_supply') party.state = 'moving';
@@ -160,6 +173,7 @@ export function mergeParties(state, ctx, events, mounted, pawn) {
     pawn.pool.hp = 0;
   }
   pawn.retired = true;
+  pawn.mergeClaim = null;
   pawn.alive = false;
   pawn.state = 'retired';
   pawn.mergedInto = mounted.id;
@@ -178,9 +192,9 @@ function mergeCandidate(state, mounted, pawn) {
 // --- body sweep -------------------------------------------------------------------------------
 
 /** Bodies of a party at a hypothetical anchor. */
-function bodiesAt(state, ctx, party, ax, ay) {
+function bodiesAt(state, ctx, party, ax, ay, living = livingMembers(state, party)) {
   const U = ctx.U;
-  return livingMembers(state, party).map((m) => {
+  return living.map((m) => {
     if (m.helperAway) return { id: m.id, x: m.x, y: m.y };
     const off = slotOffset(m.slot, party.facing);
     return { id: m.id, x: ax + off.dx * U, y: ay + off.dy * U };
@@ -203,7 +217,11 @@ export function simulateMovement(state, ctx, events, onContact) {
   const parties = () => Object.values(state.parties).filter((p) => p.alive && !p.retired);
   const spentThisTick = {};
 
-  const movers = () => parties().filter((p) => p.state === 'moving' && p.route.length && !inEngagement(state, p.id));
+  const movers = () => {
+    const engaged = new Set();
+    for (const e of Object.values(state.engagements)) if (e.active) { engaged.add(e.a); engaged.add(e.b); }
+    return parties().filter((p) => p.state === 'moving' && p.route.length && !engaged.has(p.id));
+  };
   if (!movers().length) return;
 
   for (let q = 1; q <= Q; q++) {
@@ -237,15 +255,36 @@ export function simulateMovement(state, ctx, events, onContact) {
     }
     // sweep each proposal against every other party's current bodies (order independent)
     const others = parties();
+    const bodies = new Map();
+    const bodiesOf = (o) => { let b = bodies.get(o.id); if (!b) { b = livingMembers(state, o); bodies.set(o.id, b); } return b; };
     const contacts = [];
+    // merge claims: a Pawn assembles with one mount at a time; an earlier claim stands, and
+    // simultaneous new claims both stop (no hidden right of way)
+    for (const pr of proposals) {
+      const cand = others.find((o) => o.id !== pr.p.id && o.x === pr.node.x && o.y === pr.node.y && mergeCandidate(state, pr.p, o));
+      pr.mergeTarget = cand ?? null;
+    }
+    for (const pr of proposals) {
+      const t = pr.mergeTarget;
+      if (!t) continue;
+      const claimant = t.mergeClaim && state.parties[t.mergeClaim];
+      const claimValid = claimant && claimant.alive && !claimant.retired && claimant.route[0]?.x === t.x && claimant.route[0]?.y === t.y;
+      if (claimValid && t.mergeClaim !== pr.p.id) { pr.mergeTarget = null; continue; }
+      if (!claimValid) {
+        const rivals = proposals.filter((o) => o !== pr && o.mergeTarget === t);
+        if (rivals.length) { pr.mergeTarget = null; continue; }
+        t.mergeClaim = pr.p.id;
+      }
+    }
     for (const pr of proposals) {
       const { p, sx, sy } = pr;
-      const mergeTarget = p.route.length ? others.find((o) => o.id !== p.id && o.x === pr.node.x && o.y === pr.node.y && mergeCandidate(state, p, o)) : null;
-      pr.mergeTarget = mergeTarget ?? null;
-      const near = others.filter((o) => o.id !== p.id && o !== mergeTarget && Math.max(Math.abs(o.x - p.x), Math.abs(o.y - p.y)) <= 2 * pitch);
+      const mergeTarget = pr.mergeTarget;
+      // member bodies can only meet when anchors are within 3 member widths on both axes
+      const reach = 3 * U + pr.step + tol;
+      const near = others.filter((o) => o.id !== p.id && o !== mergeTarget && Math.abs(o.x - p.x) < reach && Math.abs(o.y - p.y) < reach);
       const ok = (s) => {
-        const mine = bodiesAt(state, ctx, p, p.x + sx * s, p.y + sy * s);
-        for (const o of near) for (const b of livingMembers(state, o)) for (const a of mine) if (interiorOverlap(a, b, U)) return false;
+        const mine = bodiesAt(state, ctx, p, p.x + sx * s, p.y + sy * s, bodiesOf(p));
+        for (const o of near) for (const b of bodiesOf(o)) for (const a of mine) if (interiorOverlap(a, b, U)) return false;
         return true;
       };
       let lo = 0, hi = pr.step;
@@ -253,21 +292,24 @@ export function simulateMovement(state, ctx, events, onContact) {
         while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); if (ok(mid)) lo = mid; else hi = mid - 1; }
         pr.step = lo;
         pr.blocked = true;
+        if (!lo) p.blockedTick = state.tick;
       }
       pr.near = near;
     }
     // two movers closing on each other: if their new bodies overlap, both stay put this quantum
     for (let i = 0; i < proposals.length; i++) for (let j = i + 1; j < proposals.length; j++) {
       const a = proposals[i], b = proposals[j];
-      if (Math.max(Math.abs(a.p.x - b.p.x), Math.abs(a.p.y - b.p.y)) > 2 * pitch) continue;
+      const reach = 3 * U + a.step + b.step;
+      if (Math.abs(a.p.x - b.p.x) >= reach || Math.abs(a.p.y - b.p.y) >= reach) continue;
       if (a.mergeTarget === b.p || b.mergeTarget === a.p) continue;
-      const ba = bodiesAt(state, ctx, a.p, a.p.x + a.sx * a.step, a.p.y + a.sy * a.step);
-      const bb = bodiesAt(state, ctx, b.p, b.p.x + b.sx * b.step, b.p.y + b.sy * b.step);
+      const ba = bodiesAt(state, ctx, a.p, a.p.x + a.sx * a.step, a.p.y + a.sy * a.step, bodiesOf(a.p));
+      const bb = bodiesAt(state, ctx, b.p, b.p.x + b.sx * b.step, b.p.y + b.sy * b.step, bodiesOf(b.p));
       if (ba.some((x) => bb.some((y) => interiorOverlap(x, y, U)))) { a.step = 0; b.step = 0; a.blocked = b.blocked = true; }
     }
     for (const pr of proposals) {
       const { p } = pr;
       if (pr.step > 0) {
+        p.lastMovedTick = state.tick;
         p.x += pr.sx * pr.step;
         p.y += pr.sy * pr.step;
         const cost = Math.floor((pr.step * costPerPitch + (p.supplyRemainder ?? 0)) / pitch);
@@ -303,6 +345,7 @@ export function simulateMovement(state, ctx, events, onContact) {
       if (!p.alive) continue;
       for (const o of pr.near) {
         if (o.owner === p.owner || !o.alive) continue;
+        if (Math.abs(o.x - p.x) > 3 * U + tol || Math.abs(o.y - p.y) > 3 * U + tol) continue;
         if (engagementBetween(state, p.id, o.id)) continue;
         // exact touching for an unobstructed sweep; a reverted head-on pair keeps the tolerance
         const pairs = touchingPairs(state, ctx, p, o, pr.blocked ? tol : 0);
@@ -341,5 +384,24 @@ export function inEngagement(state, partyId) {
 }
 
 export function engagementBetween(state, a, b) {
-  return Object.values(state.engagements).find((e) => e.active && ((e.a === a && e.b === b) || (e.a === b && e.b === a))) ?? null;
+  for (const e of Object.values(state.engagements)) if (e.active && ((e.a === a && e.b === b) || (e.a === b && e.b === a))) return e;
+  return null;
+}
+
+/**
+ * Would a party's members overlap another body's interior if it faced `facing`? (Rearrangements
+ * recheck legality at completion; on failure the old arrangement stays.)
+ */
+export function arrangementBlocked(state, ctx, party, facing) {
+  const U = ctx.U;
+  const mine = livingMembers(state, party).map((m) => {
+    const off = slotOffset(m.slot, facing);
+    return { x: party.x + off.dx * U, y: party.y + off.dy * U };
+  });
+  for (const o of Object.values(state.parties)) {
+    if (o === party || !o.alive || o.retired) continue;
+    if (Math.abs(o.x - party.x) >= 3 * U || Math.abs(o.y - party.y) >= 3 * U) continue;
+    for (const b of livingMembers(state, o)) for (const a of mine) if (interiorOverlap(a, b, U)) return o.id;
+  }
+  return null;
 }

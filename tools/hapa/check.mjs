@@ -12,7 +12,7 @@ const run = (label, cmd, args) => {
 };
 const tests = readdirSync('tests/hapa').filter((f) => f.endsWith('.test.js')).map((f) => `tests/hapa/${f}`);
 const steps = [['rules tests', process.execPath, ['--test', ...tests]]];
-if (existsSync('tools/hapa/match.mjs')) steps.push(['bot-versus-bot smoke match', process.execPath, ['tools/hapa/match.mjs', '--quiet', '--seed', '7']]);
+if (existsSync('tools/hapa/match.mjs')) steps.push(['bot-versus-bot smoke match', process.execPath, ['tools/hapa/match.mjs', '--quiet', '--seed', '2', '--ticks', '80']]);
 if (existsSync('versus.html')) steps.push(['build', 'npx', ['vite', 'build', '--logLevel', 'warn']]);
 let ok = true;
 for (const [label, cmd, args] of steps) ok = run(label, cmd, args) && ok;

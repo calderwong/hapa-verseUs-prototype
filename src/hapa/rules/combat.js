@@ -370,8 +370,8 @@ export function refreshEngagements(state, ctx, events) {
     const still = P?.alive && Q?.alive && touchingPairs(state, ctx, P, Q, tol).length > 0;
     if (still) continue;
     E.active = false;
-    E.endTick = state.tick;
-    emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b });
+    delete state.engagements[E.id]; // the events keep its history
+    emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b, startTick: E.startTick });
     for (const p of [P, Q]) {
       if (!p?.alive || p.retired) continue;
       if (Object.values(state.engagements).some((x) => x.active && (x.a === p.id || x.b === p.id))) continue;
