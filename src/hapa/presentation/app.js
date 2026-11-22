@@ -18,6 +18,7 @@ import { validatePlan, resolveTick, responseOptions } from '../rules/match.js';
 import { legalDestinations, planPartyRoute, routeOrigin, touchingPairs, contactTolerance } from '../rules/movement.js';
 import { mintForecast, nextActivation, roundOf, supplyOf } from '../rules/economy.js';
 import { stateFingerprint } from '../rules/state.js';
+import { summarize } from '../rules/stats.js';
 import { clone } from '../rules/encoding.js';
 import { HeuristicBot } from '../controllers/heuristic-bot.js';
 import { ALLOCATION_POLICIES } from '../rules/combat.js';
@@ -31,6 +32,7 @@ import { standingOf, fmtBand } from './terrain-view.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
 import { VersusSound } from './sound.js';
+import { buildScenery } from './scenery.js';
 import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } from './palette.js';
 import { openEditor } from './editor.js';
 import { openLab, anyProfile, labProfiles } from './lab.js';
@@ -161,6 +163,10 @@ export class VersusApp {
     this._initEngine();
     if (this.view) { this.engine.scene.remove(this.view.root); }
     this.view = new BoardView(this.engine.scene, this.ctx);
+    // decorative diorama around the field (outside the playable rectangle and its banks)
+    this.scenery = null;
+    const v = this.view, Sx = 1.5;
+    buildScenery(v.root, { x0: -6 * Sx, x1: (v.w + 6) * Sx, z0: -(v.h + 12) * Sx, z1: 12 * Sx }).then((sc) => { if (this.view === v) this.scenery = sc; }).catch((err) => console.warn('[versus] scenery unavailable', err));
     this.cam = new BoardCamera(this.engine.camera, this.el.world, { center: this.view.center, size: this.view.size });
     this.cam.setHome(this.viewSeat);
     this.selected = null;
@@ -530,6 +536,7 @@ export class VersusApp {
     if (!this.cam) return;
     this.cam.update(dt, this.keys);
     this._stepPlayback(dt);
+    this.scenery?.update(dt);
     this.view.update(dt, this.engine.camera);
     this.el.compass.textContent = `▲ ${Math.round(this.cam.bearing)}° · ${this.cam.tactical ? 'Tactical' : 'Angled'} · home ${this.viewSeat}`;
   }
@@ -599,12 +606,26 @@ export class VersusApp {
   _showResult() {
     const o = this.state.outcome ?? { result: 'unfinished' };
     this._renderAll();
-    this.el.overlay.replaceChildren(h('div', { class: 'card-sheet' },
-      h('h2', {}, o.result === 'draw' ? 'Draw' : o.result === 'win' ? `${o.winner} wins` : 'Unfinished'),
-      h('p', {}, ...(o.reasons ?? []).map((r) => h('div', {}, `${r.seat}: ${r.reason.replace('_', ' ')}${r.partyId ? ` by ${partyName(this.state, r.partyId)}` : ''}`))),
-      h('p', {}, `Tick ${this.state.tick}. Download the replay to verify it by recomputation (npm run replay -- file.json).`),
-      h('div', { class: 'row' }, h('button', { onclick: () => (this.el.overlay.hidden = true) }, 'Inspect the board'), h('button', { onclick: () => this._downloadReplay() }, 'Download replay'), h('button', { class: 'primary', onclick: () => this.showSetup() }, 'New match'))));
+    const sum = summarize(this.session.events, this.state);
+    const REASON = { commander_died: 'the Commander fell', capital_captured: 'a party center entered the Capital', conceded: 'conceded' };
+    const crest = (seat) => h('span', { class: `crest ${seat.toLowerCase()}` }, seat);
+    const headline = o.result === 'draw' ? 'Draw' : o.result === 'win' ? 'Victory' : 'Unfinished';
+    const stat = (label, a, b) => h('tr', {}, h('td', {}, label), h('td', {}, String(a)), h('td', {}, String(b)));
+    this.el.overlay.replaceChildren(h('div', { class: 'card-sheet result' },
+      h('div', { class: 'title-emblems', 'aria-hidden': 'true' }, ...['red', 'purple', 'blue', 'black', 'rainbow', 'white', 'orange', 'yellow', 'green'].map((c) => h('img', { src: emblemURL(c, 16), alt: '' }))),
+      h('h1', {}, headline),
+      o.result === 'win' ? h('p', { class: 'lede' }, crest(o.winner), ` wins on Tick ${o.tick} — `, ...(o.reasons ?? []).map((r) => h('span', {}, `${r.seat}: ${REASON[r.reason] ?? r.reason.replace('_', ' ')}${r.partyId ? ` (${partyName(this.state, r.partyId)})` : ''}`)))
+        : h('p', { class: 'lede' }, o.result === 'draw' ? `Both sides lost on Tick ${o.tick}: ${(o.reasons ?? []).map((r) => `${r.seat} — ${REASON[r.reason] ?? r.reason}`).join('; ')}` : `Stopped at Tick ${this.state.tick} without a rules-defined result.`),
+      h('table', { class: 'result-stats' },
+        h('tr', {}, h('th', {}, ''), h('th', {}, crest('A')), h('th', {}, crest('B'))),
+        stat('Cards minted', sum.mints.A, sum.mints.B),
+        stat('Supply loaded', +sum.supplyLoaded.A.toFixed(2), +sum.supplyLoaded.B.toFixed(2)),
+        stat('Mana burned', sum.manaBurned.A, sum.manaBurned.B),
+        stat('Members lost', sum.casualties.A, sum.casualties.B)),
+      h('p', { class: 'dim small' }, `First contact on Tick ${sum.firstEngagementTick ?? '—'} · ${sum.engagements} contacts · ${sum.merges} merges · damage ${+sum.damage.physical.toFixed(1)} Physical / ${+sum.damage.magic.toFixed(1)} Magic. The replay recomputes this match exactly (npm run replay -- file.json).`),
+      h('div', { class: 'row center' }, h('button', { onclick: () => (this.el.overlay.hidden = true) }, 'Inspect the board'), h('button', { onclick: () => this._downloadReplay() }, 'Download replay'), h('button', { class: 'primary', onclick: () => this.showSetup() }, 'New match'))));
     this.el.overlay.hidden = false;
+    this.sound?.play(o.result === 'win' ? 'levelup' : 'close', { volume: 0.6 });
   }
 
   _renderHand(el, seat, own) {

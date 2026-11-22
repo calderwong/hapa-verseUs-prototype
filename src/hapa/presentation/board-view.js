@@ -42,6 +42,29 @@ function spriteSpec(role, mount, owner) {
   }
 }
 
+const MOUNT_GLYPH = { castle: '♜', knight: '♞', bishop: '♝', queen: '♛', king: '♚', commander: '♚' };
+const crestCache = new Map();
+/** A flat round plaque with the Mount's movement glyph (a Commander's carries a brass star). */
+function mountCrest(mount, ownerHex, commander) {
+  const key = `${mount}:${ownerHex}:${commander}`;
+  if (!crestCache.has(key)) {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+    const g = cv.getContext('2d');
+    g.beginPath(); g.arc(64, 64, 58, 0, Math.PI * 2); g.fillStyle = '#F5F0E3'; g.fill();
+    g.lineWidth = 9; g.strokeStyle = ownerHex; g.stroke();
+    g.lineWidth = 3; g.strokeStyle = '#17212D'; g.beginPath(); g.arc(64, 64, 63, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = '#17212D'; g.font = '76px "Apple Symbols", "Segoe UI Symbol", "DejaVu Sans", serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(MOUNT_GLYPH[mount] ?? '•', 64, 70);
+    if (commander) { g.fillStyle = '#C9A65E'; g.font = 'bold 30px sans-serif'; g.fillText('★', 100, 26); }
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    crestCache.set(key, t);
+  }
+  const m = new THREE.Mesh(new THREE.CircleGeometry(0.38 * S, 24), new THREE.MeshBasicMaterial({ map: crestCache.get(key), transparent: true, depthWrite: false, toneMapped: false }));
+  m.rotation.x = -Math.PI / 2;
+  m.renderOrder = 3;
+  return m;
+}
+
 /** Four L-shaped corner brackets lying on the ground (half-size `half`, arm length `arm`). */
 function cornerBrackets(half, arm, thick, color, opacity) {
   const g = new THREE.Group();
@@ -252,6 +275,7 @@ export class BoardView {
       const w = this.toWorld(pos[0], pos[1]);
       mk.position.set(w.x, (p.movementMode === 'air' ? 0 : bandY(p.band ?? 1)) + 0.04, w.z);
       mk.visible = p.alive && !p.retired;
+      if (mk.userData.crest) mk.userData.crest.visible = !p.mountLost;
       // decisive terrain facts in words: hilltop, open pit, roofed tunnel or flying
       const st = standingOf(state, this.ctx, p);
       if (mk.userData.standing !== st.label) {
@@ -307,7 +331,15 @@ export class BoardView {
     const empty = new THREE.Mesh(new THREE.RingGeometry(0.3 * S, 0.42 * S, 4, 1, Math.PI / 4), new THREE.MeshBasicMaterial({ color: 0xe8dcc0, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide }));
     empty.rotation.x = -Math.PI / 2;
     g.add(arrow, empty);
-    g.userData = { partyId: p.id, empty };
+    // the Mount crest: its movement glyph on a round plaque in the strip at the formation's left
+    // (clear of the facing arrow, the rear row and the edge labels; Pawns carry none)
+    if (p.mount) {
+      const crest = mountCrest(p.mount, OWNER_HEX[p.owner], p.commander);
+      crest.position.set(-1.98 * S, 0.012, 0);
+      g.add(crest);
+      g.userData.crest = crest;
+    }
+    g.userData = { ...g.userData, partyId: p.id, empty };
     g.renderOrder = 2;
     return g;
   }
