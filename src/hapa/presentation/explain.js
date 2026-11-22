@@ -1,0 +1,77 @@
+/**
+ * Plain-language explanations of rule events (Master Requirements v3 Chapter 12: "This arrow deals
+ * 1 Physical damage. Front Defense does not cover Above. Damage received: 1."). Text is built from
+ * event fields; the rules decide, the words only describe.
+ */
+const U = 1e6;
+const pts = (u) => { const v = u / U; return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); };
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+export const fmtMana = (m) => Object.entries(m ?? {}).filter(([, n]) => n).map(([c, n]) => `${n} ${cap(c)}`).join(' + ') || 'no Mana';
+
+const ROLE = { swordsman: 'Swordsman', pikeman: 'Pikeman', archer: 'Archer', mage: 'Mage', priest: 'Priest', center: 'center' };
+const ATTACK = { sword: 'sword', pike: 'pike', bow: 'arrow', bolt: 'magic bolt', smite: 'smite', blade: 'blade' };
+
+/** Name a member for players: "A's Archer (C3 party, slot 7)". */
+export function memberName(state, id) {
+  const m = state.members[id];
+  if (!m) return id;
+  const p = state.parties[m.party] ?? state.parties[m.homeParty];
+  const role = m.isCenter ? `${cap(p?.mount ?? 'center')}${m.commander ? ' (Commander)' : ''}` : ROLE[m.archetype] ?? m.archetype;
+  return `${m.owner}'s ${role} · slot ${m.slot}`;
+}
+export function partyName(state, id) {
+  const p = state.parties[id];
+  if (!p) return id;
+  const kind = p.mount ? cap(p.mount) : 'Pawn';
+  return `${p.owner}'s ${kind}${p.commander ? ' (Commander)' : ''} at R${p.region.row}C${p.region.column}`;
+}
+
+/** One hit in words. */
+export function explainHit(state, h) {
+  const src = h.kind === 'card' ? `Card ${h.cardId}` : memberName(state, h.source);
+  const what = h.kind === 'card' ? 'Card hit' : cap(ATTACK[h.attack] ?? h.attack);
+  const ratio = h.ratio && h.ratio[0] !== h.ratio[1] ? ` × ${h.ratio[0]}/${h.ratio[1]}${h.pikeTransfer ? ' (Pike transfer)' : ' (charge)'}` : '';
+  const protWords = h.protection ? `${cap(h.face)} ${cap(h.channel)} Defense ${h.protection}${(h.sources ?? []).length ? ` (${h.sources.map((s) => s.kind).join(', ')})` : ''}` : `No ${cap(h.channel)} Defense covers ${cap(h.face)}`;
+  return `${what} from ${src}: ${h.power}${ratio} ${cap(h.channel)} from the ${cap(h.face)} on ${memberName(state, h.recipient)}. ${protWords}. Damage received: ${pts(h.damage)}.`;
+}
+
+/** A short line for the event strip, or null to omit. */
+export function eventLine(state, e) {
+  switch (e.type) {
+    case 'tick_started': return `Tick ${e.tick} · ${e.period === 'prologue' ? 'Prologue' : `Round ${e.round}`} · active ${e.activeColumns.map((c) => `C${c}`).join(' & ')}`;
+    case 'card_minted': return `${e.seat} minted ${e.rank} of ${cap(e.suit)} in C${e.column}: Supply ${pts(e.supply)}, ${fmtMana(e.mana)}${e.retired ? ` (replaced ${e.retired})` : ''}`;
+    case 'mint_skipped': return null;
+    case 'mana_expired': return `${e.seat}'s unspent ${fmtMana(e.mana)} expired at the Tick boundary`;
+    case 'supply_loaded': return `${e.seat} loaded ${pts(e.units)} Supply into ${partyName(state, e.partyId)} (now ${pts(e.total)})`;
+    case 'card_burned': return `${e.seat} burned ${e.cardId} for ${fmtMana(e.mana)}`;
+    case 'destination_set': return `${partyName(state, e.partyId)} → R${e.target.row}C${e.target.column} (${e.cost} Supply${e.turn ? `, turns ${e.turn} first` : ''})`;
+    case 'parties_merged': return `${partyName(state, e.partyId)} merged with ${e.retired}: ${e.members.length} members, Supply ${pts(e.supply)}`;
+    case 'destination_reached': return `${partyName(state, e.partyId)} arrived`;
+    case 'travel_paused': return `${partyName(state, e.partyId)} paused: ${e.reason}`;
+    case 'contact': return `Contact at quantum ${e.quantum}: ${partyName(state, e.a)} meets ${partyName(state, e.b)}${e.mutual ? ' (mutual)' : ` — attacker ${e.attacker?.split('.').slice(0, 1)}`}`;
+    case 'exchange': {
+      const dmg = e.hits.reduce((a, h) => a + h.damage, 0);
+      return `Exchange (${e.cause.replace('_', ' ')}): ${e.hits.length} hits, ${pts(dmg)} damage — inspect for each hit`;
+    }
+    case 'member_died': return `${memberName(state, e.memberId)} fell (${e.reason.replace('_', ' ')})`;
+    case 'pool_damaged': return `${partyName(state, e.partyId)} pool −${pts(e.damage)} → ${pts(e.hp)}/${pts(e.max)}`;
+    case 'maintenance_removed': return `Maintenance: pool supports ${e.allowedRetainers} retainers; removed ${e.removed.length}`;
+    case 'engagement_ended': return `Engagement ${e.engagementId} ended`;
+    case 'ability_announced': return `${e.seat} announced ${e.title}`;
+    case 'response_announced': return `${e.seat} responded with ${e.title}`;
+    case 'passed': return `${e.seat} passed`;
+    case 'counter_applied': return `${e.countered} was countered`;
+    case 'ability_countered': return `${e.title} was countered (costs stay spent)`;
+    case 'card_damage': return explainHit(state, e);
+    case 'ability_resolved': return `${e.title} resolved`;
+    case 'ability_fizzled': return `Ability fizzled: ${e.reason}`;
+    case 'enchantment_placed': return `${e.seat} placed a row Enchantment on R${e.row}`;
+    case 'formation_changed': return `${partyName(state, e.partyId)} now faces ${e.facing}`;
+    case 'turn_failed': case 'formation_change_failed': return `${partyName(state, e.partyId)} could not turn: ${e.reason}`;
+    case 'command_rejected': return `${e.seat}'s ${e.command.type.replace('_', ' ')} rejected: ${e.reason}`;
+    case 'retreated': return `${partyName(state, e.partyId)} retreated, losing ${e.lost.length} touching members`;
+    case 'match_ended': return e.result === 'draw' ? 'The match is a draw' : `${e.winner} wins — ${e.reasons.map((r) => `${r.seat}: ${r.reason.replace('_', ' ')}`).join('; ')}`;
+    case 'conceded': return `${e.seat} conceded`;
+    default: return null;
+  }
+}

@@ -354,8 +354,9 @@ export function simulateMovement(state, ctx, events, onContact) {
     }
     if (contacts.length) {
       const stop = onContact(contacts, q);
+      ctx.trace?.(state, q, events);
       if (stop) break;
-    }
+    } else ctx.trace?.(state, q, events);
     // a blocked mover facing a friendly obstruction simply waits this quantum
   }
   for (const [partyId, s] of Object.entries(spentThisTick)) emit(state, events, 'supply_spent', { partyId, units: s.units, portions: s.portions, remaining: supplyOf(state.parties[partyId]) });
