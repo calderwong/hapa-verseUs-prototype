@@ -97,9 +97,13 @@ export class VersusApp {
     }
     this.raycaster = new THREE.Raycaster();
     const canvas = this.engine.renderer.domElement;
-    canvas.addEventListener('pointerdown', (e) => this._onPointer(e));
-    canvas.addEventListener('pointermove', (e) => this._onHover(e));
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    // a click acts on release, and only if the gesture was not a camera drag (pan / orbit)
+    this.el.world.addEventListener('pointerup', (e) => {
+      if (e.target.closest?.('button, .layer-rail, .cam-pad') || this.cam?.wasDrag()) return;
+      this._onPointer(e);
+    });
+    canvas.addEventListener('pointermove', (e) => { if (!this.cam?.dragging) this._onHover(e); });
+    this.el.world.addEventListener('contextmenu', (e) => e.preventDefault());
     this.engine.addSystem({ name: 'versus', update: (dt) => this._frame(dt) });
     this.engine.start();
   }
@@ -132,7 +136,7 @@ export class VersusApp {
           h('button', { onclick: () => this.startMatch({ fixture: id, seats: { A: 'human', B: 'human' } }) }, f.title),
           h('span', { class: 'dim small' }, f.description)))),
       h('details', {}, h('summary', {}, 'Controls'), h('div', { class: 'keys' },
-        ...[['Left click', 'select a party, member, territory or card'], ['Right click', 'set the selected party\'s one destination'], ['1–9', 'select your hand slot (home column order)'], ['U / B / C', 'Supply, Burn or Ability with the selected card'], ['M', 'show legal destinations of the selected party'], ['G', 'formation facing tools'], ['P', 'plan comparison'], ['Ctrl/⌘ + Enter', 'Ready (freeze your plan for this pair)'], ['Esc', 'cancel the current tool'], ['Q / E', 'rotate the camera 45°'], ['Z / X', 'tilt'], ['W A S D', 'pan'], ['Wheel', 'zoom'], ['V', 'tactical view'], ['Home', 'home view'], ['F', 'focus the selection'], ['Space', 'pause playback']].map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v)))),
+        ...[['Left click', 'select a party, member, territory or card'], ['Right click', 'set the selected party\'s one destination'], ['1–9', 'select your hand slot (home column order)'], ['U / B / C', 'Supply, Burn or Ability with the selected card'], ['M', 'show legal destinations of the selected party'], ['G', 'formation facing tools'], ['P', 'plan comparison'], ['Ctrl/⌘ + Enter', 'Ready (freeze your plan for this pair)'], ['Esc', 'cancel the current tool'], ['Left-drag', 'pan the board'], ['Right-drag', 'orbit and tilt'], ['Wheel / pinch', 'zoom toward the cursor'], ['Shift + wheel', 'tilt'], ['W A S D / arrows', 'pan'], ['Q / E', 'rotate the camera 45°'], ['Z / X', 'tilt'], ['V', 'tactical view'], ['Home', 'home view'], ['F', 'focus the selection'], ['Space', 'pause playback']].map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v)))),
     ));
     this.el.overlay.hidden = false;
   }
@@ -167,8 +171,11 @@ export class VersusApp {
     this.scenery = null;
     const v = this.view, Sx = 1.5;
     buildScenery(v.root, { x0: -6 * Sx, x1: (v.w + 6) * Sx, z0: -(v.h + 12) * Sx, z1: 12 * Sx }).then((sc) => { if (this.view === v) this.scenery = sc; }).catch((err) => console.warn('[versus] scenery unavailable', err));
+    this.cam?.dispose();
     this.cam = new BoardCamera(this.engine.camera, this.el.world, { center: this.view.center, size: this.view.size });
+    this.cam.groundAt = (cx, cy) => this._groundAt(cx, cy);
     this.cam.setHome(this.viewSeat);
+    this._renderCamPad();
     this.selected = null;
     this.tool = null;
     this.lastEvents = [];
@@ -388,6 +395,43 @@ export class VersusApp {
     const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.engine.camera);
     return this.view.pick(this.raycaster, this.state);
+  }
+
+  /** The ground point (y = 0) under a screen position, for zooming toward the cursor. */
+  _groundAt(cx, cy) {
+    const rect = this.engine.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((cx - rect.left) / rect.width) * 2 - 1, -((cy - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.engine.camera);
+    const hit = new THREE.Vector3();
+    return this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit) ? hit : null;
+  }
+
+  /** On-screen camera pad: hold to pan, tilt or zoom; click to turn 45°, go home or toggle tactical. */
+  _renderCamPad() {
+    const cam = this.cam;
+    const hold = (fn) => ({
+      onpointerdown: (e) => { e.preventDefault(); e.stopPropagation(); cam.held = fn; },
+      onpointerup: () => { cam.held = null; }, onpointerleave: () => { cam.held = null; }, onpointercancel: () => { cam.held = null; },
+    });
+    const b = (label, title, attrs) => h('button', { class: 'cam-btn', title, 'aria-label': title, ...attrs }, label);
+    const pad = h('div', { class: 'cam-pad', role: 'toolbar', 'aria-label': 'Camera' },
+      h('div', { class: 'cam-grid' },
+        b('⟲', 'Turn left 45° (Q)', { onclick: () => cam.rotate(45) }),
+        b('▲', 'Pan forward (W / ↑ / left-drag)', hold((dt) => cam.pan(0, 620 * dt))),
+        b('⟳', 'Turn right 45° (E)', { onclick: () => cam.rotate(-45) }),
+        b('◀', 'Pan left (A / ←)', hold((dt) => cam.pan(620 * dt, 0))),
+        b('⌂', 'Home view (Home)', { onclick: () => cam.home() }),
+        b('▶', 'Pan right (D / →)', hold((dt) => cam.pan(-620 * dt, 0))),
+        b('⤒', 'Tilt up — look more from above (Z)', hold((dt) => cam.tilt(40 * dt))),
+        b('▼', 'Pan back (S / ↓)', hold((dt) => cam.pan(0, -620 * dt))),
+        b('⤓', 'Tilt down — look more from the side (X)', hold((dt) => cam.tilt(-40 * dt)))),
+      h('div', { class: 'cam-col' },
+        b('+', 'Zoom in (wheel / pinch)', hold((dt) => cam.zoom(Math.exp(-1.6 * dt)))),
+        b('−', 'Zoom out (wheel / pinch)', hold((dt) => cam.zoom(Math.exp(1.6 * dt)))),
+        b('V', 'Tactical overhead view (V)', { onclick: () => cam.toggleTactical() })));
+    this.el.camPad?.remove();
+    this.el.camPad = pad;
+    this.el.world.append(pad);
   }
 
   _onHover(e) {

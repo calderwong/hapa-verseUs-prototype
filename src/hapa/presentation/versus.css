@@ -268,3 +268,14 @@ button.danger { background: #4A2A2E; border-color: var(--bad); }
 .result-stats td, .result-stats th { padding: 4px 14px; border-bottom: 1px solid rgba(245,240,227,0.08); }
 .result-stats td:first-child { text-align: left; color: var(--dim); }
 .row.center { justify-content: center; }
+/* camera pad (bottom-left of the world view) and drag cursors */
+.cam-pad { position: absolute; left: 8px; bottom: 8px; z-index: 5; display: flex; gap: 4px; align-items: flex-end; opacity: 0.88; }
+.cam-pad:hover { opacity: 1; }
+.cam-grid { display: grid; grid-template-columns: repeat(3, 28px); gap: 3px; }
+.cam-col { display: flex; flex-direction: column; gap: 3px; }
+.cam-btn { width: 28px; height: 28px; padding: 0; font-size: 14px; line-height: 1; background: rgba(23,33,45,0.88); border: 1px solid #4A5E76; color: var(--ivory); touch-action: none; user-select: none; }
+.cam-btn:active { background: var(--brass); color: var(--slate); }
+#world { cursor: grab; }
+#world.cam-panning { cursor: grabbing; }
+#world.cam-orbiting { cursor: move; }
+#world button, #world .layer-rail { cursor: pointer; }

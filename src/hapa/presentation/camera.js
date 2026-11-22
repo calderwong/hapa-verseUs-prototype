@@ -1,8 +1,9 @@
 /**
  * Board camera (Design Companion v1, Chapters 4 and 10): full orbit around a stable pivot, a
  * dependable home view per seat, a near-overhead tactical view (V), 45° yaw steps (Q/E), 15° pitch
- * steps (Z/X), WASD pan, wheel zoom, middle-drag orbit and Shift+middle-drag pan. Viewing never
- * changes territory identities, formation facing or any rule.
+ * steps (Z/X), WASD / arrow-key pan, left-drag pan, right-drag (or middle-drag) orbit and tilt,
+ * wheel or pinch zoom toward the cursor. A drag never becomes a click (the app asks
+ * `wasDrag()`). Viewing never changes territory identities, formation facing or any rule.
  */
 import * as THREE from 'three';
 import { globalUniforms } from '../../../vendor/lumina/src/engine/render/GlobalUniforms.js';
@@ -67,29 +68,49 @@ export class BoardCamera {
 
   rotate(stepDeg) { this.goal.yaw += stepDeg * DEG; }
   tilt(stepDeg) { this.goal.pitch = Math.min(86 * DEG, Math.max(18 * DEG, this.goal.pitch + stepDeg * DEG)); }
-  zoom(factor) { this.goal.distance = Math.min(this.board.size * 2.6, Math.max(this.board.size * 0.18, this.goal.distance * factor)); }
+  /** Zoom by `factor`; with a ground point, keep that point under the cursor (zoom toward it). */
+  zoom(factor, toward = null) {
+    const before = this.goal.distance;
+    this.goal.distance = Math.min(this.board.size * 2.6, Math.max(this.board.size * 0.1, before * factor));
+    const k = this.goal.distance / before;
+    if (toward && k !== 1) {
+      this.goal.focus.x = toward.x + (this.goal.focus.x - toward.x) * k;
+      this.goal.focus.z = toward.z + (this.goal.focus.z - toward.z) * k;
+      this._clampFocus();
+    }
+  }
+  _clampFocus() {
+    const h = this.board.size * 0.8;
+    this.goal.focus.x = Math.min(this.board.center.x + h, Math.max(this.board.center.x - h, this.goal.focus.x));
+    this.goal.focus.z = Math.min(this.board.center.z + h, Math.max(this.board.center.z - h, this.goal.focus.z));
+  }
+  /** Orbit by screen drag pixels: horizontal turns the view, vertical tilts it. */
+  orbit(dx, dy) { this.goal.yaw -= dx * 0.006; this.goal.pitch = Math.min(86 * DEG, Math.max(18 * DEG, this.goal.pitch + dy * 0.004)); }
+  /** Did the last pointer gesture move far enough to count as a camera drag (not a click)? */
+  wasDrag() { return this._moved > 5; }
   focusOn(v) { this.goal.focus.set(v.x, 0, v.z); this.goal.distance = Math.min(this.goal.distance, this.board.size * 0.55); }
 
   /** Pan in screen directions (world units scaled by distance). */
   pan(dx, dy) {
-    const s = this.distance * 0.0016;
+    // scale by the view: a pixel of drag moves about one pixel of ground at the focus
+    const viewH = this.el.clientHeight || 600;
+    const s = (2 * this.distance * Math.tan((this.camera.fov * DEG) / 2)) / viewH;
     const right = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
     const fwd = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
-    this.goal.focus.addScaledVector(right, -dx * s).addScaledVector(fwd, dy * s);
-    const h = this.board.size * 0.7;
-    this.goal.focus.x = Math.min(this.board.center.x + h, Math.max(this.board.center.x - h, this.goal.focus.x));
-    this.goal.focus.z = Math.min(this.board.center.z + h, Math.max(this.board.center.z - h, this.goal.focus.z));
+    this.goal.focus.addScaledVector(right, -dx * s).addScaledVector(fwd, (dy * s) / Math.max(0.35, Math.sin(this.pitch)));
+    this._clampFocus();
   }
 
   /** Compass bearing of the view (degrees, 0 = looking from A's home edge toward B). */
   get bearing() { return ((this.yaw / DEG) % 360 + 360) % 360; }
 
   update(dt, keys) {
-    const panSpeed = 520 * dt;
-    if (keys.has('KeyW')) this.pan(0, panSpeed);
-    if (keys.has('KeyS')) this.pan(0, -panSpeed);
-    if (keys.has('KeyA')) this.pan(-panSpeed, 0);
-    if (keys.has('KeyD')) this.pan(panSpeed, 0);
+    const panSpeed = 620 * dt;
+    if (keys.has('KeyW') || keys.has('ArrowUp')) this.pan(0, panSpeed);
+    if (keys.has('KeyS') || keys.has('ArrowDown')) this.pan(0, -panSpeed);
+    if (keys.has('KeyA') || keys.has('ArrowLeft')) this.pan(panSpeed, 0);
+    if (keys.has('KeyD') || keys.has('ArrowRight')) this.pan(-panSpeed, 0);
+    if (this.held) this.held(dt);
     this.yaw = dampAngle(this.yaw, this.goal.yaw, 9, dt);
     this.pitch = damp(this.pitch, this.goal.pitch, 9, dt);
     this.distance = damp(this.distance, this.goal.distance, 8, dt);
@@ -103,24 +124,48 @@ export class BoardCamera {
     globalUniforms.uCameraPosition?.value?.copy?.(c.position);
   }
 
+  /** Remove this camera's input listeners (a new match creates a new camera). */
+  dispose() { this._abort?.abort(); }
+
   _bind() {
+    this._abort = new AbortController();
+    const signal = this._abort.signal;
     let drag = null;
+    this._moved = 0;
+    this.dragging = false;
     this.el.addEventListener('pointerdown', (e) => {
-      if (e.button !== 1) return;
-      e.preventDefault();
-      drag = { x: e.clientX, y: e.clientY, pan: e.shiftKey };
-      this.el.setPointerCapture(e.pointerId);
-    });
+      if (e.target.closest?.('button, .layer-rail, .cam-pad')) return; // on-screen controls are not drags
+      if (e.button === 1) e.preventDefault();
+      // left = pan (Alt: orbit); right or middle = orbit and tilt (Shift+middle: pan)
+      const mode = e.button === 0 ? (e.altKey ? 'orbit' : 'pan') : e.button === 2 ? 'orbit' : e.shiftKey ? 'pan' : 'orbit';
+      drag = { x: e.clientX, y: e.clientY, mode, id: e.pointerId, captured: false };
+      this._moved = 0;
+    }, { signal });
     this.el.addEventListener('pointermove', (e) => {
-      if (!drag) return;
+      if (!drag || e.pointerId !== drag.id) return;
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
       drag.x = e.clientX; drag.y = e.clientY;
-      if (drag.pan) this.pan(dx, -dy);
-      else { this.goal.yaw -= dx * 0.006; this.goal.pitch = Math.min(86 * DEG, Math.max(18 * DEG, this.goal.pitch + dy * 0.004)); }
-    });
-    const end = (e) => { if (drag) { drag = null; try { this.el.releasePointerCapture(e.pointerId); } catch {} } };
-    this.el.addEventListener('pointerup', end);
-    this.el.addEventListener('pointercancel', end);
-    this.el.addEventListener('wheel', (e) => { e.preventDefault(); this.zoom(Math.exp(e.deltaY * 0.0012)); }, { passive: false });
+      this._moved += Math.abs(dx) + Math.abs(dy);
+      if (this._moved <= 5) return; // still a click
+      if (!drag.captured) { try { this.el.setPointerCapture(e.pointerId); } catch {} drag.captured = true; this.dragging = true; this.el.classList.add(drag.mode === 'pan' ? 'cam-panning' : 'cam-orbiting'); }
+      if (drag.mode === 'pan') this.pan(dx, dy);
+      else this.orbit(dx, dy);
+    }, { signal });
+    const end = (e) => {
+      if (!drag) return;
+      if (drag.captured) { try { this.el.releasePointerCapture(e.pointerId); } catch {} }
+      drag = null;
+      this.el.classList.remove('cam-panning', 'cam-orbiting');
+      setTimeout(() => { this.dragging = false; }, 0); // let the app's pointerup see the drag first
+    };
+    this.el.addEventListener('pointerup', end, { signal });
+    this.el.addEventListener('pointercancel', end, { signal });
+    this.el.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.shiftKey) { this.tilt(-Math.sign(e.deltaY) * 5); return; }
+      // pinch (ctrl+wheel on trackpads) is finer; zoom toward the ground under the cursor
+      const f = Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0015));
+      this.zoom(f, this.groundAt?.(e.clientX, e.clientY) ?? null);
+    }, { passive: false, signal });
   }
 }

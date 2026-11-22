@@ -32,9 +32,12 @@ window, then movement and combat play back → the next Tick mints.
 | --- | --- |
 | Left click | select a party, a territory, a hand card or an event (Alt+click a member) |
 | Right click | the selected party's one destination (replaces the previous one) |
+| Left-drag · right-drag | pan the board · orbit and tilt (a drag never counts as a click) |
+| Wheel / pinch · Shift+wheel | zoom toward the cursor · tilt |
+| Camera pad (bottom-left of the board) | hold to pan, tilt or zoom; turn 45°, home view, tactical view |
 | 1–9 · U · B · C | select a hand slot (home column order) · Supply · Burn · ability |
 | Ctrl/⌘ + Enter | Ready |
-| Q/E · Z/X · WASD · wheel · middle-drag | camera yaw 45° · pitch · pan · zoom · orbit |
+| Q/E · Z/X · WASD or arrows | camera yaw 45° · tilt · pan |
 | V · Home · F · Space · Esc | tactical view · home view · focus · pause playback · cancel |
 
 ## Commands
