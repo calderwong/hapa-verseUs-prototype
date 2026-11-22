@@ -17,7 +17,7 @@ export function memberName(state, id) {
   if (!m) return id;
   const p = state.parties[m.party] ?? state.parties[m.homeParty];
   const role = m.isCenter ? `${cap(p?.mount ?? 'center')}${m.commander ? ' (Commander)' : ''}` : ROLE[m.archetype] ?? m.archetype;
-  return `${m.owner}'s ${role} · slot ${m.slot}`;
+  return `${m.owner}'s ${role} (R${p?.region.row}C${p?.region.column} slot ${m.slot})`;
 }
 export function partyName(state, id) {
   const p = state.parties[id];

@@ -515,7 +515,7 @@ export class VersusApp {
     this.el.overlay.replaceChildren(h('div', { class: 'card-sheet' },
       h('h2', {}, o.result === 'draw' ? 'Draw' : o.result === 'win' ? `${o.winner} wins` : 'Unfinished'),
       h('p', {}, ...(o.reasons ?? []).map((r) => h('div', {}, `${r.seat}: ${r.reason.replace('_', ' ')}${r.partyId ? ` by ${partyName(this.state, r.partyId)}` : ''}`))),
-      h('p', {}, `Tick ${this.state.tick}. Replay verified by recomputation in the headless tools (npm run replay).`),
+      h('p', {}, `Tick ${this.state.tick}. Download the replay to verify it by recomputation (npm run replay -- file.json).`),
       h('div', { class: 'row' }, h('button', { onclick: () => (this.el.overlay.hidden = true) }, 'Inspect the board'), h('button', { onclick: () => this._downloadReplay() }, 'Download replay'), h('button', { class: 'primary', onclick: () => this.showSetup() }, 'New match'))));
     this.el.overlay.hidden = false;
   }
