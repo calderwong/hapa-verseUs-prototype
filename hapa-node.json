@@ -35,7 +35,7 @@
         "branch": "hapa",
         "base": "85efa0456812ca25e5279e9735bb11ec5a1d6979",
         "checkout": "~/Documents/Codex/2026-06-29/can/lumina",
-        "remote": "local; not pushed",
+        "remote": "https://github.com/calderwong/lumina-hapa (private; branch hapa)",
         "changes": "HAPA_FORK.md"
       }
     }

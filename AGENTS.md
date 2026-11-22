@@ -30,7 +30,8 @@ sessions, `HANDOFF.md` files and the boards.
 ## Ownership boundaries
 
 - **Luminati** (`vendor/lumina`): upstream MIT code vendored from the **Hapa fork** (branch `hapa`
-  of `~/Documents/Codex/2026-06-29/can/lumina`; base `85efa04`, the revision the requirements pin).
+  of `~/Documents/Codex/2026-06-29/can/lumina`, published privately at
+  https://github.com/calderwong/lumina-hapa; base `85efa04`, the revision the requirements pin).
   Never edit `vendor/lumina` in place. Engine changes go on the fork's `hapa` branch with
   Luminati's checks and a doc under its `docs/hapa/`; then move the pin here. `src/engine` must
   never import Hapa rules. Nothing goes upstream without Calder's word.

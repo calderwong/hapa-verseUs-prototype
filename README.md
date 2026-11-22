@@ -14,7 +14,7 @@ Built from the Hapa Versus Master Requirements v3, Design Companion v1 and Refer
 
 ```bash
 npm install
-git submodule update --init      # vendor/lumina: the Hapa fork of Luminati (read-only)
+git submodule update --init      # vendor/lumina: the Hapa fork of Luminati (private: github.com/calderwong/lumina-hapa, branch hapa)
 npm run dev                      # http://127.0.0.1:5199/versus.html
 ```
 
