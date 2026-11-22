@@ -1,0 +1,879 @@
+{
+  "label": "after",
+  "base": "http://127.0.0.1:5199",
+  "viewport": {
+    "width": 1600,
+    "height": 1000,
+    "dpr": 1
+  },
+  "chrome": "Chrome/157.0.8103.80",
+  "journeys": {
+    "ux01": {
+      "steps": [
+        {
+          "name": "opening",
+          "tick": 1,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 0,
+            "B": 0
+          },
+          "ready": {
+            "A": null,
+            "B": null
+          },
+          "plans": {
+            "A": [],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Ready ▶ Continue with existing orders · Tick 1 · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r0 editing",
+            "B plan r0 editing"
+          ]
+        },
+        {
+          "name": "A planned a Burn (C1)",
+          "tick": 1,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 1,
+            "B": 0
+          },
+          "ready": {
+            "A": null,
+            "B": null
+          },
+          "plans": {
+            "A": [
+              "burn:A.C1.T1.0"
+            ],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Ready ▶ Freeze my plan (1 order) · Tick 1 · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r1 editing",
+            "B plan r0 editing"
+          ]
+        },
+        {
+          "name": "A pressed Ready",
+          "tick": 1,
+          "phase": "planning",
+          "viewSeat": "B",
+          "rev": {
+            "A": 1,
+            "B": 0
+          },
+          "ready": {
+            "A": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": []
+              }
+            },
+            "B": null
+          },
+          "plans": {
+            "A": [
+              "burn:A.C1.T1.0"
+            ],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Ready ▶ Continue with existing orders · Tick 1 · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r1 Ready · acks A r1·B r0",
+            "B plan r0 editing"
+          ]
+        },
+        {
+          "name": "B planned a Burn (C1)",
+          "tick": 1,
+          "phase": "planning",
+          "viewSeat": "B",
+          "rev": {
+            "A": 1,
+            "B": 1
+          },
+          "ready": {
+            "A": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": []
+              }
+            },
+            "B": null
+          },
+          "plans": {
+            "A": [
+              "burn:A.C1.T1.0"
+            ],
+            "B": [
+              "burn:B.C1.T1.0"
+            ]
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Ready ▶ Freeze my plan (1 order) · Tick 1 · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r1 Frozen · ack stale",
+            "B plan r1 editing"
+          ]
+        },
+        {
+          "name": "B pressed Ready; the view returns to A (stale acknowledgment)",
+          "tick": 1,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 1,
+            "B": 1
+          },
+          "ready": {
+            "A": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": []
+              }
+            },
+            "B": {
+              "A": 1,
+              "B": 1,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": [
+                  "{\"cardId\":\"B.C1.T1.0\",\"type\":\"burn\"}"
+                ]
+              }
+            }
+          },
+          "plans": {
+            "A": [
+              "burn:A.C1.T1.0"
+            ],
+            "B": [
+              "burn:B.C1.T1.0"
+            ]
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Acknowledge ▶ Updated plan from B · yours stays frozen · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r1 Frozen · ack stale",
+            "B plan r1 Ready · acks A r1·B r1"
+          ]
+        },
+        {
+          "name": "A tried the × delete control on its own order",
+          "tick": 1,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 1,
+            "B": 1
+          },
+          "ready": {
+            "A": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": []
+              }
+            },
+            "B": {
+              "A": 1,
+              "B": 1,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": [
+                  "{\"cardId\":\"B.C1.T1.0\",\"type\":\"burn\"}"
+                ]
+              }
+            }
+          },
+          "plans": {
+            "A": [
+              "burn:A.C1.T1.0"
+            ],
+            "B": [
+              "burn:B.C1.T1.0"
+            ]
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Acknowledge ▶ Updated plan from B · yours stays frozen · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r1 Frozen · ack stale",
+            "B plan r1 Ready · acks A r1·B r1"
+          ]
+        },
+        {
+          "name": "A tried to add a Burn (9, B keys)",
+          "tick": 1,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 1,
+            "B": 1
+          },
+          "ready": {
+            "A": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": []
+              }
+            },
+            "B": {
+              "A": 1,
+              "B": 1,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": [
+                  "{\"cardId\":\"B.C1.T1.0\",\"type\":\"burn\"}"
+                ]
+              }
+            }
+          },
+          "plans": {
+            "A": [
+              "burn:A.C1.T1.0"
+            ],
+            "B": [
+              "burn:B.C1.T1.0"
+            ]
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Acknowledge ▶ Updated plan from B · yours stays frozen · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r1 Frozen · ack stale",
+            "B plan r1 Ready · acks A r1·B r1"
+          ]
+        },
+        {
+          "name": "A tried to drag a hand card onto the Mana pool (Burn)",
+          "tick": 1,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 1,
+            "B": 1
+          },
+          "ready": {
+            "A": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": []
+              }
+            },
+            "B": {
+              "A": 1,
+              "B": 1,
+              "seen": {
+                "A": [
+                  "{\"cardId\":\"A.C1.T1.0\",\"type\":\"burn\"}"
+                ],
+                "B": [
+                  "{\"cardId\":\"B.C1.T1.0\",\"type\":\"burn\"}"
+                ]
+              }
+            }
+          },
+          "plans": {
+            "A": [
+              "burn:A.C1.T1.0"
+            ],
+            "B": [
+              "burn:B.C1.T1.0"
+            ]
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Acknowledge ▶ Updated plan from B · yours stays frozen · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r1 Frozen · ack stale",
+            "B plan r1 Ready · acks A r1·B r1"
+          ]
+        },
+        {
+          "name": "A acknowledged the updated pair; the Tick resolved",
+          "tick": 2,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 0,
+            "B": 0
+          },
+          "ready": {
+            "A": null,
+            "B": null
+          },
+          "plans": {
+            "A": [],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 1,
+          "events": 14,
+          "readyBig": "Ready ▶ Continue with existing orders · Tick 2 · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r0 editing",
+            "B plan r0 editing"
+          ]
+        }
+      ],
+      "shots": [
+        "after-ux01-1-A-planned.jpg",
+        "after-ux01-2-A-stale.jpg",
+        "after-ux01-3-A-after-attempts.jpg"
+      ],
+      "deleteControlVisible": false,
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "ux02": {
+      "steps": [
+        {
+          "name": "opening (fixture response, Tick 9)",
+          "tick": 9,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 0,
+            "B": 0
+          },
+          "ready": {
+            "A": null,
+            "B": null
+          },
+          "plans": {
+            "A": [],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Ready ▶ Continue with existing orders · Tick 9 · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r0 editing",
+            "B plan r0 editing"
+          ]
+        },
+        {
+          "name": "A planned Ember Strike at B's Swordsman",
+          "tick": 9,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 1,
+            "B": 0
+          },
+          "ready": {
+            "A": null,
+            "B": null
+          },
+          "plans": {
+            "A": [
+              "play_ability:A.ember"
+            ],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Ready ▶ Freeze my plan (1 order) · Tick 9 · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r1 editing",
+            "B plan r0 editing"
+          ]
+        },
+        {
+          "name": "both Ready: the response window opens for B",
+          "tick": 9,
+          "phase": "responding",
+          "viewSeat": "B",
+          "rev": {
+            "A": 1,
+            "B": 0
+          },
+          "ready": {
+            "A": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"actorPartyId\":\"A.c\",\"burns\":[\"A.C1.T9.0\"],\"cardId\":\"A.ember\",\"target\":{\"memberId\":\"B.c.s2\"},\"type\":\"play_ability\"}"
+                ],
+                "B": []
+              }
+            },
+            "B": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"actorPartyId\":\"A.c\",\"burns\":[\"A.C1.T9.0\"],\"cardId\":\"A.ember\",\"target\":{\"memberId\":\"B.c.s2\"},\"type\":\"play_ability\"}"
+                ],
+                "B": []
+              }
+            }
+          },
+          "plans": {
+            "A": [
+              "play_ability:A.ember"
+            ],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": {
+            "seat": "B",
+            "choiceId": "C9.1"
+          },
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Response window B to respond or pass",
+          "planHead": [
+            "A plan r1 Ready · acks A r1·B r0",
+            "B plan r0 Ready · acks A r1·B r0"
+          ]
+        },
+        {
+          "name": "B pressed Ctrl+Enter and Cmd+Enter five times each during the window",
+          "tick": 9,
+          "phase": "responding",
+          "viewSeat": "B",
+          "rev": {
+            "A": 1,
+            "B": 0
+          },
+          "ready": {
+            "A": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"actorPartyId\":\"A.c\",\"burns\":[\"A.C1.T9.0\"],\"cardId\":\"A.ember\",\"target\":{\"memberId\":\"B.c.s2\"},\"type\":\"play_ability\"}"
+                ],
+                "B": []
+              }
+            },
+            "B": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"actorPartyId\":\"A.c\",\"burns\":[\"A.C1.T9.0\"],\"cardId\":\"A.ember\",\"target\":{\"memberId\":\"B.c.s2\"},\"type\":\"play_ability\"}"
+                ],
+                "B": []
+              }
+            }
+          },
+          "plans": {
+            "A": [
+              "play_ability:A.ember"
+            ],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": {
+            "seat": "B",
+            "choiceId": "C9.1"
+          },
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Response window B to respond or pass",
+          "planHead": [
+            "A plan r1 Ready · acks A r1·B r0",
+            "B plan r0 Ready · acks A r1·B r0"
+          ],
+          "tickBefore": 9
+        },
+        {
+          "name": "B passed once",
+          "tick": 9,
+          "phase": "responding",
+          "viewSeat": "A",
+          "rev": {
+            "A": 1,
+            "B": 0
+          },
+          "ready": {
+            "A": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"actorPartyId\":\"A.c\",\"burns\":[\"A.C1.T9.0\"],\"cardId\":\"A.ember\",\"target\":{\"memberId\":\"B.c.s2\"},\"type\":\"play_ability\"}"
+                ],
+                "B": []
+              }
+            },
+            "B": {
+              "A": 1,
+              "B": 0,
+              "seen": {
+                "A": [
+                  "{\"actorPartyId\":\"A.c\",\"burns\":[\"A.C1.T9.0\"],\"cardId\":\"A.ember\",\"target\":{\"memberId\":\"B.c.s2\"},\"type\":\"play_ability\"}"
+                ],
+                "B": []
+              }
+            }
+          },
+          "plans": {
+            "A": [
+              "play_ability:A.ember"
+            ],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": {
+            "seat": "A",
+            "choiceId": "C9.2"
+          },
+          "replayTicks": 0,
+          "events": 5,
+          "readyBig": "Response window A to respond or pass",
+          "planHead": [
+            "A plan r1 Ready · acks A r1·B r0",
+            "B plan r0 Ready · acks A r1·B r0"
+          ]
+        },
+        {
+          "name": "A passed once; the Spell resolves and playback finishes",
+          "tick": 10,
+          "phase": "planning",
+          "viewSeat": "A",
+          "rev": {
+            "A": 0,
+            "B": 0
+          },
+          "ready": {
+            "A": null,
+            "B": null
+          },
+          "plans": {
+            "A": [],
+            "B": []
+          },
+          "playback": false,
+          "pendingChoice": null,
+          "replayTicks": 1,
+          "events": 19,
+          "readyBig": "Ready ▶ Continue with existing orders · Tick 10 · Ctrl/⌘+Enter",
+          "planHead": [
+            "A plan r0 editing",
+            "B plan r0 editing"
+          ]
+        }
+      ],
+      "shots": [
+        "after-ux02-1-response-window.jpg",
+        "after-ux02-2-after-shortcut.jpg",
+        "after-ux02-3-resolved.jpg"
+      ],
+      "result": {
+        "emberCastEvents": 1,
+        "cardDamage": 1,
+        "plansLocked": 1,
+        "tickStarted": [
+          9,
+          10
+        ],
+        "replayTicks": [
+          9
+        ],
+        "poolA": {},
+        "tick": 10
+      },
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "ux03": {
+      "cases": [
+        {
+          "name": "home view · flyer body (A.fly, +3)",
+          "clickedOn": "A.fly.s5",
+          "at": {
+            "x": 740,
+            "y": 387.2909746792127
+          },
+          "selected": {
+            "kind": "party",
+            "id": "A.fly",
+            "band": 3,
+            "mode": "air",
+            "layer": null,
+            "selectRingY": 1.85,
+            "membersY": 1.83,
+            "candidates": null
+          },
+          "camera": {
+            "yawDeg": 0,
+            "pitchDeg": 56,
+            "distance": 93
+          }
+        },
+        {
+          "name": "home view · hilltop Archer (A.hill, +2)",
+          "clickedOn": "A.hill.s8",
+          "at": {
+            "x": 594.3997284445184,
+            "y": 465.65455895369814
+          },
+          "selected": {
+            "kind": "party",
+            "id": "A.hill",
+            "band": 2,
+            "mode": "ground",
+            "layer": null,
+            "selectRingY": 0.95,
+            "membersY": 0.93,
+            "candidates": null
+          },
+          "camera": {
+            "yawDeg": 0,
+            "pitchDeg": 56,
+            "distance": 93
+          }
+        },
+        {
+          "name": "home view · open-ground Knight (B.walk, +1)",
+          "clickedOn": "B.walk.s5",
+          "at": {
+            "x": 601.843483962461,
+            "y": 400.1875886534888
+          },
+          "selected": {
+            "kind": "party",
+            "id": "B.walk",
+            "band": 1,
+            "mode": "ground",
+            "layer": null,
+            "selectRingY": 0.05,
+            "membersY": 0.03,
+            "candidates": null
+          },
+          "camera": {
+            "yawDeg": 0,
+            "pitchDeg": 56,
+            "distance": 93
+          }
+        },
+        {
+          "name": "home view · ground surface of R6C5 (flyer marker + tunnel outline)",
+          "clickedOn": "territory R6C5 surface",
+          "at": {
+            "x": 740,
+            "y": 403.559687810663
+          },
+          "selected": {
+            "candidates": [
+              "A's Queen at R6C5 · band +3 · flying · idle",
+              "B's Castle at R6C5 · band -2 · roofed tunnel · idle · under a roof",
+              "Cancel (Esc)"
+            ]
+          }
+        },
+        {
+          "name": "keyboard: the list opened focused; ArrowDown then Enter chose the second candidate",
+          "focusedAtOpen": "A's Queen at R6C5 · band +3 · flying · idle",
+          "clickedOn": "candidate 2 (keyboard)",
+          "selected": {
+            "kind": "party",
+            "id": "B.tunnel",
+            "band": -2,
+            "mode": "ground",
+            "layer": -2,
+            "selectRingY": -1.75,
+            "membersY": -1.77,
+            "candidates": null
+          }
+        },
+        {
+          "name": "rotated 90° · flyer body",
+          "clickedOn": "A.fly.s5",
+          "at": {
+            "x": 827.9146086895029,
+            "y": 456.4298955097535
+          },
+          "selected": {
+            "kind": "party",
+            "id": "A.fly",
+            "band": 3,
+            "mode": "air",
+            "layer": null,
+            "selectRingY": 1.85,
+            "membersY": 1.83,
+            "candidates": null
+          },
+          "camera": {
+            "yawDeg": 90,
+            "pitchDeg": 56,
+            "distance": 93
+          }
+        },
+        {
+          "name": "rotated 90° · hilltop Archer",
+          "clickedOn": "A.hill.s8",
+          "at": {
+            "x": 736.613920097991,
+            "y": 351.00529213855737
+          },
+          "selected": {
+            "kind": "party",
+            "id": "A.hill",
+            "band": 2,
+            "mode": "ground",
+            "layer": null,
+            "selectRingY": 0.95,
+            "membersY": 0.93,
+            "candidates": null
+          },
+          "camera": {
+            "yawDeg": 90,
+            "pitchDeg": 56,
+            "distance": 93
+          }
+        },
+        {
+          "name": "tactical · flyer over tunnel (same territory)",
+          "clickedOn": "A.fly.s5",
+          "at": {
+            "x": 740.0000005387195,
+            "y": 368.44553982393165
+          },
+          "selected": {
+            "kind": "party",
+            "id": "A.fly",
+            "band": 3,
+            "mode": "air",
+            "layer": null,
+            "selectRingY": 1.85,
+            "membersY": 1.83,
+            "candidates": null
+          },
+          "camera": {
+            "yawDeg": 0,
+            "pitchDeg": 84,
+            "distance": 81
+          }
+        },
+        {
+          "name": "layer +3 only · click the tunnel party's position",
+          "clickedOn": "B.tunnel.s5",
+          "at": {
+            "x": 740,
+            "y": 415.75710180874984
+          },
+          "selected": {
+            "kind": "party",
+            "id": "A.fly",
+            "band": 3,
+            "mode": "air",
+            "layer": 3,
+            "selectRingY": 1.85,
+            "membersY": 1.83,
+            "candidates": null
+          },
+          "camera": {
+            "yawDeg": 0,
+            "pitchDeg": 56,
+            "distance": 93
+          }
+        },
+        {
+          "name": "layer −2 only · tunnel Pikeman",
+          "clickedOn": "B.tunnel.s2",
+          "at": {
+            "x": 740.0000000000001,
+            "y": 426.4014724873613
+          },
+          "selected": {
+            "kind": "party",
+            "id": "B.tunnel",
+            "band": -2,
+            "mode": "ground",
+            "layer": -2,
+            "selectRingY": -1.75,
+            "membersY": -1.77,
+            "candidates": null
+          },
+          "camera": {
+            "yawDeg": 0,
+            "pitchDeg": 56,
+            "distance": 93
+          }
+        }
+      ],
+      "shots": [
+        "after-ux03-1-flyer-click-home.jpg",
+        "after-ux03-2-hill-click-home.jpg",
+        "after-ux03-2b-stacked-candidates.jpg",
+        "after-ux03-2c-chose-tunnel.jpg",
+        "after-ux03-3-rotated.jpg",
+        "after-ux03-4-tactical-stacked.jpg",
+        "after-ux03-5-layer-minus2.jpg"
+      ],
+      "errors": []
+    }
+  }
+}

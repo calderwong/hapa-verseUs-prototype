@@ -7,7 +7,7 @@ This folder is the shared handoff between CJ, the reviewing assistant, and the l
 - **Current review:** [UI and design review — 22 November 2026](2026-11-22-ui-design-review.md), findings **UX-01 through UX-14**.
 - **Original visual evidence:** [prototype screenshot](evidence/2026-11-22/prototype-ui.png).
 - **Local agent response:** use the [implementation report template](IMPLEMENTATION_REPORT_TEMPLATE.md).
-- **Current response:** none published with this initial handoff. The review identifies observations, source findings, and proposals; it does not claim that fixes or browser checks have been completed.
+- **Current response:** [Implementation response 01 — 22 November 2026](2026-11-22-ui-design-response-01.md): UX-01, UX-02 and UX-03 reproduced and implemented (commit `d61d56d`), one UX-14 keyboard blocker fixed, every other finding dispositioned. Before/after evidence is in [evidence/2026-11-22/response-01](evidence/2026-11-22/response-01/). CJ acceptance: not yet recorded.
 
 The review examined prototype commit `af6977d295dd0970a744bb65281f7ec4ea8c1457` and its Lumina submodule at `ba838cca09ba43afceda0452b63d28df4cbf7f72`. Compare those revisions with the current work before acting. Later local or pushed changes may already address a finding.
 
@@ -64,4 +64,5 @@ Update the current-review/current-response links above as work advances. Maintai
 | Date | Record | Baseline or scope |
 | --- | --- | --- |
 | 2026-11-22 | [Initial UI/design review](2026-11-22-ui-design-review.md) | Screenshot plus static review of `af6977d`; engine `ba838cc` |
+| 2026-11-22 | [Implementation response 01](2026-11-22-ui-design-response-01.md) | UX-01/02/03 implemented in `d61d56d` (Ready freeze, single resolution, height-aware picking); scripted Chrome journeys before/after; engine `ba838cc` unchanged |
 
