@@ -144,3 +144,21 @@ kbd { font: 11px 'Pixelify Sans', monospace; border: 1px solid #5a6380; border-b
 .tile > .tl, .tile > .rank, .tile > .sup, .tile > .mana, .tile > .abil, .tile > .dim { position: relative; }
 .artcredit { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; }
 .artcredit img { width: 64px; height: 96px; object-fit: cover; border: 1px solid #5a5040; }
+/* Cards & decks editor */
+.card-sheet.editor { width: min(980px, 94vw); max-height: 88vh; overflow: auto; }
+.editor .tabs { display: flex; gap: 4px; margin: 6px 0 10px; }
+.editor .tabs button.on { border-color: var(--gold); color: var(--gold); }
+.ed-grid { display: grid; grid-template-columns: 260px 1fr; gap: 12px; }
+.ed-list { display: flex; flex-direction: column; gap: 3px; max-height: 60vh; overflow: auto; }
+.ed-item { text-align: left; }
+.ed-item.on { border-color: var(--gold); }
+.ed-item small { color: var(--dim); }
+.ed-fields { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 8px 0; }
+.ed-fields input[type=number] { width: 48px; }
+.ed-cost { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; width: 100%; }
+.ed-cost .chip input { width: 36px; margin-left: 3px; }
+.ed-wording { margin: 4px 0 8px; padding: 8px 10px; border-left: 3px solid var(--gold); background: rgba(255,255,255,0.04); }
+.ed-valid.ok { color: var(--ok); }
+.ed-valid.bad { color: #ff8a7a; }
+.ed-deck table { border-collapse: collapse; }
+.ed-deck td, .ed-deck th { padding: 3px 8px; text-align: left; }

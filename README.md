@@ -83,7 +83,17 @@ expanded profile and its `sha256:` fingerprint. To make an experiment, add a var
 changed fields; the validator rejects unknown policies, missing definitions, negative costs and
 impossible slots.
 
-**Author a Card:** add a definition to `fixtures/hapa/content.js` using existing operations
+**Cards & decks (in the app).** The setup screen's *Cards & decks…* opens the editor: start from a
+known Card, edit its supported fields (damage Cards: hits, power, channel, incoming face, colored
+cost, counterable), read the generated wording, validate (executable meaning, not balance) and save
+a derivative or a new revision with creator lineage. *Deck bindings* chooses the Card each local
+column mints for seat A and seat B in the next match. *Exchange* exports your Cards as one bundle
+(canonical JSON with a content hash per definition) and imports another client's bundle — hashes
+are verified and any unsupported operation is named before anything is merged. These local Cards
+live in this browser's storage; the bundle is the durable form. Headless: `src/hapa/adapters/content.js`
+(`exportBundle`, `loadBundle`, `deriveDefinition`, `reviseDefinition`, `generateWording`).
+
+**Author a Card in code:** add a definition to `fixtures/hapa/content.js` using existing operations
 (`damage`, `counter`, `formation_immediate`, `place_row_enchantment`, `mint_row_multiplier`,
 `protection_modifier`), with creator lineage. `validateContent` names any unsupported operation
 before play. Bind it to a column in a profile's `cards.bindings` (or a Major in `cards.majors`).
@@ -112,5 +122,6 @@ Known limitations (see the board for each): merges do not sweep each member's as
 are per territory (no slopes inside a territory); damage allocation uses the recorded standing
 policy rather than a live per-exchange prompt; the battlefield uses Luminati's procedural
 characters, not commissioned Hapa art; the local tarot deck has faces for 12 of the 40 Minor Arcana
-ranks; no deck/Card editor, experiment panel or creator statistics UI yet. Fixture identities are
+ranks; the editor edits damage Cards only (others can be bound and exchanged); no experiment panel or
+creator statistics UI yet. Fixture identities are
 labeled local development identities, not verified Hapa DIDs.

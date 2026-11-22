@@ -234,7 +234,7 @@ function execute(state, ctx, events, seat, cmd, opts = {}) {
       pay(state, ctx, events, seat, card, cmd.burns, def.cost?.mana);
       state.stackSeq = (state.stackSeq ?? 0) + 1;
       const entry = { id: `S${state.tick}.${state.stackSeq}`, seat, cardId: card.id, definition: `${def.id}@${def.revision}`, defId: def.id, actorPartyId: cmd.actorPartyId, target: cmd.target ?? null, counterable: !!def.counterable, countered: false };
-      emit(state, events, 'ability_announced', { seat, stackId: entry.id, cardId: card.id, title: def.title, category: def.category, target: entry.target, actorPartyId: entry.actorPartyId, dryRun: !!opts.dryRun });
+      emit(state, events, 'ability_announced', { seat, stackId: entry.id, cardId: card.id, title: def.title, definition: `${def.id}@${def.revision}`, creator: def.lineage?.creator?.id ?? null, category: def.category, target: entry.target, actorPartyId: entry.actorPartyId, dryRun: !!opts.dryRun });
       if (def.category === 'spell' || def.category === 'enchantment') return { spell: entry };
       resolveEntry(state, ctx, events, entry); // Skills resolve at once (not on the stack)
       return { ok: true };
@@ -319,7 +319,7 @@ function* runStack(state, ctx, events, entry, firstSeat) {
         state.stackSeq = (state.stackSeq ?? 0) + 1;
         const resp = { id: `S${state.tick}.${state.stackSeq}`, seat: priority, cardId: card.id, definition: `${def.id}@${def.revision}`, defId: def.id, actorPartyId: cmd.actorPartyId, target: cmd.target, counterable: !!def.counterable, countered: false };
         state.stack.push(resp);
-        emit(state, events, 'response_announced', { seat: priority, stackId: resp.id, cardId: card.id, title: def.title, target: resp.target, choiceId: request.choiceId });
+        emit(state, events, 'response_announced', { seat: priority, stackId: resp.id, cardId: card.id, title: def.title, definition: `${def.id}@${def.revision}`, creator: def.lineage?.creator?.id ?? null, target: resp.target, choiceId: request.choiceId });
         responded = true;
       }
     }

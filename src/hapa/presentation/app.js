@@ -22,9 +22,15 @@ import { HeuristicBot } from '../controllers/heuristic-bot.js';
 import { ALLOCATION_POLICIES } from '../rules/combat.js';
 import { profileById, PROFILE_IDS, BASE_PROFILE } from '../../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../../fixtures/hapa/content.js';
+
+/** The catalog the running match agreed (bundled + local Cards); presentation reads definitions from it. */
+let activeCatalog = CATALOG;
 import { UI_FIXTURES } from '../../../fixtures/hapa/ui-fixtures.js';
 import { standingOf, fmtBand } from './terrain-view.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
+import { h } from './dom.js';
+import { openEditor } from './editor.js';
+import { localCatalog, localDecks } from './local-content.js';
 
 const U = 1e6;
 const SUIT = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
@@ -32,17 +38,6 @@ const SUIT_NAME = { wands: 'Wands', pentacles: 'Pentacles', cups: 'Cups', swords
 const ROLE_ABBR = { swordsman: 'Sw', pikeman: 'Pk', archer: 'Ar', mage: 'Mg', priest: 'Pr', center: '★' };
 const COLOR_LETTER = { red: 'R', green: 'G', purple: 'P', yellow: 'Y', blue: 'B', orange: 'O', black: 'K', white: 'W', rainbow: '✦' };
 const pts = (u) => { const v = u / U; return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); };
-const h = (tag, attrs = {}, ...kids) => {
-  const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === 'class') e.className = v;
-    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
-    else if (k === 'style') e.style.cssText = v;
-    else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
-  }
-  for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
-  return e;
-};
 const manaChips = (m) => Object.entries(m ?? {}).filter(([, n]) => n).map(([c, n]) => h('span', { class: `chip c-${c}`, title: `${n} ${c}` }, `${COLOR_LETTER[c]}${n}`));
 
 export class VersusApp {
@@ -102,6 +97,7 @@ export class VersusApp {
       h('div', { class: 'row' },
         h('button', { class: 'primary', onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: document.getElementById('set-A').value, B: document.getElementById('set-B').value }, seed: Number(seed.value) || 1, policies: { A: document.getElementById('set-pol-A').value, B: document.getElementById('set-pol-B').value } }) }, 'Start match'),
         h('button', { onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: 'bot', B: 'bot' }, seed: Number(seed.value) || 1, watch: true }) }, 'Watch bot vs bot')),
+      h('div', { class: 'row' }, h('button', { onclick: () => openEditor(this) }, 'Cards & decks…'), h('span', { class: 'dim small' }, 'Edit Cards, bind them to columns for either seat, exchange bundles.')),
       h('details', {}, h('summary', {}, 'Diagnostic fixtures (labeled, not ordinary play)'),
         ...Object.entries(UI_FIXTURES).map(([id, f]) => h('div', { class: 'row fixture' },
           h('button', { onclick: () => this.startMatch({ fixture: id, seats: { A: 'human', B: 'human' } }) }, f.title),
@@ -123,11 +119,12 @@ export class VersusApp {
     } else {
       const profile = profileById(profileId);
       this.session = createSession({
-        matchId: `local-${profileId}-${seed}-${Date.now().toString(36)}`, profile, catalog: CATALOG, seed, allocationPolicies: policies,
+        matchId: `local-${profileId}-${seed}-${Date.now().toString(36)}`, profile, catalog: localCatalog(), decks: localDecks(profile), seed, allocationPolicies: policies,
         controllers: { A: { type: seats.A, revision: seats.A === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' }, B: { type: seats.B, revision: seats.B === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' } },
       });
     }
     this.ctx = this.session.ctx;
+    activeCatalog = this.ctx.catalog;
     this.seats = seats;
     this.watch = watch || (seats.A === 'bot' && seats.B === 'bot');
     this.bots = {};
@@ -369,7 +366,7 @@ export class VersusApp {
     }
     if (this.tool?.kind === 'ability') {
       const t = this.tool;
-      const def = CATALOG.cards[this.state.cards[t.cardId].abilityId];
+      const def = activeCatalog.cards[this.state.cards[t.cardId].abilityId];
       if (t.step === 'actor' && pick.party && pick.party.owner === seat) {
         t.actorPartyId = pick.party.id;
         const op = def.operations[0]?.type;
@@ -441,7 +438,7 @@ export class VersusApp {
     if (kind === 'burn') { if (this._addCommand(this.viewSeat, { type: 'burn', cardId: card.id })) this._toast(`Burn planned: +${fmtMana(card.mana)}`); return; }
     if (kind === 'supply') { this.tool = { kind: 'supply', cardId: card.id }; this._toast('Click a friendly party to receive the Supply'); }
     if (kind === 'ability') {
-      const def = CATALOG.cards[card.abilityId];
+      const def = activeCatalog.cards[card.abilityId];
       if (!def || def.category === 'resource') return this._toast('No attached ability');
       if (def.timing === 'response') return this._toast(`${def.title} is a response: it is offered when the opponent announces a Spell`);
       this.tool = { kind: 'ability', cardId: card.id, step: 'actor' };
@@ -569,7 +566,7 @@ export class VersusApp {
       const fc = mintForecast(s, this.ctx, seat, col);
       const forecast = fc ? `T${next}: ${fc.rank} · S${fc.rank}${Object.keys(fc.mana).length ? ` · ${fmtMana(fc.mana)}` : ''}${card ? ' (replaces)' : ''}` : `T${next}: no frontier`;
       const sel = this.selected?.kind === 'card' && this.selected.id === id;
-      const def = card ? CATALOG.cards[card.abilityId] : null;
+      const def = card ? activeCatalog.cards[card.abilityId] : null;
       tiles.push(h('div', {
         class: `tile${card ? '' : ' empty'}${sel ? ' sel' : ''}${planned.has(id) ? ' planned' : ''} suit-${card?.suit ?? ''}`,
         onclick: () => { if (card) { this.selected = { kind: 'card', id }; this._renderAll(); } },
@@ -715,7 +712,7 @@ export class VersusApp {
   }
 
   _memberPanel(m) {
-    const s = this.state, arch = CATALOG.archetypes[m.archetype];
+    const s = this.state, arch = activeCatalog.archetypes[m.archetype];
     return h('div', {},
       h('h3', {}, memberName(s, m.id)),
       h('div', { class: 'kv' },
@@ -729,7 +726,7 @@ export class VersusApp {
   }
 
   _cardPanel(card) {
-    const s = this.state, def = CATALOG.cards[card.abilityId];
+    const s = this.state, def = activeCatalog.cards[card.abilityId];
     const own = card.owner === this.viewSeat && this.seats[card.owner] === 'human' && card.state === 'available';
     const planned = this._plannedCardIds(card.owner).has(card.id);
     return h('div', {},
@@ -741,7 +738,7 @@ export class VersusApp {
         h('span', {}, 'State'), h('span', {}, `${card.state}${planned ? ' (planned)' : ''}`)),
       card.pips?.length ? h('div', { class: 'small' }, 'Mana provenance: ', ...card.pips.map((p) => h('span', { class: `chip c-${p.color}` }, `R${p.row}:${COLOR_LETTER[p.color]}${p.amount}`))) : null,
       h('h4', {}, def?.title ?? 'Ability'), h('p', {}, def?.text ?? ''),
-      h('p', { class: 'dim small' }, `Definition ${card.ability} · creator ${def?.lineage?.creator?.label ?? '—'}`),
+      h('p', { class: 'dim small' }, `Definition ${card.ability} · creator ${def?.lineage?.creator?.label ?? def?.lineage?.creator?.id ?? '—'}${def?.lineage?.parents?.length ? ` · derived from ${def.lineage.parents.map((p) => (typeof p === 'string' ? p : `${p.id}@${p.revision}`)).join(', ')}` : ''}`),
       (() => { const art = renditionFor(card); return art
         ? h('div', { class: 'artcredit small' }, h('img', { src: art.url, alt: `${art.title} — ${art.deck}` }), h('span', { class: 'dim' }, `Face: “${art.title}” from the ${art.deck} (local rendition; the art stays with its owner and never affects play)`))
         : h('p', { class: 'dim small' }, 'Face: procedural placeholder (no local rendition for this rank and suit; play is identical)'); })(),
@@ -774,10 +771,10 @@ export class VersusApp {
     return h('div', { class: 'response' },
       h('h3', {}, `Response window · ${req.seat}`),
       h('p', {}, 'Pending (last resolves first):'),
-      h('ol', {}, ...req.stack.map((e) => h('li', {}, `${e.seat}: ${CATALOG.cards[e.defId].title}${e.target?.memberId ? ` → ${memberName(s, e.target.memberId)}` : e.target?.stackId ? ` → ${e.target.stackId}` : ''}${e.countered ? ' (countered)' : ''}`))),
+      h('ol', {}, ...req.stack.map((e) => h('li', {}, `${e.seat}: ${activeCatalog.cards[e.defId].title}${e.target?.memberId ? ` → ${memberName(s, e.target.memberId)}` : e.target?.stackId ? ` → ${e.target.stackId}` : ''}${e.countered ? ' (countered)' : ''}`))),
       ...opts.cards.map((id) => {
         const c = s.cards[id];
-        const def = CATALOG.cards[c.abilityId];
+        const def = activeCatalog.cards[c.abilityId];
         const burns = this._autoBurnsNow(req.seat, def, id);
         return h('button', { class: 'primary', onclick: () => finish({ cardId: id, actorPartyId: actor.id, target: { stackId: top.id }, burns }) }, `${def.title} with ${c.id} → counter ${top.id}${burns.length ? ` (burn ${burns.join(', ')})` : ''}`);
       }),
@@ -807,7 +804,7 @@ function describeCmd(state, c) {
     case 'set_destination': return `${partyName(state, c.partyId)} → R${c.target.row}C${c.target.column}`;
     case 'change_formation': return `${partyName(state, c.partyId)} faces ${c.facing}`;
     case 'retreat': return `${partyName(state, c.partyId)} retreats → R${c.target.row}C${c.target.column}`;
-    case 'play_ability': { const d = CATALOG.cards[state.cards[c.cardId]?.abilityId]; return `${d?.title ?? 'Ability'} (${c.cardId})${c.burns?.length ? `, burning ${c.burns.join(', ')}` : ''}`; }
+    case 'play_ability': { const d = activeCatalog.cards[state.cards[c.cardId]?.abilityId]; return `${d?.title ?? 'Ability'} (${c.cardId})${c.burns?.length ? `, burning ${c.burns.join(', ')}` : ''}`; }
     case 'concede': return 'Concede';
     default: return c.type;
   }
@@ -818,7 +815,7 @@ export function drawCardCanvas(card, state, w = 120, h2 = 160) {
   const cv = document.createElement('canvas');
   cv.width = w; cv.height = h2;
   const g = cv.getContext('2d');
-  const def = CATALOG.cards[card.abilityId];
+  const def = activeCatalog.cards[card.abilityId];
   g.fillStyle = '#efe6d2'; g.fillRect(0, 0, w, h2);
   g.strokeStyle = OWNER_HEX[card.owner]; g.lineWidth = 8; g.strokeRect(4, 4, w - 8, h2 - 8);
   g.fillStyle = '#1d1a24'; g.textAlign = 'center';

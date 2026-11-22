@@ -5,7 +5,8 @@
  *
  * Policy (deterministic; ties broken by its own xorshift32 stream, separate from game state):
  *  1. Mounts join their Pawn first, then advance toward the enemy Capital, attacking what they meet.
- *  2. Ember Strike when an enemy member is adjacent and Red can be paid (burning Red cards).
+ *  2. A damage Card (Ember Strike or a derivative) when an enemy member is adjacent and its cost
+ *     can be paid (burning cards that carry the needed colors).
  *  3. Remaining cards load Supply into the mounted parties that need it most.
  *  4. Counter an opposing Spell with Blue Denial when Blue can be paid.
  */
@@ -84,7 +85,10 @@ export class HeuristicBot {
     // 2. Ember Strike on an adjacent enemy member
     const pool = { ...state.players[seat].pool };
     for (const c of bank) {
-      if (c.abilityId !== 'fixture.ember_strike' || used.has(c.id)) continue;
+      // any damage Card that targets an adjacent enemy member (Ember Strike or a derivative of it)
+      const def = ctx.catalog.cards[c.abilityId];
+      if (def?.operations?.[0]?.type !== 'damage' || def.timing !== 'ordinary_action' || used.has(c.id)) continue;
+      const cost = def.cost?.mana ?? {};
       const actor = mine.find((p) => state.activeColumns.includes(p.region.column) && enemies.some((e) => adjacent(e, p)));
       if (!actor) continue;
       const enemy = enemies.find((e) => adjacent(e, actor));
@@ -93,14 +97,14 @@ export class HeuristicBot {
       const burns = [];
       const pay = { ...pool };
       for (const b of bank) {
-        if (planPayment(pay, { red: 2 })) break;
-        if (b.id === c.id || used.has(b.id) || !(b.mana.red || b.mana.rainbow)) continue;
+        if (planPayment(pay, cost)) break;
+        if (b.id === c.id || used.has(b.id) || !(Object.keys(cost).some((k) => b.mana[k]) || b.mana.rainbow)) continue;
         burns.push(b.id);
         for (const [k, n] of Object.entries(b.mana)) pay[k] = (pay[k] ?? 0) + n;
       }
-      if (!planPayment(pay, { red: 2 })) continue;
+      if (!planPayment(pay, cost)) continue;
       for (const id of burns) { cmds.push({ type: 'burn', cardId: id }); used.add(id); }
-      Object.assign(pool, planPayment(pay, { red: 2 }).remaining);
+      Object.assign(pool, planPayment(pay, cost).remaining);
       cmds.push({ type: 'play_ability', cardId: c.id, actorPartyId: actor.id, target: { memberId: target.id } });
       used.add(c.id);
     }
