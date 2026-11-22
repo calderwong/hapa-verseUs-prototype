@@ -205,8 +205,8 @@ test('Queen/Knight diagnostic: first touch at quantum 125 with the Queen shifted
   assert.ok(r.events.some((e) => e.type === 'exchange' && e.cause === 'first_contact'));
 });
 
-function mirrored(profileId, slots = MIRRORED_QUEEN) {
-  const fx = scenario({ profileId, parties: [
+function mirrored(profileId, slots = MIRRORED_QUEEN, allocationPolicies) {
+  const fx = scenario({ profileId, allocationPolicies, parties: [
     // a quarter Supply closes the one-member gap, so the fight stays at its first contact
     { id: 'A.q', owner: 'A', mount: 'queen', column: 5, row: 5, slots, supply: 0.25 },
     { id: 'B.q', owner: 'B', mount: 'queen', column: 5, row: 6, slots, supply: 3 },
@@ -242,6 +242,16 @@ test('Shared line Defense 3 stops every 3-point sword hit; six arrows deal 6 (at
   const arrowDamage = ex.hits.filter((h) => h.attack === 'bow' && fx.state.members[h.recipient].owner === 'A').reduce((a, h) => a + h.damage, 0);
   assert.equal(arrowDamage, 6 * U);
   assert.deepEqual(['s1', 's2', 's3'].map((x) => fx.state.members[`A.q.${x}`].alive), [false, false, true]);
+});
+
+test('Defender allocation with a center-first standing policy puts all six arrows on the Queen', () => {
+  const { fx, ex } = mirrored('hapa_open_10x9_v3_01_line_defender', MIRRORED_QUEEN, { A: 'center_first', B: 'slot_order' });
+  const onA = ex.hits.filter((h) => h.attack === 'bow' && fx.state.members[h.recipient].owner === 'A');
+  assert.ok(onA.every((h) => h.recipient === 'A.q.s5' && h.allocator === 'A'));
+  assert.equal(fx.state.members['A.q.s5'].hp, 0);
+  assert.equal(fx.state.members['A.q.s1'].alive, true); // the retainers are preserved
+  // B allocated by slot order: two of its Swordsmen fell instead
+  assert.deepEqual(['s1', 's2'].map((x) => fx.state.members[`B.q.${x}`].alive), [false, false]);
 });
 
 test('Party maintenance: 24-HP pool takes six arrows → 18; two retainers removed without a second debit', () => {

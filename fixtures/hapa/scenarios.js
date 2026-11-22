@@ -13,7 +13,7 @@ import { CATALOG } from './content.js';
 export function opening(profileId = BASE_PROFILE.id, opts = {}) {
   const profile = profileById(profileId);
   if (opts.majors) profile.cards.majors = opts.majors;
-  const manifest = createManifest({ matchId: opts.matchId ?? `fixture-${profileId}`, profile, catalog: CATALOG, controllers: opts.controllers });
+  const manifest = createManifest({ matchId: opts.matchId ?? `fixture-${profileId}`, profile, catalog: CATALOG, controllers: opts.controllers, allocationPolicies: opts.allocationPolicies });
   const state = initializeMatch(manifest);
   return { manifest, ctx: createContext(manifest), state };
 }
@@ -23,7 +23,7 @@ export function opening(profileId = BASE_PROFILE.id, opts = {}) {
  * @param {{ profileId?: string, keep?: string[], parties: Array<{ id: string, owner: 'A'|'B', mount?: string|null, column: number, row: number, facing?: string, slots: Record<number,string>, supply?: number, commander?: boolean }> }} spec
  */
 export function scenario(spec) {
-  const base = opening(spec.profileId ?? BASE_PROFILE.id, { matchId: spec.matchId ?? 'fixture-scenario', majors: spec.majors });
+  const base = opening(spec.profileId ?? BASE_PROFILE.id, { matchId: spec.matchId ?? 'fixture-scenario', majors: spec.majors, allocationPolicies: spec.allocationPolicies });
   const { state, ctx } = base;
   const keep = new Set(spec.keep ?? ['A.mount.C5', 'B.mount.C5']);
   for (const id of Object.keys(state.parties)) {

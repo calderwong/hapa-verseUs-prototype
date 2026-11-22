@@ -14,7 +14,7 @@ export const other = (seat) => (seat === 'A' ? 'B' : 'A');
 
 /**
  * Build a manifest: the complete agreement both participants accept before play.
- * @param {{ matchId: string, profile: any, catalog: any, participants?: Record<string, any>, controllers?: Record<string, any>, decks?: Record<string, any>, seed?: number }} o
+ * @param {{ matchId: string, profile: any, catalog: any, participants?: Record<string, any>, controllers?: Record<string, any>, decks?: Record<string, any>, seed?: number, allocationPolicies?: Record<string, string> }} o
  */
 export function createManifest(o) {
   const p = validateProfile(o.profile, o.catalog);
@@ -40,6 +40,8 @@ export function createManifest(o) {
     controllers,
     decks: o.decks ?? { A: { majors: o.profile.cards.majors, bindings: o.profile.cards.bindings }, B: { majors: o.profile.cards.majors, bindings: o.profile.cards.bindings } },
     randomStream: { algorithm: 'xorshift32_v1', seed: o.seed ?? 0x9e3779b9 },
+    /** each seat's recorded standing damage-allocation policy (public; used when it allocates) */
+    allocationPolicies: o.allocationPolicies ?? { A: 'slot_order', B: 'slot_order' },
   };
 }
 

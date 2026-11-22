@@ -75,6 +75,27 @@ export const residual = (U, power, ratio, prot) => Math.max(0, Math.floor((power
 
 const bySlotThenId = (a, b) => a.slot - b.slot || (a.id < b.id ? -1 : 1);
 
+/** The seat that allocates a hit under the profile (attacker or defender). */
+function allocatorSeat(state, ctx, h) {
+  return ctx.profile.combat.allocation === 'attacker' ? state.parties[h.sourceParty].owner : state.parties[h.defParty].owner;
+}
+
+/**
+ * Recipient order under the allocating seat's recorded standing policy (Chapter 7: "use a
+ * player's recorded standing policy to automate it"). Policies live in the manifest, so every
+ * peer and replay applies the same choice:
+ *   slot_order   — the Appendix A fixture: slots 1–9, then member id
+ *   center_first — put damage on the center first (sacrifice it to preserve retainers)
+ *   protect_ranged — Archers, Mages and Priests last
+ */
+export const ALLOCATION_POLICIES = ['slot_order', 'center_first', 'protect_ranged'];
+function orderRecipients(ctx, seat, members) {
+  const policy = ctx.manifest.allocationPolicies?.[seat] ?? 'slot_order';
+  const ranged = (m) => ['archer', 'mage', 'priest'].includes(m.archetype);
+  const key = policy === 'center_first' ? (m) => (m.isCenter ? 0 : 1) : policy === 'protect_ranged' ? (m) => (ranged(m) ? 1 : 0) : () => 0;
+  return [...members].sort((a, b) => key(a) - key(b) || bySlotThenId(a, b));
+}
+
 /**
  * Gather the hits of an exchange batch from one snapshot.
  * @param {{ engagement: any, first: boolean }[]} batch
@@ -189,7 +210,7 @@ export function resolveExchange(state, ctx, events, batch, cause) {
     }
     for (const h of hits.filter((x) => !x.fixed)) {
       const def = state.parties[h.defParty];
-      const legal = livingMembers(state, def).sort(bySlotThenId);
+      const legal = orderRecipients(ctx, allocatorSeat(state, ctx, h), livingMembers(state, def));
       if (!legal.length) continue;
       let r = legal.find((m) => mode.health === 'party_pool' || hpOf(m) > 0) ?? legal[0];
       const face = h.face === 'above' ? 'above' : faceFrom(def.facing, state.members[h.source], r);
@@ -210,7 +231,7 @@ export function resolveExchange(state, ctx, events, batch, cause) {
       const lineMembers = face === 'above' || list.every((h) => !h.fixed)
         ? livingMembers(state, def)
         : [...new Set(list.filter((h) => h.fixed).map((h) => h.fixed))].map((id) => state.members[id]).filter((m) => m.alive);
-      const legal = (lineMembers.length ? lineMembers : livingMembers(state, def)).sort(bySlotThenId);
+      const legal = orderRecipients(ctx, allocatorSeat(state, ctx, list[0]), lineMembers.length ? lineMembers : livingMembers(state, def));
       const { total, sources } = lineProtection(state, ctx, def, legal, list[0].channel, face);
       for (const h of list) {
         let left = residual(U, h.power, h.ratio, total);

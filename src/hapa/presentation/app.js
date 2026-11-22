@@ -19,6 +19,7 @@ import { mintForecast, nextActivation, roundOf, supplyOf } from '../rules/econom
 import { stateFingerprint } from '../rules/state.js';
 import { clone } from '../rules/encoding.js';
 import { HeuristicBot } from '../controllers/heuristic-bot.js';
+import { ALLOCATION_POLICIES } from '../rules/combat.js';
 import { profileById, PROFILE_IDS, BASE_PROFILE } from '../../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../../fixtures/hapa/content.js';
 
@@ -82,6 +83,7 @@ export class VersusApp {
     const profileSel = h('select', { id: 'set-profile' }, ...PROFILE_IDS.map((id) => h('option', { value: id }, `${id} — ${profileById(id).title}`)));
     const seatSel = (seat, dflt) => h('select', { id: `set-${seat}` }, h('option', { value: 'human', selected: dflt === 'human' }, 'Human'), h('option', { value: 'bot', selected: dflt === 'bot' }, 'Heuristic bot'));
     const seed = h('input', { id: 'set-seed', type: 'number', value: '1', min: '1' });
+    const policySel = (seat) => h('select', { id: `set-pol-${seat}` }, ...ALLOCATION_POLICIES.map((p) => h('option', { value: p }, { slot_order: 'Slot order (fixture)', center_first: 'Center first (sacrifice the center)', protect_ranged: 'Protect ranged members' }[p])));
     this.el.overlay.replaceChildren(h('div', { class: 'card-sheet setup' },
       h('h1', {}, 'Hapa Versus'),
       h('p', { class: 'lede' }, 'Two armies on a nine-column battlefield. Each Tick the highlighted columns mint public Minor Arcana from the territory you hold: spend a card as Supply to move, burn it for colored Mana, or play its attached ability. Win by moving a party center into the enemy Capital or killing the enemy Commander.'),
@@ -89,9 +91,12 @@ export class VersusApp {
         h('label', {}, 'Profile', profileSel),
         h('label', {}, 'Seat A (low rows)', seatSel('A', 'human')),
         h('label', {}, 'Seat B (high rows)', seatSel('B', 'bot')),
-        h('label', {}, 'Seed', seed)),
+        h('label', {}, 'Seed', seed),
+        h('label', {}, 'A standing damage allocation', policySel('A')),
+        h('label', {}, 'B standing damage allocation', policySel('B'))),
+      h('p', { class: 'dim small' }, 'Allocation applies when your seat assigns damage under the profile (attacker or defender allocation). It is public and recorded in the match manifest.'),
       h('div', { class: 'row' },
-        h('button', { class: 'primary', onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: document.getElementById('set-A').value, B: document.getElementById('set-B').value }, seed: Number(seed.value) || 1 }) }, 'Start match'),
+        h('button', { class: 'primary', onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: document.getElementById('set-A').value, B: document.getElementById('set-B').value }, seed: Number(seed.value) || 1, policies: { A: document.getElementById('set-pol-A').value, B: document.getElementById('set-pol-B').value } }) }, 'Start match'),
         h('button', { onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: 'bot', B: 'bot' }, seed: Number(seed.value) || 1, watch: true }) }, 'Watch bot vs bot')),
       h('details', {}, h('summary', {}, 'Controls'), h('div', { class: 'keys' },
         ...[['Left click', 'select a party, member, territory or card'], ['Right click', 'set the selected party\'s one destination'], ['1–9', 'select your hand slot (home column order)'], ['U / B / C', 'Supply, Burn or Ability with the selected card'], ['M', 'show legal destinations of the selected party'], ['G', 'formation facing tools'], ['P', 'plan comparison'], ['Ctrl/⌘ + Enter', 'Ready (freeze your plan for this pair)'], ['Esc', 'cancel the current tool'], ['Q / E', 'rotate the camera 45°'], ['Z / X', 'tilt'], ['W A S D', 'pan'], ['Wheel', 'zoom'], ['V', 'tactical view'], ['Home', 'home view'], ['F', 'focus the selection'], ['Space', 'pause playback']].map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v)))),
@@ -99,12 +104,12 @@ export class VersusApp {
     this.el.overlay.hidden = false;
   }
 
-  async startMatch({ profileId = BASE_PROFILE.id, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false }) {
+  async startMatch({ profileId = BASE_PROFILE.id, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' } }) {
     this.el.overlay.hidden = true;
     await loadCharacterKit(); // crowns, helmets and the guard preset are kit parts
     const profile = profileById(profileId);
     this.session = createSession({
-      matchId: `local-${profileId}-${seed}-${Date.now().toString(36)}`, profile, catalog: CATALOG, seed,
+      matchId: `local-${profileId}-${seed}-${Date.now().toString(36)}`, profile, catalog: CATALOG, seed, allocationPolicies: policies,
       controllers: { A: { type: seats.A, revision: seats.A === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' }, B: { type: seats.B, revision: seats.B === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' } },
     });
     this.ctx = this.session.ctx;
