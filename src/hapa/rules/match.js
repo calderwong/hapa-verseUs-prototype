@@ -17,6 +17,7 @@ import { SEATS, other, livingMembers } from './state.js';
 import { activeColumnsAt, roundOf, mintAndClear, planPayment, supplyOf } from './economy.js';
 import { setDestination, simulateMovement, placeMembers, planRoute, routeOrigin, touchingPairs, contactTolerance, arrangementBlocked } from './movement.js';
 import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember } from './combat.js';
+import { workError, startWork, completeWork } from './terrain.js';
 
 // --- the Tick boundary ------------------------------------------------------------------------
 
@@ -88,6 +89,7 @@ export function commandError(state, ctx, seat, cmd) {
       return plan.error ?? null;
     }
     case 'play_ability': return abilityError(state, ctx, seat, cmd, 'ordinary_action');
+    case 'begin_work': return workError(state, ctx, seat, cmd);
     case 'concede': return null;
     default: return `unknown command type ${cmd.type}`;
   }
@@ -216,6 +218,9 @@ function execute(state, ctx, events, seat, cmd, opts = {}) {
     case 'retreat':
       state.pendingRetreats = [...(state.pendingRetreats ?? []), { seat, partyId: P.id, target: cmd.target }];
       emit(state, events, 'retreat_ordered', { partyId: P.id, target: cmd.target });
+      return { ok: true };
+    case 'begin_work':
+      startWork(state, ctx, events, seat, cmd);
       return { ok: true };
     case 'concede':
       state.players[seat].conceded = true;
@@ -429,6 +434,7 @@ function finishTick(state, ctx, events) {
       if (P.state === 'turning') P.state = P.route.length ? 'moving' : 'idle';
     }
   }
+  completeWork(state, ctx, events);
   refreshEngagements(state, ctx, events);
   emit(state, events, 'tick_finished', { parties: Object.values(state.parties).filter((p) => p.alive && !p.retired).length, members: Object.values(state.members).filter((m) => m.alive).length });
 }

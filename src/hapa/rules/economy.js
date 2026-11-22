@@ -4,6 +4,7 @@
  */
 import { emit, COLORS } from './context.js';
 import { SEATS, livingMembers } from './state.js';
+import { exposed } from './terrain.js';
 
 // --- clock ------------------------------------------------------------------------------------
 
@@ -43,18 +44,10 @@ export function groundAnchor(state, party) {
   return exposedAt(state, party);
 }
 
-/** Exposed-ground test (Chapter 9): flat terrain is always exposed; volume terrain checks roofs. */
+/** Exposed-ground test (Chapter 9): no intact roof above the anchor's supporting position. */
 export function exposedAt(state, party) {
-  const t = state.terrain;
-  if (t.kind === 'flat') return true;
-  const key = (x, y, band) => `${x},${y},${band}`;
-  const cx = Math.round(party.x / 1e6), cy = Math.round(party.y / 1e6);
-  // any solid cell above the supporting position (to the top band) is a roof
-  for (const band of [-3, -2, -1, 1, 2, 3]) {
-    if (band <= party.band) continue;
-    if (t.cells[key(cx, cy, band)]?.solid) return false;
-  }
-  return true;
+  if (state.terrain.kind === 'flat' && party.band === 1) return true;
+  return exposed(state, { U: 1e6 }, party);
 }
 
 /**

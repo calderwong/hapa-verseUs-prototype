@@ -99,7 +99,7 @@ export class Peer {
       const check = () => {
         const i = this.inbox.findIndex(pred);
         if (i >= 0) { this.waiters = this.waiters.filter((w) => w !== check); resolve(this.inbox.splice(i, 1)[0]); return true; }
-        if (Date.now() - t0 > timeoutMs) { this.waiters = this.waiters.filter((w) => w !== check); reject(new Error('timed out waiting for the opponent (the match is paused, not conceded)')); return true; }
+        if (this.closed || Date.now() - t0 > timeoutMs) { this.waiters = this.waiters.filter((w) => w !== check); reject(new Error('timed out waiting for the opponent (the match is paused, not conceded)')); return true; }
         return false;
       };
       if (!check()) { this.waiters.push(check); const iv = setInterval(() => { if (check()) clearInterval(iv); }, 50); }
