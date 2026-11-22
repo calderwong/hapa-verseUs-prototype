@@ -303,6 +303,7 @@ export class VersusApp {
     for (const t of this.view.supplyTokens?.values() ?? []) t.visible = false; // they return at their new places after playback
     return new Promise((resolve) => {
       this.playback = { t: 0, duration, all, events, resolve, shown: 0, paused: false };
+      this._renderReadyButton();
     });
   }
 
@@ -748,7 +749,7 @@ export class VersusApp {
       ] : h('div', { class: 'dim' }, 'empty'),
       own ? h('div', { class: 'fc' }, forecast) : null));
     }
-    el.replaceChildren(h('div', { class: 'ribbon-label' }, own ? `Your hand · ${seat}` : `Opponent hand · ${seat}`), h('div', { class: 'tiles' }, ...tiles));
+    el.replaceChildren(h('div', { class: 'ribbon-label' }, own ? `Your hand · ${seat}` : `Opponent hand · ${seat}`), h('div', { class: 'tiles' }, ...tiles), ...(own && this.el.readyBig ? [this.el.readyBig] : []));
   }
 
   _renderRoster() {
@@ -795,8 +796,28 @@ export class VersusApp {
     };
     const me = this.viewSeat;
     const canReady = this.seats[me] === 'human' && !this.playback && !this.pendingChoice && !this.state.outcome;
+    // the plans scroll; the Ready button stays pinned at the bottom of the panel
     this.el.plan.replaceChildren(h('h3', {}, 'Public plans'), h('div', { class: 'plans' }, box('A'), box('B')),
       h('button', { class: `primary ready${this._readyValid(me) ? ' done' : ''}`, disabled: !canReady, onclick: () => this._pressReady() }, this._readyValid(me) ? `Ready ✓ (${me})` : `Ready as ${me} (Ctrl/⌘+Enter)`));
+    this._renderReadyButton();
+  }
+
+  /** The big Ready button at the end of your hand ribbon: ends your planning for this Tick. */
+  _renderReadyButton() {
+    if (!this.el.readyBig) this.el.readyBig = h('button', { class: 'ready-big', onclick: () => this._pressReady() });
+    if (this.el.readyBig.parentElement !== this.el.ownhand) this.el.ownhand.append(this.el.readyBig); // beside your hand, like "end turn"
+    const me = this.viewSeat, b = this.el.readyBig;
+    const human = this.seats[me] === 'human';
+    const other = me === 'A' ? 'B' : 'A';
+    const waiting = this._readyValid(me) && !this._readyValid(other);
+    const state = this.state.outcome ? 'over' : this.playback ? 'resolving' : this.pendingChoice ? 'choice' : !human ? 'watch' : waiting ? 'waiting' : 'ready';
+    b.hidden = state === 'watch' || state === 'over';
+    b.disabled = state !== 'ready';
+    b.className = `ready-big ${state === 'ready' ? 'can' : state}`;
+    const n = this.plans[me]?.length ?? 0;
+    b.replaceChildren(
+      h('span', { class: 'rb-main' }, state === 'resolving' ? 'Resolving…' : state === 'choice' ? 'Response window' : state === 'waiting' ? `Waiting for ${other}…` : 'Ready ▶'),
+      h('span', { class: 'rb-sub' }, state === 'ready' ? `Resolve Tick ${this.state.tick} · ${n ? `${n} order${n > 1 ? 's' : ''}` : 'pass'} · Ctrl/⌘+Enter` : state === 'waiting' ? `${other} is planning (hotseat)` : ''));
   }
 
   _renderEvents() {
@@ -816,7 +837,7 @@ export class VersusApp {
       h('ol', { class: 'quickstart' },
         h('li', {}, h('b', {}, 'Supply. '), h('b', {}, 'Drag'), ' a card from your hand (or its slot on the board) onto one of your formations and let go. Each step of movement costs 1 Supply. Drop a card on the Mana pool panel to burn it instead.'),
         h('li', {}, h('b', {}, 'Move. '), 'With the party selected, ', h('b', {}, 'right-click'), ' a highlighted territory. New orders need the party\'s column to be active (striped edges).'),
-        h('li', {}, h('b', {}, 'Ready. '), 'Press ', h('b', {}, 'Ready'), ' (Ctrl/⌘ + Enter). Both plans resolve together and play back.')),
+        h('li', {}, h('b', {}, 'Ready. '), 'Press the gold ', h('b', {}, 'Ready ▶'), ' button at the end of your hand (or Ctrl/⌘ + Enter). Both plans resolve together and play back.')),
       h('p', { class: 'dim small' }, 'Opening: drag the C1 card onto your C1 Castle (R1), select the Castle and right-click the Pawn ahead of it (R2) — they merge into one nine-member party.'),
       this._hoverHelp());
     if (sel.kind === 'party') return el.replaceChildren(this._partyPanel(s.parties[sel.id]));
