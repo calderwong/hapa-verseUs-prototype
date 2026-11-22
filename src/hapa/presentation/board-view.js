@@ -12,14 +12,14 @@ import { Sprite3D } from '../../../vendor/lumina/src/engine/sprite/Sprite3D.js';
 import { createCharacterSheet } from '../../../vendor/lumina/src/engine/pixel/CharacterSprites.js';
 import { territoryColors } from '../rules/economy.js';
 import { TerrainView, bandY, textLabel, standingOf } from './terrain-view.js';
+import { paintGround, PX } from './ground-painter.js';
 
 export const S = 1.5; // world units per member width
-const PX = 16; // ground texture pixels per member width
 export const COLOR_HEX = {
   red: '#c8473c', green: '#4d9a4a', purple: '#7b4fa8', yellow: '#d9b840', blue: '#3f6fc4', orange: '#d9853b',
   black: '#2a2730', white: '#e9e4d6', rainbow: '#c08fd8',
 };
-export const OWNER_HEX = { A: '#4d86d9', B: '#d9574d' };
+export const OWNER_HEX = { A: '#7FB2E8', B: '#E8857A' }; // with single (A) / double (B) brackets
 const SUIT_GLYPH = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
 
 /** Sprite specs per role (procedural Luminati pixel characters; the owner color is the tabard). */
@@ -39,6 +39,22 @@ function spriteSpec(role, mount, owner) {
       return { ...base, preset: 'guard', hat: hats[mount] ?? 'helmet', weapon, cape: { color: trim, style: mount === 'commander' ? 'cloak' : 'short', lining: top } };
     }
   }
+}
+
+/** Four L-shaped corner brackets lying on the ground (half-size `half`, arm length `arm`). */
+function cornerBrackets(half, arm, thick, color, opacity) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({ color, transparent: opacity < 1, opacity, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const h = new THREE.Mesh(new THREE.PlaneGeometry(arm, thick), mat);
+    h.rotation.x = -Math.PI / 2; h.position.set(sx * (half - arm / 2), 0, sz * half);
+    const v = new THREE.Mesh(new THREE.PlaneGeometry(thick, arm), mat);
+    v.rotation.x = -Math.PI / 2; v.position.set(sx * half, 0, sz * (half - arm / 2));
+    g.add(h, v);
+  }
+  g.renderOrder = 3;
+  g.visible = true;
+  return g;
 }
 
 export class BoardView {
@@ -90,8 +106,12 @@ export class BoardView {
   toBoard(v) { return { x: v.x / S, y: -v.z / S }; }
 
   _buildLights() {
-    const hemi = new THREE.HemisphereLight(0xdfe6ff, 0x3a3428, 1.25);
-    const sun = new THREE.DirectionalLight(0xfff1d6, 2.1);
+    // a stable warm key and a cool fill (Design Companion ch.2); the light stays with the world
+    const hemi = new THREE.HemisphereLight(0xc9d8f0, 0x4a3a28, 1.05);
+    const fill = new THREE.DirectionalLight(0x9db8ff, 0.7);
+    fill.position.set(-this.w * S * 0.6, 30, -this.h * S * 1.2);
+    this.root.add(fill);
+    const sun = new THREE.DirectionalLight(0xffdcae, 2.9);
     sun.position.set(this.w * S * 0.2, 60, 30);
     sun.target.position.copy(this.center);
     sun.castShadow = true;
@@ -102,89 +122,21 @@ export class BoardView {
     this.root.add(hemi, sun, sun.target);
   }
 
-  /** The ground: territories with their 3×3 slots, contact strips, Capitals, labels and bank frames. */
+  /** The ground: painted slabs, earth strips, inlays, plaques, Capitals, labels and bank trays. */
   _buildGround() {
     const { ctx } = this;
-    const margin = { x: 6, y: 12 };
-    const W = this.w + margin.x * 2, H = this.h + margin.y * 2;
-    const cv = document.createElement('canvas');
-    cv.width = W * PX; cv.height = H * PX;
-    const g = cv.getContext('2d');
-    const px = (x) => (x + margin.x) * PX; // member-width x → canvas
-    const py = (y) => (H - (y + margin.y)) * PX; // member-width y (up) → canvas (down)
-    g.fillStyle = '#1b1f2a'; g.fillRect(0, 0, cv.width, cv.height);
-    // contact strips / earth
-    g.fillStyle = '#3a3024'; g.fillRect(px(0), py(this.h), this.w * PX, this.h * PX);
-    const mana = new Set([...ctx.profile.board.manaRows, ...ctx.profile.board.dualRows]);
-    for (let c = 1; c <= this.cols; c++) for (let r = 1; r <= this.rows; r++) {
-      const colors = territoryColors(ctx.profile, c, r);
-      const x0 = 4 * c - 3.5, y0 = 4 * r - 3.5;
-      const grad = g.createLinearGradient(px(x0), 0, px(x0 + 3), 0);
-      colors.forEach((col, i) => { grad.addColorStop(i / Math.max(1, colors.length - 1) * 0.999, COLOR_HEX[col]); });
-      g.globalAlpha = mana.has(r) ? 0.62 : 0.32;
-      g.fillStyle = colors.length > 1 ? grad : COLOR_HEX[colors[0]];
-      g.fillRect(px(x0), py(y0 + 3), 3 * PX, 3 * PX);
-      g.globalAlpha = 1;
-      // 3×3 slot grid
-      g.strokeStyle = 'rgba(14,12,10,0.55)'; g.lineWidth = 1;
-      for (let i = 0; i <= 3; i++) {
-        g.beginPath(); g.moveTo(px(x0 + i), py(y0)); g.lineTo(px(x0 + i), py(y0 + 3)); g.stroke();
-        g.beginPath(); g.moveTo(px(x0), py(y0 + i)); g.lineTo(px(x0 + 3), py(y0 + i)); g.stroke();
-      }
-      g.strokeStyle = 'rgba(240,230,210,0.35)'; g.lineWidth = 2;
-      g.strokeRect(px(x0) + 1, py(y0 + 3) + 1, 3 * PX - 2, 3 * PX - 2);
-      if (mana.has(r)) { // Mana pips: a small diamond per contributed color
-        colors.forEach((col, i) => {
-          g.fillStyle = COLOR_HEX[col]; g.strokeStyle = '#111';
-          const cx = px(x0 + 0.35 + i * 0.4), cy = py(y0 + 0.35);
-          g.beginPath(); g.moveTo(cx, cy - 4); g.lineTo(cx + 4, cy); g.lineTo(cx, cy + 4); g.lineTo(cx - 4, cy); g.closePath(); g.fill(); g.stroke();
-        });
-      }
-    }
-    // Capitals
-    for (const seat of ['A', 'B']) {
-      const cap = ctx.geo.toGlobal(seat, ctx.profile.board.capitalColumn, 1);
-      const x0 = 4 * cap.column - 3.5, y0 = 4 * cap.row - 3.5;
-      g.strokeStyle = '#f0c75e'; g.lineWidth = 4; g.setLineDash([10, 6]);
-      g.strokeRect(px(x0) - 4, py(y0 + 3) - 4, 3 * PX + 8, 3 * PX + 8);
-      g.setLineDash([]);
-      g.fillStyle = '#f0c75e'; g.font = 'bold 14px sans-serif'; g.textAlign = 'center';
-      g.fillText(`${seat} CAPITAL`, px(x0 + 1.5), seat === 'A' ? py(y0) + 16 : py(y0 + 3) - 6);
-    }
-    // labels: global columns and rows
-    g.fillStyle = '#d8ccb0'; g.font = 'bold 18px sans-serif'; g.textAlign = 'center';
-    for (let c = 1; c <= this.cols; c++) {
-      const info = ctx.profile.board.columnMap[c - 1];
-      g.fillText(`C${c} ${SUIT_GLYPH[info.suit]}`, px(4 * c - 2), py(-0.6) + 6);
-      g.fillText(`C${c} ${SUIT_GLYPH[info.suit]}`, px(4 * c - 2), py(this.h + 0.6) + 6);
-    }
-    g.textAlign = 'right';
-    for (let r = 1; r <= this.rows; r++) g.fillText(`R${r}`, px(-0.4), py(4 * r - 2) + 6);
-    g.textAlign = 'left';
-    for (let r = 1; r <= this.rows; r++) g.fillText(`R${r}`, px(this.w + 0.4), py(4 * r - 2) + 6);
-    // bank frames: Major (nearer) and Minor (behind it) for each seat; row Enchantments on the left
-    const frame = (x, y, w, h, color) => { g.strokeStyle = color; g.lineWidth = 2; g.strokeRect(px(x), py(y + h), w * PX, h * PX); };
-    for (let c = 1; c <= this.cols; c++) {
-      frame(4 * c - 3.4, -3.6, 2.8, 2.6, 'rgba(240,199,94,0.5)');
-      frame(4 * c - 3.4, -7.6, 2.8, 3.4, 'rgba(160,190,240,0.55)');
-      frame(4 * c - 3.4, this.h + 1, 2.8, 2.6, 'rgba(240,199,94,0.5)');
-      frame(4 * c - 3.4, this.h + 4.2, 2.8, 3.4, 'rgba(240,160,150,0.55)');
-    }
-    for (let r = 1; r <= this.rows; r++) {
-      frame(-4.6, 4 * r - 3.2, 2.6, 2.4, 'rgba(220,220,220,0.35)');
-      frame(this.w + 2, 4 * r - 3.2, 2.6, 2.4, 'rgba(220,220,220,0.35)');
-    }
-    g.fillStyle = '#9fb3d9'; g.font = '13px sans-serif'; g.textAlign = 'left';
-    g.fillText('A · MAJOR ARCANA', px(-5.5), py(-2.2)); g.fillText('A · MINOR ARCANA (HAND)', px(-5.5), py(-6));
-    g.fillText('B · MAJOR ARCANA', px(-5.5), py(this.h + 2.4)); g.fillText('B · MINOR ARCANA (HAND)', px(-5.5), py(this.h + 6));
+    const paint = paintGround(ctx, { cols: this.cols, rows: this.rows });
+    const { color: cv, emissive, px, py, W, H } = paint;
     const tex = new THREE.CanvasTexture(cv);
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.magFilter = THREE.NearestFilter;
-    tex.anisotropy = 4;
+    tex.anisotropy = 8;
+    const glow = new THREE.CanvasTexture(emissive);
+    glow.colorSpace = THREE.SRGBColorSpace;
     // open excavations are cut out of the surface so a pit is seen from above (alphaTest)
-    this.groundPaint = { g, base: g.getImageData(0, 0, cv.width, cv.height), px, py, tex };
+    const g = cv.getContext('2d');
+    this.groundPaint = { g, base: g.getImageData(0, 0, cv.width, cv.height), px, py, tex, px1: PX };
     const geo = new THREE.PlaneGeometry(W * S, H * S);
-    const mat = new THREE.MeshLambertMaterial({ map: tex, alphaTest: 0.5 });
+    const mat = new THREE.MeshLambertMaterial({ map: tex, alphaTest: 0.5, emissive: 0xffffff, emissiveMap: glow, emissiveIntensity: 0.9 });
     const ground = new THREE.Mesh(geo, mat);
     ground.rotation.x = -Math.PI / 2;
     ground.position.set((this.w / 2) * S, 0, -(this.h / 2) * S);
@@ -195,15 +147,34 @@ export class BoardView {
   }
 
   _buildOverlays() {
-    // active-column highlight
+    // active columns: a patterned edge along both sides and a named header at each end (not a wash)
+    const stripe = document.createElement('canvas');
+    stripe.width = 16; stripe.height = 64;
+    const sg = stripe.getContext('2d');
+    for (let i = -4; i < 8; i++) { sg.fillStyle = i % 2 ? 'rgba(245,240,227,0.95)' : 'rgba(201,166,94,0.95)'; sg.beginPath(); sg.moveTo(0, i * 16); sg.lineTo(16, i * 16 - 16); sg.lineTo(16, i * 16); sg.lineTo(0, i * 16 + 16); sg.closePath(); sg.fill(); }
+    const stripeTex = new THREE.CanvasTexture(stripe);
+    stripeTex.wrapS = stripeTex.wrapT = THREE.RepeatWrapping;
+    stripeTex.repeat.set(1, this.h / 1.2);
+    stripeTex.colorSpace = THREE.SRGBColorSpace;
     this.activeCols = new Map();
     for (let c = 1; c <= this.cols; c++) {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(3.6 * S, this.h * S), new THREE.MeshBasicMaterial({ color: 0xf0c75e, transparent: true, opacity: 0.0, depthWrite: false }));
-      m.rotation.x = -Math.PI / 2;
-      m.position.set((4 * c - 2) * S, 0.02, -(this.h / 2) * S);
-      m.renderOrder = 1;
-      this.activeCols.set(c, m);
-      this.root.add(m);
+      const grp = new THREE.Group();
+      for (const x of [4 * c - 3.72, 4 * c - 0.28]) {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(0.22 * S, this.h * S), new THREE.MeshBasicMaterial({ map: stripeTex, transparent: true, depthWrite: false, toneMapped: false }));
+        m.rotation.x = -Math.PI / 2;
+        m.position.set(x * S, 0.025, -(this.h / 2) * S);
+        m.renderOrder = 1;
+        grp.add(m);
+      }
+      for (const y of [-0.05, this.h + 0.05]) {
+        const lab = textLabel(`ACTIVE C${c}`, { color: '#F5F0E3', bg: 'rgba(201,166,94,0.92)', size: 0.55 });
+        lab.material.color.set(0xffffff);
+        lab.position.set((4 * c - 2) * S, 0.7, -y * S);
+        grp.add(lab);
+      }
+      grp.visible = false;
+      this.activeCols.set(c, grp);
+      this.root.add(grp);
     }
     // legal destination squares (pooled)
     this.destGroup = new THREE.Group();
@@ -211,17 +182,15 @@ export class BoardView {
     this.routeLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xfff2b0 }));
     this.routeLine.renderOrder = 3;
     this.root.add(this.routeLine);
-    this.selectRing = new THREE.Mesh(new THREE.RingGeometry(2.05 * S, 2.25 * S, 4, 1, Math.PI / 4), new THREE.MeshBasicMaterial({ color: 0xfff2b0, transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide }));
-    this.selectRing.rotation.x = -Math.PI / 2;
+    this.selectRing = cornerBrackets(2.15 * S, 0.7 * S, 0.12 * S, 0xf5f0e3, 1);
     this.selectRing.visible = false;
     this.root.add(this.selectRing);
-    this.hoverRing = new THREE.Mesh(new THREE.PlaneGeometry(3 * S, 3 * S), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, depthWrite: false }));
-    this.hoverRing.rotation.x = -Math.PI / 2;
+    this.hoverRing = cornerBrackets(1.62 * S, 0.45 * S, 0.07 * S, 0xc8d2da, 1);
     this.hoverRing.visible = false;
     this.root.add(this.hoverRing);
   }
 
-  setActiveColumns(cols) { for (const [c, m] of this.activeCols) m.material.opacity = cols.includes(c) ? 0.16 : 0; }
+  setActiveColumns(cols) { for (const [c, g] of this.activeCols) g.visible = cols.includes(c); }
 
   _sheet(role, mount, owner) {
     const key = `${role}:${mount}:${owner}`;
@@ -301,7 +270,9 @@ export class BoardView {
   }
 
   _ownerDisc(owner) {
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(0.36 * S, 12), new THREE.MeshBasicMaterial({ color: OWNER_HEX[owner], transparent: true, opacity: 0.55, depthWrite: false }));
+    // A: a solid disc; B: a ring — ownership by shape as well as hue
+    const geo = owner === 'A' ? new THREE.CircleGeometry(0.34 * S, 16) : new THREE.RingGeometry(0.2 * S, 0.36 * S, 16);
+    const disc = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: OWNER_HEX[owner], transparent: true, opacity: 0.75, depthWrite: false }));
     disc.rotation.x = -Math.PI / 2;
     disc.position.y = 0.02;
     disc.renderOrder = 2;
@@ -320,17 +291,20 @@ export class BoardView {
   _partyMarker(p) {
     const g = new THREE.Group();
     const color = new THREE.Color(OWNER_HEX[p.owner]);
-    const frame = new THREE.Mesh(new THREE.RingGeometry(1.62 * S, 1.75 * S, 4, 1, Math.PI / 4), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.75, depthWrite: false, side: THREE.DoubleSide }));
-    frame.rotation.x = -Math.PI / 2;
+    // ownership: single brackets for A, double brackets for B (shape, not only hue)
+    g.add(cornerBrackets(1.72 * S, 0.55 * S, 0.09 * S, color, 0.95));
+    if (p.owner === 'B') g.add(cornerBrackets(1.9 * S, 0.45 * S, 0.07 * S, color, 0.85));
     const arrowShape = new THREE.Shape();
     arrowShape.moveTo(-0.45 * S, 0); arrowShape.lineTo(0.45 * S, 0); arrowShape.lineTo(0, 0.5 * S); arrowShape.closePath();
     const arrow = new THREE.Mesh(new THREE.ShapeGeometry(arrowShape), new THREE.MeshBasicMaterial({ color, depthWrite: false, side: THREE.DoubleSide }));
     arrow.rotation.x = -Math.PI / 2;
-    arrow.position.set(0, 0.01, -1.85 * S);
+    arrow.position.set(0, 0.01, -1.95 * S);
+    const arrowEdge = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.45 * S, 0, 0), new THREE.Vector3(0.45 * S, 0, 0), new THREE.Vector3(0, 0.5 * S, 0)]), new THREE.LineBasicMaterial({ color: 0x0d131b }));
+    arrow.add(arrowEdge);
     // an empty center (Pawn) reads as a dashed square, never as a missing member
     const empty = new THREE.Mesh(new THREE.RingGeometry(0.3 * S, 0.42 * S, 4, 1, Math.PI / 4), new THREE.MeshBasicMaterial({ color: 0xe8dcc0, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide }));
     empty.rotation.x = -Math.PI / 2;
-    g.add(frame, arrow, empty);
+    g.add(arrow, empty);
     g.userData = { partyId: p.id, empty };
     g.renderOrder = 2;
     return g;
@@ -419,7 +393,8 @@ export class BoardView {
     for (const [key, w] of want) {
       if (this.cardTiles.has(key)) continue;
       const card = state.cards[w.id];
-      const tex = new THREE.CanvasTexture(drawCard(card, state, 120, 160));
+      const tex = new THREE.CanvasTexture(drawCard(card, state, 240, 320));
+      tex.anisotropy = 8;
       tex.colorSpace = THREE.SRGBColorSpace;
       const tile = new THREE.Mesh(new THREE.PlaneGeometry(2.4 * S, 3.2 * S), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
       tile.rotation.x = -Math.PI / 2;

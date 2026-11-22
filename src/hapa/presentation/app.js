@@ -8,6 +8,7 @@
  */
 import * as THREE from 'three';
 import { Engine } from '../../../vendor/lumina/src/engine/core/Engine.js';
+import { PostFX } from '../../../vendor/lumina/src/engine/render/PostFX.js';
 import { loadCharacterKit } from '../../../vendor/lumina/src/engine/pixel/CharacterSprites.js';
 import { BoardCamera } from './camera.js';
 import { BoardView, COLOR_HEX, OWNER_HEX } from './board-view.js';
@@ -29,6 +30,7 @@ import { UI_FIXTURES } from '../../../fixtures/hapa/ui-fixtures.js';
 import { standingOf, fmtBand } from './terrain-view.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
+import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } from './palette.js';
 import { openEditor } from './editor.js';
 import { openLab, anyProfile, labProfiles } from './lab.js';
 import { localCatalog, localDecks } from './local-content.js';
@@ -39,7 +41,8 @@ const SUIT_NAME = { wands: 'Wands', pentacles: 'Pentacles', cups: 'Cups', swords
 const ROLE_ABBR = { swordsman: 'Sw', pikeman: 'Pk', archer: 'Ar', mage: 'Mg', priest: 'Pr', center: '★' };
 const COLOR_LETTER = { red: 'R', green: 'G', purple: 'P', yellow: 'Y', blue: 'B', orange: 'O', black: 'K', white: 'W', rainbow: '✦' };
 const pts = (u) => { const v = u / U; return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); };
-const manaChips = (m) => Object.entries(m ?? {}).filter(([, n]) => n).map(([c, n]) => h('span', { class: `chip c-${c}`, title: `${n} ${c}` }, `${COLOR_LETTER[c]}${n}`));
+/** Mana as emblem + count (the emblem carries the color identity by shape; the name is in the title). */
+const manaChips = (m) => Object.entries(m ?? {}).filter(([, n]) => n).map(([c, n]) => h('span', { class: `mchip`, title: `${n} ${COLOR_NAME[c]} Mana`, 'aria-label': `${n} ${COLOR_NAME[c]}` }, h('img', { src: emblemURL(c, 16), alt: '' }), String(n)));
 
 export class VersusApp {
   constructor(root) {
@@ -67,8 +70,27 @@ export class VersusApp {
 
   _initEngine() {
     if (this.engine) return;
-    this.engine = new Engine({ container: this.el.world, clearColor: 0x0e1018, maxPixelRatio: 2 });
-    this.engine.scene.fog = new THREE.Fog(0x0e1018, 160, 320);
+    this.engine = new Engine({ container: this.el.world, clearColor: 0x17212d, maxPixelRatio: 2 });
+    this.engine.renderer.toneMappingExposure = 1.12;
+    this.engine.scene.fog = new THREE.Fog(0x17212d, 160, 320);
+    // restrained post (Design Companion ch.2): no depth blur, grain or chromatic aberration over
+    // playable territory; a soft bloom for the inlays and short effects; a gentle vignette
+    try {
+      const r = this.engine.renderer;
+      const dpr = Math.min(window.devicePixelRatio || 1, this.engine.maxPixelRatio);
+      this.postfx = new PostFX(r, this.engine.scene, this.engine.camera, { maxTaps: 48, samples: window.innerWidth * window.innerHeight * dpr * dpr > 1.8e6 ? 2 : 4 });
+      const st = this.postfx.settings;
+      st.dof.enabled = false;
+      Object.assign(st.bloom, { enabled: true, strength: 0.32, radius: 0.45, threshold: 0.86, warmth: 0.2 });
+      Object.assign(st.grade, { contrast: 1.06, saturation: 1.06, temperature: 0.05, vignette: 0.32, vignetteSoftness: 0.6, grain: 0, chromaticAberration: 0, sharpen: 0.12 });
+      this.engine.events.on('resize', ({ width, height, pixelRatio }) => this.postfx.setSize(width, height, pixelRatio));
+      const size = r.getSize(new THREE.Vector2());
+      this.postfx.setSize(Math.max(1, size.x), Math.max(1, size.y), r.getPixelRatio());
+      this.engine.setRenderFn((dt) => this.postfx.render(dt));
+    } catch (err) {
+      console.warn('[versus] post effects unavailable; plain rendering', err);
+      this.postfx = null;
+    }
     this.raycaster = new THREE.Raycaster();
     const canvas = this.engine.renderer.domElement;
     canvas.addEventListener('pointerdown', (e) => this._onPointer(e));
@@ -85,15 +107,16 @@ export class VersusApp {
     const seed = h('input', { id: 'set-seed', type: 'number', value: '1', min: '1' });
     const policySel = (seat) => h('select', { id: `set-pol-${seat}` }, ...ALLOCATION_POLICIES.map((p) => h('option', { value: p }, { slot_order: 'Slot order (fixture)', center_first: 'Center first (sacrifice the center)', protect_ranged: 'Protect ranged members' }[p])));
     this.el.overlay.replaceChildren(h('div', { class: 'card-sheet setup' },
+      h('div', { class: 'title-emblems', 'aria-hidden': 'true' }, ...['red', 'purple', 'blue', 'black', 'rainbow', 'white', 'orange', 'yellow', 'green'].map((c) => h('img', { src: emblemURL(c, 18), alt: '' }))),
       h('h1', {}, 'Hapa Versus'),
       h('p', { class: 'lede' }, 'Two armies on a nine-column battlefield. Each Tick the highlighted columns mint public Minor Arcana from the territory you hold: spend a card as Supply to move, burn it for colored Mana, or play its attached ability. Win by moving a party center into the enemy Capital or killing the enemy Commander.'),
       h('div', { class: 'form' },
-        h('label', {}, 'Profile', profileSel),
+        h('label', { class: 'wide' }, 'Profile', profileSel),
         h('label', {}, 'Seat A (low rows)', seatSel('A', 'human')),
         h('label', {}, 'Seat B (high rows)', seatSel('B', 'bot')),
-        h('label', {}, 'Seed', seed),
         h('label', {}, 'A standing damage allocation', policySel('A')),
-        h('label', {}, 'B standing damage allocation', policySel('B'))),
+        h('label', {}, 'B standing damage allocation', policySel('B')),
+        h('label', {}, 'Seed', seed)),
       h('p', { class: 'dim small' }, 'Allocation applies when your seat assigns damage under the profile (attacker or defender allocation). It is public and recorded in the match manifest.'),
       h('div', { class: 'row' },
         h('button', { class: 'primary', onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: document.getElementById('set-A').value, B: document.getElementById('set-B').value }, seed: Number(seed.value) || 1, policies: { A: document.getElementById('set-pol-A').value, B: document.getElementById('set-pol-B').value } }) }, 'Start match'),
@@ -571,7 +594,7 @@ export class VersusApp {
       const sel = this.selected?.kind === 'card' && this.selected.id === id;
       const def = card ? activeCatalog.cards[card.abilityId] : null;
       tiles.push(h('div', {
-        class: `tile${card ? '' : ' empty'}${sel ? ' sel' : ''}${planned.has(id) ? ' planned' : ''} suit-${card?.suit ?? ''}`,
+        class: `tile owner-${seat.toLowerCase()}${card ? '' : ' empty'}${sel ? ' sel' : ''}${planned.has(id) ? ' planned' : ''} suit-${card?.suit ?? ''}`,
         onclick: () => { if (card) { this.selected = { kind: 'card', id }; this._renderAll(); } },
         title: card ? `${card.id}\n${def?.title}: ${def?.text ?? ''}` : `Empty · next mint ${forecast}`,
       },
@@ -656,15 +679,15 @@ export class VersusApp {
   }
 
   _hoverHelp() {
+    const em = (c) => h('img', { class: 'lg-em', src: emblemURL(c, 14), alt: '' });
     return h('div', { class: 'legend' }, h('h4', {}, 'Legend'),
-      h('div', {}, h('span', { class: 'dot a' }), ' A · ', h('span', { class: 'dot b' }), ' B ownership discs'),
-      h('div', {}, 'Square frame + arrow: a party anchor and its facing; a small dashed square marks an empty Pawn center.'),
-      h('div', {}, 'Gold column wash: active columns this Tick (new unit orders).'),
-      h('div', {}, 'Diamonds on a territory: its Mana color(s).'),
-      h('div', {}, 'Dashed gold square: a Capital.'),
-      h('div', {}, 'Gold diamond under a member: a corner helper standing in the contact strip for a neighbour (it still belongs to its own party).'),
-      h('div', {}, 'Red triangle under a member: it advanced one slot into an enemy casualty\'s gap.'),
-      h('div', {}, 'Terrain labels: ▲ HILLTOP, ▽ OPEN PIT (exposed), ▭ TUNNEL (roofed, not exposed), ✈ FLYING (a line drops to the floor). [ and ] step the cutaway layer.'));
+      h('div', {}, h('span', { class: 'lg-a' }, 'A'), ' single brackets and solid discs · ', h('span', { class: 'lg-b' }, 'B'), ' double brackets and ring discs; the arrow is the formation\'s front.'),
+      h('div', {}, 'Striped column edges with an ACTIVE header: columns that mint and take new unit orders this Tick.'),
+      h('div', {}, 'Thin glowing inlay + emblem plaque: a territory\'s color identity — ', em('red'), ' Red ', em('green'), ' Green ', em('purple'), ' Purple ', em('yellow'), ' Yellow ', em('blue'), ' Blue ', em('orange'), ' Orange ', em('black'), ' Black ', em('white'), ' White ', em('rainbow'), ' Rainbow.'),
+      h('div', {}, 'Brass diamond on a slab: a Mana row. Brass dashed square: a Capital.'),
+      h('div', {}, 'Ivory corner brackets: your selection. A small dashed square in a formation: an empty Pawn center.'),
+      h('div', {}, 'Gold square under a member: a corner helper in the contact strip (still in its own party). Red triangle: it advanced into an enemy casualty\'s gap.'),
+      h('div', {}, 'Terrain labels: ▲ HILLTOP, ▽ OPEN PIT (exposed), ▭ TUNNEL (roofed, not exposed), ✈ FLYING (a line drops to the floor). [ and ] step the height layers.'));
   }
 
   _partyPanel(p) {
@@ -814,30 +837,59 @@ function describeCmd(state, c) {
 }
 
 /** A card face for the world bank tiles. */
-export function drawCardCanvas(card, state, w = 120, h2 = 160) {
+export function drawCardCanvas(card, state, w = 240, h2 = 320) {
   const cv = document.createElement('canvas');
   cv.width = w; cv.height = h2;
   const g = cv.getContext('2d');
   const def = activeCatalog.cards[card.abilityId];
-  g.fillStyle = '#efe6d2'; g.fillRect(0, 0, w, h2);
-  g.strokeStyle = OWNER_HEX[card.owner]; g.lineWidth = 8; g.strokeRect(4, 4, w - 8, h2 - 8);
-  g.fillStyle = '#1d1a24'; g.textAlign = 'center';
+  const k = w / 120; // design units: a 120 × 160 card
+  g.scale(k, k);
+  const W = 120, H = 160;
+  // ivory face, slate keyline
+  const face = g.createLinearGradient(0, 0, 0, H);
+  face.addColorStop(0, '#F8F3E7'); face.addColorStop(1, '#E6DCC6');
+  g.fillStyle = face; g.beginPath(); g.roundRect(1, 1, W - 2, H - 2, 7); g.fill();
+  g.strokeStyle = INK.slate; g.lineWidth = 2; g.stroke();
+  // owner: single corner brackets for A, double for B
+  const oc = OWNER_HEX[card.owner];
+  const brackets = (inset, lw) => {
+    g.strokeStyle = oc; g.lineWidth = lw; const a = 14;
+    for (const [x, y, dx, dy] of [[inset, inset, 1, 1], [W - inset, inset, -1, 1], [inset, H - inset, 1, -1], [W - inset, H - inset, -1, -1]]) {
+      g.beginPath(); g.moveTo(x + dx * a, y); g.lineTo(x, y); g.lineTo(x, y + dy * a); g.stroke();
+    }
+  };
+  brackets(6, 3);
+  if (card.owner === 'B') brackets(11, 2);
+  g.fillStyle = INK.slate; g.textAlign = 'center';
   if (card.category === 'major') {
-    g.font = 'bold 15px serif'; g.fillText('MAJOR', w / 2, 34);
-    g.font = 'bold 13px serif'; (def?.title ?? '').split(' ').forEach((wd, i) => g.fillText(wd, w / 2, 62 + i * 18));
+    g.fillStyle = INK.brass; g.fillRect(14, 16, W - 28, 18);
+    g.fillStyle = INK.slate; g.font = '700 10px Cinzel, Georgia, serif'; g.fillText('MAJOR ARCANA', W / 2, 29);
+    g.font = '700 14px Cinzel, Georgia, serif';
+    (def?.title ?? '').split(' ').forEach((wd, i) => g.fillText(wd, W / 2, 62 + i * 18));
+    g.font = '10px system-ui, sans-serif'; g.fillStyle = '#4B5866';
+    g.fillText(`${card.owner} · C${card.localColumn}`, W / 2, H - 18);
     return cv;
   }
   const art = renditionFor(card);
-  if (art) { // the deck face as a band behind the rules text; the numbers stay legible on top
-    drawCover(g, art.img, 8, 8, w - 16, h2 - 16);
-    g.fillStyle = 'rgba(239,230,210,0.78)'; g.fillRect(8, 20, w - 16, 104);
-    g.fillStyle = '#1d1a24';
-  }
-  g.font = 'bold 46px serif'; g.fillText(String(card.rank ?? ''), w / 2 - 14, 60);
-  g.font = '36px serif'; g.fillText(SUIT[card.suit] ?? '', w / 2 + 26, 58);
-  g.font = 'bold 15px sans-serif'; g.fillText(`Supply ${pts(card.supply ?? 0)}`, w / 2, 88);
-  let x = 16;
-  for (const [c, n] of Object.entries(card.mana ?? {})) { g.fillStyle = COLOR_HEX[c]; g.fillRect(x, 100, 24, 20); g.fillStyle = c === 'white' || c === 'yellow' ? '#111' : '#fff'; g.font = 'bold 13px sans-serif'; g.fillText(`${COLOR_LETTER[c]}${n}`, x + 12, 115); x += 28; }
-  g.fillStyle = '#3a3346'; g.font = '12px sans-serif'; g.fillText(def?.title ?? '', w / 2, 144);
+  if (art) { g.save(); g.beginPath(); g.rect(12, 44, W - 24, 62); g.clip(); drawCover(g, art.img, 12, 44, W - 24, 62); g.restore(); g.strokeStyle = 'rgba(23,33,45,0.6)'; g.lineWidth = 1; g.strokeRect(12, 44, W - 24, 62); }
+  // rank and suit
+  g.font = '700 30px Cinzel, Georgia, serif'; g.textAlign = 'left'; g.fillStyle = INK.slate;
+  g.fillText(String(card.rank ?? ''), 14, 38);
+  g.font = '22px Georgia, serif'; g.textAlign = 'right';
+  g.fillText(SUIT_MARK[card.suit] ?? '', W - 14, 34);
+  g.font = '600 8px system-ui, sans-serif'; g.fillStyle = '#4B5866';
+  g.fillText((card.suit ?? '').toUpperCase(), W - 14, 43);
+  // Supply and Mana (emblem + count), on a band
+  const by = art ? 110 : 56;
+  g.textAlign = 'left'; g.fillStyle = INK.slate; g.font = '700 13px system-ui, sans-serif';
+  g.fillText(`Supply ${pts(card.supply ?? 0)}`, 14, by + 12);
+  const mana = Object.entries(card.mana ?? {}).filter(([, n]) => n);
+  let x = 14;
+  if (!mana.length) { g.font = '11px system-ui, sans-serif'; g.fillStyle = '#5C6A78'; g.fillText('no Mana', 14, by + 30); }
+  for (const [c, n] of mana) { drawEmblem(g, c, x + 7, by + 26, 7); g.fillStyle = INK.slate; g.font = '700 12px system-ui, sans-serif'; g.fillText(String(n), x + 16, by + 30); x += 30; }
+  // the attached ability on a slate band
+  g.fillStyle = INK.slate; g.fillRect(8, H - 26, W - 16, 18);
+  g.fillStyle = INK.ivory; g.textAlign = 'center'; g.font = '600 10px system-ui, sans-serif';
+  g.fillText(def?.title ?? '—', W / 2, H - 13);
   return cv;
 }
