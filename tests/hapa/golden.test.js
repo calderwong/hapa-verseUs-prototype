@@ -386,3 +386,71 @@ test('Determinism: the same opening plans give the same fingerprint twice', () =
   };
   assert.equal(run(), run());
 });
+
+test('Breach: a casualty leaves a gap; its opponent steps one slot in and meets Archer 4 ahead and Swordsman 2 on the flank', () => {
+  // the Chapter 7 example: Swordsmen 1–3, Archers 4 and 6, a Queen in 5
+  const fx = scenario({ parties: [
+    { id: 'A.att', owner: 'A', mount: 'castle', column: 5, row: 5, slots: { 5: 'center', 1: 'swordsman', 2: 'swordsman', 3: 'swordsman' }, supply: 0.25 },
+    { id: 'B.def', owner: 'B', mount: 'queen', column: 5, row: 6, slots: { 5: 'center', 1: 'swordsman', 2: 'swordsman', 3: 'swordsman', 4: 'archer', 6: 'archer' } },
+  ] });
+  fx.state.members['B.def.s1'].hp = 1; // B's Swordsman 1 falls in the first exchange
+  for (const x of ['s1', 's2', 's3']) fx.state.members[`A.att.${x}`].hp = 20 * U; // (fixture) A's front survives the Archers
+  fx.state.tick = 5; fx.state.activeColumns = [5]; fx.state.phase = 'planning';
+  runTick(fx.state, fx.ctx, { A: [{ type: 'set_destination', partyId: 'A.att', target: { column: 5, row: 6 } }], B: [] });
+  assert.equal(fx.state.members['B.def.s1'].alive, false);
+  const r = tick(fx);
+  const breach = r.events.find((e) => e.type === 'breach_advanced');
+  assert.ok(breach, 'a member advanced into the gap');
+  assert.equal(breach.memberId, 'A.att.s3'); // the Swordsman opposite B's slot 1 (mirrored facing)
+  assert.equal(breach.intoSlot, 1);
+  const anchor = fx.state.parties['A.att'];
+  assert.deepEqual([anchor.region.column, anchor.region.row], [5, 5]); // the party center did not move
+  const ex = r.events.find((e) => e.type === 'exchange');
+  const targets = ex.hits.filter((h) => h.source === 'A.att.s3').map((h) => h.recipient).sort();
+  assert.deepEqual(targets, ['B.def.s2', 'B.def.s4']); // flank Swordsman 2 and Archer 4 ahead
+  assert.equal(r.events.filter((e) => e.type === 'breach_advanced').length, 1); // no cascade
+});
+
+test('Retreat: only touching own members die; the attacker follows into the vacated territory at no Supply', () => {
+  const fx = scenario({ parties: [
+    { id: 'A.att', owner: 'A', mount: 'castle', column: 5, row: 5, slots: { 5: 'center', 2: 'swordsman' }, supply: 0.25 },
+    { id: 'B.def', owner: 'B', mount: 'castle', column: 5, row: 6, slots: { 5: 'center', 2: 'swordsman', 8: 'archer' }, supply: 2 },
+  ] });
+  fx.state.members['A.att.s2'].hp = 20 * U; // (fixture) the attacker's front survives
+  fx.state.members['B.def.s2'].hp = 20 * U; // (fixture) so the retreat itself, not the exchange, kills it
+  fx.state.tick = 5; fx.state.activeColumns = [5]; fx.state.phase = 'planning';
+  runTick(fx.state, fx.ctx, { A: [{ type: 'set_destination', partyId: 'A.att', target: { column: 5, row: 6 } }], B: [] });
+  fx.state.tick = 13; // C5 is active again at Tick 14
+  const r = tick(fx, { A: [], B: [{ type: 'retreat', partyId: 'B.def', target: { column: 5, row: 8 } }] });
+  const ret = r.events.find((e) => e.type === 'retreated');
+  assert.deepEqual(ret.lost, ['B.def.s2']); // the touching Swordsman; the untouched Archer lives
+  assert.equal(fx.state.members['B.def.s8'].alive, true);
+  assert.ok(r.events.some((e) => e.type === 'follow_started' && e.partyId === 'A.att'));
+  assert.equal(supplyOf(fx.state.parties['A.att']), 0); // it had none left, yet it follows
+  assert.ok(fx.state.parties['A.att'].y > 18 * U); // advanced toward the vacated R6
+});
+
+test('Row Mana Double placed through its Card doubles only R6 at the next mint (end to end)', () => {
+  const fx = scenario({ parties: [{ id: 'A.x', owner: 'A', mount: 'castle', column: 1, row: 6, slots: { 5: 'center' } }] });
+  const s = fx.state;
+  s.tick = 1; s.activeColumns = [1, 9]; s.phase = 'planning';
+  s.cards['A.rmd'] = { id: 'A.rmd', owner: 'A', column: 5, localColumn: 5, tick: 1, suit: 'wildcard', rank: 2, supply: 2 * U, mana: {}, pips: [], ability: 'fixture.row_mana_double@1', abilityId: 'fixture.row_mana_double', state: 'available' };
+  s.players.A.bank.minor['5'] = 'A.rmd';
+  s.players.A.pool = { blue: 2 };
+  const r = runTick(s, fx.ctx, { A: [{ type: 'play_ability', cardId: 'A.rmd', actorPartyId: 'A.x', target: { row: 6 } }], B: [] });
+  assert.ok(r.events.some((e) => e.type === 'enchantment_placed' && e.row === 6));
+  assert.equal(s.players.A.bank.rows['6'], 'A.rmd');
+  // a newly placed production Enchantment first affects a later mint
+  const next = tick(fx); // Tick 2 mints C2/C8 — the next C1 mint is Tick 9
+  void next;
+  for (let t = 3; t <= 9; t++) tick(fx);
+  const card = s.cards[s.players.A.bank.minor['1']];
+  assert.deepEqual(card.mana, { red: 3, green: 2 });
+  assert.deepEqual(card.pips.find((p) => p.row === 6).multipliers, ['F.A.rmd']);
+  // an own-half row is refused
+  s.players.A.pool = { blue: 2 };
+  s.cards['A.rmd2'] = { ...s.cards['A.rmd'], id: 'A.rmd2', state: 'available' };
+  s.players.A.bank.minor['5'] = 'A.rmd2';
+  const v = validatePlan(s, fx.ctx, 'A', [{ type: 'play_ability', cardId: 'A.rmd2', actorPartyId: 'A.x', target: { row: 4 } }]);
+  assert.match(v.errors[0].error, /enemy-half Mana row/);
+});

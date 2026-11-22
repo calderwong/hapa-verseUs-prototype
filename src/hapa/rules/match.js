@@ -16,7 +16,7 @@ import { clone } from './encoding.js';
 import { SEATS, other, livingMembers } from './state.js';
 import { activeColumnsAt, roundOf, mintAndClear, planPayment, supplyOf } from './economy.js';
 import { setDestination, simulateMovement, placeMembers, planRoute, routeOrigin, touchingPairs, contactTolerance, arrangementBlocked } from './movement.js';
-import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember } from './combat.js';
+import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember, applyBreaches } from './combat.js';
 import { workError, startWork, completeWork } from './terrain.js';
 
 // --- the Tick boundary ------------------------------------------------------------------------
@@ -373,6 +373,8 @@ export function* resolveTick(state, ctx, plans) {
 /** Movement and combat for one Tick: scheduled exchanges, retreats, then swept travel. */
 function simulateTick(state, ctx, events) {
   state.phase = 'simulating';
+  // breach: a member next to a casualty's vacated slot may step one slot in (no cascade)
+  applyBreaches(state, ctx, events);
   // existing engagements exchange once at the start of the movement phase
   const scheduled = Object.values(state.engagements).filter((E) => E.active && E.lastExchangeTick < state.tick).map((engagement) => ({ engagement, first: false }));
   if (scheduled.length) {
@@ -404,7 +406,20 @@ function applyRetreats(state, ctx, events) {
     const lost = [...touching].filter((id) => state.members[id].homeParty === P.id);
     for (const id of lost) killMember(state, ctx, events, state.members[id], 'retreat');
     emit(state, events, 'retreated', { partyId: P.id, lost, target: r.target });
-    for (const E of Object.values(state.engagements)) if (E.active && (E.a === P.id || E.b === P.id)) { E.active = false; delete state.engagements[E.id]; emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b, cause: 'retreat' }); }
+    // the engagement's attacker follows a withdrawing defender into the vacated territory (0 Supply)
+    for (const E of Object.values(state.engagements)) {
+      if (!E.active || E.defender !== P.id || !E.attacker) continue;
+      const A = state.parties[E.attacker];
+      if (!A?.alive || !A.mount || A.mountLost) continue;
+      const vacated = { column: P.region.column, row: P.region.row };
+      const origin = routeOrigin(state, ctx, A);
+      const onTheWay = origin.column === vacated.column && origin.row === vacated.row; // already heading there
+      if (onTheWay || planRoute(ctx, A.mount, origin, vacated).route) {
+        A.freeFollow = { column: vacated.column, row: vacated.row };
+        A.pendingFollow = { ...vacated, continueRoute: onTheWay };
+      }
+    }
+    for (const E of Object.values(state.engagements)) if (E.active && (E.a === P.id || E.b === P.id)) { const Q = state.parties[E.a === P.id ? E.b : E.a]; E.active = false; delete state.engagements[E.id]; if (Q?.alive && !Object.values(state.engagements).some((x) => x.active && (x.a === Q.id || x.b === Q.id))) Q.state = Q.route.length && Q.mount && !Q.mountLost ? 'moving' : 'idle'; emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b, cause: 'retreat' }); }
     if (P.alive && P.mount && !P.mountLost) {
       P.state = 'idle';
       setDestination(state, ctx, events, P, r.target, { seat: r.seat, command: 'retreat' });
@@ -413,6 +428,16 @@ function applyRetreats(state, ctx, events) {
   }
   state.pendingRetreats = [];
   refreshEngagements(state, ctx, events);
+  for (const A of Object.values(state.parties)) {
+    if (!A.pendingFollow || !A.alive) continue;
+    const t = A.pendingFollow;
+    A.pendingFollow = null;
+    if (Object.values(state.engagements).some((x) => x.active && (x.a === A.id || x.b === A.id))) { A.freeFollow = null; continue; }
+    A.state = 'idle';
+    if (!t.continueRoute) setDestination(state, ctx, events, A, { column: t.column, row: t.row }, { command: 'follow' });
+    A.state = 'moving';
+    emit(state, events, 'follow_started', { partyId: A.id, target: { column: t.column, row: t.row }, supplyCost: 0 });
+  }
 }
 
 /** End of Tick: turns and formation changes complete; release the planning state. */

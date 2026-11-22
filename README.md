@@ -80,19 +80,19 @@ before play. Bind it to a column in a profile's `cards.bindings` (or a Major in 
 
 ## What is implemented, fixture-tested or scheduled
 
-Implemented and fixture-tested (44 headless tests): canonical encoding and the Appendix B
+Implemented and fixture-tested (47 headless tests): canonical encoding and the Appendix B
 SHA-256 vector; all profiles; 36 parties / 162 members; the clock, prologue and Rounds; mint from
 the completed prior state with replacement; frontier cutoff and exposed ground; exclusive card
 uses; Rainbow payment; one destination, Mount routes, Knight L, fractional Supply; merging; swept
 contact (Queen/Knight at quantum 125); per-hit directional damage; individual, line and
 party-pool health; attacker/defender allocation with recorded standing policies; charge and Pike
 transfer; victory, draws and concession; `public_stack_v1` counters; Bound and Column Standards;
-row Mana doubling; retreat casualties; mining → crafting → equipment (`terrain_work_v3_01`);
+row Mana doubling placed through its Card; breach advance; retreat casualties and the attacker's free follow; mining → crafting → equipment (`terrain_work_v3_01`);
 plan agreement with stale Ready pairs; signed peer records; replay verification; idempotent
 history.
 
-Known limitations (see the board for each): corner helpers and breach advance are not implemented;
-retreat does not yet grant the attacker its automatic follow; formation changes are refused while
+Known limitations (see the board for each): corner helpers (a neighbouring party's member stepping
+into the contact strip) are not implemented; formation changes are refused while
 engaged (a conservative reading); merges do not sweep each member's assembly path; uphill Speed,
 ramps and the Archer elevation curve wait for terrain presentation; damage allocation uses the
 recorded standing policy rather than a live per-exchange prompt; the battlefield uses Luminati's

@@ -229,7 +229,8 @@ export function simulateMovement(state, ctx, events, onContact) {
     if (!list.length) break;
     const proposals = [];
     for (const p of list) {
-      const avail = supplyOf(p);
+      const free = !!p.freeFollow; // following a withdrawing defender costs no Supply
+      const avail = free ? Number.MAX_SAFE_INTEGER : supplyOf(p);
       if (avail <= 0) {
         p.state = 'waiting_supply';
         emit(state, events, 'travel_paused', { partyId: p.id, reason: 'no Supply', quantum: q, destination: p.destination });
@@ -312,9 +313,9 @@ export function simulateMovement(state, ctx, events, onContact) {
         p.lastMovedTick = state.tick;
         p.x += pr.sx * pr.step;
         p.y += pr.sy * pr.step;
-        const cost = Math.floor((pr.step * costPerPitch + (p.supplyRemainder ?? 0)) / pitch);
-        p.supplyRemainder = (pr.step * costPerPitch + (p.supplyRemainder ?? 0)) % pitch;
-        const spent = spendSupply(p, cost);
+        const cost = p.freeFollow ? 0 : Math.floor((pr.step * costPerPitch + (p.supplyRemainder ?? 0)) / pitch);
+        if (!p.freeFollow) p.supplyRemainder = (pr.step * costPerPitch + (p.supplyRemainder ?? 0)) % pitch;
+        const spent = cost ? spendSupply(p, cost) : [];
         const acc = (spentThisTick[p.id] ??= { units: 0, portions: {} });
         acc.units += cost;
         for (const s of spent) acc.portions[s.cardId] = (acc.portions[s.cardId] ?? 0) + s.units;
@@ -333,6 +334,7 @@ export function simulateMovement(state, ctx, events, onContact) {
           if (r.error) emit(state, events, 'merge_failed', { partyId: p.id, pawnId: pr.mergeTarget.id, reason: r.error });
         }
         if (!p.route.length) {
+          p.freeFollow = null;
           p.state = 'idle';
           emit(state, events, 'destination_reached', { partyId: p.id, at: p.destination, quantum: q });
           p.destination = null;

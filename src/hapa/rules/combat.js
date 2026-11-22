@@ -11,7 +11,7 @@
 import { emit } from './context.js';
 import { FACINGS } from './geometry.js';
 import { livingMembers, other } from './state.js';
-import { touchingPairs, contactTolerance, engagementBetween } from './movement.js';
+import { touchingPairs, contactTolerance, engagementBetween, placeMembers as placeAll } from './movement.js';
 
 const FRONT_SLOTS = [1, 2, 3], SIDE_SLOTS = [4, 6], REAR_SLOTS = [7, 8, 9];
 
@@ -396,6 +396,7 @@ export function refreshEngagements(state, ctx, events) {
     for (const p of [P, Q]) {
       if (!p?.alive || p.retired) continue;
       if (Object.values(state.engagements).some((x) => x.active && (x.a === p.id || x.b === p.id))) continue;
+      if (recallBreaches(state, p)) placeAll(state, ctx, p);
       p.state = p.route.length && p.mount && !p.mountLost ? 'moving' : 'idle';
     }
   }
@@ -423,4 +424,54 @@ export function checkVictory(state, ctx, events) {
   state.phase = 'ended';
   emit(state, events, 'match_ended', state.outcome);
   return state.outcome;
+}
+
+/**
+ * Breach (Appendix A "Breach"): at the start of a later Tick, a member that touches a vacated
+ * enemy slot square may advance one local slot into it — without moving its party anchor or
+ * spending Supply. One member per vacancy, one slot per member, no cascade within the Tick.
+ */
+export function applyBreaches(state, ctx, events) {
+  const U = ctx.U;
+  const tol = contactTolerance(ctx);
+  const moved = new Set();
+  for (const E of Object.values(state.engagements)) {
+    if (!E.active) continue;
+    for (const [P, Q] of [[state.parties[E.a], state.parties[E.b]], [state.parties[E.b], state.parties[E.a]]]) {
+      if (!P?.alive || !Q?.alive) continue;
+      const bodies = Object.values(state.members).filter((m) => m.alive);
+      for (let slot = 1; slot <= 9; slot++) {
+        const id = Q.slots[String(slot)];
+        if (!id || state.members[id].alive) continue; // only a casualty's slot is a breach vacancy
+        const off = slotOffsetOf(Q, slot);
+        const vx = Q.x + off.dx * U, vy = Q.y + off.dy * U;
+        if (bodies.some((b) => Math.abs(b.x - vx) < U && Math.abs(b.y - vy) < U)) continue; // occupied
+        const cand = livingMembers(state, P).filter((m) => !moved.has(m.id) && !m.isCenter
+          && ((Math.abs(m.x - vx) <= U + tol && Math.abs(m.y - vy) < U - tol) || (Math.abs(m.y - vy) <= U + tol && Math.abs(m.x - vx) < U - tol))
+          && (archetype(ctx, m).attacks ?? []).some((a) => a.kind === 'melee'))
+          .sort(bySlotThenId)[0];
+        if (!cand) continue;
+        moved.add(cand.id);
+        const from = { x: cand.x, y: cand.y };
+        cand.x = vx; cand.y = vy;
+        cand.helperAway = { kind: 'breach', intoParty: Q.id, intoSlot: slot, tick: state.tick };
+        bodies.push(cand);
+        emit(state, events, 'breach_advanced', { memberId: cand.id, partyId: P.id, intoParty: Q.id, intoSlot: slot, from, to: { x: vx, y: vy } });
+      }
+    }
+  }
+}
+
+function slotOffsetOf(party, slot) {
+  const row = Math.floor((slot - 1) / 3), col = (slot - 1) % 3;
+  const lx = col - 1, ly = 1 - row;
+  const f = FACINGS[party.facing];
+  return { dx: lx * f.rx + ly * f.fx, dy: lx * f.ry + ly * f.fy };
+}
+
+/** Members that breached return to their slots when their party's engagements end. */
+export function recallBreaches(state, party) {
+  let any = false;
+  for (const m of livingMembers(state, party)) if (m.helperAway?.kind === 'breach') { m.helperAway = null; any = true; }
+  return any;
 }
