@@ -30,6 +30,7 @@ window, then movement and combat play back → the next Tick mints.
 
 | Input | Action |
 | --- | --- |
+| Drag a hand card | onto one of your formations: Supply (a tooltip shows the result before you let go) · onto the Mana pool panel: Burn · anywhere else: it returns |
 | Left click | select a party, a territory, a hand card or an event (Alt+click a member) |
 | Right click | the selected party's one destination (replaces the previous one) |
 | Left-drag · right-drag | pan the board · orbit and tilt (a drag never counts as a click) |

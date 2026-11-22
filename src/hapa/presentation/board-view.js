@@ -44,6 +44,33 @@ function spriteSpec(role, mount, owner) {
   }
 }
 
+/** A Supply token sprite: a brass ration-crate icon with the loaded count, plus "+n" when planned. */
+function supplyToken(have, plan) {
+  const txt = `${+have.toFixed(2)}`;
+  const extra = plan ? ` +${+plan.toFixed(2)}` : '';
+  const probe = document.createElement('canvas').getContext('2d');
+  probe.font = '800 34px system-ui, sans-serif';
+  const w = 62 + Math.ceil(probe.measureText(txt).width) + (extra ? Math.ceil(probe.measureText(extra).width) + 6 : 0) + 14;
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = 56;
+  const g = cv.getContext('2d');
+  g.fillStyle = 'rgba(23,33,45,0.92)'; g.beginPath(); g.roundRect(2, 2, w - 4, 52, 14); g.fill();
+  g.lineWidth = 3; g.strokeStyle = plan ? '#8FD3A0' : '#C9A65E';
+  if (plan) g.setLineDash([7, 5]);
+  g.stroke(); g.setLineDash([]);
+  // the icon: a small strapped crate
+  g.fillStyle = '#C9A65E'; g.fillRect(14, 14, 32, 28); g.strokeStyle = '#0D131B'; g.lineWidth = 3; g.strokeRect(14, 14, 32, 28);
+  g.beginPath(); g.moveTo(14, 28); g.lineTo(46, 28); g.moveTo(30, 14); g.lineTo(30, 42); g.stroke();
+  g.font = '800 34px system-ui, sans-serif'; g.textBaseline = 'middle';
+  g.fillStyle = '#F5F0E3'; g.fillText(txt, 56, 30);
+  if (extra) { g.fillStyle = '#8FD3A0'; g.fillText(extra, 56 + probe.measureText(txt).width + 4, 30); }
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true, toneMapped: false }));
+  spr.userData.w = 0.55 * (w / 56); spr.userData.h = 0.55;
+  spr.scale.set(spr.userData.w, spr.userData.h, 1);
+  spr.renderOrder = 9;
+  return spr;
+}
+
 const MOUNT_GLYPH = { castle: '♜', knight: '♞', bishop: '♝', queen: '♛', king: '♚', commander: '♚' };
 const crestCache = new Map();
 /** A flat round plaque with the Mount's movement glyph (a Commander's carries a brass star). */
@@ -356,6 +383,17 @@ export class BoardView {
   /** Billboard + facing each frame. */
   update(dt, camera) {
     this.fx.update(dt);
+    if (this.dropRing?.visible) {
+      this.dropRing.userData.t += dt;
+      const k = 1 + Math.sin(this.dropRing.userData.t * 7) * 0.05;
+      this.dropRing.scale.set(k, 1, k);
+    }
+    for (const tok of this.supplyTokens?.values() ?? []) {
+      if (tok.userData.pop === undefined || tok.userData.pop >= 1) { tok.scale.set(tok.userData.w, tok.userData.h, 1); continue; }
+      tok.userData.pop = Math.min(1, tok.userData.pop + dt * 2.2);
+      const t = tok.userData.pop, k = 1 + Math.sin(t * Math.PI) * 0.6 * (1 - t);
+      tok.scale.set(tok.userData.w * k, tok.userData.h * k, 1);
+    }
     for (const spr of this.sprites.values()) {
       if (!spr.visible) continue;
       const f = spr.userData.facing;
@@ -423,6 +461,69 @@ export class BoardView {
     if (!party) party = Object.values(state.parties).find((p) => p.alive && !p.retired && Math.abs(p.x / U - b.x) < 1.6 && Math.abs(p.y / U - b.y) < 1.6) ?? null;
     const onBoard = this.ctx.geo.onBoard(column, row);
     return { territory: onBoard ? { column, row } : null, member, party, point: b };
+  }
+
+  /** The bank card tile under the pointer, or null. */
+  pickCard(raycaster) {
+    const hit = raycaster.intersectObjects([...this.cardTiles.values()], false)[0];
+    return hit ? hit.object.userData.cardId : null;
+  }
+
+  /** Hide or show one bank tile (while its card is picked up). */
+  setCardLifted(cardId, lifted) { for (const t of this.cardTiles.values()) if (t.userData.cardId === cardId) t.visible = !lifted; }
+
+  /**
+   * Drop-target feedback: a pulsing bracket frame around a formation (green when the drop is
+   * legal, red when it is not), or nothing.
+   */
+  dropHighlight(state, party, valid) {
+    if (!this.dropRing) {
+      this.dropRing = new THREE.Group();
+      this.dropRing.add(cornerBrackets(2.3 * S, 0.9 * S, 0.16 * S, 0xffffff, 1));
+      const fill = new THREE.Mesh(new THREE.PlaneGeometry(4.2 * S, 4.2 * S), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, depthWrite: false, toneMapped: false }));
+      fill.rotation.x = -Math.PI / 2;
+      this.dropRing.add(fill);
+      this.dropRing.renderOrder = 4;
+      this.root.add(this.dropRing);
+    }
+    if (!party) { this.dropRing.visible = false; return; }
+    const w = this.toWorld(party.x, party.y);
+    this.dropRing.position.set(w.x, 0.07 + (party.movementMode === 'air' ? 0 : bandY(party.band ?? 1)), w.z);
+    const color = valid ? 0x8fd3a0 : 0xef6a5b;
+    this.dropRing.traverse((o) => { if (o.material) o.material.color.setHex(color); });
+    this.dropRing.visible = true;
+    this.dropRing.userData.t = this.dropRing.userData.t ?? 0;
+  }
+
+  /**
+   * Supply tokens beside each formation: loaded Supply and, if any, the Supply planned this Tick
+   * (dashed rim, "+n"). A change pops the token. `planned` maps party id → planned units.
+   */
+  syncSupplyTokens(state, planned = {}) {
+    this.supplyTokens ??= new Map();
+    const U = this.ctx.U;
+    for (const p of Object.values(state.parties)) {
+      const have = p.supply.reduce((n, x) => n + x.units, 0) / U;
+      const plan = (planned[p.id] ?? 0) / U;
+      const key = `${have}|${plan}`;
+      let tok = this.supplyTokens.get(p.id);
+      const show = p.alive && !p.retired && (have > 0 || plan > 0);
+      if (!show) { if (tok) tok.visible = false; continue; }
+      if (!tok || tok.userData.key !== key) {
+        if (tok) { this.root.remove(tok); tok.material.map.dispose(); tok.material.dispose(); }
+        tok = supplyToken(have, plan);
+        tok.userData.key = key;
+        tok.userData.pop = 0; // pop on change
+        this.supplyTokens.set(p.id, tok);
+        this.root.add(tok);
+      }
+      const mk = this.markers.get(p.id);
+      const base = mk ? mk.position : this.toWorld(p.x, p.y);
+      // to the formation's right in world terms of its facing
+      const F = FACINGS[p.facing] ?? FACINGS.N;
+      tok.position.set(base.x + F.rx * 2.0 * S, base.y + 0.95, base.z - F.ry * 2.0 * S);
+      tok.visible = true;
+    }
   }
 
   /** Small card tiles lying in the world bank slots (the ribbons in the HUD show the same instances). */

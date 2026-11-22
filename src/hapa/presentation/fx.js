@@ -96,6 +96,31 @@ export class HitFX {
     this.items.push({ parts, t: 0, life: reduced() ? 0.9 : 0.75, base: to.clone(), label, mark });
   }
 
+  /**
+   * Supply delivered (planned) to a formation: an expanding brass ring on the ground, sparks rising
+   * from the drop point and a "+n Supply" callout. `at` is the formation's world position.
+   */
+  supply(at, text) {
+    const still = reduced();
+    const parts = [];
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.05, 48), new THREE.MeshBasicMaterial({ color: 0xE3CB8E, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.copy(at).add(new THREE.Vector3(0, 0.08, 0)); ring.renderOrder = 8;
+    this.group.add(ring); parts.push(ring);
+    const sparks = [];
+    if (!still) for (let i = 0; i < 14; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.tex.burst, color: i % 3 ? 0xE3CB8E : 0xF5F0E3, transparent: true, depthTest: false, toneMapped: false }));
+      sp.scale.set(0.28, 0.28, 1); sp.renderOrder = 11;
+      const a = (i / 14) * Math.PI * 2;
+      sp.position.copy(at).add(new THREE.Vector3(0, 0.4, 0));
+      sp.userData.v = new THREE.Vector3(Math.cos(a) * (1.2 + (i % 4) * 0.35), 3.2 + (i % 5) * 0.5, Math.sin(a) * (1.2 + (i % 4) * 0.35));
+      this.group.add(sp); parts.push(sp); sparks.push(sp);
+    }
+    const label = numberSprite(text, '#F2DFA6');
+    label.position.copy(at).add(new THREE.Vector3(0, 2.4, 0));
+    this.group.add(label); parts.push(label);
+    this.items.push({ parts, t: 0, life: still ? 1.0 : 1.3, base: at.clone(), label, mark: null, ring, sparks, kind: 'supply' });
+  }
+
   update(dt) {
     const still = reduced();
     for (let i = this.items.length - 1; i >= 0; i--) {
@@ -109,6 +134,14 @@ export class HitFX {
       }
       const fade = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
       for (const p of it.parts) p.material.opacity = fade;
+      if (it.kind === 'supply') {
+        const r = 0.6 + (still ? 1.6 : Math.min(1, k * 1.6) * 2.2);
+        it.ring.scale.set(r, r, r);
+        it.ring.material.opacity = (1 - k) * 0.9;
+        for (const sp of it.sparks) { sp.userData.v.y -= 7 * dt; sp.position.addScaledVector(sp.userData.v, dt); }
+        if (it.label) it.label.position.y = it.base.y + 2.4 + (still ? 0 : k * 0.9);
+        continue;
+      }
       if (!still) {
         const s = 0.6 + Math.min(1, k * 4) * 0.7;
         it.mark.scale.set(s, s, 1);

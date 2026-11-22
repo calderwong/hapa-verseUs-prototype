@@ -33,6 +33,7 @@ import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
 import { VersusSound } from './sound.js';
 import { buildScenery } from './scenery.js';
+import { CardDrag } from './card-drag.js';
 import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } from './palette.js';
 import { openEditor } from './editor.js';
 import { openLab, anyProfile, labProfiles } from './lab.js';
@@ -97,12 +98,20 @@ export class VersusApp {
     }
     this.raycaster = new THREE.Raycaster();
     const canvas = this.engine.renderer.domElement;
-    // a click acts on release, and only if the gesture was not a camera drag (pan / orbit)
+    // cards are picked up from the hand ribbon or their bank slot and dropped on the field
+    this.cardDrag = new CardDrag(this, { drawCard: drawCardCanvas, pts, fmtMana, supplyOf, partyName, legalDestinations });
+    canvas.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || !this.view || !this.session) return;
+      const id = this._cardTileAt(e);
+      const card = id ? this.state.cards[id] : null;
+      if (card && this.cardDrag.press(e, card, { x: e.clientX, y: e.clientY })) e.stopPropagation(); // not a camera pan
+    });
+    // a click acts on release, and only if the gesture was not a camera drag (pan / orbit) or a card drag
     this.el.world.addEventListener('pointerup', (e) => {
-      if (e.target.closest?.('button, .layer-rail, .cam-pad') || this.cam?.wasDrag()) return;
+      if (e.target.closest?.('button, .layer-rail, .cam-pad') || this.cam?.wasDrag() || this.cardDrag?.active || this.dragging) return;
       this._onPointer(e);
     });
-    canvas.addEventListener('pointermove', (e) => { if (!this.cam?.dragging) this._onHover(e); });
+    canvas.addEventListener('pointermove', (e) => { if (!this.cam?.dragging && !this.dragging) this._onHover(e); });
     this.el.world.addEventListener('contextmenu', (e) => e.preventDefault());
     this.engine.addSystem({ name: 'versus', update: (dt) => this._frame(dt) });
     this.engine.start();
@@ -291,6 +300,7 @@ export class VersusApp {
     const moving = new Set();
     for (const m of Object.values(this.state.members)) { const a = startPos[m.id], b = [m.x, m.y]; if (a && (a[0] !== b[0] || a[1] !== b[1])) moving.add(m.id); }
     this.view.setWalking(moving);
+    for (const t of this.view.supplyTokens?.values() ?? []) t.visible = false; // they return at their new places after playback
     return new Promise((resolve) => {
       this.playback = { t: 0, duration, all, events, resolve, shown: 0, paused: false };
     });
@@ -302,6 +312,11 @@ export class VersusApp {
     const colorOfMember = (id) => activeCatalog.archetypes[this.state.members[id]?.archetype]?.color ?? null;
     let n = 0;
     for (const e of events) {
+      if (e.type === 'supply_loaded') { // the planned Supply actually lands
+        const mk = this.view.markers.get(e.partyId);
+        if (mk) this.view.fx.supply(mk.position.clone(), `Supply ${pts(e.total)}`);
+        continue;
+      }
       const hits = e.type === 'exchange' ? e.hits : e.type === 'card_damage' ? [e] : [];
       const totals = new Map();
       for (const hit of hits) { const t = totals.get(hit.recipient) ?? { damage: 0, hits: 0, seen: 0 }; t.damage += hit.damage; t.hits++; totals.set(hit.recipient, t); }
@@ -441,8 +456,24 @@ export class VersusApp {
     this.hoverInfo = p;
   }
 
+  /** The bank card tile under a pointer event, or null. */
+  _cardTileAt(e) {
+    const rect = this.engine.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.engine.camera);
+    return this.view.pickCard(this.raycaster);
+  }
+
+  /** Supply planned in both public plans, by party (for the on-board tokens). */
+  _plannedSupplyMap() {
+    const out = {};
+    for (const seat of ['A', 'B']) for (const c of this.plans?.[seat] ?? []) if (c.type === 'load_supply') out[c.partyId] = (out[c.partyId] ?? 0) + (this.state.cards[c.cardId]?.supply ?? 0);
+    return out;
+  }
+
   _onPointer(e) {
     if (!this.session || e.button === 1) return;
+    if (e.button === 0) { const id = this._cardTileAt(e); if (id) { this.selected = { kind: 'card', id }; this._renderAll(); return; } }
     const pick = this._rayFrom(e);
     if (!pick) return;
     const seat = this.viewSeat;
@@ -618,6 +649,7 @@ export class VersusApp {
     this._renderEvents();
     this._renderLayers();
     this._renderToolHint();
+    if (!this.playback) this.view.syncSupplyTokens(this.state, this._plannedSupplyMap());
     const sel = this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null;
     if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? legalDestinations(this.state, this.ctx, sel) : []);
     else if (!sel) this.view.select(this.state, null);
@@ -700,8 +732,9 @@ export class VersusApp {
       const sel = this.selected?.kind === 'card' && this.selected.id === id;
       const def = card ? activeCatalog.cards[card.abilityId] : null;
       tiles.push(h('div', {
-        class: `tile owner-${seat.toLowerCase()}${card ? '' : ' empty'}${sel ? ' sel' : ''}${planned.has(id) ? ' planned' : ''} suit-${card?.suit ?? ''}`,
-        onclick: () => { if (card) { this.selected = { kind: 'card', id }; this._renderAll(); } },
+        class: `tile owner-${seat.toLowerCase()}${card && own && this.cardDrag?.canLift(card) ? ' liftable' : ''}${card ? '' : ' empty'}${sel ? ' sel' : ''}${planned.has(id) ? ' planned' : ''} suit-${card?.suit ?? ''}`,
+        onclick: () => { if (card && !this.dragging) { this.selected = { kind: 'card', id }; this._renderAll(); } },
+        onpointerdown: (e) => { if (card && own) { const r = e.currentTarget.getBoundingClientRect(); this.cardDrag?.press(e, card, { x: r.left + r.width / 2, y: r.top + r.height / 2 }); } },
         title: card ? `${card.id}\n${def?.title}: ${def?.text ?? ''}` : `Empty · next mint ${forecast}`,
       },
       h('div', { class: 'tl' }, `C${lc}`, seat === 'B' ? h('small', {}, ` g${col}`) : null),
@@ -781,10 +814,10 @@ export class VersusApp {
     if (this.pendingChoice) return el.replaceChildren(this._responsePanel());
     if (!sel) return el.replaceChildren(h('h3', {}, 'How a Tick goes'),
       h('ol', { class: 'quickstart' },
-        h('li', {}, h('b', {}, 'Supply. '), 'Select one of your parties and press a ', h('b', {}, 'Load Supply'), ' button — or pick a hand card and choose ', h('b', {}, 'Supply…'), '. Each step of movement costs 1 Supply.'),
+        h('li', {}, h('b', {}, 'Supply. '), h('b', {}, 'Drag'), ' a card from your hand (or its slot on the board) onto one of your formations and let go. Each step of movement costs 1 Supply. Drop a card on the Mana pool panel to burn it instead.'),
         h('li', {}, h('b', {}, 'Move. '), 'With the party selected, ', h('b', {}, 'right-click'), ' a highlighted territory. New orders need the party\'s column to be active (striped edges).'),
         h('li', {}, h('b', {}, 'Ready. '), 'Press ', h('b', {}, 'Ready'), ' (Ctrl/⌘ + Enter). Both plans resolve together and play back.')),
-      h('p', { class: 'dim small' }, 'Opening: load the C1 card into your C1 Castle (R1), then right-click the Pawn ahead of it (R2) — they merge into one nine-member party.'),
+      h('p', { class: 'dim small' }, 'Opening: drag the C1 card onto your C1 Castle (R1), select the Castle and right-click the Pawn ahead of it (R2) — they merge into one nine-member party.'),
       this._hoverHelp());
     if (sel.kind === 'party') return el.replaceChildren(this._partyPanel(s.parties[sel.id]));
     if (sel.kind === 'member') return el.replaceChildren(this._memberPanel(s.members[sel.id]));
