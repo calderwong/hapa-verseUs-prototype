@@ -1,0 +1,45 @@
+{
+  "id": "hapa-versus",
+  "owner_id": "hapa-versus",
+  "kind": "node",
+  "stage": "local-prototype",
+  "intention": "Two-player tactical Card battlefield on a Luminati 2.5D diorama: territory mints public Minor Arcana used for Supply, Mana or abilities; formations fight member by member; humans and bots share one deterministic rules module",
+  "use_cases": [
+    "play a complete public-information match locally against a bot or a second person",
+    "inspect nine-slot formations, directional hits and why a card or member contributed",
+    "run bot-versus-bot experiments across board, combat and resource profiles",
+    "replay and verify a recorded match from its manifest and accepted plans"
+  ],
+  "non_goals": [
+    "hidden information, cryptographic traps or commit-reveal (later game iteration)",
+    "commerce, pricing, marketplace or permanent progression policy",
+    "public deployment or a central match server",
+    "modifying Luminati upstream (engine changes live on the Hapa fork, branch hapa)"
+  ],
+  "source_ref": ".",
+  "revision": "working-tree-v0.1",
+  "board": { "project_id": "hapa-versus", "url": "http://127.0.0.1:5181/?project=hapa-versus" },
+  "requirements": [
+    "docs/requirements/master-requirements-v3.txt",
+    "docs/requirements/design-companion-v1.txt",
+    "docs/requirements/references-master-v1.txt"
+  ],
+  "upstream": {
+    "luminati": {
+      "repository": "https://gitlab.com/stubborn-hug/lumina",
+      "path": "vendor/lumina",
+      "revision": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+      "license": "MIT",
+      "fork": {
+        "name": "Hapa fork of Luminati",
+        "branch": "hapa",
+        "base": "85efa0456812ca25e5279e9735bb11ec5a1d6979",
+        "checkout": "~/Documents/Codex/2026-06-29/can/lumina",
+        "remote": "local; not pushed",
+        "changes": "HAPA_FORK.md"
+      }
+    }
+  },
+  "verification": { "command": "npm run check", "dev": "npm run dev (http://127.0.0.1:5199/)" },
+  "related_nodes": ["hapa-tarot-edh", "hapa-overcard", "hapa-avatar-builder", "hapa-overwatch-kanban", "hapa-second-brain"]
+}

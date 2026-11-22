@@ -1,0 +1,32 @@
+{
+  "name": "hapa-versus",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hapa Versus: a two-player tactical Card battlefield on a 2.5D Luminati diorama. Territory mints public Minor Arcana that become Supply, Mana or Card abilities; formations meet member by member.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test tests/hapa/*.test.js",
+    "check": "node tools/hapa/check.mjs",
+    "match": "node tools/hapa/match.mjs",
+    "experiment": "node tools/hapa/experiment.mjs",
+    "replay": "node tools/hapa/replay.mjs"
+  },
+  "dependencies": {
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/crimson-pro": "^5.3.0",
+    "@fontsource/dotgothic16": "^5.3.0",
+    "@fontsource/jersey-10": "^5.3.0",
+    "@fontsource/jersey-15": "^5.3.0",
+    "@fontsource/noto-sans-jp": "^5.3.0",
+    "@fontsource/noto-sans-sc": "^5.3.0",
+    "@fontsource/pixelify-sans": "^5.3.0",
+    "@fontsource/tiny5": "^5.3.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1"
+  }
+}

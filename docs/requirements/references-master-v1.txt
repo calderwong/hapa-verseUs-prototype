@@ -1,0 +1,1143 @@
+
+Hapa Versus References Master
+Implementation resources and visual reference atlas
+Version 1.0  |  21 November 2026  |  Prepared for CJ
+Purpose. Give the game team a practical implementation reference and a shared visual north star. This book connects the selected Hapa rules to the Lumina fork, researches tools with specific jobs, and adds twelve detailed mockups with clear interpretation and acceptance guidance.
+Recommended starting point. Build a deterministic headless core, a simple Lumina view and independent public peer agreement. Prove one complete Card-to-Supply-to-merge sequence, then extend it through combat, excavated space, authored effects and attributed history.
+
+Figure 1  Concept study of exposed ground, a roofed passage and a flyer. The atlas explains its rules meaning and limits; it is not a runtime capture.
+Design set. Master Requirements v3 governs behavior. Design Companion v1 proposes presentation. This References Master supplies research, working methods and additional visual examples. The full set should travel with an implementation task.
+Contents
+1 Purpose and source authority	3
+2 Implementation quick start	5
+3 Mechanical contract and golden fixtures	7
+4 Public agreement deterministic state and replay	11
+5 Lumina and rendering references	13
+6 Peer records and application packaging	18
+7 Testing tools and agent workflows	20
+8 Art and interface production resources	22
+9 From a Card identity to a runtime rendition	26
+10 Wisdom from games and engineering references	29
+11 Visual reference atlas	31
+12 Agent kickoff and staged acceptance	44
+13 Decisions evidence and continued maintenance	46
+14 Source register	48
+Appendix A Illustration provenance and exact prompts	61
+Fast route. Read the quick start and mechanical contract before coding. Use the Lumina file map for integration, the production chapters for art, the atlas for visual intent, and the staged kickoff for the first development tasks. Source records and exact prompts remain available at the end.
+1 Purpose and source authority
+This References Master turns the Hapa Versus specification and visual direction into a practical working reference for designers, artists and coding agents. Its recommendation is to begin with a small deterministic game core, present its accepted outcomes through the pinned Lumina fork, and prove the Card and territory loop with two independently validating peers. The visual goal is a tangible brushed-pixel battlefield in which a player can trace every important change to its source.
+The book combines an implementation cheat sheet, selected repositories and production tools, independent acceptance examples, a new twelve-image visual atlas, and a staged agent handoff. It is the third member of the design set. Read the quick start before choosing dependencies; use the atlas while building presentation; use the source register when checking a factual claim or revisiting a tool choice.
+Authority is explicit
+Document
+What it owns
+How to use it
+Master Requirements v3
+Selected game behavior, configurable capabilities, exact engineering profiles, protocol and canonical records.
+Implement its complete rules and fixtures. It governs any disagreement about gameplay. [REQ03]
+Design Companion v1
+Proposed aesthetic, spatial presentation, UI, controls, effects and production criteria.
+Implement a versioned presentation profile and validate the proposed visual choices in play. [DES01]
+References Master v1
+Research-backed implementation choices, reusable examples, agent workflows and additional concept mockups.
+Use as the practical route into the first two documents. Recommendations and illustrations do not amend their rules.
+
+Selected rules, configurable capabilities, engineering fixtures and presentation proposals retain their original status. For example, public information and the three exclusive uses of a Minor Arcana are selected behavior; alternative row counts and damage policies are required capabilities; starting HP and fixed-point scales belong to named engineering fixtures; eight authored sprite views are a proposed visual extension. Preserve those distinctions in code and test names.
+This document is navigable on its own and supplies the context for its recommendations. It is not a condensed replacement for every rule in the 83-page requirements. A coding agent must have all three files available before claiming to implement the complete game. Exact source filenames, hashes and links are recorded in the source register.
+What this pass adds
+The engine review now identifies exact Lumina integration files and separates its existing heightfield, four-view sprites and browser frame loop from the volume, rendition and rules work Hapa requires. The repository guide gives each resource a job and an adoption status. Current Pear packaging and OpenAI agent-workflow references were checked again rather than copied from older tutorials. Asset guidance now addresses fixed-grid compatibility, anatomical consistency, per-material alpha behavior and source lineage. [ENG01, ENG16; IC09–IC12; AR09]
+The new atlas covers a complete opening, local formation inspection, underground and aerial occupation, excavation, crossing persistent effects, a paid counter window, resource consumption, character orbit, stale public acknowledgment, combat explanation, crafting history and replay-led learning. Every image has implementation notes and an acceptance check. These are original concept images; none is presented as a running Hapa build.
+Preserve the decisions already made
+The current ten-row starting field has nine columns and four deployment rows in total. Its full frame is 11 by 14 after banks are included. Formations are actual member placements, with defender-relative incoming faces; the early shorthand percentages are not the implemented formation rules. Minor Arcana occupy nine public column slots per player, and replacement differs from the expiry of burned Mana. Major Arcana remain in their bank but follow the target rule written on the Card, which may bind a traveling Mount. Public plan agreement determines when resolution may begin. [REQ03 chapters 3–10 and 14; Appendix A]
+These points are especially easy for an agent to lose when working from an attractive image or a familiar reference game. The implementation should explain the selected Hapa behavior even when that differs from the agent's memory of Chess, Magic or a typical real-time tactics engine.
+2 Implementation quick start
+Start with the smallest stack that serves the selected design
+Job
+Recommended starting point
+Add only when justified
+Scene and controls
+Pinned Lumina with its locked Three.js dependency.
+Engine upgrade, more elaborate instancing or postprocessing after comparison. [ENG01, ENG02]
+Rules
+A headless Hapa module with fixed-point arithmetic and accepted-input transitions.
+New operations through versioned definitions and profiles. [REQ03]
+Shared JSON contracts
+Checked-in schemas and non-mutating Ajv validation.
+Local form conveniences that do not become a second protocol. [IC04, IC05]
+Peer records
+Two independent Hypercores with real signing keys and separate stores; Hyperswarm for replication connections.
+Protomux for a named extra channel; current Pear runtime for packaging. [ENG10–ENG16]
+Rules evidence
+Vitest fixtures and a small independent fast-check model.
+Broader generated cases to address a concrete remaining risk. [IC01, IC02]
+UI evidence
+Playwright with semantic assertions, native captures and targeted axe-core checks.
+Packaged-runtime checks when that delivery route exists. [IC03, IC06]
+Art delivery
+Approved layered sources, a simple fixed-grid exporter and rendition manifest.
+Eight-view capture, packing optimization and BVH after bounded trials or measurements. [AR01–AR09; ENG08]
+
+These choices are recommendations, not a declaration that the packages are installed or mutually tested. Use the existing lockfile for the baseline, then pin each added dependency deliberately. A current source snapshot is a research reference, not a command to upgrade every package.
+A useful first working demonstration
+Run the named ten-row opening fixture. Show both players the same public board and banks. On the first outer-column activation, generate one rank-2 Wands Card for each eligible outer column, with Supply 2 and Mana 0. Spend A's C1 instance as Supply, stage the Castle's destination at its allied Pawn party, agree the public plans, and resolve the merge. Both independently calculated states should contain the same nine original members, remaining Supply 1 and no duplicate instance. Reopen that accepted sequence from stored records. [REQ03 Appendix A]
+This demonstration connects placement, income, the three-use Card model, movement, merging, public agreement, explanation and replay. Use clear proxy art while the path works. Then substitute one approved Hapa rendition without changing the state trace. Terrain, counterspells and the full damage-policy suite follow as focused slices; they should not be smuggled into this first acceptance case.
+Keep these facts visible beside the editor
+Fact
+Implementation reminder
+Board
+Baseline 9 columns × 10 playable rows; 9- and 11-row alternatives remain supported capabilities.
+Vertical model
+Six occupied bands: −3, −2, −1, +1, +2, +3. Ground 0 is the original boundary.
+Opening scale
+36 party anchors and 162 members across both seats; nine Mount and nine Pawn parties per seat.
+Economy
+One stored Minor per column; a qualifying active pair mints up to two per player, center up to one.
+Card use
+Consume an instance for Supply, Mana or its attached ability. Only one branch may occur.
+Time
+Nine activation positions repeat; Ticks 1–4 are prologue, first full Round is Ticks 5–13.
+Activity
+Inactive columns restrict ordinary new orders; existing movement, combat and work continue.
+Public planning
+First Ready freezes the sender's plan; a revised opposing plan needs a fresh acknowledgment of the pair.
+Presentation
+Camera, particles, sprite animation and cutaways cannot alter game state or decide a hit.
+
+All entries summarize v3 and its initial profile. The following chapters supply the important conditions and independently stated results. Do not turn this short checklist into a substitute for legality validation. [REQ03; DES01]
+Read by the task in front of you
+For game rules, start with the mechanical contract and golden fixtures. For a tunnel or camera problem, start with the Lumina file map and the volume reference. For networking, start with public agreement and the two-log architecture. For a new Card or unit rendition, start with the art contract and the relevant atlas plate. For a failing build, read the handoff instructions and preserve the first observed error before proposing a framework replacement.
+The smallest useful review unit is one vertical behavior: accepted input, new state, emitted explanation, both client views and replay. A person or agent should be able to answer what happened, why it was legal, what it cost, and where the evidence is held.
+3 Mechanical contract and golden fixtures
+Authority and the meaning of a passing build
+This chapter is an implementation aid for Hapa Versus Master Requirements v3 and its Design Companion v1. It preserves their three levels of instruction: selected product behavior, configurable capabilities, and concrete engineering fixtures. Public information and the three exclusive Minor Arcana uses are selected behavior. Alternative board sizes and damage policies are required capabilities. Temporary health values, numeric scales and the profile hapa_open_10x9_v3_01 make reproducible experiments possible; they are not permanent balance decisions. The Design Companion supplies presentation proposals without changing those rules. [REQ03; DES01]
+A build passes by producing the specified state changes and explaining them accurately to both players. An attractive scene alone does not establish correct movement, and a correct rules engine alone does not establish understandable play. Keep a short drift ledger linking each change to its source passage, profile setting, expected result and evidence. A deliberate new experiment gets a new profile or content revision. It must not silently replace an existing fixture to make a test pass.
+The tools below are recommendations grounded in current primary documentation. They have not been installed or run against a Hapa implementation for this reference. Pin versions compatible with the fork's actual Node, Vite, browser and packaging environment; the existence of a newer release is not evidence that it fits the project.
+
+Figure 2  Authored layout of the ten-row opening. Filled positions preserve the four-member Mount and five-member Pawn arrangements; the two seats face each other. The full frame includes public banks and nonplayable corner padding. Contact-strip dimensions remain in the numeric profile. [REQ03]
+Mechanical contract to keep beside the code
+Use global coordinates in authoritative records. Player A advances toward increasing rows. Player B advances toward decreasing rows; B's home-relative column is 10 minus the global column and its home-relative row is N plus 1 minus the global row. Camera rotation never changes either mapping. The following chart is global, with colors ordered from A's half to B's half. [REQ03 chapters 3–5]
+Column
+Geographic colors
+Suit
+A-side starting archetype
+C1
+Red to Green
+Wands
+Castle
+C2
+Purple to Yellow
+Pentacles
+Knight
+C3
+Blue to Orange
+Cups
+Bishop
+C4
+Black to White
+Swords
+King
+C5
+Rainbow to Rainbow
+Wildcard
+Commander
+C6
+White to Black
+Swords
+Queen
+C7
+Orange to Blue
+Cups
+Bishop
+C8
+Yellow to Purple
+Pentacles
+Knight
+C9
+Green to Red
+Wands
+Castle
+
+B's local lineup uses that same home-relative order: its King is global C6 and Queen global C4. Do not swap those identities when changing the camera.
+Board alternatives. Nine playable columns and nine, ten or eleven playable rows. Two side Enchantment columns plus two bank rows at each end produce full frames 11 × 13, 11 × 14 and 11 × 15. Each player has nine Major slots, nine Minor slots and N row Enchantment slots.
+Vertical space. Six occupied bands: −3, −2, −1, +1, +2, +3. Zero is the original surface boundary. Grounded, flying, supported and exposed are different properties; a hilltop and flyer can share a band.
+Physical geometry. Starting fixture: member square width 1, party body width 3, intervening strip width 1, center pitch 4. Territory centers are (4C−2, 4R−2). At an exact territory boundary, retain the prior territory until strict crossing. Four cardinal formation facings; diagonal travel preserves facing.
+Opening army. Nine four-member Mount parties and nine five-member Pawn parties per seat: 81 members and 18 anchors each, 162 members and 36 anchors overall. Pawn slots 1, 2, 3 contain Swordsmen and 7, 9 Archers; its empty center still anchors income. Mount slots 5, 4, 6, 8 contain center, Pike, Mage, Priest. Banks, Supply, Mana and destinations start empty.
+Clock. Repeating activation sequence: C1/C9, C2/C8, C3/C7, C4/C6, C5, C4/C6, C3/C7, C2/C8, C1/C9. Ticks 1–4 are the prologue; Round 1 is Ticks 5–13 and Round 2 starts at 14. Outer activations at Ticks 9 and 10 are intentional. A fully qualifying Round mints 17 ordinary cards per player, not 17 storage slots.
+Orders. Active columns normally permit new Move, Formation, Skill and Spell orders. Existing movement, combat and work continue off-lane. Supply delivery can target any owned party in any state through the agreed action procedure. No gameplay order quota is added. One current destination replaces the previous legal destination; an invalid order leaves it intact.
+Territory. Compare exact friendly and enemy center positions from the owner's home edge. The nearest qualifying enemy blocks; only a friendly center strictly before it qualifies as a frontier. Equal positions exclude that friendly center. Exposed, supported ground qualifies; flying or roofed occupants do not. Retainers alone cannot extend a column's frontier.
+Public bank. One stored Minor Arcana per owned column. Ordinary minting replaces the old occupant in that slot atomically before spending. A column without a qualifying frontier does not mint and retains its old stored card. Ordinary pair activation permits two mints per player; center permits one per player.
+Resource branches. Consume one instance for Supply, OR burn it for its Mana payload, OR use its attached ability. No branch also grants the other branches. Definitions survive instance consumption. Loaded Supply persists; temporary Mana expires each Tick. Stored cards do not share that expiry. Different columns can save enough cards to fund a large friendly-origin payment; there is no hard invasion gate.
+Movement. Orthogonal and diagonal territory steps each cost one Supply, charged for actual fractional progress. Knight long-axis-first L travel costs three steps and fights along its route. Starting Speed is 2 for Knights, 1 for other mounts; unmounted Pawns lack ordinary travel. A new orthogonal direction normally costs one Tick to turn. The predeclared Knight bend costs no extra turn in this fixture.
+Combat and victory. First contact exchanges immediately, with at most one ordinary exchange per engagement per Tick. Simultaneous damage, separate hits, Physical versus Magic channels, and defender-relative faces remain distinct. A live enemy anchor entering the fixed Capital at any occupied height or movement mode can win in the initial fixture; income eligibility is not the capture test. Commander death also loses. Same-batch mutual losses draw; earlier terminal results stop later simulation.
+Keep the four damage demonstrations independently selectable: individual protection, line protection with attacker allocation, line protection with defender allocation, and party health maintenance. Do not implement a hybrid accidentally. A starting center has 6 HP, Physical Attack 3, frontal Physical Defense 1, and Magic Attack/Defense 0; ordinary retainers have 3 HP. Party health mode reserves 6 for a live center and maintains retainers at 3 each, removing excess retainers front, side, then rear. The interface must show its actual shared pool rather than invent member HP. [REQ03 chapters 6–9; Appendix A]
+Golden fixtures with independently stated outcomes
+These fixtures should be checked into the repository as small manifests, accepted command traces and expected observations. The assertions below are derived from v3, not from whatever the new implementation happens to output. A failure should identify the first diverging event and state field.
+Fixture
+Setup and exact expected result
+Opening merge
+Tick 1, A C1: mint one rank-2 Wands Card with Supply 2 and Mana 0. Load it into the Castle and target the friendly Pawn at R2C1. After one ordinary Tick, the mounted identity has nine original members, Supply 1 and no continuing destination beyond that target. The consumed instance is unavailable. Repeat with mirrored B coordinates.
+Clock and storage
+With all frontiers qualifying and cards unspent, the first five activations occupy 2, 4, 6, 8 and 9 slots per player. Full Round Ticks 5–13 creates 17 cards, replacing repeated columns. Assert consecutive outer activations at 9 and 10 and the next center at 14.
+Resource curve
+Ten-row fixture: A C1 frontier R2 yields rank 2, Supply 2, zero Mana. R6 yields rank 6, Supply 6, three Red plus one Green. The separately hand-authored 4 Wands with three Red plus one Green is a payment diagnostic; it is not the natural frontier curve.
+Three board profiles
+Deployment Mana is off. Nine-row Mana rows are 3–7 with dual middle R5; ten-row rows are 3–8 without dual middle; eleven-row rows are 3–9 with dual middle R6. A dual middle contributes one pip of each geographic color, or two Rainbow in C5. Rank caps at 10 independently of Mana contributions.
+Cutoff and exposure
+In one column A has anchors at global R2 and R7; B has R5 and R9. Each side's eligible frontier is its own home-relative R2. Repeat with the nearest blocker flying, on an exposed pit floor, and in a roofed tunnel. Only qualifying exposed-ground anchors block. Cutaway visibility alone changes none of these results.
+Replacement and exclusive use
+An occupied C1 bank slot is replaced at its next eligible mint; the old identity cannot be spent afterward. A no-mint C1 retains its old card. Trying to load and burn the same instance fails without a second grant. Loading a C1 card into an inactive-column party is allowed through the accepted action phase.
+Pip provenance and expiry
+Give a card three Red pips from friendly rows and one Green from enemy R6. Row Mana Double on R6 yields three Red plus two Green at a subsequent mint, not six Red plus two Green. Preserve each pip's origin. Burned unused Mana disappears at the Tick boundary; saved cards and loaded Supply remain.
+Cross-column payment
+C1 can store three Red while C5 stores three Rainbow, all from friendly land. Burn both and pay a four-Red cost with three Red plus one Rainbow, leaving two Rainbow in the pool. Replacing only one slot does not invalidate the other card or create a hidden enemy-territory requirement. Ordinary colors cannot pay a Rainbow-only cost.
+Contact and arithmetic
+With the Appendix A bodies and approach paths, the Knight/Queen diagnostic first touches at 125 of 1,000 quanta, one eighth Tick. Preserve partial-flank exposure. Attack 3 multiplied by one half, less Defense 1, causes 0.5 HP: 500,000 health units. Do not round the attack prematurely to 1.
+Retreat and health
+Resolve a scheduled same-time exchange before withdrawal casualties. The withdrawing party loses its own living members actually touching enemies; borrowed helpers return without being resurrected. In the maintenance diagnostic, a 24-HP party takes six one-point hits, leaving 18; after the center reserve, four retainers can remain, so two are removed without a second damage debit.
+Terrain work
+terrain_work_v3_01 begins after completed Tick 8 with an accessible worker at −3. Extract once at Tick 9, craft at Tick 10, then equip at Tick 18. Result: exhausted deposit, the Metal consumed, one armor instance, worker frontal Physical Defense 2. Replay or filling the cavity must not duplicate the deposit, Metal or armor.
+Cards and response
+Ember Strike consumes its card plus two Red from other resources; a friendly party in an active column targets one living enemy member in any of the eight neighboring territories at the same height, with no line-of-sight restriction, for one two-point Magic Front hit. Blue Denial consumes its own card plus two Blue, can respond from an inactive column, and counters a pending counterable Spell. Countering does not refund costs.
+
+Also preserve the ordinary formation restriction during contact: a one-Tick rearrangement uses the old combat arrangement until successful completion. Wheel Formation changes duration, not permission to escape contact. Rechecking an invalid completion retains the old arrangement and emits failure. Merge, rearrangement and helper movement preserve attack markers; they cannot produce extra ordinary volleys by changing identities. [REQ03 chapters 6–10; Appendix A]
+4 Public agreement deterministic state and replay
+Public agreement is part of the test surface
+The initial public protocol has no concealed plan and no invented Unready button. A first Ready record names the Tick, phase, prior state hash and both current plan revisions and hashes. It freezes that sender's own plan. The other player can still edit; that makes the earlier acknowledgment stale. The frozen player must acknowledge the updated pair without editing their own plan. Resolution begins only when both valid acknowledgments name the same pair. Duplicate delivery does nothing. Packet arrival never determines action priority. Ordinary queues preserve each player's order and alternate, with A first on odd global Ticks and B first on even ones. [REQ03 chapters 10, 14; Appendix B]
+Exercise that sequence in two clients, including a delayed earlier revision, duplicate Ready, reconnect, and an invalid command after a valid one. Disconnect is interruption or pause, not concession. An automated test's Tick budget produces an unfinished experiment, not a competitive draw. A response window pauses simulation. Under public_stack_v1 the opponent receives first response to an ordinary Spell; two consecutive passes resolve the most recent pending action. A new response resets the passes. If actions remain after resolution, the Tick's first-action player receives the next opportunity. No animation timer decides that opportunity.
+Separate the rules from their presentation
+Keep a deterministic core that accepts a complete state, profile and accepted input, and returns a new state plus identified events. Transport carries authenticated records; the public protocol assembles the agreed input order; a controller submits choices; the view consumes state and events; history projects them into durable records. Camera, audio, frames per second and DOM focus do not enter rule calculations. A view may interpolate an authoritative path, but an animation callback cannot spend Supply or deal damage. [REQ03 chapters 14–16; DES01 chapter 15]
+For the declared fixture, use integer scales of 1,000,000 per member width, Supply point and HP, with 1,000 quanta per Tick. Speed 1 advances 4,000 position units and spends 1,000 Supply units per quantum on a straight ordinary path. Preserve declared fractional remainders. Use swept geometry and simultaneous event batches; do not sample only final positions. Checked arithmetic must reject overflow rather than letting JavaScript silently lose integer precision.
+Recommend one checked-in JSON Schema family, draft 2020-12, validated with Ajv's appropriate 2020 class. It makes manifests, profiles, commands, events and Card definitions explicit JSON contracts usable beyond TypeScript. Keep validation non-mutating: no coercion, removal of unknown fields or insertion of defaults into received signed records. Expand agreed defaults before hashing and signing. Strict schema validation catches malformed shapes; separate semantic validation checks ownership, phase, costs, references and installed operations. Ajv can generate standalone validators during the build, avoiding runtime schema compilation where the package environment requires it. [IC04]
+Zod is a credible alternative for TypeScript-centric local forms. Its JSON Schema export cannot faithfully represent every transform or custom type, so it should not become a second competing protocol authority. The recommendation here is Ajv for the shared contract, not a claim that Zod cannot validate data. Uploaded Cards remain constrained definitions using installed operations; neither validator turns arbitrary JavaScript from a Card into an acceptable rules extension. [IC05]
+Replay and canonical integrity
+Appendix B's encoding is stricter than ordinary JSON acceptance. Reject duplicate keys during decoding, negative zero, unsafe integers, sparse arrays, non-finite numbers and unpaired surrogates. A schema applied after ordinary parsing cannot recover duplicate keys already discarded. Canonical objects sort keys by UTF-16 order; arrays retain order; strings use the declared escaping without Unicode normalization. Emit sorted keys directly: rebuilding a JavaScript object can reorder integer-looking keys. Hash UTF-8 bytes without a byte-order mark or whitespace. [REQ03 Appendix B]
+Golden vector: canonical {"a":1,"b":2} produces sha256:43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777. The authoritative vector in Appendix B is the source of truth; verify every byte when incorporating this fixture.
+Replay must load the original manifest, rules, content and numeric profile, then recompute accepted commands and recorded choices. Compare resulting events and checkpoints rather than trusting recorded damage. Include positions, remainders, terrain, inventory, durations, pending choices and any rules random stream in the state hash. Exclude camera, audio, wall-clock timing and derived presentation caches. Plans being edited are protocol inputs, not mutations of the prior authoritative game state. History projections and presentation events must be idempotent by event identity.
+The initial fixture needs no gameplay randomness. If an experiment activates the specified xorshift32_v1 stream, preserve its nonzero seed and state; it is not a source for signing keys. Verify the complete identity and signature envelope as specified, including Ed25519 domain separation, rather than treating a matching state hash as proof of the sender's identity.
+5 Lumina and rendering references
+Read these recommendations against the two design authorities
+The Master Requirements v3 owns gameplay and protocol behavior. The Design Companion v1 owns the proposed presentation, interaction and art direction. This reference chapter selects supporting implementation materials; it does not replace either document. The inspected uploads match the completed source snapshots identified in the source register. The most relevant sections are v3 Chapters 9 and 15–18, Appendix B, and Companion Chapters 3, 4 and 15. [REQ03, DES01]
+The resulting architecture is deliberately small: one shared rules module calculates outcomes; Lumina presents those outcomes; each participant owns a signed Hypercore and independently validates the same public match; local adapters supply content and identity fixtures until the corresponding Hapa interfaces are connected. Six occupied height bands, excavatable solid and empty space, roofs, support surfaces, member formations and public plan revisions are application concepts that no selected library supplies automatically.
+“Adopt” below means select for the implementation path, with pinned dependencies and an integration check. “Evaluate” means introduce only to answer a demonstrated need. “Reference only” means study the design without importing its architecture. Repository versions and dates below are observed snapshots, not guarantees of compatibility, support or production readiness. Review date: 21 November 2026 in the user's timezone; source retrieval occurred on 22 November UTC.
+The short list and the decision it supports
+Resource
+Judgment
+Hapa use and practical boundary
+Pinned Lumina and its existing Three.js dependency
+Adopt
+Retain the rendering, sprite, camera, lighting and interface foundation. Build Hapa's rules and presentation adapter around it.
+Official Three.js voxel geometry manual
+Adopt the technique
+Build exposed terrain faces from explicit cell data, then update affected regions. The example is a rendering lesson, not Hapa's terrain rules.
+Three.js picking, clipping, transparency and color-management references
+Adopt as implementation guidance
+Make orbit, cutaways and painted materials readable while keeping selection and rules data explicit.
+three-mesh-bvh
+Evaluate after measurement
+Accelerate expensive mesh picking or inspection queries. It must not replace deterministic movement, support or combat rules.
+Binary Greedy Meshing v2
+Reference only
+Study hidden-face removal and compatible-face merging. Its C++ renderer and benchmark numbers are not a JavaScript integration or a Hapa capacity result.
+Hypercore, Hyperswarm and HyperDHT
+Adopt for the peer prototype
+Persist two independent writer logs, replicate them and discover/connect peers without a match referee. Hapa still implements agreement and validation.
+hypercore-crypto
+Adopt a supported signing path
+Use established Ed25519 operations for application signatures. Keep the specified SHA-256 fingerprints and application encoding distinct from internal Hypercore hashes.
+Protomux
+Evaluate when a separate channel is needed
+Carry a versioned handshake or bounded content request beside replication. It is message plumbing, not ordering or consensus.
+pear-runtime and current Pear desktop documentation
+Evaluate for PC/Mac packaging
+Keep the Lumina web view and a local networking/storage worker behind a narrow interface. Current packaging has changed since older Pear tutorials.
+Colyseus
+Reference only; do not adopt its authority model
+Study room lifecycle and state-update ergonomics. Server-owned state conflicts with the selected independent-peer baseline.
+
+The exact Lumina map an agent should open first
+Use commit 85efa0456812ca25e5279e9735bb11ec5a1d6979 of https://gitlab.com/stubborn-hug/lumina. Every path in this table is relative to that checkout. The repository calls its engine Luminati and carries an MIT LICENSE. Preserve the notice when adapting its code. [ENG01]
+Path or paths
+Observed foundation
+Hapa integration consequence
+package.json; package-lock.json; vite.config.js
+ES-module application, JSDoc type checking, Vite entries and a lockfile resolving Three.js 0.186.1.
+Keep the baseline reproducible; add a deliberate Hapa production entry instead of assuming a new file is built automatically.
+src/engine/core/Engine.js
+Owns WebGL renderer, scene, perspective camera, input and frame loop; construction reads browser objects.
+Do not instantiate it in the headless rules runner. Its frame clock is presentation time.
+src/engine/core/CameraRig.js; src/game/Player.js
+Free-yaw option, framing and orbit; Player preserves world facing and refreshes its camera-relative sprite view.
+Adapt the pivot and controls to a board and generalize stationary-facing updates to every member.
+src/engine/sprite/Sprite3D.js
+Sheet contract, lit billboards, four camera-relative views, mirror fallback, shadow proxy and dither fading.
+Add the Hapa rendition loader and optional eight-view selector; maintain explicit mirror permissions for asymmetric equipment.
+src/engine/pixel/PixelCanvas.js; src/engine/pixel/CharacterSprites.js
+Procedural images, texture filtering/color-space setup and bundled character conventions.
+Reuse the texture boundary; larger authored art is possible without changing member dimensions.
+src/engine/world/TileMap.js
+Terrain tops/sides, one queried top surface and incremental region rebuilding.
+It is a useful rendering pattern, but cannot be the sole model for a tunnel beneath intact ground.
+src/engine/world/props/MeshBuilder.js
+Accumulates geometry by material and supplies world-scaled texture coordinates.
+Reuse face/material conventions in a new volume renderer. Keep cell and surface identities outside merged triangle indices.
+src/engine/fx/GroundMarkers.js
+Instanced markers draped using one height per horizontal location.
+Add explicit surface/layer bindings so a tunnel-floor effect does not appear on its roof.
+src/engine/lighting/LightingSystem.js; src/engine/lighting/VfxLights.js; src/engine/render/PostFX.js
+Directional shadows, pooled effect lights and a layered postprocessing pipeline.
+Tune a readable tactical preset and define cutaway shadow behavior separately from gameplay roof state.
+src/engine/ui/UI.js; src/engine/ui/WorldLabels.js; src/engine/ui/UiScale.js; src/engine/core/Input.js
+HTML overlay, projected labels, display scaling and named input actions.
+Preserve sharp controls; add layer-aware label filtering, focus rules and Hapa command routing.
+src/engine/sprite/SpriteManager.js; src/engine/sprite/BlobBatch.js; src/editor/viewport3d/SpriteBatch.js
+Individual sprite updates, batched contact shadows and an editor instancing path with exclusions.
+Profile before adapting batching; the full Hapa combat roster is not already an instanced implementation.
+tools/check.mjs; sandbox/combat_play.js; docs/specs/AUTOMATION_API.md
+Browser checks and upstream adventure-game automation.
+Useful interaction/capture references, separate from new headless Hapa controllers.
+
+Clickable pinned file references and line landmarks are included in the source register. The engine's generic modules should remain independent of Hapa rules. The proposed src/hapa/rules, protocol, presentation, controllers and adapters directories are new work, not existing upstream features. [ENG01; REQ03]
+The earlier source audit installed the locked dependencies and completed npm run build. Chromium's launch failed on a denied socket operation before loading a page. Therefore there is build evidence, but no fresh runtime screenshot, GPU benchmark or verified Hapa PC/Mac package. None of the newly researched optional libraries was installed or exercised in this references pass. Upstream authored screenshots remain visual examples rather than measured Hapa results. [ENG01, DES01]
+Repository evidence and license scope
+The following dates are the committer dates of the inspected default-branch snapshots. They establish concrete revision history; they do not establish a support commitment. Full commit identifiers, exact license URLs and retrieved files are in the source register. Each MIT or Apache entry below was checked against the actual LICENSE text, not inferred from a search badge.
+Repository
+Observed snapshot version
+Commit date
+Verified repository license
+Three.js
+0.187.0 on current source; Lumina remains locked to 0.186.1
+21 November 2026
+MIT
+three-mesh-bvh
+0.9.18
+19 November 2026
+MIT
+Binary Greedy Meshing v2
+C++ source snapshot
+30 March 2025
+MIT
+Hypercore
+11.40.4
+12 November 2026
+MIT
+Hyperswarm
+4.17.2
+22 September 2026
+MIT
+HyperDHT
+6.36.0
+19 November 2026
+MIT
+hypercore-crypto
+3.7.0
+21 October 2026
+MIT
+Protomux
+3.13.1
+9 November 2026
+MIT
+pear-runtime
+1.4.0
+18 November 2026
+Apache-2.0
+Colyseus
+Monorepo snapshot, not one universal package version
+18 November 2026
+MIT
+
+The current Three.js reference and default branch can be ahead of Lumina. Read current documentation for concepts, then check the exact API against the installed baseline. An engine upgrade is a separate change requiring comparison of the existing shaders, shadows, postprocessing and imports. These snapshot versions are research pins, not an instruction to install every default branch or update the lockfile. [ENG02, ENG08–ENG15, ENG17]
+Three js references for a truthful volume and readable view
+Start with the official voxel-geometry manual. It explains why independent cube objects become expensive, generates faces where filled cells border empty cells, partitions the world into cells, and refreshes affected geometry after a change. This is a close conceptual match to Hapa's discrete excavation. Use the example to learn the meshing boundary, then implement that boundary against Hapa's own terrain records. Its terrain generation, coordinate defaults and visual style are not requirements. [ENG03]
+Hapa should own a small authoritative volume model describing solid material, empty space, supporting floors, intact roofs, explicit traversal connections and deposits. Preserve zero as the original ground boundary, with three occupied bands above and three below. Territory bodies, one-member cubes and the gaps between territories are different scales. The renderer should consume a resolved edit and rebuild affected faces plus neighboring boundaries. It must not decide whether digging is legal, expose a deposit twice, or infer that a flying center blocks ground supply. Those decisions remain in the shared rules. [REQ03, DES01]
+Begin with straightforward exposed-face generation grouped by material and manageable region. Keep stable cell/surface identifiers and a mapping from rendered faces back to those identifiers. This is enough to build the decisive demonstration: intact surface, open shaft, lateral tunnel with a roof, ground occupant above it, tunnel occupant and a flyer. A mesh can be rebuilt asynchronously for responsiveness, but interaction should use the current authoritative geometry and a clear pending visual until the replacement mesh is ready.
+Greedy meshing is an optimization that merges neighboring compatible faces into larger rectangles. Binary Greedy Meshing v2 demonstrates occupancy masks, hidden-face culling and face merging in C++, with its own vertex-pulling renderer. Its MIT license was read at the pinned commit. Study the algorithm if measured draw or rebuild cost warrants it; do not port its 64-bit layout mechanically into JavaScript or quote its CPU benchmark as Hapa performance. Its inspected last commit is 30 March 2025, which is concrete history, not a claim of abandonment or ongoing support. [ENG09]
+For Hapa, a merge must preserve material treatment and any boundary needed for inspection. A large rectangle can still carry a texture and a separate territorial marker; it cannot erase the logical distinction between two cells. Smooth isosurface extraction is not the initial solution: rounding a tunnel mouth or changing a support boundary would make the drawing less faithful to the specified cubes. This is a recommendation based on Hapa's geometry, not a judgment against smooth-terrain tools generally.
+Use Three.js Raycaster as the initial pointer-query tool. Its layer filter, camera-aware rays and sorted intersections support an inspection adapter, but Hapa still needs explicit candidate selection. A pointer hit should resolve to a member, party anchor, terrain face or bank slot with stable identity and occupied band. When several public objects share a horizontal location, offer a target list and layer controls instead of silently selecting whichever triangle happens to be closest. The shared validator determines whether the selected target is legal. [ENG04; DES01]
+Read the Material clipping documentation and the clipping-stencil example for view-only cuts. Local clipping needs renderer support; shadow clipping is separately configurable. Lumina's current renderer explicitly disables stencil, so the stencil example cannot simply be pasted into its current pipeline. Prefer an explicit cell/surface cutaway and visible cut edges first; evaluate stencil caps only if they solve a concrete presentation problem. In either implementation, retain the logical roof for attacks, support and supply eligibility, and make picking aware of the inspection view. [ENG05; ENG01]
+The official transparency guide documents sorting tradeoffs and cutout alpha testing. It reinforces the Companion's recommendation to keep ordinary bodies and the selected floor opaque, using restrained ghosts or dither for obstruction. The color-management guide distinguishes color textures from data textures and explains output conversion with postprocessing. Keep painted color in the declared color space and masks as data; otherwise Hapa's suit/color vocabulary can drift between the card UI and the battlefield. These sources support rendering choices, not new gameplay visibility rules. [ENG06, ENG07]
+When three mesh bvh earns its place
+three-mesh-bvh builds spatial acceleration structures for Three.js geometry. The inspected repository is 0.9.18 at 0375ada0d674af3a4a169c4ad890239cf3d60cda, with MIT LICENSE and a commit dated 19 November 2026. Its declared Three.js peer range includes the pinned Lumina version, but a matching range is not a tested integration. [ENG08]
+Evaluate it if a representative Hapa scene shows pointer queries or detailed mesh inspection consuming material time. Compare the same target sequence with the ordinary raycaster and the BVH adapter. The README and API describe direct/local-space queries, optional indirect indexing, refitting and worker construction. Excavation changes topology, so rebuilding the affected region's tree is the appropriate starting path; refitting unchanged triangle topology is a different operation. Preserve face-to-cell lookup if index ordering changes. Worker generation can temporarily transfer geometry buffers, so do not detach the currently displayed mesh without a replacement strategy. [ENG08]
+Keep this acceleration cache out of authoritative state and replays. Hapa's fixed-point body sweeps, contact arbitration, facing, six incoming faces and support rules require the specified outcome calculations. A fast floating-point mesh query does not automatically implement them. The success criterion is faster equivalent inspection with unchanged legal selections and state hashes, not the presence of another dependency.
+6 Peer records and application packaging
+Two real peer logs with a small explicit agreement protocol
+Hypercore is the selected durable log primitive. Current primary documentation describes directory-backed cores, appending blocks, verified reads and replication; it also exposes truncation and forks. The actual inspected repository package is 11.40.4, despite an older sentence in its README referring to Hypercore 10 as latest. Use the pinned package and API evidence, not that stale summary sentence. Hapa's accepted match prefix must remain protected at the application level. [ENG10]
+Create two independent participants with separate identity/session keys and storage roots. On one development machine, peer A's writable log and peer B's writable log still belong to separate processes or independently initialized peers. Each retains a read copy of the other's log. A launcher can start them, but cannot accept a command on their behalf or choose the winning state. Core construction, ready(), append(), get() and replicate() are the primitive operations to study; the application supplies the manifest, signed message envelope and transition validator. [ENG10; REQ03]
+Start from the existing v3 public-planning contract. Plan revisions are visible. First Ready freezes the author's own plan; it names the prior-state hash and the exact pair of plan revisions reviewed. If the other participant revises its still-editable plan, the earlier acknowledgment becomes stale and requires acknowledgment of the new pair. Only matching Ready records permit resolution. Responses follow the rule-supplied priority token, never arrival order. Both clients independently run the transition and record receipts naming the resulting state fingerprint. Do not substitute a generic last-writer-wins merge, a host decision or mandatory commit–reveal. [REQ03]
+Hyperswarm supplies peer discovery by a 32-byte topic and encrypted connection streams; it also provides connection to a known peer key. Its client/server option names describe finding or accepting connections, not a privileged game referee. Bind the received network identity to the manifest's intended participant rather than trusting membership in a discovery topic. HyperDHT permits configured bootstrap nodes and documents the infrastructure needed for a private network. This supports replaceable discovery infrastructure; it does not establish that every network will connect without forwarding or that discovery is itself match authority. [ENG11, ENG12]
+Keep four identities separate in code and records: the participant's DID, its application-signing verification key, its Hypercore log identifier and its network connection key. The identity adapter binds them for the match. A local fixture identity uses real signing keys and independent storage but must be labeled development identity, not verified Hapa identity. For integrated play, retain v3's DID-associated public match-intention record with the new match-log keys and deck fingerprints. The reference stack does not supply that Hapa service contract. [REQ03]
+hypercore-crypto exposes Ed25519 keyPair(), sign() and verify(). Its data() operation hashes an internal Merkle leaf; it is not the SHA-256 operation specified for Hapa application fingerprints. Use an established SHA-256 implementation through a small runtime adapter, with v3's canonical integer-only JSON, signature prefix and frozen vectors unchanged. A valid signature establishes authorization of bytes; the rules validator still decides legality. Do not expose application secret keys or storage handles to creator animation descriptors. [ENG13; REQ03]
+For recovery, store accepted records, receipts, the manifest, pinned definitions and a checkpoint. Reconnect by fetching missing log records and replaying from an agreed prefix. A changed accepted fork must be detected rather than silently replacing the past. An unfinished session remains a resumable or exportable record; final forfeit or reward policy does not block this engineering work. Export held bytes for offline replay, since a remote identifier alone does not guarantee that another peer still serves the content. [REQ03]
+Protomux is a modest optional helper for a separate handshake/content channel on an existing framed stream. Its actual MIT license and APIs were inspected. Use protocol and match identifiers, explicit encodings and bounded messages. Durable Plan, Ready, Choice and Receipt records remain in the logs; a transient channel must not become an unrecorded alternate path for outcomes. For the first bundled fixture, pre-agreed local content can avoid adding a second application protocol until it is useful. [ENG14; REQ03]
+Pear packaging and the Colyseus comparison
+Pear's current official migration page states that pear run and the ambient global Pear API were removed in Pear v3. The documented direction is an application-owned host importing pear-runtime. Its runtime explanation places networking/storage in a Bare worker and communicates with the UI through IPC. The inspected pear-runtime 1.4.0 repository carries Apache-2.0. Evaluate this as a packaging seam around Lumina, with the same shared rules and versioned data contracts; do not rewrite the game into a new UI framework. No package or updater path was executed here. [ENG15, ENG16]
+The official hello-pear-electron example is useful for locating that seam, but license evidence is incomplete at the inspected snapshot: package.json has an empty license field and its complete repository tree has no license, copying or notice file. Corestore's package declares MIT, while its complete inspected tree likewise has no such file. Record those facts accurately; do not label either as having a verified repository LICENSE or copy template code under pear-runtime's separate Apache license. Direct Hypercore usage keeps the initial two-log prototype small. Packaging dependency attribution can be resolved when selecting the actual distribution. [ENG18, ENG19]
+Colyseus' current state documentation explicitly puts state mutation on the server, with clients sending requests and receiving synchronized changes. Its repository carries MIT, and the inspected commit is dated 18 November 2026. It is a credible reference for room lifecycles and update ergonomics, but adopting that authority would change Hapa's decided protocol. Hosting the same server inside one player's process would still give one participant a privileged role. A small public-plan state machine over replicated peer logs is the closer fit. This is a product-fit decision, not a claim that Colyseus lacks useful multiplayer capabilities. [ENG17]
+7 Testing tools and agent workflows
+Testing stack and what each result proves
+Use Vitest for small core examples and fixture suites, with separate projects for the headless core and selected real-browser runs. Its Browser Mode can use Playwright as a provider. A node-only pass does not demonstrate the shipped renderer or browser's behavior. Keep test-state reset explicit and pin the browser binaries used in recorded evidence. [IC01]
+Use fast-check for generated command sequences and invariants. Model only a small independent ledger or protocol: bank replacement, exclusive consumption, resource conservation, Ready revision agreement, and replay idempotence are good candidates. Generating only valid actions misses rejection behavior; include stale identities, unpaid costs and malformed phase transitions. Let shrinking expose a minimal failing trace. Record the library version, seed, path and model-command replayPath when required, together with that trace. A test generation budget is not a gameplay order cap. [IC02]
+Use Playwright Test for two isolated browser contexts representing the seats, full keyboard paths and accessible controls. Prefer role- and label-based assertions with built-in waiting over arbitrary sleeps. Add a read-only diagnostic bridge exposing selected entity, targeted band, displayed plan pair and authoritative checkpoint. It should report state for tests, not bypass public command validation or introduce an alternate production command path. [IC03]
+Two browser contexts establish UI isolation, not independent peer verification. A transport acceptance test also needs separate participant/session keys, separate storage roots and real independent peer stores replicating through the selected transport. A shared test coordinator must not secretly resolve both seats' rules and then claim two-peer agreement. [REQ03 chapters 14–16]
+Semantic assertions should accompany native-resolution captures: a 360-degree orbit leaves facing and ownership unchanged; an inactive party continues its saved route; a cutaway exposes a selectable public tunnel occupant while retaining the roof's rules status; a loaded card disappears from its one bank slot; a stale Ready visibly requires acknowledgment; an illegal target explains why instead of selecting another member. Check that a world marker and its inspector identify the same row, surface, face and damage channel.
+Run axe-core through its Playwright integration on planning, response, targeting, inspection and error states. Review reported incomplete checks. Automated checks do not prove readable canvas combat, correct targeting, useful descriptions or complete accessibility. Manually inspect keyboard focus and escape, text scaling, non-color ownership, reduced motion, hidden-layer discovery and the dense 162-member scene. Record viewport, device pixel ratio, fonts, browser, GPU and content versions for visual comparisons. A screenshot difference needs explanation; an unchanged screenshot does not prove unchanged semantics. [IC03; IC06; DES01 chapters 10–16]
+Agent workflow and an independent drift gate
+Put short durable repository conventions in AGENTS.md: source authority, coordinate convention, core/view boundary, actual validation commands, and prohibited shortcuts such as moving damage into animation callbacks. Scoped instructions can specialize a directory. Keep large reference chapters linked rather than pasting the whole specification into every agent context. Use skills for repeatable workflows and their inputs and outputs. Current Codex documentation describes project-local skills under .agents/skills with SKILL.md metadata; tool availability remains host-specific. [IC07; IC08]
+The older public openai/skills catalog now declares itself deprecated and points to openai/plugins. Current useful examples include Game Studio's game-playtest and Build Web Apps' frontend-testing-debugging. They demonstrate focused playthroughs, real visual inspection and explicit evidence. Their general framework defaults do not override the selected Lumina/Three.js architecture, and an available example repository does not mean its tools are installed in every agent session. Pin the chosen plugin revision and inspect its package licensing before adoption. [IC09–IC12]
+Proposed project-local skills, not created or installed by this reference:
+Workflow
+Required output
+hapa-rule-fixture
+Source passage, profile setting, independent expected result, fixture trace and actual test evidence; no silently updated golden result.
+hapa-replay-audit
+Canonical-byte vectors, malformed-input cases, replay recomputation and duplicate-delivery results across the supported runtimes.
+hapa-visual-acceptance
+Named dense scene, semantic assertions, native captures, manual accessibility findings and exact reproduction steps.
+hapa-card-review
+Definition schema, operation support, costs and timing, three-branch exclusivity, provenance and explicit interaction examples.
+hapa-rendition-build
+Approved source lineage, view review, fixed-grid export, material-specific alpha checks, manifest and runtime orbit captures; use the seven art pipeline tasks.
+
+An independent reviewer should derive expectations from the documents before reading implementation results. Review one change vertically: accepted input, state transition, emitted explanation, both clients and replay. Require evidence appropriate to the risk, not an ever-growing ritual of unrelated tests. A completed handoff identifies source and profile revisions, commands actually run, exit results, first-divergence diagnostics, visual findings and remaining limitations. Never convert “recommended,” “implemented” or “compiled” into “playtested.”
+Evidence for this reference: both supplied DOCX files and extracted text were inspected; current primary tool documentation and license evidence were reviewed. Simple local checks confirmed the 162-member opening, 36 anchors, 17 mints per full Round, numeric-scale arithmetic and canonical hash vector. No Hapa core, browser suite, network match, accessibility audit or performance benchmark was executed for this chapter.
+8 Art and interface production resources
+Purpose and recommended production path
+Hapa needs a repeatable way to turn an approved Card identity into readable characters, terrain, effects and interface elements. The difficult work is consistency: a shield must stay on the same arm during orbit; a spell must indicate its real target; a roofed tunnel must remain selectable; and an imported asset must retain its creator and source history. A larger collection of beautiful images does not solve those requirements by itself.
+The proposed baseline is Krita for brushed-pixel source cleanup, an optional licensed Aseprite installation or evaluated LibreSprite build for frame animation, and small Pillow-based scripts for fixed-grid export and validation. Blender is useful when a controlled three-dimensional proxy can maintain anatomy and equipment across views. TexturePacker becomes useful if measured atlas needs justify a richer importer and the appropriate license. No recommendation here authorizes a purchase or asserts that any of these tools is already installed in the Hapa fork.
+“Adopt” means a recommended project dependency or review reference after ordinary version and environment checks. “Evaluate” means a bounded proof before committing the pipeline. “Reference only” means learn a design principle without importing another game's assets. These are companion recommendations, not changes to v3 gameplay. Sources and license statements were checked on 22 November 2026 UTC; the accompanying source register preserves exact links and claim scopes.
+Eleven resources with specific jobs
+Aseprite for an artist friendly animation source
+Evaluate — animation authoring and reproducible export. Aseprite's official CLI supports background batch processing and export of a sprite sheet plus JSON. Its documented example is a starting point for a version-pinned export wrapper: [AR01]
+aseprite -b animation.ase --sheet sheet.png --data sheet.json
+The wrapper must translate exported metadata into Hapa's manifest; Aseprite JSON is not automatically a Lumina SpriteSheet.
+Aseprite is source-available under its current EULA, not a blanket GPL dependency. Its FAQ permits commercial artwork and distinguishes individual use from company licenses per developer. Keep a licensed executable outside the game's asset package. Record the exporter version and source file, and confirm the applicable terms before installing it on shared infrastructure. The editor's license does not grant rights to imported references or purchased brushes.
+Use the proof to finish one Swordsman idle, walk and attack set, then inspect two opposed views at tactical size. Adopt only if source editing, naming and unattended export are dependable. Avoid building the whole workflow around a manual export dialog.
+LibreSprite for a separately tested open source alternative
+Evaluate — pixel cleanup and frame animation without assuming Aseprite parity. The official LibreSprite repository identifies it as a fork of the last GPLv2 Aseprite version and licenses the application under GPL-2.0. That makes it a meaningful alternative to test, not a drop-in guarantee for current Aseprite scripts, file features or CLI switches. [AR02]
+Evaluate the exact released build against the same source asset and output contract: dimensions, alpha, frame order, animation timing and retained editable layers. Use its own documented capabilities rather than copying commands from modern Aseprite. Record any conversions that discard information. If the project distributes the program or modifications, retain its applicable notices and source obligations; that is separate from the licensing of the images being edited.
+The practical decision is whether the tested tool helps the artist produce a correct rendition. Hapa does not need to support two editor-specific production systems simply to offer a nominal choice.
+Krita for the brushed pixel source of truth
+Adopt — layered source painting, cleanup and controlled flat export. Krita's documented CLI can export a source document with krita approved.kra --export --export-filename approved.png. This is useful for repeatable KRA-to-PNG conversion; it is not evidence that every animation-editing operation has a complete headless API. [AR03]
+Krita's license page distinguishes the GPLv3 application from the artwork it produces and explicitly allows commercial art. The same page states that distributed Krita plugins using its extension API must be shared under the GPL. A standalone file-conversion wrapper and a distributed in-process plugin therefore need separate licensing treatment.
+For Hapa, keep the higher-resolution approved painting and its intentional delivery-size cleanup. Use broad brush clusters, selective ink and stable material planes. Do not obtain the final style by shrinking a detailed painting and applying a global pixel filter. Preserve gear, silhouette and foot-anchor guides as editable layers; exported layers should have stable names and a documented compositing order.
+Blender for controlled view capture
+Evaluate — consistent eight-view proxies and repeatable captures. Blender supports background rendering and Python scripts, allowing an agent-authored capture job to set cameras, poses, output paths and frame ranges. Its documentation stresses command-line argument order. Blender is GPL software; its application license does not impose the GPL on rendered artwork. Imported meshes, textures, rigs and add-ons still retain their own terms. [AR04]
+Build one simple, anatomically consistent character proxy with shield and weapon attached to the correct body sides. Capture at eight azimuths, using the companion's proposed 50-degree downward view as the initial art trial. A capture can use an orthographic camera for consistent scale, but that is an authoring choice: Hapa's runtime rig is perspective, so the output must be checked in that rig. It does not add an orthographic gameplay mode.
+Use the captures as painting guides or approved rendition sources. Blender is not required to replace the game's renderer, and a rigid proxy is not a substitute for the desired brushed-pixel finish. Pin camera settings, lighting, rig version and pose names so a repaired frame can be reproduced.
+TexturePacker for later atlas optimization
+Evaluate — measured packing needs, with the correct commercial or CI license. The official documentation supports CLI builds and reusable packing projects. At this review date, TexturePacker Essential is free only for non-commercial projects; commercial use requires a license. The vendor separately lists desktop and Docker/CI licensing. Do not describe Essential as a free commercial build dependency. [AR05]
+More efficient packing is not automatically compatible with Lumina. The current SpriteSheet addresses equal-size cells through column and row coordinates. A rotated, trimmed or irregularly packed region needs an importer that respects source dimensions, offsets, rotation and foot anchor, or a repack into fixed cells. Without that work, apparent memory savings can produce jumping feet, clipped weapons or the wrong frame.
+Begin with the simpler fixed-grid pipeline below. Revisit TexturePacker when real texture-memory or packaging measurements identify a benefit. Check the chosen features and build-machine license against the current vendor terms; store project settings and tool versions, never activation secrets, alongside the build recipe.
+Pillow for a small inspectable asset pipeline
+Adopt — fixed-grid composition, metadata checks and review sheets. Pillow's official API provides image loading, RGBA manipulation and PNG output. Its current documentation identifies the license as MIT-CMU. Hapa's proposed atlas packer would be project code built with those primitives; it is not an existing Pillow feature named “Hapa export.” [AR06]
+Use a fixed canvas for each frame, preserve the shared anchor and place frames into deterministic cells. Produce both an atlas and a contact sheet with view/action/frame labels. Inspect dimensions and decoded memory before accepting a file; retain Pillow's image-size protections. Hash source and output bytes, and verify that all frame coordinates lie within the atlas.
+This keeps the initial importer small and reviewable. A fixed grid trades some unused transparent area for simple addressing and consistent anchors. Measure that trade before replacing it with a more complex packing scheme. An MIT-CMU tool dependency does not make the input artwork or exported atlas public domain.
+Kenney for disposable prototype components
+Adopt selectively — prototype icons, calibration textures and temporary interface pieces. Kenney's official support page identifies assets on its asset pages as CC0 and permits commercial use without required attribution. The Development Essentials page supplies a concrete CC0 texture pack useful for diagnostic surfaces. The site's branding and other material should not be swept into that asset-license statement. [AR07]
+Use temporary pieces to prove selection, scale, borders and controls while Hapa-specific art is being made. Mark them as prototype dependencies in the manifest and keep their asset-page URL and license file. They should not silently become the final Hapa identity or substitute generic icons for the game's distinct suit, alignment, owner and damage-channel meanings.
+A pack-level license check remains preferable to a directory called “free assets.” Recording attribution voluntarily also makes later replacement and auditing easier, even when the asset license does not demand it.
+Poly Haven for material and lighting source material
+Evaluate — selected textures, models or HDRIs as source material. Poly Haven licenses its downloadable assets under CC0. Its API is a separate matter: the current official API page permits free commercial access, while the API terms require a recognizable client identity and visible source credit for a live integration. Those API conditions do not add attribution requirements to downloaded or self-hosted CC0 assets. [AR08]
+For Hapa, sample a few relevant stone, earth, wood or lighting references, then make intentional brushed material renditions at the game's scale. Photorealistic texture detail and realistic HDRI contrast can overwhelm small tactical characters. Test material tiling, luminance and orbit shimmer before building a library.
+Prefer a curated, cached project set with asset IDs, source files, hashes and license records. There is no need to depend on a live asset service during a match. If an authoring browser later uses the live API, implement its current attribution and identification requirements explicitly; the API code's AGPL license is also separate from the downloaded assets' CC0 status.
+Three js and the pinned Lumina sprite contract
+Adopt — engineering references for exports and runtime validation. Three.js documents distinct magnification/minification filtering, texture color spaces and transparency limitations. Color images normally need sRGB interpretation; masks and other data use the appropriate non-color treatment. Nearest magnification can preserve deliberate pixel edges, while minification and mipmaps require a separate material decision. Overlapping transparent surfaces can expose depth-ordering problems. [AR09]
+The inspected Lumina revision uses equal-cell frame coordinates, four camera-relative directions and a mirror fallback. Eight authored views require a selector extension; a finished asymmetric sprite must not pass through an uncontrolled mirror fallback. The combat shader also uses partially transparent alpha, including 204, for glow. Ordinary soft brush edges can therefore acquire unintended emission.
+Declare a material profile in each rendition. A cutout combat sprite follows the chosen binary-alpha/reserved-glow contract; a deliberately translucent VFX asset uses its separately implemented path. Do not reject or normalize all semi-transparent art with one global rule. Recheck color, anchors, filtering and alpha in the actual renderer rather than approving the PNG in an image viewer alone.
+Riot s clarity and VFX practice
+Reference only — visual hierarchy and precise effect boundaries. Riot's clarity article explains why silhouettes, readable abilities and restrained visual noise matter. Its VFX update account prioritizes incorrect or missing indicators and carries corrected bounds across cosmetic variants. These are useful production principles, not permission to reuse Riot's characters, effects, interface art or code. [AR10]
+Hapa's application is concrete: preserve the meaningful footprint across every rendition; make source, target and incoming face recoverable; give decisive events more emphasis than ambient glows; and distinguish pending from resolved effects. A more expensive-looking Card rendition must not obscure an enemy's protection or alter the apparent legal area.
+Review criticism in operational terms: “the overhead arrows flash the Front shield,” “the trail implies a wider area,” or “the pending Spell appears to land before Pass.” Each comment identifies a repairable mismatch. General requests for spectacle come after those mismatches are fixed.
+Xbox Accessibility Guidelines for acceptance work
+Adopt as a review rubric — not an accessibility certification. XAG 103 recommends additional sensory channels and alternatives to color-only communication. XAG 117 addresses moving content and camera effects; XAG 118 calls for photosensitivity testing. The wider guideline set also provides text, focus, navigation, audio and narration references. [AR11]
+For Hapa, pair alignment color with a named emblem; provide captions and readable event records; retain keyboard-accessible target lists; and give response controls a clear focus order. Different visual shapes improve color independence but do not, by themselves, make critical information accessible to a blind player. Meaningful narration or other suitable access needs deliberate implementation.
+Offer reduced motion and effects while preserving exact source, boundary and result. Test the combined scene: several individually mild spells can create excessive flashing or hide labels together. Check real composited backgrounds and enlarged text, and test with representative users. A good palette, grayscale screenshot or absence of intentional strobe effects cannot certify the complete experience.
+9 From a Card identity to a runtime rendition
+From an approved identity to a validated rendition
+Establish the asset contract before generating variants
+Start with a stable Hapa identity, gameplay role, approved references and a presentation-only asset ID. Record anatomical left and right, major silhouette features, clothing materials, equipment attachments and the member's foot anchor. A source Card's executable rules remain a separate versioned definition. A costume does not grant armor, and an animated spear does not determine collision range.
+The companion proposes a 128×128 frame trial with roughly 64 authored texels per displayed member width. Keep that a production trial, not a change to physical member width. Reserve transparent space for weapons and casting poses so the anchor never moves to accommodate a drawing. Specify view naming and animation names before producing a large batch.
+Generate or paint source material with complete lineage
+Generate one controlled proof view, or paint it manually, then check identity and tactical readability. Preserve the original output even after cleanup. Record inspiration references, exact prompt history, prompt author, generator/version/settings when available, image artifacts, edit parent and artist. An unknown field is labeled unknown; it is not filled with invented authorship.
+Use generated turnarounds as candidates requiring review. Do not promote a montage with plausible-looking labels directly into an atlas. Generated characters can change costume details, hands or proportions between views. Repair a failed view before using it as the reference for further images. Imported licensed artwork needs its own usage record even when it appears inside an otherwise original painting.
+Clean at delivery size and evaluate the extended views
+Approve broad material planes, readable face/role, deliberate brush clusters and selective ink at tactical scale. Keep the existing four-view path available for the first proxy playable. After the proposed eight-view selector and art trial are approved, build its views at 45-degree camera-relative increments. Define zero as the view looking toward the actor's front and record increasing-angle convention explicitly. Test it with a shield-bearing model; ambiguous labels such as “left” are insufficient because anatomical and camera-left differ.
+Eight art views do not add eight legal formation facings. The starting combat fixture has four cardinal facings. The renderer maps relative camera angle to the art while the rules keep their own facing. Use independent views for asymmetric gear, with mirror permission disabled unless the specific asset proves it is safe. Preview a complete orbit at ordinary and steep pitches, retaining normalized animation phase at every view transition.
+Animate rule events without creating them
+Use the companion's proposed clip set as an initial budget: idle, walk, weapon action, cast, hit reaction, fall and work, plus stable pending/interrupted poses. Declare per-clip frames, rate and loop flag. The proposed two-frame idle or six-frame attack is an authoring choice; it does not define Tick length or number of hits.
+Drive impacts from recorded gameplay events. Six Above arrow hits need six recoverable calculations even if their trails overlap aesthetically. A response pause holds work progress and movement; decorative settling cannot imply that the Spell resolved. A charge effect ends at its recorded impact, and subsequent stationary attacks use ordinary combat presentation. Reduced-motion playback retains the same event identity and outcome.
+Export a simple atlas and a complete manifest
+First export independent RGBA frames with a common canvas, anchor and scale. Normalize them only under their declared material profile. Pack deterministic equal-size cells and emit animation frame coordinates matching Lumina's current contract. Keep trim and rotation disabled in this baseline. If a future importer supports more sophisticated packing, it must preserve original frame size and anchor through every transform.
+The manifest includes source Card/identity, immutable asset version, content hash, file dimensions, cell dimensions, view convention, anchor, pixels-per-unit conversion, animation lists, timing, loop flags, mirror permissions, sockets, draw order, color-space declaration, alpha/glow profile and fallback. It also links original source files and lineage records. Packaging should not throw away the evidence that made the rendition trustworthy.
+If rendition metadata enters a signed v3 canonical record, keep it integer-safe: integer pixel anchors and rational scale or rate fields, or a separately hashed art artifact under its own schema. Convert to renderer-native numeric values at the presentation boundary. Cosmetic floating-point settings must not weaken the integer-only gameplay encoding. [REQ03 Appendix B]
+Validate inside the actual game
+Check malformed or oversized images, missing views, duplicate or out-of-range frames, drifting anchors, unexpected alpha values and absent provenance. Then load the asset in a small renderer scene containing a floor, tunnel roof, flyer, bright/dark backgrounds and an opposing asymmetric member. Capture the actual tactical zoom, continuous orbit and an animation-view transition.
+Finally use recorded semantic fixtures: six Above arrows, front sword protection, a public counter window, a corner helper returning home, a roofed tunnel target and a completed excavation. Confirm that the same state and events produce the same meaning under reduced effects, muted audio and enlarged interface text. Missing cosmetic art uses a labeled neutral fallback; missing executable behavior must remain a separate content error.
+Concrete tasks for coding agents
+These are proposed tools to build, not tools claimed to exist already. Each should have explicit inputs, deterministic outputs and a review artifact. Prefer small command-line programs over a large editor that combines generation, gameplay and asset management before any one step works.
+Proposed task
+Inputs and outputs
+Required check
+export_source_art
+Pinned editor, approved source and export settings → PNG frames plus export report.
+Source hash and exporter version recorded; layer/frame names preserved.
+capture_views.py
+Approved Blender scene, poses, camera convention and view list → named capture frames and camera metadata.
+Anatomical gear sides stable; common scale and foot baseline.
+pack_fixed_grid.py
+RGBA frames and manifest draft → fixed-grid PNG, frame map and labeled contact sheet.
+Equal cells, deterministic ordering, no hidden trim/rotation, stable anchors.
+validate_hapa_assets.py
+Manifest, atlas and lineage → actionable JSON/text report.
+Dimensions, decoded-memory limits, view coverage, frame bounds and material-specific alpha rules.
+render_orbit_review.mjs
+Runtime loader, rendition and camera settings → orbit captures and transition report.
+No mirror swaps, phase resets, foot jumps or color-space mismatch.
+render_semantic_fixture.mjs
+Frozen rules/profile fixture, accepted events and presentation settings → exact overlays and comparison captures.
+Target, face, source and result remain identical across renditions.
+build_provenance_manifest.py
+Original images, prompts, authors, edits and external-license records → searchable lineage record.
+No missing parent artifacts, fabricated author fields or lost license URLs.
+
+A reusable agent task bundle can combine these operations with a short brief, naming conventions and review checklist. It should stop on a missing view, unsupported material profile or ambiguous source record, provide a precise correction, and resume from that artifact after repair. It should not silently generate substitute gameplay behavior or accept a new costume as a new Card rule.
+Before scaling to many Cards, complete one end-to-end vertical slice: one identity, one asymmetric character, the approved view count, two meaningful clips, one hit effect, one reduced-motion variant, one valid import and a full provenance chain. Then run the opening-army scene with representative layered effects and measure frame time, decoded texture memory, overdraw and load cost on declared hardware. Optimize the measured bottleneck while keeping rule-bearing boundaries and labels intact. The success criterion is a dependable pipeline that another artist or coding agent can reproduce, not the number of tools in the stack.
+10 Wisdom from games and engineering references
+These references supply design principles and implementation techniques. Apply each through a small Hapa fixture while preserving the selected rules. The comparisons are recommendations, not new balance decisions.
+League and ARAM make concentrated conflict legible
+Riot describes League's ARAM as randomly assigned champions fighting in a single lane, five players per side. Its clarity article emphasizes recognizable silhouettes, accurate ability presentation and visual emphasis proportional to gameplay importance. Current ARAM has map variations; Howling Abyss is not the only possible current setting. [WIS01, WIS02]
+A contested Hapa frontage should reveal commitment, relevant protection and the next exchange's stakes. Emphasize decisive Spells over routine movement and keep their causes inspectable. A paired-column highlight identifies new-order permission; it must not hide combat continuing elsewhere. Do not import real-time MOBA pacing, reflex execution, random rosters, five-player teams or respawn assumptions. Hapa's public agreement and response pauses remain deliberate decision space. Test the exciting moment at reduced motion as well as full effects.
+Chess offers a movement vocabulary not a complete combat model
+FIDE chess uses alternating moves, piece-specific movement and checkmate. A move cannot expose or leave the mover's own king in check. Ordinary capture removes the opposing piece from its square; these rules do not describe a health-and-formation battle. [WIS03]
+Familiar movement silhouettes help explain a Castle, Bishop or Queen's destinations. Show Hapa's differences at the point of action: travel persists, Supply pays for progress, speed affects arrival, bodies can meet between anchors and nine members retain their own roles. A Knight's diagnostic route is physical travel with possible contact, not a teleport over the intervening fight. Do not add chess check, checkmate, one-hit capture, promotion or alternating single-piece turns by association. Keep the King archetype, mobile Commander and fixed Capital visibly distinct; their names do not make them interchangeable victory objects.
+Go teaches the value of connection and cutting
+The British Go Association introduces territory as surrounded vacant points. A stone or orthogonally connected string has adjacent empty liberties; occupying all its liberties captures it. Its introductory scoring example counts territory and prisoners. These are specific Go mechanisms, not a universal definition of territorial control. [WIS04]
+Ask which advance stays connected and which position becomes isolated. Explain a cutoff through the nearest eligible enemy and the friendly frontier before it. Do not calculate Hapa income by flood-filling enclosed regions, counting Go liberties or removing a party simply because it is surrounded. Exposure and support matter independently: a visible roofed occupant and a flyer do not become ground-income blockers. A good learning comparison uses the same column with an exposed enemy, a roofed enemy and no blocker, then shows the different eligible frontier.
+Magic demonstrates precise costs timing and exceptions
+Magic's Comprehensive Rules distinguish Mana, costs, priority and the stack. Successive passes resolve the top pending spell or ability; a response normally resolves before the action beneath it. Card text can override an applicable rule in its specified situation. The inspected rules are effective 6 November 2026. [WIS05]
+For Hapa, name the source, payment, legal target, response window, result and duration. Separate an instance consumed as Supply, burned for Mana or used for its attached ability. Make a countered paid spell explain its spent cost. Do not copy Magic's five-color system, land-play cadence, turn phases, hidden hands or complete priority machinery. Hapa's named public response policy supplies its own order. Likewise, “Card text overrides rules” does not authorize arbitrary prose or creator JavaScript to execute: the versioned interpreter must support the declared operation, and the match must agree its definition.
+Command objects separate intent from execution
+Robert Nystrom's Command chapter turns an operation into a value that can be selected, queued, logged or replayed. The same interface can receive human or AI decisions. Serializable commands also help transport those decisions; undo is another possible use, not an automatic game rule. [WIS06]
+Mouse, keyboard, bot and test should request the same typed action with actor, target, parameters and plan revision. Validation and the shared transition still decide legality; a command object is not permission to execute it. Replaying accepted commands and recorded choices should reconstruct the same result. Do not import arbitrary undo into a frozen public plan or accepted match history because the tutorial demonstrates it. An editable proposal, a replay cursor and a committed gameplay action have different responsibilities.
+A star searches the graph that the game defines
+Red Blob Games explains A* through graph nodes, weighted edges and a heuristic. The returned path says which nodes connect, not how an actor physically traverses the world. A heuristic that does not overestimate supports optimal paths under the represented costs. [WIS07]
+Define the search objective: least Supply, earliest arrival and safest route differ. A graph needs the relevant surface, occupied band, support and explicit connections; two positions above and below one roof cannot collapse into the same node. Search can assist an allowed route preview or experiment, while swept bodies and the shared validator determine actual traversal and contact. Do not replace the specified straight routes or long-axis-first Knight fixture with an unconstrained shortest-path solver. Fix neighbor order and equal-cost tie handling when search results become agreed gameplay data.
+Fixed stepping separates simulation from display speed
+Glenn Fiedler's Fix Your Timestep explains how variable frame duration can alter a simulation, how bounded or fixed steps address that problem, and how an accumulator and interpolation separate simulation updates from rendering. It also discusses the overload problem when simulation cannot keep up. [WIS08]
+Hapa's existing numerical profile supplies its Tick subdivisions and fixed-point arithmetic. Use those accepted rules to calculate motion and simultaneous events; use interpolation only to present the resolved trajectory. A slow renderer must not change who touches first, spend extra Supply or choose a different winner. Do not equate one Tick with one display frame or add a 60-Hz gameplay requirement because an article uses that example. Public choices pause simulation, so waiting time must not accumulate into later gameplay catch-up. Fixed stepping is one ingredient: deterministic arithmetic, event ordering, content versions and recorded choices still need their own verification.
+A useful transfer check
+For each borrowed idea, name the improvement and the Hapa rule it preserves. Keep a small inspectable destination, counter, cutoff or interception example as evidence, so the next agent inherits the principle accurately.
+11 Visual reference atlas
+These twelve original mockups extend the Design Companion. They establish material character, information hierarchy and the feeling of consequential actions. They are concept plates with deliberate interface examples, not runtime captures, pixel-perfect layout files, importable sprite atlases or evidence of performance. The exact board diagram and requirements fixtures govern counts, geometry and outcomes. [REQ03; DES01]
+Across the atlas, warm earth and painted stone make the battlefield tangible; dark slate and ivory keep controls legible; aged brass supplies structure; restrained alignment light identifies a source or boundary. The strongest light belongs to the decision being made. Ownership, suit, alignment, attack channel, incoming face and pending/resolved state require independent marks. Color does not carry all six meanings.
+Use each plate in three passes. First identify the experience it promises. Next implement the named semantic check with simple geometry and real labels. Finally replace the proxies with the intended art, preserving the same meaning at ordinary play distance, enlarged text and reduced effects. The scene may become richer; legal targeting and causal explanation must remain dependable.
+Plate
+Reference to use during implementation
+M01
+Complete opening board, public banks, active columns and selected Card payload.
+M02
+Party-relative member inspection, formation Front and anatomical equipment.
+M03
+Exposed pit, roofed passage, flyer and six-band inspection.
+M04
+Dig preview, work in progress and completed terrain edit.
+M05
+Separate territory, row and Mount effect bindings.
+M06
+Paid Ember Strike and Blue Denial waiting for a response.
+M07
+Rank-6 Wands, distinct Supply and Mana, and exclusive use.
+M08
+Camera-relative art views with stable world facing and equipment.
+M09
+Frozen public plan, revised opponent plan and fresh acknowledgment.
+M10
+Source, incoming face, protection and damage for one hit.
+M11
+Extracted Metal, crafted armor and attributed equipment history.
+M12
+Prior frontier, exposed blocker and an explainable change in income.
+
+M01 The complete battlefield
+
+Figure 3  Original Hapa concept mockup. The complete battlefield. Interpretation and implementation checks follow.
+Experience. A crafted tactical relic with enough depth and texture to invite exploration, while the full field, public Cards and active columns remain easy to locate.
+Build meaning. The baseline is nine columns by ten playable rows, with both deployment rows occupied for each player: 36 party anchors and 162 members. Four rear bank rows each contain nine slots; the two side banks each contain ten. The illustrated opening shows only the two outer rank-2 Wands in each public hand. The selected C1 Card has Supply 2 and Mana 0; those are its payload, not a universal wallet total. [REQ03 chapters 3–5; Appendix A]
+Interpretation limit. Miniature counts within clusters, exact local slot patterns and contact-strip widths remain schematic. Use the authored board diagram and fixtures for those details. Ground 0 is a divider, not another selectable band.
+Acceptance. From either seat, locate all four bank rows, identify C1 and C9, inspect the same selected Card, and orbit without changing coordinates, owner, facing or income.
+M02 Formation and member inspection
+
+Figure 4  Original Hapa concept mockup. Formation and member inspection. Interpretation and implementation checks follow.
+Experience. A party feels like an assembled group of people. A close inspection reveals equipment, positions and a shared direction without losing the party's relationship to the board.
+Build meaning. The inspector has a party-relative 3×3 grid with center slot 5 and a clear Front. World selection, grid selection and member details identify the same entity. Anatomical shield-left and sword-right remain consistent in opposed views. Four cardinal formation facings are independent of the camera. [REQ03 chapters 6–8; DES01 chapters 4 and 11]
+Interpretation limit. This is a full-party presentation study; the painted roles do not define a new opening roster. Populate the real opening from the exact Mount and Pawn slot fixtures. A formation preview does not immediately move bodies, change protection or escape hostile contact.
+Acceptance. Select each member through the inspector and the world, then orbit 360 degrees. The same member remains highlighted; its gear stays on the same anatomical side; Front and all six incoming-face labels retain their rules meaning. An invalid rearrangement explains the violated condition while retaining the old formation.
+M03 Exposed ground roofed passage and sky
+
+Figure 5  Original Hapa concept mockup. Exposed ground roofed passage and sky. Interpretation and implementation checks follow.
+Experience. The board is a small excavatable world. A player can understand an exposed pit, a covered tunnel and a flyer occupying the same region without the scene becoming a transparent fog.
+Build meaning. A six-band rail presents +3, +2, +1, −1, −2 and −3 around the original Ground 0 boundary. Occupied height, movement mode, support and exposure are distinct fields. Ownership has letter and shape cues. A roof can be visually cut away while remaining intact in the rules. The flyer has a separated projection marker rather than a ground footprint that implies income eligibility. [REQ03 chapters 4 and 9; DES01 chapters 3–4]
+Interpretation limit. The perspective scene illustrates relationships; the companion's measured section controls band and cube dimensions. Inspector field headings need actual selected-state values in the implementation.
+Acceptance. Select the surface, pit-floor, roofed and flying occupants through both pointer and target list. Changing the viewing band leaves the authoritative digest unchanged. Only the qualifying exposed supported ground centers participate in the income cutoff test; capture uses its separate rule.
+M04 Excavation from preview to completed void
+
+Figure 6  Original Hapa concept mockup. Excavation from preview to completed void. Interpretation and implementation checks follow.
+Experience. Digging produces a satisfying material change: a marked face becomes a worked boundary, then opens into traversable space with crisp strata, falling fragments and a settled edge.
+Build meaning. The three panels distinguish a proposed edit, ongoing work and an accepted completed edit. The selected fixture takes one Tick without a resource cost. Until completion the cube remains solid. Removing the side cube leaves the roof above intact; particle dust and the cutaway are presentation. [REQ03 chapter 9 and Appendix A; DES01 chapter 7]
+Interpretation limit. The depicted duration and cost belong to the prepared demonstration, not every future terrain Skill. The picture grants no automatic staircase, collapse, mining reward or permission to enter unsupported space.
+Acceptance. Pause during work, resume, complete, then replay. The cell changes exactly once at the accepted event; support and route checks recompute from the result; the roof remains logically present. Interrupting work retains the appropriate solid state and explains the interruption. Reduced-motion mode uses a clear before-and-after edge with the same result.
+M05 Territory identity and crossing persistent effects
+
+Figure 7  Original Hapa concept mockup. Territory identity and crossing persistent effects. Interpretation and implementation checks follow.
+Experience. Enhancement makes a place feel authored: rooted stone ribs, fitted material and a quiet glow provide a durable identity. Overlapping magic remains attributable.
+Build meaning. Three scopes are deliberately different: a Green territory footprint, a Purple row effect, and a White Major Arcana bound to one Mount. Their source glyphs match their world markers. Inspector copies do not move the physical Cards out of their banks. A thin leader reaches the actual target instead of implying that every Major affects its whole column. [REQ03 chapter 10; DES01 chapters 6–7]
+Interpretation limit. Earth Study, Row Effect and Mount Binding are illustrative labels. The art supplies no new cost, duration, stacking rule, defensive bonus or legal operation. The future authored definition determines those facts. A horse is one possible Mount rendition, not a requirement that all movement archetypes be horses.
+Acceptance. Inspect a crossing cell and recover each source and actual target independently. Toggle one presentation layer without removing the underlying effect. A selected real Card's written scope and computed area must match; a decorative ridge may not masquerade as a movement obstruction.
+M06 A paid spell awaiting its response
+
+Figure 8  Original Hapa concept mockup. A paid spell awaiting its response. Interpretation and implementation checks follow.
+Experience. The scene holds its breath. The caster has announced an action, the defender has answered, and the interface makes the current opportunity unmistakable.
+Build meaning. A friendly caster party in an active column uses Ember Strike on one living enemy member in any of the eight neighboring territories at the same height. Its Card instance and two Red from other resources are already consumed. Blue Denial, shown above it as the newest pending effect, consumes its own instance and two Blue from other resources. Its response permission can apply from an inactive column. The priority panel exposes Inspect Target and Pass. [REQ03 chapter 10; Appendix A]
+Interpretation limit. The orange trace is a target preview, not a landed hit. The consumed Cards shown in the stack are inspectable effect records, not reusable bank instances. The picture does not imply a line-of-sight restriction, a refund for a countered action, or a timer that forces a choice.
+Acceptance. Both clients agree on the pending stack, payer, targets and priority. Movement and work remain paused. Two consecutive passes resolve the newest effect under the selected response interpreter, and replay reproduces the same costs and counter result without playing impact early.
+M07 One resource instance and three exclusive uses
+
+Figure 9  Original Hapa concept mockup. One resource instance and three exclusive uses. Interpretation and implementation checks follow.
+Experience. A Card is a beautiful, inspectable object whose practical meaning is immediately clear. The player sees a choice between logistics, Mana and the attached ability.
+Build meaning. The prepared A C1 R6 example is rank 6 Wands with Supply 6 and a distinct Mana payload of three Red plus one Green. Its nine-slot public bank preserves the source-column association. Each branch consumes that same instance once. Loaded Supply persists; pooled Mana expires at the Tick boundary; a stored Card has its separate replacement rule. [REQ03 chapter 5 and Appendix A; DES01 chapter 11]
+Interpretation limit. This is a selected-card state, not the whole opening income or every bank's contents. Use Ability must name a supported attached ability, or explain that the selected resource-only definition has none. The illustration does not grant an ability through its artwork.
+Acceptance. Execute each branch in a separate fixture run. The instance disappears from its one slot, only the chosen output appears, and a repeated use is rejected without a second grant. Show exact named Mana quantities in the payment UI and distinguish a Card payload from the player's current pool.
+M08 Camera rotation and an asymmetric character
+
+Figure 10  Original Hapa concept mockup. Camera rotation and an asymmetric character. Interpretation and implementation checks follow.
+Experience. A character feels coherent from every side. Orbit reveals clothing, shield and weapon without making the person appear to change equipment or face the wrong way.
+Build meaning. The large front view points Front toward the viewer; the rear view points it away. Both preserve anatomical shield-left and sword-right. Runtime art selection uses relative camera angle while authoritative formation facing remains unchanged. Lumina's current four-view foundation can support the first proxy slice; eight authored views require the proposed selector and rendition trial. [ENG01; AR04, AR09; DES01 chapters 4 and 13]
+Interpretation limit. The lower strip is an eight-view production target, not a verified evenly spaced atlas. Its final views are too similar to approve as production frames. Do not crop the montage into a shipping sheet or infer eight legal facings from it.
+Acceptance. Capture a full orbit with idle and a weapon action. Check foot anchor, anatomical equipment, silhouette, normalized animation phase and view thresholds. A view transition must not reset an attack, spend resources, flip a shield or produce a new hit event.
+M09 Public plans after an opponent changes a revision
+
+Figure 11  Original Hapa concept mockup. Public plans after an opponent changes a revision. Interpretation and implementation checks follow.
+Experience. Agreement feels calm and understandable. The player can see why the match has not advanced and exactly what needs review.
+Build meaning. A first Ready freezes that player's own plan. The opponent may revise its still-editable plan, making the earlier acknowledgment stale. The frozen player reviews and acknowledges the new pair without editing its own plan. Both public plans remain inspectable; the game resolves only after valid acknowledgments name the same pair. [REQ03 chapter 14; Appendix B]
+Interpretation limit. The cropped battlefield supplies visual context, not a complete roster or new board profile. The implementation must expose the actual Tick, phase, revisions and relevant review status in accessible detail. Add no concealed commitment, Unready shortcut or arrival-based priority.
+Acceptance. Delay one old revision, duplicate Ready and reconnect one seat. The displayed review request remains correct, and no stale pair resolves. Path lines remain proposals while agreement is pending. The read-only diagnostic surface and the user-facing review must describe the same pair.
+M10 Explaining one directional hit
+
+Figure 12  Original Hapa concept mockup. Explaining one directional hit. Interpretation and implementation checks follow.
+Experience. Combat can be dramatic without being mysterious. A player can inspect the attacker, incoming face, protection source and resulting damage.
+Build meaning. This prepared hit has Physical Attack 3 against Front Physical Defense 1, producing damage 2. The selected incoming face is Front; Above remains a distinct direction. Previous Hit and Next Hit navigate recorded explanation. [REQ03 chapters 7–8; DES01 chapter 11]
+Interpretation limit. The visible timeline is an explanation of one hit, not additional Ticks, response windows or sequential recalculation of a simultaneous batch. The image does not choose among v3's four required damage-policy demonstrations or establish which member dies under each policy.
+Acceptance. Revisit the same event repeatedly. HP, costs and rewards do not change. Switch to the six-Above-arrow diagnostic and preserve six separately inspectable hits; a frontal shield must not flash as if it supplied Above protection. The shared-pool mode presents its actual pool instead of invented individual health.
+M11 Mining crafting and attributed equipment history
+
+Figure 13  Original Hapa concept mockup. Mining crafting and attributed equipment history. Interpretation and implementation checks follow.
+Experience. A material acquires a story the player can follow: a seam was worked, Metal was extracted, armor was crafted and a specific member equipped it.
+Build meaning. The fixture begins after Tick 8 with an accessible worker at −3, extracts at Tick 9, crafts at Tick 10 and equips at Tick 18. The deposit is exhausted once; Metal is consumed; one armor instance adds one frontal Physical Defense, bringing the worker's value to 2. Material and equipment inventory are separate from the nine Minor slots. [REQ03 chapter 9; Appendix A]
+Interpretation limit. The workshop is an inventory and history presentation, not a required crafting building or a new map location. This Match labels the depicted scope. Durable ownership, provenance and retention follow the selected Hapa adapters and format; the image promises no XP curve, trading value or automatic permanent power gain.
+Acceptance. Inspect origin through deposit, extraction, material, recipe and equipment events. Replay, reconnect, fill and redig do not duplicate the resource. Removing or replacing an equipment instance updates the stated modifier through the rules, with the same history available to both clients.
+M12 Learning by following the income calculation
+
+Figure 14  Original Hapa concept mockup. Learning by following the income calculation. Interpretation and implementation checks follow.
+Experience. Learning emerges from a real consequence. Instead of a detached tutorial essay, the player follows the exact column and discovers why its next income differs.
+Build meaning. In this post-cutoff inspection, the solid gold trace ends at the eligible friendly frontier. A neutral dashed scan continues toward the exposed enemy blocker. A covered enemy remains publicly discoverable below its roof but does not participate in that ground-income test. A and B marks distinguish owner independently of alignment hue. [REQ03 chapter 5; DES01 chapter 12]
+Interpretation limit. Why Income Changed must link to a preceding event and the former deeper frontier. An enemy merely beyond an unchanged friendly frontier does not itself reduce income. The picture supplies no exact rank or Mana calculation; the real inspector must show both prior and resulting values and their provenance.
+Acceptance. Seek backward, inspect the previous frontier, then advance to the cutoff event. The explanation highlights the actual centers used in the calculation and names why excluded occupants were ignored. Seeking changes the replay view without reminting Cards, replaying rewards or altering the saved match.
+12 Agent kickoff and staged acceptance
+Copy this brief into the implementation task
+Build Hapa Versus from Lumina commit 85efa0456812ca25e5279e9735bb11ec5a1d6979 at https://gitlab.com/stubborn-hug/lumina. Read the complete Master Requirements v3 and Design Companion v1, especially requirements Chapters 15–18 and Appendices A–B. They govern behavior and presentation; this book supplies implementation advice. Use hapa_open_10x9_v3_01, preserving fixtures and configurable balance.
+Implement shared headless rules, a simple Lumina presentation and two independent peer participants. First-iteration decks, commands and effects are public. Each peer owns its signed Hypercore, keys and storage, validates inputs and calculates outcomes independently. Public plan revisions and matching Ready acknowledgments determine agreement; packet arrival never grants action priority. Humans and bots use the same command contract. Retain local content/identity adapters so unavailable Hapa services do not prevent development.
+Before each slice, derive expectations from the documents independently of implementation output. Record source, profile and expected observations, implement, then compare and diagnose the first divergence. A changed expectation requires a corrected interpretation or separately versioned experiment.
+Keep rules independent of DOM, WebGL, wall-clock time and animations; art cannot grant abilities. Deliver small increments with actual commands, records and limitations. Keep the selected stack. BVH, eight-view production assets and Pear packaging need not precede a simple playable.
+Establish the pinned baseline
+For a new working copy, these commands use the verified repository URL, revision and existing scripts:
+git clone https://gitlab.com/stubborn-hug/lumina.git hapa-versus
+cd hapa-versus
+git checkout -b hapa-versus 85efa0456812ca25e5279e9735bb11ec5a1d6979
+npm ci
+npm run typecheck
+npm run build
+npm run dev
+Stop the development server before the existing browser-check harness starts its own server:
+npm run check -- \
+  --page=game.html --query=autostart=1 --out=baseline \
+  --wait=6000 --fps=0 --fonts=local --strict
+Use a compatible Node runtime and an installed browser; the harness accepts CHROME_PATH when automatic detection does not locate it. The earlier audit installed dependencies and built successfully, but Chromium failed before page load. These are reproducible starting commands, not a claim that the new Hapa application or every command above has passed. Document new Hapa commands only after implementing them.
+Proposed repository boundaries
+All Hapa paths below are proposed new areas, not completed upstream modules.
+Area
+Responsibility
+src/hapa/rules
+Validated state transitions, movement, contacts, terrain, resources, Cards and choices; no browser or networking dependency.
+src/hapa/protocol
+Canonical records, identity/signature checks, public plan agreement, receipts and recovery.
+src/hapa/presentation
+Coordinate conversion, Lumina objects, targeting, interface and event-driven effects.
+src/hapa/controllers
+Human and automated decision adapters returning ordinary commands or choices.
+src/hapa/adapters
+Replaceable local and Hapa-facing identity, content, storage and history interfaces.
+fixtures/hapa and tests/hapa
+Versioned profiles, catalogs, independent expected traces and focused verification.
+
+Generic src/engine modules must not import Hapa rules. Add the Hapa production entry deliberately in vite.config.js when its view exists.
+Six coherent working slices
+1. Reproducible state and contracts. Pin the source, create local participants/catalogs and load the complete profile. Implement canonical encoding and basic validation. Complete when independent initialization yields the same digest, the SHA-256 vector matches Appendix B, and the opening contains 36 party anchors and 162 members. Record baseline build limitations separately.
+2. Opening resources and travel. Implement activation, minting, bank replacement, exclusive Card use, Supply loading, continuous movement and merging. Complete when the R2 frontier produces one rank-2 Wands Card with Supply 2 and zero Mana, the opening Castle/Pawn merge preserves original members, and inactive-column movement continues. Replay the same accepted trace to identical state.
+3. First playable local match. Add contact, the selected combat profile, response choices and victory, then a proxy-art Lumina view with real member footprints, facing, public Cards and command feedback. Complete when a human or bot can reach a rules-defined result and inspect its causes. Simulation and rendering frame rates must not change outcomes. Label this a local rules match until actual peer validation exists.
+4. Independent peer agreement. Run two peers with distinct keys and storage roots, replicate their Hypercores and bind the same manifest. Complete when a stale Ready requires acknowledgment of the revised pair, duplicates have no second effect, both peers calculate matching receipts, and reconnection resumes accepted records. Two browser windows alone do not establish this result.
+5. Volume and extensible content. Implement solid/empty terrain, support, roofs, surface-bound effects and the specified mining/crafting/equipment fixtures. Complete when an exposed pit differs from a covered tunnel in supply eligibility, a cutaway changes no rules digest, and extraction produces its resource once. Demonstrate the defined row effect, Mount binding and spell response through executable definitions rather than bespoke animation behavior.
+6. Reusable play and evidence. Complete offline replay/export, shared content with attribution, adapter contracts, controller experiments and readable dense-scene inspection. Complete when another developer reproduces a recorded match and explains its resource, movement and combat outcomes. Measure rendering before selecting BVH, extra batching or richer atlases; evaluate desktop packaging separately. These slices are an iterative sequence, not a fixed launch gate.
+13 Decisions evidence and continued maintenance
+Work that can begin now
+The source documents provide enough definition to begin the pinned engine baseline, headless fixture runner, exact coordinate and Card models, public agreement, proxy volume view and first Card-to-merge demonstration. These tasks do not require a final illustration style, an extra multiplayer framework or an answer about future collection economics. Complete them against the existing profiles while the bounded visual trials proceed. [REQ03 chapters 15–18; DES01 chapter 16]
+Questions for the next visual lock
+Which default camera lets a player read the full army and select a covered unit reliably? The starting board has 90 playable territories, six occupied height bands and 162 members. Begin with the companion's 50-degree perspective home view and full orbit. Compare it with a higher tactical view using the same dense state, then ask players to locate a tunnel occupant, identify a party's Front and target the intended member from both seats. Choose the default after those tasks. An orthographic gameplay view remains an optional later decision; orthographic authoring captures do not select it automatically.
+How much painted detail should a member retain at ordinary play distance? The new mockups show rich close views, while the actual Overview must preserve small role silhouettes, party membership and facing. Test one shield bearer and one ranged member at the proposed 128×128 source-cell size, using opposed views and the actual runtime scale. Decide the working brush density, silhouette rules and distant token threshold from those captures. Full eight-view production follows a successful selector and art trial; it does not delay the first proxy playable.
+What exactly should the first territory-enhancement Card do? Earth Study in M05 demonstrates appearance and targeting, but it is not a priced playable definition. Select one concrete effect with a named operation, legal area, cost, duration, source, stacking behavior and expiry. Use an existing defined modifier where suitable, or author an explicit new versioned operation and fixture. Only then should artists encode its bonus through a fortification, movement cue or income marker. Until that selection, keep the enhancement labeled as a concept.
+Which measured hardware and display profiles define the first supported experience? The source build passed, but there is no new Hapa runtime or performance benchmark. Record the first PC and Mac test configurations, viewport, device pixel ratio and quality settings. Measure the full opening roster with overlapping row, column, terrain and response effects, including reduced effects and enlarged text. Choose frame-time, memory and load budgets from those results. The existence of a powerful development computer does not establish a minimum supported machine.
+Which signals must every collectible rendition preserve? The player should be able to identify a unit's role, owner, facing, source effect, incoming face and exact meaningful boundary even when an artist changes costume, materials or portrait treatment. Compare a base rendition and two expressive variants using the same recorded actions. Approve the shared signals and allowed variation, then record that contract in the asset manifest and review skill. Rarity and visual expense do not justify a larger apparent target area or a persistent aura that hides other state.
+These questions carry forward the Companion's bounded decisions with evidence that a prototype can produce. They do not reopen the selected board economics, public information, separate Card branches or peer authority. An unresolved ecosystem API should use a clearly labeled adapter and fixture identity until the real interface is supplied; that adapter cannot claim verified Hapa issuance or entitlement.
+Update the reference through a visible decision record
+When a trial resolves a question, record the chosen option, reason, compared alternatives, source and profile revision, acceptance evidence, date and owner. A gameplay change belongs in the requirements and its fixtures. A presentation choice belongs in the Companion or a versioned presentation profile. A tool replacement or newer source belongs here. Update the linked artifacts together so that a future agent does not reconcile three different answers by guessing.
+Each new mockup should identify the underlying scenario, source and target, paid or pending state, quantities deliberately shown, and details that remain illustrative. Each new repository entry should identify the job it solves, exact revision or version, current primary link, license scope and integration evidence. Retire superseded advice visibly; retain the previous artifact and its provenance.
+Recover from implementation blockers
+Missing cosmetic art uses a visible neutral fallback; unsupported gameplay operations remain explicit errors. Missing ecosystem APIs use labeled local adapters with the same contract. Browser or discovery failures preserve logs, exact commands and diagnostic evidence; continue with headless or local transport fixtures while clearly identifying what remains untested. Never replace independent agreement with a privileged server to obtain a green result. Escalate only a genuine contradiction that changes behavior; configurable values already supplied by the profile do not require another owner decision.
+Evidence limits at this handoff
+Both supplied documents and pinned engine source were reviewed. Current primary documentation and repository license evidence were researched. The opening counts, nine-position activation cycle, fixed-point example and canonical hash vector were checked independently. The twelve new concept images received individual inspection and targeted corrections; their remaining conceptual limits are stated beside them.
+The prior Lumina dependency install and production build succeeded, while Chromium failed before page load. This reference pass did not implement a Hapa rules engine, run a network match, integrate the recommended dependencies, qualify a GPU, conduct a user playtest or certify accessibility. The first implementation handoff should replace each relevant unverified claim with named, reproducible evidence as the corresponding slice is completed. [ENG01; IC01–IC06; AR11]
+14 Source register
+All external sources are primary documentation, official project repositories, original authors or the named game authorities. Reviewed 21 November 2026 Pacific; external retrieval occurred 22 November 2026 UTC. Links to mutable documentation are research snapshots; pin versions and recheck interfaces when implementing. Code licenses do not automatically license documentation, imported artwork or trademarks.
+Source IDs in brackets point to the entries below. A source supports the specific cited claim; the Hapa applications and recommendations are design reasoning. Source files were inspected where stated. No package adoption, installed skill or successful runtime integration is inferred from a link.
+REQ03 Hapa Versus Master Requirements v3
+Gameplay and engineering authority, particularly Chapters 9 and 15–18 and Appendix B. Public commands, two independent signed logs, readiness revisions, local adapters, coordinate/terrain rules and canonical record contract.
+Source SHA256: 64c910803e0791c7c89d4c92ecdddc5f255c72f94a5ce6bb60609ef48dbbe91d.
+REQ03  Open supplied document
+DES01 Hapa Versus Design Companion v1
+Presentation authority, particularly Chapters 3, 4 and 15; volume, camera, cutaways, source evidence, material style, renderer/UI separation and performance qualifications.
+Source SHA256: 79b29ae91dfba11c2ccfc80c0af50b86435a78ada39325172d48278dc5fcaae6.
+DES01  Open supplied document
+ENG01 Pinned Lumina source and prior build evidence
+Existing engine architecture and exact integration file map; observed build success and pre-page-load Chromium launch failure. Does not establish Hapa runtime compatibility, performance, full volumetric terrain, networking or gameplay implementation.
+Inspected revision: 85efa0456812ca25e5279e9735bb11ec5a1d6979. Commit date: 2026-11-05T23:06:17-08:00.
+License and reuse scope: MIT. Actual license file inspected.
+ENG01  gitlab.com  /stubborn-hug/lumina
+ENG01  gitlab.com  85efa0456812ca25e5279e9735bb11ec5a1d6979  LICENSE
+ENG01  gitlab.com  /stubborn-hug/lumina/-/blob/85efa0456812ca25e5279e9735bb11ec5a1d6979/package.json
+Pinned Lumina files
+The paths below refer to the inspected revision. Line landmarks aid source navigation and are not stable across later commits.
+LICENSE  1–21
+package.json  scripts and dependencies
+package-lock.json  node_modules/three and node_modules/vite
+vite.config.js  88 onward and build inputs
+src/engine/core/Engine.js  22–30, 60–114
+src/engine/constants.js  1–35
+src/engine/core/CameraRig.js  82–143, 213–234, 403–468
+src/game/Player.js  43–80, 161–162, 427–437
+src/engine/sprite/Sprite3D.js  148–187, 298–309, 330–510, 615–675, 804–905, 984–1030
+src/engine/pixel/PixelCanvas.js  480–529
+src/engine/pixel/CharacterSprites.js  3631–3725
+src/engine/world/TileMap.js  237–317, 626–638, 1430–1469, 1536–1597
+src/engine/world/props/MeshBuilder.js  5–22
+src/engine/fx/GroundMarkers.js  5–66
+src/engine/lighting/LightingSystem.js  314–398, 610–613, 859–895
+src/engine/lighting/VfxLights.js  16–51, 86–109
+src/engine/render/PostFX.js  37–79, 201–264, 455–542
+src/engine/ui/UI.js  106–137
+src/engine/ui/WorldLabels.js  17–79
+src/engine/ui/UiScale.js  1–34, 74–88
+src/engine/core/Input.js  1–48, 66–72
+src/engine/sprite/SpriteManager.js  3–8, 54–65
+src/engine/sprite/BlobBatch.js  5–20
+src/editor/viewport3d/SpriteBatch.js  57–90, 157–164
+tools/check.mjs  5–14, 36–44, 198–206, 259–269
+sandbox/combat_play.js  automation implementation
+docs/specs/AUTOMATION_API.md  automation contract
+docs/architecture/OVERVIEW.md  architecture boundaries
+ENG02 Three js source snapshot and license
+Current repository package version 0.187.0, pinned source and actual MIT license. Distinguish current documentation from Lumina locked 0.186.1.
+Inspected revision: 6246c818834fd19d0c216d3dbc074b6cc9c27896. Commit date: 2026-11-21T19:39:51Z.
+License and reuse scope: MIT. Actual license file inspected.
+ENG02  github.com  /mrdoob/three.js
+ENG02  github.com  /mrdoob/three.js/commit/6246c818834fd19d0c216d3dbc074b6cc9c27896
+ENG02  github.com  6246c818834fd19d0c216d3dbc074b6cc9c27896  LICENSE
+ENG02  github.com  6246c818834fd19d0c216d3dbc074b6cc9c27896  README.md
+ENG02  github.com  /mrdoob/three.js/blob/6246c818834fd19d0c216d3dbc074b6cc9c27896/package.json
+ENG03 Three js official voxel geometry manual
+Visible-face construction, cell-based geometry and updates after voxel changes. Rendering example, not game topology, collision or support semantics.
+ENG03  threejs.org  /manual/pages/voxel-geometry.html
+ENG03  github.com  /mrdoob/three.js/blob/dev/manual/pages/voxel-geometry.html
+ENG04 Three js Raycaster documentation
+Camera-aware ray construction, layers, sorted intersections, object delegation and back-face behavior. Hapa supplies semantic picking and legal-target rules.
+ENG04  threejs.org  /docs/pages/Raycaster
+ENG05 Three js clipping and shadow configuration
+Local clipping requires renderer support; clipShadows is distinct; stencil-cap example illustrates a presentation option. Lumina stencil-disabled limitation is from ENG01.
+ENG05  threejs.org  /docs/pages/Material.html
+ENG05  threejs.org  /docs/pages/WebGLRenderer
+ENG05  threejs.org  /examples/webgl_clipping_stencil.html
+ENG06 Three js official transparency manual
+Transparent sorting and intersecting-surface limitations; alpha-test cutout tradeoffs.
+ENG06  threejs.org  /manual/pages/transparency.html
+ENG07 Three js official color management manual
+Linear working color, sRGB color textures versus NoColorSpace data textures, output conversion and postprocessing.
+ENG07  threejs.org  /manual/pages/color-management.html
+ENG08 three mesh bvh
+Acceleration of mesh queries; current peer dependency range; indexing/indirect mode; refit versus rebuild; worker buffer-transfer implications. No Hapa benchmark or deterministic-rule equivalence was measured.
+Inspected revision: 0375ada0d674af3a4a169c4ad890239cf3d60cda. Commit date: 2026-11-19T14:12:32Z.
+License and reuse scope: MIT. Actual license file inspected.
+ENG08  github.com  /gkjohnson/three-mesh-bvh
+ENG08  github.com  /gkjohnson/three-mesh-bvh/commit/0375ada0d674af3a4a169c4ad890239cf3d60cda
+ENG08  github.com  0375ada0d674af3a4a169c4ad890239cf3d60cda  LICENSE
+ENG08  github.com  0375ada0d674af3a4a169c4ad890239cf3d60cda  README.md
+ENG08  github.com  /gkjohnson/three-mesh-bvh/blob/0375ada0d674af3a4a169c4ad890239cf3d60cda/package.json
+ENG08  gkjohnson.github.io  /tools/docs/three-mesh-bvh/
+ENG08  gkjohnson.github.io  /tools/docs/three-mesh-bvh/BVH/
+ENG08  github.com  /gkjohnson/three-mesh-bvh/blob/0375ada0d674af3a4a169c4ad890239cf3d60cda/API.md
+ENG09 Binary Greedy Meshing v2
+C++ occupancy/face-mask meshing and compatible-face merging; vertex-pulling demo; actual MIT license; 2025-03-30 snapshot. No benchmark results transferred to Hapa.
+Inspected revision: af8c688ed3af63e98f9631c05774f30e1350a021. Commit date: 2025-03-30T09:05:42Z.
+License and reuse scope: MIT. Actual license file inspected.
+ENG09  github.com  /cgerikj/binary-greedy-meshing
+ENG09  github.com  /cgerikj/binary-greedy-meshing/commit/af8c688ed3af63e98f9631c05774f30e1350a021
+ENG09  github.com  af8c688ed3af63e98f9631c05774f30e1350a021  LICENSE
+ENG09  github.com  af8c688ed3af63e98f9631c05774f30e1350a021  README.md
+ENG10 Hypercore
+Directory-backed signed log, append/get/ready/replicate primitives, forks/truncation and current package 11.40.4; internal key derives from auth manifest. Hapa owns independent writer logs and application agreement.
+Inspected revision: 1b0cdad290d642c7c4c90d608c6e821bf6193597. Commit date: 2026-11-12T17:54:00Z.
+License and reuse scope: MIT. Actual license file inspected.
+ENG10  github.com  /holepunchto/hypercore
+ENG10  github.com  /holepunchto/hypercore/commit/1b0cdad290d642c7c4c90d608c6e821bf6193597
+ENG10  github.com  1b0cdad290d642c7c4c90d608c6e821bf6193597  LICENSE
+ENG10  github.com  1b0cdad290d642c7c4c90d608c6e821bf6193597  README.md
+ENG10  github.com  /holepunchto/hypercore/blob/1b0cdad290d642c7c4c90d608c6e821bf6193597/package.json
+ENG10  docs.pears.com  /p2p/reference/building-blocks/hypercore/
+ENG11 Hyperswarm
+32-byte topic discovery, known-peer connection, Noise encrypted duplex stream and connection role semantics. Discovery topic membership is not Hapa identity authorization.
+Inspected revision: 1e508a7e4a632a0fe9ab6e391cfc8a791c9b5014. Commit date: 2026-09-22T16:37:32Z.
+License and reuse scope: MIT. Actual license file inspected.
+ENG11  github.com  /holepunchto/hyperswarm
+ENG11  github.com  /holepunchto/hyperswarm/commit/1e508a7e4a632a0fe9ab6e391cfc8a791c9b5014
+ENG11  github.com  1e508a7e4a632a0fe9ab6e391cfc8a791c9b5014  LICENSE
+ENG11  github.com  1e508a7e4a632a0fe9ab6e391cfc8a791c9b5014  README.md
+ENG11  github.com  /holepunchto/hyperswarm/blob/1e508a7e4a632a0fe9ab6e391cfc8a791c9b5014/package.json
+ENG12 HyperDHT
+Hyperswarm DHT, configurable bootstrap nodes, peer connection keys and private-network infrastructure. Does not prove universal direct connectivity or eliminate infrastructure needs.
+Inspected revision: ce23dfd62d0033881a11f13f63af0254ab745365. Commit date: 2026-11-19T15:39:36Z.
+License and reuse scope: MIT. Actual license file inspected.
+ENG12  github.com  /holepunchto/hyperdht
+ENG12  github.com  /holepunchto/hyperdht/commit/ce23dfd62d0033881a11f13f63af0254ab745365
+ENG12  github.com  ce23dfd62d0033881a11f13f63af0254ab745365  LICENSE
+ENG12  github.com  ce23dfd62d0033881a11f13f63af0254ab745365  README.md
+ENG12  github.com  /holepunchto/hyperdht/blob/ce23dfd62d0033881a11f13f63af0254ab745365/package.json
+ENG13 hypercore crypto
+Ed25519 keyPair/sign/verify APIs and Merkle hash helper distinction. data() is an internal leaf hash and must not replace v3 SHA-256 application fingerprint.
+Inspected revision: 18a707f24824e3ee940c1396b2fee704b4f3a510. Commit date: 2026-10-21T21:06:18Z.
+License and reuse scope: MIT. Actual license file inspected.
+ENG13  github.com  /holepunchto/hypercore-crypto
+ENG13  github.com  /holepunchto/hypercore-crypto/commit/18a707f24824e3ee940c1396b2fee704b4f3a510
+ENG13  github.com  18a707f24824e3ee940c1396b2fee704b4f3a510  LICENSE
+ENG13  github.com  18a707f24824e3ee940c1396b2fee704b4f3a510  README.md
+ENG13  github.com  …/blob/18a707f24824e3ee940c1396b2fee704b4f3a510/package.json
+ENG13  github.com  /holepunchto/hypercore-crypto/blob/18a707f24824e3ee940c1396b2fee704b4f3a510/index.js
+ENG14 Protomux
+Message-oriented channels on a framed stream; protocol/channel identifiers and encodings. Does not supply application order, durability, consensus or validation.
+Inspected revision: 8f2bec200a628196b164b91c91c39c9486a6e781. Commit date: 2026-11-09T20:28:43Z.
+License and reuse scope: MIT. Actual license file inspected.
+ENG14  github.com  /holepunchto/protomux
+ENG14  github.com  /holepunchto/protomux/commit/8f2bec200a628196b164b91c91c39c9486a6e781
+ENG14  github.com  8f2bec200a628196b164b91c91c39c9486a6e781  LICENSE
+ENG14  github.com  8f2bec200a628196b164b91c91c39c9486a6e781  README.md
+ENG14  github.com  /holepunchto/protomux/blob/8f2bec200a628196b164b91c91c39c9486a6e781/package.json
+ENG15 pear runtime
+Current embeddable runtime candidate with Bare-worker and storage/update functions; actual Apache-2.0 license and 1.4.0 snapshot. No Hapa desktop package or updater exercised.
+Inspected revision: 245e33adbe9e0c36887ec72d66c8da403e3c0c45. Commit date: 2026-11-18T14:15:13Z.
+License and reuse scope: Apache-2.0. Actual license file inspected.
+ENG15  github.com  /holepunchto/pear-runtime
+ENG15  github.com  /holepunchto/pear-runtime/commit/245e33adbe9e0c36887ec72d66c8da403e3c0c45
+ENG15  github.com  245e33adbe9e0c36887ec72d66c8da403e3c0c45  LICENSE
+ENG15  github.com  245e33adbe9e0c36887ec72d66c8da403e3c0c45  README.md
+ENG15  github.com  /holepunchto/pear-runtime/blob/245e33adbe9e0c36887ec72d66c8da403e3c0c45/package.json
+ENG16 Current Pear migration and runtime architecture
+Official docs say pear run/global Pear removed in Pear v3; application-owned runtime with Bare worker and UI IPC seam. Architectural guidance and changed workflow, not tested packaging.
+ENG16  docs.pears.com  /pear/how-to/operate-an-app/migration/
+ENG16  docs.pears.com  /pear/explanation/runtime-and-languages/
+ENG17 Colyseus architectural comparison
+Repository MIT license and commit history; state docs put authoritative mutation on server and clients request changes. Hapa rejection is a requirements-fit judgment, not a claim of inferior implementation.
+Inspected revision: 31bb1a8bd1359d742c104a370cb32eb5cdf69721. Commit date: 2026-11-18T20:03:39Z.
+License and reuse scope: MIT. Actual license file inspected.
+ENG17  github.com  /colyseus/colyseus
+ENG17  github.com  /colyseus/colyseus/commit/31bb1a8bd1359d742c104a370cb32eb5cdf69721
+ENG17  github.com  31bb1a8bd1359d742c104a370cb32eb5cdf69721  LICENSE
+ENG17  github.com  31bb1a8bd1359d742c104a370cb32eb5cdf69721  README.md
+ENG17  github.com  /colyseus/colyseus/blob/31bb1a8bd1359d742c104a370cb32eb5cdf69721/package.json
+ENG17  docs.colyseus.io  /state
+ENG18 Corestore license evidence boundary
+Hypercore factory and package MIT declaration. Complete pinned Git tree has no license/copying/notice file; no verified actual repository license text. Not needed for initial explicit two-log prototype.
+Inspected revision: 0939467fe027dcf91268f70d24769b5e1a3d714b. Commit date: 2026-11-09T16:44:12Z.
+License and reuse scope: No complete repository license verified.
+ENG18  github.com  /holepunchto/corestore
+ENG18  github.com  /holepunchto/corestore/commit/0939467fe027dcf91268f70d24769b5e1a3d714b
+ENG18  github.com  0939467fe027dcf91268f70d24769b5e1a3d714b  README.md
+ENG18  github.com  /holepunchto/corestore/blob/0939467fe027dcf91268f70d24769b5e1a3d714b/package.json
+ENG19 Official Pear Electron example license evidence boundary
+Official migration example and integration seam. Empty package license and no license/copying/notice file in complete pinned Git tree. Do not inherit pear-runtime Apache license automatically.
+Inspected revision: ed067ea5d8a9b22a98a879789ef8b56bfc4acbd2. Commit date: 2026-11-17T21:45:23Z.
+License and reuse scope: No complete repository license verified.
+ENG19  github.com  /holepunchto/hello-pear-electron
+ENG19  github.com  /holepunchto/hello-pear-electron/commit/ed067ea5d8a9b22a98a879789ef8b56bfc4acbd2
+ENG19  github.com  ed067ea5d8a9b22a98a879789ef8b56bfc4acbd2  README.md
+ENG19  github.com  …/blob/ed067ea5d8a9b22a98a879789ef8b56bfc4acbd2/package.json
+ENG20 Three js Texture API
+Magnification/minification filtering, mipmap options, colorSpace, flipY and premultiplyAlpha/ImageBitmap caveats. Useful cross-reference for art export/import chapter.
+ENG20  threejs.org  /docs/pages/Texture.html
+IC01 Vitest projects and Browser Mode
+Multiple test projects, real-browser execution and a Playwright provider are documented capabilities.
+License and reuse scope: MIT
+No recommended package version was compatibility-tested with Lumina. A browser provider is not proof of per-test isolation or correct WebGL output.
+IC01  vitest.dev  /guide/projects.html
+IC01  vitest.dev  /guide/browser/
+IC01  github.com  /vitest-dev/vitest
+IC01  github.com  main  LICENSE
+IC02 fast check property and model based testing
+Generated tests, shrinking and command models are documented. Model-command replay can require seed, path and commands replayPath.
+License and reuse scope: MIT
+A simplified independent model is recommended; duplicating the production algorithm is not an independent oracle. No Hapa generated suite was run.
+IC02  fast-check.dev  /docs/advanced/model-based-testing/
+IC02  fast-check.dev  /docs/introduction/getting-started/
+IC02  github.com  /dubzzz/fast-check
+IC02  github.com  main  LICENSE
+IC03 Playwright Test assertions and accessibility integration
+Auto-retrying assertions, role/label locators, isolated browser contexts and AxeBuilder examples support the proposed acceptance workflow.
+License and reuse scope: Apache-2.0
+Automated accessibility checks cover only some issues. Browser testing does not automatically verify a packaged desktop runtime or GPU performance.
+IC03  playwright.dev  /docs/test-assertions
+IC03  playwright.dev  /docs/accessibility-testing
+IC03  playwright.dev  /
+IC03  github.com  main  LICENSE
+IC04 Ajv JSON Schema validation and standalone generation
+Draft 2020-12 uses a different Ajv class and cannot be mixed with earlier drafts in one instance. Mutation options and standalone validator generation are documented.
+License and reuse scope: MIT
+Selecting draft 2020-12, non-mutating validation and one schema authority is a proposed Hapa engineering choice. Schemas do not establish phase legality, canonical bytes or Card semantic correctness.
+IC04  ajv.js.org  /json-schema.html
+IC04  ajv.js.org  /options.html
+IC04  ajv.js.org  /standalone.html
+IC04  ajv.js.org  /guide/schema-language.html
+IC04  ajv.js.org  /license.html
+IC05 Zod JSON Schema conversion limits
+Current Zod exports JSON Schema but documents unrepresentable types including transforms and some custom values.
+License and reuse scope: MIT
+This supports choosing a portable explicit schema contract; it does not mean Zod is unsuitable for all protocol validation or UI forms.
+IC05  zod.dev  /json-schema
+IC05  github.com  main  LICENSE
+IC06 axe core and its Playwright adapter
+Automated web accessibility analysis and the Playwright adapter exist. Incomplete checks require manual review; repositories identify MPL-2.0 licensing.
+License and reuse scope: MPL-2.0
+No claim of complete accessibility coverage, canvas combat comprehension or an executed Hapa accessibility audit. The license URL directly verifies the adapter repository; axe-core repository also declares MPL-2.0.
+IC06  github.com  /dequelabs/axe-core
+IC06  github.com  /dequelabs/axe-core-npm
+IC06  github.com  playwright  README.md
+IC06  github.com  develop  LICENSE
+IC07 Official Codex AGENTS md guidance
+Repository and nested AGENTS.md instruction discovery, closer-directory scope, concise durable guidance and distinction from skills.
+License and reuse scope: Documentation reference; no code or documentation reuse license asserted
+Describes current Codex behavior, not a universal instruction loader for all agents. No AGENTS.md file was created or changed for this reference.
+Access evidence: Official guidance was read from the refreshed Codex manual in this environment before external repository research.
+IC07  learn.chatgpt.com  /docs/agent-configuration/agents-md
+IC07  learn.chatgpt.com  /docs/agent-configuration/agents-md.md
+IC08 Official Codex skills and customization guidance
+Project-local .agents/skills, SKILL.md name and description, supporting scripts/references, and separation between instructions, workflows and tool connections.
+License and reuse scope: Documentation reference; no reuse license asserted
+No proposed Hapa skill was authored or installed. Capabilities in this ChatGPT session are not guaranteed installable tools in another host.
+Access evidence: Official guidance was read from the refreshed Codex manual in this environment before external repository research.
+IC08  learn.chatgpt.com  /docs/build-skills
+IC08  learn.chatgpt.com  /docs/build-skills.md
+IC08  learn.chatgpt.com  /docs/customization/overview.md
+IC09 Deprecated OpenAI skills catalog
+Repository notice states that the catalog is deprecated and points to OpenAI Plugins.
+License and reuse scope: Per-skill licenses; no blanket repository license assumed
+Historical skill paths should not be presented as the recommended current installation route. Individual historical skill licenses were not used as proof for current plugin packages.
+IC09  github.com  /openai/skills
+IC10 Current public OpenAI Plugins examples
+Public plugin structure includes manifests and reusable skills, with optional tool connections.
+License and reuse scope: Inspect per plugin; no blanket license asserted here
+Repository availability is not installation, host compatibility or proof that an agent has browser/image capabilities. Pin a revision before adopting mutable main-branch content.
+IC10  github.com  /openai/plugins
+IC11 Game Studio game playtest skill example
+Actual skill text describes main-verb playtests, state coverage, screenshots, severity and reproduction evidence. Manifest declares MIT.
+License and reuse scope: MIT declared in game-studio plugin manifest
+Standalone distributed license not independently inspected. Generic framework defaults yield to Hapa's selected Lumina/Three.js architecture. This is a public existing example, not a newly installed Hapa skill.
+IC11  github.com  game-playtest  SKILL.md
+IC11  github.com  game-studio  SKILL.md
+IC11  github.com  .codex-plugin  plugin.json
+IC12 Build Web Apps frontend testing debugging skill example
+Skill text calls for scoped user flows, repository commands, visual checks, console/effect inspection and explicit available-browser/fallback evidence.
+License and reuse scope: MIT declared in build-web-apps plugin manifest
+Standalone distributed license not independently inspected. Tool access and installation remain host-specific. A workflow example is not an executed Hapa acceptance result.
+IC12  github.com  frontend-testing-debugging  SKILL.md
+IC12  github.com  .codex-plugin  plugin.json
+AR01 Aseprite
+Editable animation source plus version-pinned batch export; transform exporter metadata into Hapa manifest.
+License and reuse scope: Current Aseprite EULA; source-available, not blanket GPL/open-source licensing. Official FAQ permits commercial artwork. Imported media and other third-party content retain separate terms. FAQ distinguishes company licenses per developer. Confirm applicable shared-machine/automation terms rather than assuming redistribution or CI rights.
+AR01  aseprite.org  /docs/cli/
+AR01  aseprite.org  /faq/
+AR01  github.com  /aseprite/aseprite/blob/main/EULA.txt
+AR02 LibreSprite
+Test source editing and export as an alternative to current Aseprite; no assumed CLI or file-feature parity.
+License and reuse scope: GPL-2.0, as identified by the official project repository. Application licensing is not an asset provenance or imported-media license record. Redistribution of the program or modifications must follow its applicable GPL obligations.
+AR02  github.com  /LibreSprite/LibreSprite
+AR02  github.com  master  README.md
+AR03 Krita
+Layered brushed-pixel source cleanup and repeatable KRA-to-PNG export.
+License and reuse scope: GPLv3 application, with more permissive components noted in source. Krita explicitly allows commercial artwork and does not impose its application GPL on artwork; input-media rights remain separate. Official page states distributed Krita plugins using its extension API must be GPL. Do not conflate a standalone file wrapper with a distributed in-process plugin.
+AR03  docs.krita.org  /en/reference_manual/linux_command_line.html
+AR03  krita.org  /en/about/license/
+AR04 Blender
+Reproducible eight-view proxy capture with stable anatomy, attached gear, pose, lighting and camera metadata.
+License and reuse scope: GPL software; official source default GPLv2 or later, with component exceptions. Blender's application GPL does not apply to rendered artwork. Third-party models, materials, rigs and add-ons require their own license records.
+AR04  docs.blender.org  /manual/en/latest/advanced/command_line/render.html
+AR04  docs.blender.org  /api/main/info_tips_and_tricks.html
+AR04  www.blender.org  /about/license/
+AR04  docs.blender.org  /manual/en/4.4/getting_started/about/license.html
+AR05 TexturePacker
+Optimize atlases only after measurable need and a compatible importer exist; not the default fixed-grid pipeline.
+License and reuse scope: Proprietary licensed application. Essential mode is free for non-commercial projects only at retrieval date. Commercial use requires a suitable license; vendor distinguishes desktop/volume and Docker/CI options. Packing does not change the license of input sprites or authorize their use.
+AR05  www.codeandweb.com  /texturepacker/documentation/installation-and-licensing
+AR05  www.codeandweb.com  /texturepacker/licenses-comparison
+AR05  www.codeandweb.com  /texturepacker/documentation/commandline
+AR06 Pillow
+Project-authored fixed-grid PNG packer, contact sheets, alpha checks, dimensions and decoded-memory validation.
+License and reuse scope: MIT-CMU according to current official Pillow documentation; pin the project's actual dependency version and notices. Using a permissive image library does not relicense input or output art.
+AR06  pillow.readthedocs.io  /en/latest/about.html
+AR06  pillow.readthedocs.io  /en/stable/reference/Image.html
+AR07 Kenney
+Temporary UI and calibration assets while proving scale, controls and tactical readability.
+License and reuse scope: Official asset-page downloads are CC0; check and retain the specific pack's license record. Attribution is not required for those CC0 assets, but useful provenance. Do not extend the asset license to Kenney branding or all website content.
+AR07  kenney.nl  /support
+AR07  kenney.nl  /assets/development-essentials
+AR08 Poly Haven
+Curated material, model or HDRI source set; prefer cached project artifacts over runtime external dependency.
+License and reuse scope: Downloadable assets CC0; no required attribution for downloaded/self-hosted assets. Current live API terms permit free commercial access but require identifying client headers and visible source attribution for integration. Official API ToS separately describes its code as AGPL; not the asset license.
+AR08  polyhaven.com  /license
+AR08  polyhaven.com  /our-api
+AR08  github.com  /Poly-Haven/Public-API/blob/master/ToS.md
+AR09 Three js documentation and pinned Lumina sprite contract
+Define image-export settings and verify material, alpha, view selection and atlas compatibility in the actual renderer.
+License and reuse scope: Documentation and upstream code are engineering references. Retain applicable pinned code licenses separately; this entry grants no license to downloaded media. Renderer compatibility and media provenance are independent acceptance checks.
+AR09  threejs.org  /manual/pages/transparency.html
+AR09  threejs.org  /manual/pages/color-management.html
+AR09  threejs.org  /docs/pages/Texture.html
+AR09  gitlab.com  …/engine/sprite/Sprite3D.js
+AR10 Riot clarity and VFX development articles
+Use readability hierarchy and accurate effect bounds as review principles; no copying of Riot assets.
+License and reuse scope: Public design articles are cited as design references, not an asset, code or commercial reuse license.
+AR10  www.leagueoflegends.com  /en-us/news/dev/clarity-in-league/
+AR10  www.leagueoflegends.com  /en-us/news/dev/dev-behind-the-scenes-of-vfx-updates/
+AR11 Xbox Accessibility Guidelines
+Plan and evaluate redundant cues, text/focus/input access, reduced motion and combined-effect photosensitivity review.
+License and reuse scope: Official design guidance, not certification of Hapa or permission to reuse illustrated third-party game assets.
+AR11  learn.microsoft.com  /en-us/xbox/accessibility/guidelines
+AR11  learn.microsoft.com  /en-us/xbox/accessibility/xbox-accessibility-guidelines/103
+AR11  learn.microsoft.com  /en-us/gaming/accessibility/xbox-accessibility-guidelines/117
+AR11  learn.microsoft.com  /en-us/xbox/accessibility/xbox-accessibility-guidelines/118
+WIS01 ARAM Game Mode
+League ARAM is All Random All Mid: random champions, one lane, two teams of five. Current page also documents map rotation, so the draft does not treat Howling Abyss as the sole current map.
+License and reuse scope: Reference only; no reuse of Riot assets or rules text.
+WIS01  support.riotgames.com  /en-us/league-of-legends/gameplay/aram-game-mode
+WIS02 Clarity in League
+Silhouette recognition, appropriate ability presentation, visual hierarchy and restrained noise.
+License and reuse scope: Reference only.
+WIS02  www.leagueoflegends.com  /en-us/news/dev/clarity-in-league/
+WIS03 FIDE Laws of Chess taking effect from 1 January 2023
+Alternating play, type-specific movement and capture; own-king check restrictions; checkmate completion. Relevant Articles 1, 3 and 5.
+License and reuse scope: Reference only; no reproduction of full rules.
+Official indexed FIDE text used. Direct page access has been unreliable.
+WIS03  handbook.fide.com  /chapter/e012023
+WIS04 How to Play
+Introductory territory, orthogonally connected strings, liberties, capture and the page's territory-plus-prisoners example. No claim that this scoring description is every Go ruleset.
+License and reuse scope: Reference only.
+WIS04  www.britgo.org  /intro/intro2.html
+WIS05 Magic The Gathering Comprehensive Rules
+Mana and costs, response priority/top-of-stack resolution, and Card-text exceptions. Relevant rules 101.1, 105, 106, 117, 118 and 405.
+License and reuse scope: Reference only; no Magic card text or assets copied.
+WIS05  media.wizards.com  /2026/downloads/MagicCompRules 20261106.txt
+WIS05  magic.wizards.com  /en/rules
+WIS06 Game Programming Patterns Command chapter
+Representing operations as commands; human/AI producer separation, logging, serialization, replay and optional undo.
+License and reuse scope: Design reference; no source code imported. Inspect repository licensing before any later code reuse.
+WIS06  github.com  /munificent/game-programming-patterns/blob/master/book/command.markdown
+WIS07 Introduction to the A star Algorithm
+Graph nodes/edges and costs, path semantics supplied by the application, heuristics and optimality with a non-overestimating heuristic.
+License and reuse scope: Technique reference; no source code imported.
+WIS07  www.redblobgames.com  /pathfinding/a-star/introduction.html
+WIS08 Fix Your Timestep
+Variable-delta instability, bounded/fixed steps, accumulator/interpolation separation and overload/spiral-of-death concerns.
+License and reuse scope: Technique reference; no source code imported.
+WIS08  gafferongames.com  /post/fix_your_timestep/
+Appendix A Illustration provenance and exact prompts
+The atlas contains twelve original generated concepts, with eight targeted revision passes retained in their lineage. The exact board diagram was authored programmatically from the v3 opening data. No external game artwork was imported into the new mockups. Source generation and edits used the built-in image-generation tool; a specific model version and random seed were not exposed. Unknown generator metadata is not invented.
+Prompt author: ChatGPT, preparing the document for CJ. Content references: the supplied Master Requirements v3, Design Companion v1 and the Hapa aesthetic described there. All final images are embedded in this file. Initial and revised generated artifacts remain identified below by original filename and SHA256. The prompts support traceability; they do not guarantee bit-identical regeneration.
+Shared initial art direction
+Each initial generation used this exact common paragraph, a blank line, then the corresponding scene prompt below.
+Create a highly polished detailed HAPA VERSUS game design mockup, landscape 3:2. Hapa aesthetic: high-resolution brushed-pixel comic painting, selective structural ink, broad material planes with deliberate square brush clusters, expressive semi-realistic adult tactical figures, less anime, not chibi. True dimensional 2.5D diorama with crisp silhouettes, weathered slate, cut earth strata, cedar, linen, navy cloth, aged brass, moss, warm key light and cool fill. Quiet dark slate #17212D UI with warm ivory #F5F0E3 readable sans serif type, minimal aged-brass structural accents. Interface is sharp, modern and functional around the painterly battlefield; restrained luminous inlays and accurate-looking target outlines. No blanket coarse pixelation, excessive gold, plastic, depth blur, film grain or fullscreen bloom. This is an original concept mockup for a design book, not a claim of a running game. Use only the short exact labels requested, with generous spacing and legible typography; omit tiny filler prose. Do not add coins, cash shops, XP, rarity combat bonuses, countdown clocks, hidden-card backs or victory rewards. Public-information tactics.
+M01 The complete battlefield
+Initial scene prompt: Main game screen in Overview. Most of the image is a coherent rectangular 9-column by 10-row tactical field, seen from a high three-quarter perspective about 50 degrees down. Narrow side Enchantment banks and two rear rows of face-up Card sockets at each end sit outside the playable field. It feels like a crafted relic containing earth and stone, not floating disconnected blocks. Many small organized parties near both starting edges; fine 3-by-3 member seams inside selected territories, larger territory boundaries quiet. Leftmost and rightmost columns receive patterned active edges. Colors across the near edge are Red, Purple, Blue, Black, segmented Rainbow, White, Orange, Yellow, Green; far edge reverses each pair. Small owner crests distinguish sides independently of alignment. Bottom player dock has nine fixed slots; only the two outside slots contain face-up rank 2 Wands, the others are empty. Opponent public dock is a narrow ribbon. Exact top labels "HAPA VERSUS", "TICK 1", "PROLOGUE", "C1 + C9". Exact bottom resource labels "SUPPLY 2", "MANA 0", "PLAN", "READY". Right six-layer rail "+3" "+2" "+1" "-1" "-2" "-3", with a thin unnumbered surface divider. Crisp screen hierarchy, whole battlefield fully inside frame. Focus on credible rich art and a spacious playable layout.
+Revision prompt applied to the initial image: Edit this existing Hapa opening-screen concept. Preserve its brushed-pixel comic art, painted stone and earth, slate and ivory UI, warm light, landscape aspect ratio and overall visual quality. Correct the play surface and banks. Show the board a little more from above so its EXACT nine columns and ten playable rows can be counted. There are TWO deployment rows per player: near home R1 nine four-member Mount parties, R2 nine five-member Pawn parties; far home R10 nine four-member Mount parties and R9 nine five-member Pawn parties. Each occupied territory contains one distinct small cluster, with fine local 3x3 seams. Keep six empty middle rows R3 through R8. There are 36 party clusters in total, not 18. Keep the middle field flat and clear, moving rivers, rocks, bridges and scenery outside the playing rectangle. Preserve a subtle contact strip between territory bodies. Outside each home edge show TWO clearly distinct banks of NINE aligned slots: Major Arcana immediately behind the Mount row, then PUBLIC HAND farther outward. The near and far Hands each contain only two rank-2 Wands, one in their leftmost and one in their rightmost slot; remaining seven slots empty. All Major slots are empty in this prepared opening. Along each side show TEN small empty Enchantment slots aligned to the ten playable rows, instead of three large cards. These are non-walkable banks. Keep near column colors red,purple,blue,black,rainbow,white,orange,yellow,green and far opposite pairs. Remove the huge corner portraits; use small identity crests, giving the full board and banks generous unobstructed margins. Top exact text stays "HAPA VERSUS", "TICK 1", "PROLOGUE", "C1 + C9". Bottom exact label becomes "SELECTED C1 CARD" then "SUPPLY 2" and "MANA 0", plus PLAN and READY. Preserve compact right height rail +3,+2,+1, a thin divider "GROUND 0", then -1,-2,-3. Zero is not another button. Quiet borders, minimal glow, readable miniatures. Do not invent extra units or resources. This is a precise board-layout correction of the supplied image.
+Final artifact: exec-89baaba4-fae6-4a90-973e-77a2633fd0dc.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 2bff412166c262d8e955bd464239d81ae597865f83c4a7db9e49cdcaea6588f6.
+Initial artifact: exec-f96e2f7a-32fd-40dd-b00c-8cf6bd06264f.png. Initial SHA256: 85c701c2ebc8bdc2198b54495b8a604b2f7a17789105b53bbb45d6d341454d45.
+M02 Formation and member inspection
+Initial scene prompt: Tactics close view of ONE full nine-member party standing on a square territory's exact 3-by-3 local formation. Nine distinct full bodies, one per slot; an adult caped Hero is center slot 5, eight members around, shield bearer, archer, mage and other retainers. The party faces world north/up the board. Tiny footprint seams and a strong white front chevron make arrangement readable. Shield bearer's shield is on anatomical LEFT arm and sword in RIGHT hand. No duplicate center character. Background shows several adjacent territories and one quieter enemy party. On the right a clean slate inspector with a small exact 3x3 numbered diagram "1 2 3 / 4 5 6 / 7 8 9"; mark 5 with a Hero crest. Exact labels "FORMATION", "9 MEMBERS", "FRONT", "INSPECT", "STAGE". Selected member has a thin ivory outline, not a bright whole-body glow. Cinematic material detail, functional arrangement, no attack or health numbers invented.
+Revision prompt applied to the initial image: Make one precise equipment correction to this Hapa formation image. In the front row of the near nine-member formation, the middle shield bearer is seen from the BACK. Move his shield to his anatomical LEFT arm, which is on the LEFT side of that figure in the image. His sword belongs in his anatomical RIGHT hand, on the RIGHT side of the figure in this rear view. Repaint those two arms and equipment naturally; do not mirror the entire person, scene, board, other characters or UI. Keep all nine members, the central hero, grid, labels, lighting, camera, materials and composition otherwise unchanged. Shield left, sword right for that rear-facing shield bearer only.
+Final artifact: exec-54d80f1b-08ed-437e-9e52-508942b7580c.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 00dfb9e5dcf1c3a5199e8173251024915634bbe4df24878a9cc4ee5cc7d394ec.
+Initial artifact: exec-1740eaaf-1363-4a11-b4c3-637c61a0801a.png. Initial SHA256: df67df33485dbc84754fc822ab434da14418167746244376259dfe5d3c3a32a4.
+M03 The exposed pit roofed tunnel and sky
+Initial scene prompt: Detailed playable underground inspection view. The image centers on a physically coherent cut section of about four territories. Left: an open square excavation down through three equal geological bands, floor and walls visible, a grounded member on an exposed lower floor. Right: another underground member at similar depth inside a passage under an INTACT solid stone roof supporting a ground party above. The front-facing walls and part of obstructing roof are made into restrained presentation-only cutaway with ghost hatching; an intact roof edge is unambiguous. Above the right territory a single winged figure hovers with a broken projection stem to its horizontal territory, visibly distinct from grounded unit on hill. All characters are selectable with small owner crests. Do not invent stairs or ramps inside the excavation. Right-side six-band rail and focused inspector. Exact labels "LAYER INSPECTION", "OPEN PIT", "GROUNDED AND EXPOSED", "ROOF INTACT", "COVERED", "AIRBORNE", "RESET VIEW". Show solid slabs, void, supported floors and atmosphere separately. Geological colors are earthy, not rainbow. Most air empty. Human-readable planning cutaway with beautiful strata.
+Revision prompt applied to the initial image: Edit only the right sidebar and owner badges of this Hapa layer-inspection study. Preserve the beautiful exposed pit, roofed tunnel, intact roof hatching, airborne figure, materials, poses, camera and all main labels. Replace the right-hand material menu with an actual height selector: six large buttons in descending order "+3", "+2", "+1", then a thin unselectable divider labeled "GROUND 0", then "-1", "-2", "-3". Title the control "HEIGHT". Keep RESET VIEW above it. Below the selector replace the large portrait with concise inspection rows "GROUND OR AIR" and "EXPOSURE" with small neutral icons; do not add invented numeric values. For the blue owner badges on the surface/pit use a clear small A inside a square; for the red owner badges on flyer/tunnel use B inside a circle, preserving those assigned occupants. Ownership must be recognizable without hue. Do not change geometry or claim exact dimensions; retain roof intact and distinct covered/exposed states. Keep generous padding and no duplicated -1 or missing +1.
+Final artifact: exec-81ce0201-859c-4553-8789-3e67f5743b91.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 30809b9745a3d64ef0c89b10d147b0d3d8571fc4895a3b8f855536c7eb7e6ca6.
+Initial artifact: exec-841e1e03-2564-44c3-b71d-9062a8183beb.png. Initial SHA256: 8cebafe67ad15ab04a9c50dd5d7dd0cf4f5c3db7772cd8e3d814fd9425f4b711.
+M04 Digging from plan to completion
+Initial scene prompt: A detailed three-panel storyboard in one landscape image, three equally sized tall panels with generous gutters. Same local territory, same camera, same adult worker with a pick, same world geometry in all panels. A single member-width cube in the SIDE face of a stone-and-earth block is chosen for excavation; nothing stands on or inside the cube. Panel1 exact heading "PREVIEW": solid face intact, dashed ivory cube outline, faint ghost of future cavity, compact labels "1 TICK" and "NO RESOURCE COST". Panel2 heading "WORK": worker contacting that side face, a few chips and contained dust, original face still mostly solid, slim progress indicator with no numeric wall-clock countdown. Panel3 heading "COMPLETE": exactly that cube is now an empty cubical cavity with clean square opening, readable floor, side walls and roof, dust already clearing, worker nearby. No extra tunnel, no ramp, no free stairs, no collapsed roof, no dropped occupant. Beautiful tactile material evolution. Bottom single quiet exact caption "PREPARED DIG FIXTURE". Every panel is spacious and detailed, not an infographic with many arrows.
+Final artifact: exec-57260864-f97d-4352-ab2e-eb2bbaee8e1d.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 11a00e83cd174091a7ae9d71b1d5e39388f638a2c588525f11ff235756ce3fcd.
+M05 Territory enhancement and crossing effects
+Initial scene prompt: Rich Tactics view of several contiguous square territories. Central square has a proposed Green earth enhancement: a small number of fitted stone ribs and rooted growth along a clearly marked footprint, subtle green luminous seams; central troop positions remain clear. Show the enhancement source Card in the nearby inspector and a thin deliberate leader to the affected footprint. A Purple row Enchantment in a side bank projects a quiet patterned row-edge rail across these territories. A separate White Major Arcana in the rear bank binds to one selected Mount: its thin leader ends at that Mount, not an entire column. Distinct glyphs for each source; no blended purple-green floodfill at intersections. Card banks are outside battlefield, all face-up. On right exact title "ACTIVE EFFECTS" and three spacious entries "EARTH STUDY", "ROW EFFECT", "MOUNT BINDING". Small bottom exact label "CONCEPT EFFECT". This image explores visual vocabulary; show no numerical bonus, no playable card cost, no implied extra attack. The enhancement is quiet once formed. Main emotional note: a territory gaining crafted identity and living texture, with immediately understandable spatial scope.
+Revision prompt applied to the initial image: Make one tiny identity correction in this Hapa enhancement image. On the WHITE MAJOR ARCANA card at the top of the left sidebar, replace the small green-leaf badge at its top-left corner with the WHITE SUN OR STAR glyph already used by the world Mount marker and the MOUNT BINDING row at right. That Card must use the same White identity consistently. Leave the Green Earth Study leaf badge unchanged. Preserve every other element, image size, all text, figures, geometry, effect lines, colors, lighting, and layout exactly.
+Final artifact: exec-3b7c5029-342d-4c6d-b7ee-c08e891cd8c0.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 731a6f61de3c5501406472197e24e99f4e2b3a8c176f8e09067a6f2e4c60daae.
+Initial artifact: exec-0b377373-fdaa-49a9-81da-53efd36489d2.png. Initial SHA256: c0fdebca3fffcfadfcc92a226f6f286ec7dfe4d55e519e33d0d1d0cce7c0d3af.
+M06 A spell response before impact
+Initial scene prompt: Detailed full game interaction mockup during a public spell response. Board is in Tactics view with a Red mage source and an opposing shield party target separated by several territories. A pending Ember-like Spell has a clean narrow directional outline, source ember and marked target footprint, but NO resolved hit, explosion, damage number or burning victim. The world feels paused. On right a large spacious response panel with two visible face-up Card thumbnails, one Red flame illustration, one Blue interrupted water-arc illustration. Stack represented clearly newest at top. Exact labels "RESPONSE", "BLUE DENIAL", "EMBER STRIKE", "YOUR PRIORITY", "INSPECT TARGET", "PASS". Bottom compact resource chips and selected target summary without numeric invented costs. An ivory pointer line links target to its precise footprint. Decorative energy contained near source and card, not covering silhouettes. Strong tension comes from the held moment before a decision. No turn countdown, hidden cards, or premature impact.
+Revision prompt applied to the initial image: Correct this Hapa spell-response mockup to show the actual short-range Ember Strike fixture. Preserve art style, the Red mage, defending shield party, the right response panel with BLUE DENIAL above EMBER STRIKE, YOUR PRIORITY, INSPECT TARGET and PASS, all visible characters' identities and pending state. Rebuild ONLY the intervening play geometry so the mage source and target stand in TWO DIRECTLY ADJACENT territories on the SAME FLAT HEIGHT, separated by a narrow one-member-width contact strip. Bring the target closer in the composition. The pending line crosses that one short gap, not several tiles or a canyon. Put any scenic waterfall/chasm outside these two adjacent play territories. Show a clear 3x3 local seam pattern within both large territory bodies, without extra intermediate territories. Keep the effect at the source and its destination outline; NO impact, damage number or burned target yet. Add a small readable paid-cost line inside each pending Card panel: under BLUE DENIAL write "PAID 2 BLUE"; under EMBER STRIKE write "PAID 2 RED". Under each cost line add "CARD CONSUMED" in small but legible type. These are pending effect records, not reusable unspent bank cards. Do not invent a new cooldown, timer or resource. Preserve overall premium detailed UI and warm brushed-pixel aesthetic.
+Final artifact: exec-0293ea36-bc71-4283-a0a5-3fc051dae281.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 1c5d85e06d1853f279209ed843a17ce49c4d36877f88e961708d03ddb9199799.
+Initial artifact: exec-c72aa844-84ee-40b6-9185-9fa24e971643.png. Initial SHA256: 3027e96db5b78953b16bb617b58962016659a5bc1d14df7d14e451f04cbc104a.
+M07 A resource Card and its three uses
+Initial scene prompt: Premium Hapa resource Card inspection UI. Left half is an enlarged beautiful illustrated Wands Card with inked wand-and-leaf suit symbol and understated brushed-pixel art of a red ember passing into green earth. Exact large typography "6", "WANDS", "SUPPLY 6". A clear payload block shows exactly "3 RED" with three Red chips and "1 GREEN" with one Green chip. Card provenance label "A C1 R6". Right half has three equally prominent, spacious action controls with concise exact labels "LOAD SUPPLY", "BURN FOR MANA", "USE ABILITY". Under these, exact sentence "ONE INSTANCE. ONE USE." Along lower edge a narrow view of the public nine-slot bank with this card selected; a faint battlefield behind it shows a column contribution trace. Visually separate numeric rank, Supply and Mana payload, no misleading total '6 mana'. Ivory readable text on slate, beautiful collectible identity, UI is premium and information-first. No price, XP, level bar, or extra invented cost.
+Revision prompt applied to the initial image: Edit this Card inspection mockup with two specific corrections. Preserve the large 6 WANDS Card, its illustration, SUPPLY 6, A C1 R6, three red chips and one green chip, three action buttons, and ONE INSTANCE. ONE USE. text. Correct the bottom public bank to EXACTLY NINE fixed equal slots. Put the SELECTED rank-6 Wands in the FIRST leftmost slot C1. Make the other eight slots EMPTY dark slate sockets, with no cards, numbers or suit symbols. Keep only the first slot selected and lit. Label the strip "PUBLIC BANK". Remove the tall floating vertical column of red/green cubes from the background; replace it with a quiet flat line along the visible ground column, so it cannot look like altitude or a second resource display. Keep all other styling, layout, artwork and text unchanged. This prepared state has only the C1 resource instance in its bank.
+Final artifact: exec-1b435bd7-6112-4ebb-8022-89d259358979.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 38cffae9d0f109c4264a20a8de86981b3b729a5382cad94c8465c8f100bbe900.
+Initial artifact: exec-885880a1-402e-4387-b12c-965aba74522d.png. Initial SHA256: 72332d2c9401ab4ee77a4930cef39c0dedb771e6d88955be5d39cd686051c10d.
+M08 Character views and camera rotation
+Initial scene prompt: An art production and camera consistency workbench. Large left region shows a close diorama of a single navy-cloaked adult shield bearer on a stone territory, sword in anatomical RIGHT hand, shield on LEFT arm, viewed from front three-quarter. Beside it a second equally large diorama of the SAME character and SAME territory viewed from rear three-quarter, with the same physical facing unchanged and shield still anatomical LEFT. Same costume and proportions, no mirror swapping. A neutral arrow on the stone denotes fixed world Front in both views. Bottom thin strip has eight clearly separated smaller authored-view thumbnails in a full turn, with small base anchor marks; concept thumbnails, not an exact export atlas. Right small tools list with exact labels "VIEW PROOF", "WORLD FRONT", "LEFT SHIELD", "SHARED FOOT ANCHOR", "8 VIEW TARGET". No busy metadata, no autogenerated code. This should feel like a beautiful practical artist's workshop inside a game tool, and demonstrate camera orbit without gameplay rotation. Background neutral slate, figures well lit and crisp.
+Revision prompt applied to the initial image: Correct only one orientation marker in this Hapa character view-proof image. The LARGE LEFT panel shows the character from the FRONT, looking toward the viewer, so its white ground Front arrow must point toward the viewer, DOWN toward the bottom edge. Reverse the arrow on that large left stone pedestal accordingly. The LARGE RIGHT panel shows the character's BACK; preserve its white ground arrow pointing UP and away. Preserve both characters' anatomical handedness, shield on left arm, sword in right hand. Preserve the eight-view strip, all text, poses, backgrounds, textures, lighting, colors and composition. Do not rotate or mirror any figure. This edit only corrects the large left pedestal arrow to match the character's fixed facing as seen from that camera.
+Final artifact: exec-2bbcb425-b908-42c0-a2a9-0eb6bd70bfe6.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 27c46c473bcf92d27c378cf1cab1da556f476aff0ddaadf5d602bc6e77cab6c1.
+Initial artifact: exec-105ebbf7-9948-4466-af06-6979f200d868.png. Initial SHA256: 0939692da57fac2fa41cd2de90c1676ec4868ac319d74ca3933aa2798bcd26a4.
+M09 Public plans and reviewing a change
+Initial scene prompt: Main Hapa game screen with public planning prominently displayed. Battlefield occupies upper two-thirds, tidy parties and quiet dashed movement previews, no damage effects. Bottom third has two equal, elegant plan columns, clearly labeled "YOUR PLAN" and "OPPONENT PLAN". Own column shows a closed-lock symbol, exact "FROZEN", and two clean rows "MOVE" and "LOAD SUPPLY". Opponent column shows exact "REVISION CHANGED" with one highlighted changed plan row, no hidden information. Between panels a clear status "REVIEW BOTH PLANS"; main action button "ACKNOWLEDGE". Keep selected destination outline stable on the board. Small top labels "PUBLIC PLANNING" and "WAITING FOR AGREEMENT". No "Unready" button, no silent auto-resolution, no opponent hidden card backs, no timer. Make review manageable: one changed entry highlighted, current plans easily compared, all UI text large and precise. This is a persuasive complete interaction mockup, not a flowchart.
+Final artifact: exec-b0331254-d033-4208-9922-d98b254270ef.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: b3dc5cb7d72dfc92996b0057218b72cf77c8a435c6d62c1d9acf9f9b8d9f3199.
+M10 Directional combat explanation
+Initial scene prompt: Detailed combat inspection UI on a Hapa stone battlefield. A shield-bearing defender faces north with broad visible shield front; a physical attack from the front is paused for inspection, with a crisp local contact mark. Additional small six-face direction graphic beside the character labels only "FRONT" and "ABOVE" clearly, other faces simple lines. Right slate panel large exact title "HIT EXPLANATION"; exactly three spacious numeric rows "PHYSICAL HIT 3", "FRONT DEFENSE 1", "DAMAGE 2". Source and target portraits above the rows, connected to the actual figures with restrained leaders. Exact lower action labels "PREVIOUS HIT", "NEXT HIT", "INSPECT SOURCE". A small event timeline has separate markers, not one combined damage blast. No casualty animation or assumption of health profile; no Red-equals-enemy ownership shortcut. Brushed-pixel characters have expressive effort, worn metal, cloth movement. The visualization makes arithmetic and attack face understandable while preserving a dramatic close encounter.
+Final artifact: exec-e8cce38a-2690-4247-84ec-aa0f2d80ebf2.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: deceb433ac581a222aa2aa20b483fdf08a1174d8464338ed33d6c4e6cfed004e.
+M11 Mining crafting and attributed history
+Initial scene prompt: Hapa crafting and history interface presented as a rich local workshop adjoining a small excavated board region. Left background: a clearly emptied mineral seam in exposed stone, a quiet tunnel cutaway, one worker; no replenished ore. Center: a material Card labeled "METAL" visually different from the Tarot Minor Arcana, a simple iron-and-leather armor piece and a clean production arrow. Right panel shows exact title "CRAFT HISTORY" with large rows "EXTRACTED", "CRAFTED", "EQUIPPED", and exact effect "FRONT PHYSICAL DEFENSE +1". Bottom clear tag "THIS MATCH" and small button "INSPECT ORIGIN". Do not imply permanent ownership, currency, purchase or XP. A creator portrait/crest and source icon establish attribution, without invented real names. Warm forge-like light is subtle decorative work light, not fire gameplay. Beautiful tactile artifact detail balanced with a readable record of deposit, material and equipped effect.
+Final artifact: exec-22904bfa-db42-419f-9df5-1b4c2da3d7a8.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 51f8adb6ddf3de767af7113323d258520221ba20abc73c22f4dab32101902cb4.
+M12 Learning through replay
+Initial scene prompt: A polished Hapa learning and replay screen. Main battlefield Tactics view shows a grounded party's center anchor and a subtle column-income path from home edge. One exposed enemy party center terminates the path with a clear cutoff symbol; a second covered underground party is visible through a local cutaway and distinguished by roof hatch, not used as the cutoff. The right explanation panel has exact title "WHY INCOME CHANGED", short labels "FOLLOW THE COLUMN", "EXPOSED ENEMY CENTER", "ROOF INTACT", and a big button "INSPECT EVENT". Bottom replay timeline with exact controls "BACK", "PLAY", "NEXT EVENT", plus clearly separate "LEARNING VIEW". The viewer can trace cause from source to result. Show one focused lesson without wall of text or modal covering the whole board. No score rewards, XP, fabricated quiz results or autoplay countdown. Warm and welcoming but mechanically precise. Reduced decorative particles, readable symbols and quiet modern UI make this feel like a useful in-game teacher.
+Revision prompt applied to the initial image: Edit only the income-path markings and small owner markers in this Hapa learning/replay image. Keep the gold contribution path from the home icon up to the friendly blue party's white center ring. STOP the gold path at that friendly center. From that center onward toward the exposed red enemy, change the path to a QUIET DASHED IVORY INSPECTION LINE with NO filled gold tile arrows. It ends at the existing enemy cutoff symbol. This makes clear that the inspection scan can continue but paid territory stops at the friendly frontier. Add a small label "INCOME FRONTIER" beside the friendly center, connected with a short leader. Keep exposed enemy and intact-roof underground enemy visibly distinct. Give the friendly party a small A-square badge and both enemy parties small B-circle badges independent of color. Preserve all characters, terrain, art, right explanation panel, learning controls, text and composition otherwise.
+Final artifact: exec-5cf7f48d-ac61-4579-b2fa-74e13f368200.png. Dimensions: 1536 × 1024 pixels.
+Final SHA256: 39901a2bdfb59c870e28a14442651b41d9810a768db8552a8dc3ac4805d3142f.
+Initial artifact: exec-6728e1d7-e3a7-493b-a9f9-6721e2db3535.png. Initial SHA256: 7a2a01627848249ce7d7a5694a358d5c931ed0a468cb899c1fa4c0ab3c8d509d.

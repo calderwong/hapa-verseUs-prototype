@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.DS_Store
+# runtime and peer storage (match logs, keys, local catalogs written at run time)
+.data/
+.check/
+runtime/
+# the source .docx files stay local (large binaries); their text lives in docs/requirements/
+reference_documents/
+# optional art synced from the owner's Avatar Builder (media stays with its owner)
+public/renditions/
+.env*
+*.key

@@ -1,0 +1,3 @@
+[submodule "vendor/lumina"]
+	path = vendor/lumina
+	url = /Users/calderwong/Documents/Codex/2026-06-29/can/lumina

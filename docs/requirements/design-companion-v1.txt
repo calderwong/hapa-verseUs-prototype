@@ -1,0 +1,750 @@
+
+Hapa Versus Design Companion
+Art direction interface and production specification
+Version 1.0  |  21 November 2026  |  Prepared for CJ
+
+Original art-direction study. The precise board, layer and interaction diagrams inside are the implementation references.
+Design direction. A tangible brushed-pixel comic-book battlefield with a full camera orbit, readable underground space and Cards whose effects can be traced through the board. Spectacle comes from meaningful changes in terrain, formation and power.
+Authority. The supplied Master Requirements v3 governs gameplay. This companion proposes the visual and interaction system, identifies what Lumina already supports, and gives people and agents concrete production and acceptance guidance.
+Contents
+1 Design direction and authority	3
+2 The Lumina visual starting point	5
+3 The battlefield as a volume	7
+4 Camera and spatial comprehension	10
+5 Color and visual vocabulary	12
+6 Territory identity enhancement and card banks	15
+7 Spells terrain and persistent effects	18
+8 Signature moments and pacing	22
+9 The battlefield interface	23
+10 Controls public planning and responses	26
+11 Cards formations and combat inspection	29
+12 Learning replay and recoverable errors	30
+13 Sprite production and asset generation	33
+14 Sound accessibility and readable text	36
+15 Rendering architecture and performance	38
+16 Prototype sequence acceptance and decisions	43
+17 Evidence and source register	46
+Appendix A Illustration provenance and prompts	50
+Reading path. Chapters 1–8 define the look and visual language. Chapters 9–12 explain interaction and learning. Chapters 13–16 guide asset creation, rendering and prototype validation. Chapter 17 records the evidence, and the appendix preserves the concept-art prompts.
+1 Design direction and authority
+Build Hapa Versus as a living tactical diorama: a dimensional battlefield made of painted stone, worked earth, worn wood and restrained arcane machinery. Small, expressive characters occupy precise formation positions. Tarot Cards become instruments that explain and alter the world. The player can turn the board, open a readable view into its depths, and trace a visible consequence back to its Card, party or terrain source.
+The visual promise is a brushed-pixel comic-book world that remains understandable under pressure. Its strongest spectacle comes from a legible transformation: a solid face opens into a passage, an enhancement assembles along a territory's edges, a column's eligible ground gathers into a newly minted Card, or a shield line visibly stops a sequence of separate hits. The player should understand the change before the flourish finishes.
+This interpretation carries forward CJ's earlier preferences for a “Pixel-ish + Comic book” world and “less anime and a little more brushed pixel.” Use high-resolution painted material structure, deliberate clusters of brush marks and selective ink. Keep faces, Card illustrations and typography clear. Avoid applying one coarse pixel filter to every surface. The detailed materials, interface layouts, animation timings and production conventions in this companion are recommended design decisions, not previously approved Hapa canon. [HC01]
+What this document establishes
+The companion defines art direction, spatial presentation, camera behavior, visual semantics, interaction, sound, onboarding, asset production and visual acceptance for the first Hapa Versus implementation. It is written for CJ, artists, interface designers and development agents. Every proposed feature should be implementable against an explicit game state and testable with an observable result.
+The uploaded Hapa Versus Master Requirements v3 is the authority for gameplay. It specifies a public-information, one-versus-one game with territory-generated Minor Arcana, movement Supply, colored Mana, formations, directional combat and editable terrain. The default field has nine columns and ten playable rows; alternate profiles support nine and eleven rows. This companion does not change those mechanics. Where this document describes a proposed camera value, asset size, sound duration or layout, treat it as a starting configuration to validate in a prototype. [REQ03]
+Three labels govern interpretation. Required by v3 means the visual design must express that existing rule accurately. Recommended presentation means this companion proposes a concrete default that an agent may prototype. Future content example means an illustration of the visual language whose gameplay definition must be authored and validated before it becomes a playable Card. An attractive concept image never creates an ability, a traversal link, an extra slot or a reward.
+The first implementation should have one coherent visual language across play, inspection and replay. It can use proxy art while individual assets improve. It must already communicate the correct owner, position, layer, facing, cost, phase and outcome. A neutral fallback sprite is acceptable; an invisible member or misleading range indicator is not.
+The material and lighting direction
+Use cool slate and dark blue as the quiet structural base, with warm ivory for readable interface surfaces and markings. Weathered cedar, linen, moss, dark water, painted stone, aged brass and restrained optical glass supply material variety. A repaired edge, worn strap or fitted joint should explain how an object is made. Ornament belongs at meaningful locations: Card sockets, Capital insignia, source pedestals and equipment attachment points.
+Stone has broad planes, broken edges and sparse wear. Earth has clear strata and compact clusters, not a carpet of high-frequency noise. Cloth has broad folds and silhouette movement. Metal has small, controlled highlights that distinguish it from rock. Water remains visibly blue or dark rather than becoming the same brown as every other material. Scene dressing stays below the contrast of members, contact lines and legal targets.
+Use a stable warm key light and cool fill in the baseline arena. The world light stays attached to the world while the camera orbits. Underground inspection receives enough neutral fill to read surfaces and equipment; that fill is an interface aid, not a new lighting mechanic. Sunrise, moonlight and high-noon themes may vary scenic mood, but semantic Card chips and rule boundaries must preserve their identity. No arena theme may turn an ordinary Blue signal into an unreadable teal shadow.
+Ground materials can be elaborate in close inspection and quiet at the tactical distance. The tactical preset disables depth blur over playable territory, grain and chromatic aberration. Bloom belongs on small emissive seams and brief meaningful effects. It must never wash out a formation front, a mining opening or the difference between Black and White alignment.
+A visual hierarchy that survives a crowded board
+At rest, the battlefield is the largest visual object and the interface is calm. During a decision, the legal target, exact cost and outstanding choice become dominant. During resolution, the event that changes the player's options gets the strongest temporary emphasis. An ambient rune does not compete with a threatened Commander.
+Use four presentation priorities. First are decisions requiring action, winning conditions and errors that prevent an order. Second are the selected party, confirmed target, contact boundary and the effect currently being inspected. Third are persistent status, territorial production, active columns and public plans. Fourth is atmosphere. When screen space or rendering capacity is limited, simplify atmosphere first and compress low-priority information into inspectable badges. Never drop the facts required to make a legal choice.
+This hierarchy is a Hapa-specific application of a useful principle in Riot's published clarity work: attention should track gameplay importance, silhouettes should communicate function, and decorative noise has a cost. Microsoft's accessibility guidance likewise supports redundant cues and adjustable motion rather than dependence on hue or animation alone. The detailed Hapa treatments below are original design proposals, not copied interfaces. [REF01, REF03, REF04, REF05]
+2 The Lumina visual starting point
+Purpose and evidence
+The battlefield should feel like a dimensional, painted comic world that the player can turn, inspect and reshape. Brushed pixel clusters belong to stone, wood, cloth and earth; selective ink makes important silhouettes readable. Hapa's direction is higher-resolution brushed-pixel art, with expressive characters and material structure. A coarse filter over the entire screen, a global sepia wash or neon outlines around every object would not produce that result.
+Lumina supplies a useful starting renderer. The inspected repository revision is 85efa0456812ca25e5279e9735bb11ec5a1d6979. It contains a Three.js scene, lit sprite billboards, perspective camera controls, terrain meshes, dynamic lighting, shadows, postprocessing and an HTML interface above the scene. The original assets and interfaces demonstrate these features; they are not a Hapa visual implementation. [LV01, LV04, LV07, LV11, LV12]
+At this revision, the locked dependencies installed and the production build completed successfully. The supplied browser-check tool could not launch Chromium in this workspace because its required socket operation was denied before page load. No new runtime image, performance measurement or PC/Mac compatibility result was obtained. Six upstream screenshots were inspected as authored examples. Their attractive lighting and material depth are useful references; their heavy blur, dense ground texture and small chibi character style are choices Hapa should replace or tune. Numerical performance budgets remain proposals until measured on named target machines. [LV17, LV18]
+
+Figure 1  Upstream Lumina authored screenshot at the inspected revision. Useful foundations include dimensional lighting, contact grounding and material separation. This is not a new runtime capture or Hapa implementation. [LV18]
+
+Figure 2  Upstream authored sprite demonstration. Its four-view, compact character convention is a reusable foundation; Hapa's proposed brushed-pixel proportions, larger source frames and eight-view resolver require additional work. [LV04, LV06, LV18]
+What to retain and what to change
+Component
+Starting evidence
+Hapa design decision
+Lit sprite world
+Billboards, shadows and dimensional terrain are present.
+Keep the spatial foundation and commission Hapa art.
+Camera and views
+Free yaw and four camera-relative views exist.
+Expose full orbit; validate all members and extend to eight authored views if approved.
+Terrain
+One sampled top surface is available.
+Add a solid and void volume view for roofs, tunnels and layer-aware picking.
+Postprocessing
+Strong blur, bloom and grain appear in examples.
+Use a restrained tactical preset; protect state markers and native UI.
+Performance
+Source build passed; runtime rendering was blocked.
+Measure the dense Hapa scene on named computers before setting budgets.
+
+3 The battlefield as a volume
+The exact spatial model that the artwork must respect
+The baseline playable field is nine columns by ten rows. Each territory contains a horizontal three-by-three set of member positions. The side Enchantment banks add one column on each side. Each player has a rear Major Arcana row and a farther Minor Arcana row. The complete logical frame is therefore eleven columns by fourteen rows in the ten-row profile. The banks are interface positions around the playable field, not additional walkable territory. [REQ03]
+The physical fixture distinguishes territories from the smaller cubes used for terrain. A member is one unit wide. A territory body is three member widths across, neighboring territory centers are four units apart, and the contact strip between bodies is one unit wide. Thus, the nine-by-ten arrangement is not a nine-by-ten array of single member-sized voxels. Keep these scales separate in meshes, selection, diagrams and language. A party center anchor is its logical location; it exists even when local slot 5 is empty, as in the starting Pawn formation. A center character is a member occupying that slot. The interface must distinguish the anchor from the character.
+There are six occupied height bands. Height zero is the original ground surface and is not a seventh occupied layer. Positive bands are +1 for space immediately above ordinary ground, +2 for the next height interval, and +3 for the highest interval. Underground bands are −1, −2 and −3. Each band spans one vertical unit. A party's nine positions do not become a twenty-seven-member cube when it moves between bands.
+Band
+Height interval
+Primary visual reading
++3
+2 to 3
+High air position with a clear floor projection
++2
+1 to 2
+Low air position or raised supported terrain
++1
+0 to 1
+Members above the original ground surface
+−1
+−1 to 0
+Shallow excavation or solid roof material
+−2
+−2 to −1
+Deeper passage, open pit or solid material
+−3
+−3 to −2
+Deep passage, mineral deposit or solid material
+
+These labels describe position, not automatic capabilities. A grounded unit standing on a raised surface can share a band with a flyer. An open pit and a roofed tunnel can contain members at the same height. The renderer must show movement mode, supporting surface and exposure separately.
+
+Figure 3  Member-width cross-section. The six occupied bands share the original ground boundary at zero. View-only roof removal leaves the roof solid in the rules. Markers represent anchors, not entire formations.
+Give solid ground a readable construction
+The ordinary board should look like a continuous field with fitted territory edges, not ninety disconnected platforms. Fine seams define the three-by-three formation within a selected territory. The contact strips are real usable spacing in the movement model, not visual gutters that can be covered by decorative walls. The frame and Card banks can be a crafted relic, while the playable interior remains landscape that can be altered.
+Exposed vertical faces reveal strata whose spacing corresponds to the occupied bands. Use broad stone-and-earth changes and a small repeated depth marker on cut edges. Do not turn every geological band into a Mana hue. Alignment information belongs to a separate inlay and glyph system. If a territory's scenic material is mossy green, the player must still be able to identify a Red alignment chip there.
+Each modified face should read as one of four physical facts: solid material, open traversable space, supporting floor, or retained roof. A bevel may soften the manufactured look, but it must not alter the apparent legal boundary. Decorative support beams and rubble cannot suggest blocked movement unless the rules actually mark that space blocked. Art may imply craftsmanship without inventing collision.
+Show air through occupants and intent
+Do not draw a permanent transparent cage around every air cube. Most air is empty, and its value is the space it gives silhouettes and effects. An airborne party gets a concise band badge, a light broken projection stem and a distinct landing-footprint symbol on the relevant horizontal position. A selected flyer reveals its occupied volume and legal vertical route. Unselected flyers retain enough projection to identify the underlying territory.
+The stem is an altitude guide, not a supply connection or attack ray. Its cap and label identify that purpose. Grounded members use a contact mark attached to their actual floor; flyers use a broken projected mark. A grounded hilltop unit carries the grounded symbol even when its band is +2. At close zoom the body may bob slightly, but the selected logical footprint and altitude label remain still.
+Inspect underground space without pretending to change it
+Provide a normal surface view, a selected local cutaway, and an isolated band view. Selecting a tunnel party should open a local cutaway around that object automatically, with an obvious way back to the prior view. Fade or clip the obstructing roof only for presentation. Retain a hatched roof boundary and the words “Roof intact” in the inspector. A clean opaque floor is easier to interpret than several translucent floors stacked on one another.
+The layer rail lists +3, +2, +1, −1, −2 and −3, with a divider at Ground 0. Each band has an occupied-party count and an outstanding-choice indicator when relevant. Selecting a band changes the view filter, not the current rules phase. Parties on other layers remain available through the roster and explicit off-layer badges. All information is public in the first implementation, so an enemy cannot disappear from discoverability because the camera is above its roof.
+The exposed-ground distinction is strategically important. In the initial fixture, a live enemy party's grounded center anchor in an exposed open pit can interrupt supply; an airborne anchor or one beneath an intact roof cannot. The inspection panel should say “Grounded and exposed — eligible to interrupt this column” or “Covered tunnel — does not interrupt ground supply.” This is calculated from rules state. A camera cutaway must never change the sentence.
+Digging should feel physical and consequential
+Begin with a face selection, not a vague click into a dark volume. The prospective cube receives a crisp outline, its band and a small ghost of the resulting opening. The preview names the action, worker, duration and payment. In the diagnostic fixture, removing one face-adjacent unoccupied solid cube takes one Tick and has no Supply or Mana charge. That fixture is not a promise that every future excavation Card is free.
+Show staged work with a dashed boundary while the existing face remains solid. A work indicator stops during public planning and responses. During simulated work, the worker contacts the selected face with a weighted tool motion, restrained chips and a material-specific sound.
+At accepted completion, remove exactly the resolved cube and reveal the new boundaries before dust disperses. Keep its floor edge, depth badge and occupants readable. Rejected or cancelled work retains the solid material and explains why; it does not play a successful completion.
+The first tool cannot remove a member's supporting floor or fill an occupied cube. Explain that restriction in the preview. Falls, crushing, collapse and ramps require explicit gameplay operations. Decorative stairs must not imply an ascent that the traversal model rejects.
+4 Camera and spatial comprehension
+A complete orbit with a dependable home
+Recommended starting camera: a perspective three-quarter view pitched about 50 degrees down from the horizon, orbiting a stable board pivot. Allow continuous 360-degree yaw and pitch from roughly 30 to 75 degrees in ordinary play, with 45-degree yaw detents available for precise comparisons. These are prototype values. A near-overhead tactical mode may use footprint tokens; a true orthographic view would require a deliberate extension of Lumina's current perspective rig.
+Offer three named framing presets: Overview for the whole field and banks, Tactics for a selected group of territories, and Inspect for formation members or an excavation. The chosen subject should remain the zoom pivot. Zooming should not move the target under the pointer onto a different physical surface. Never require a cinematic orbit to understand an ordinary command.
+Keep a home-edge crest, coordinate compass and Reset view control visible. The top of the screen is not automatically the enemy's side once the camera rotates. The board's global column and row identities remain stable. Each player's local labels may be shown alongside them, but do not change when the camera moves. A view label such as “Looking from B's edge” is a camera statement, not a change of player control.
+Card docks stay in a fixed order for the controlling player. Selecting a dock Card highlights its actual bank position and column with a temporary leader. The camera may rotate around that relationship, but the dock cannot reorder underneath the pointer. The opponent's public ribbon uses the same physical-column comparison order and explicitly names its owner. A player on side B sees its local C1 identified as global C9 where both labels are needed.
+View direction is different from formation facing
+The camera selects which painted view of a member is visible. The member's world-facing vector determines its combat front. Those are different quantities. Turning the camera must never rotate a shield toward an attack or make a retained movement order turn with the view. The selected formation gets a strong front chevron on its actual footprint, with Front, Left, Right and Rear available in the inspector. Above and Below receive vertical face symbols.
+The starting combat fixture has four cardinal formation facings. Eight authored sprite views would make the orbit smoother without creating eight legal facings. A Knight's bent route and a diagonal route must preserve the facing behavior defined by the profile. The preview should show movement path and facing separately whenever they differ.
+Use camera-relative sprite selection with stable directional thresholds and animation phase continuity. Do not mirror shields or other asymmetric equipment unless that asset explicitly permits it. A full turn around a stationary unit should reveal the same character with the same gear on the same side. A sudden sword swap is a tactical clarity defect, not merely an art blemish.
+Targeting through stacked spaces
+Picking must resolve an entity, member slot, surface or cube identity. It cannot merely use the highest visible height at a screen position. When several selectable objects overlap, show a short choice list with owner, party, band and support information. The player can select the same object from the roster without hitting its tiny sprite.
+A click during Card targeting locks a target into a preview. The player can then rotate or change layers to inspect it; the target remains the same object. A second explicit Stage action confirms the displayed target and cost. The target outline remains attached to its actual surface through orbit and cutaway. If accepted state changes invalidate it before commitment, the preview explains the new reason and requires a fresh choice.
+Camera input and command input need separate gesture boundaries. An orbit drag never becomes a movement click on release. A scroll over a text panel scrolls that panel. Right-click Move is an optional fast staging path for experienced players; it still produces a visible plan entry before Ready. The same action remains available by labeled controls and keyboard navigation.
+Keep close views connected to the whole match
+In Inspect, retain the active-column indicator, public-plan summary, Commander/Capital status and layer rail. Off-screen events should appear as persistent, selectable entries, not merely a transient flash at the screen edge. Selecting an event can frame its location after the player requests it. The interface should not seize the camera because another part of the board is more visually dramatic.
+Replays may offer a separate Director camera that follows an event sequence. Live play defaults to player-controlled framing. Automatic motion, screen shake and camera easing have independent settings. Reduced-motion mode uses a direct view change or restrained crossfade while maintaining all selection and target cues. Viewing an exciting spell is optional; understanding its consequence is not.
+5 Color and visual vocabulary
+Separate the facts that players need to read
+Color identity, suit, ownership, damage channel, incoming direction and timing are different facts. Give each a distinct visual channel. A Red Magic spell remains a Magic spell. A Blue square does not belong to the Blue player. A glowing row is not necessarily a row in which new commands are currently permitted. These distinctions follow the v3 rules and are essential to teaching the Cards rather than merely decorating them.
+The proposed palette uses dark slate #17212D, warm ivory #F5F0E3 and secondary slate #9AA8B2 as its base. Color accents are Blue #58B8F0, Red #EF6A5B, Green #71BE83, Orange #E6A05D, Yellow #E7D26A, Purple #AA8DE1, Black #40394B and White #F3E9D2. These are starting art tokens, not a claim that every pairing meets a contrast standard. Text and essential boundaries need separate contrast checks against their actual backgrounds.
+Pair every identity hue with its written name and a small, repeatable emblem. Proposed emblems are a wave for Blue, flame for Red, leaf for Green, doubled chevron for Orange, ray cluster for Yellow, branching arrangement for Purple, crescent for Black and four-point star for White. They are identity mnemonics, not automatic ability rules. Repeat the same emblem on Cards, Mana quantities, inspectors and relevant effects. Black receives an ivory rim; White receives a dark rim. Neither may resemble a disabled button or an empty territory.
+The four Tarot suits remain separate marks: Wands connects the Red and Green columns, Pentacles the Purple and Yellow columns, Cups the Blue and Orange columns, and Swords the Black and White columns. Show the suit beside the color emblem rather than replacing one with the other. Rainbow uses an eight-segment emblem with a neutral center and the word Rainbow. The center column's Wildcard suit has its own label. A segmented badge prevents Rainbow from becoming an ambiguous ninth neon hue.
+Ownership uses a stable A or B crest and a different perimeter treatment, such as single and double brackets. The local player may choose a preferred ownership presentation, but the same match coordinates remain visible in inspection. Selection uses an ivory corner bracket. New-order eligibility uses a labeled column header and a patterned boundary along the column. Existing movement and combat elsewhere retain their normal visibility. Geographic color is a subdued surface inlay, not a flood fill that overwhelms members or changes when an enemy occupies it.
+Physical attacks use compact solid impact marks, angular trails and material contact. Magic attacks use an open rune, stepped rings and an effect-shaped trail. Both may carry their actual Card identity color. Incoming Front, Rear, Left and Right are shown relative to the defending formation; Above and Below receive explicit vertical arrows and written labels in the inspector. Screen-left is never silently substituted for the defender's Left. A shield glyph sits on the faces it actually protects. Three frontal shields cannot visually form an overhead dome.
+Timing also has a grammar. A proposed action has a dashed outline and Preview label. An accepted but unfinished action has a solid work indicator. A resolved event has a short emphasis and a durable result. A continuing effect settles into a quiet badge and boundary. Cancellation retracts the preview or breaks the pending rune; it does not play a successful hit. These conventions make an effect legible with motion disabled. Using shapes and text alongside color follows W3C guidance on color-independent information; applying that guidance to these particular Hapa marks is a design recommendation. [REF06]
+Each alignment needs a recognizable behavior
+The following vocabulary translates CJ's original color identities into proposed shape, material, motion and sound choices. It is a production guide, not a rule granting every Card of a color the same powers. Use the Card's typed operation to determine what actually happens. Color supplies character; shape, target boundary and outcome explain the mechanic.
+Alignment
+Design association
+Proposed visual behavior
+Clarity constraint
+Blue
+Draw, counters, slowing, water
+Curved stream, open rings, a clean interrupted arc; a soft descending tone
+A backward curl does not mean the match rewound. Show the actual counter or speed modifier.
+Red
+Speed, dexterity, acceleration, destructive fire
+Short forward wedges, ember points and a forceful directional tail; dry attack onset
+Trail length follows the resolved event. It cannot imply extra range, hits or permanent charge.
+Green
+Strength, stamina, creative earth
+Broad lifting planes, fitted stone ribs and sparse rooted growth; low earthy impact
+Only actual solid changes create obstacles or support. Scenic foliage does not grant cover.
+Orange
+Amplification
+Nested echoes around the source or affected mark; a reinforced second harmonic
+A repeated ring is a modifier cue, not an extra hit. Display the calculated modifier.
+Yellow
+Recruitment and training
+A purposeful assembly into a legal slot, ray marks and a crisp joining chime
+A new silhouette appears only for a created member. Training cannot resemble a free spawn.
+Purple
+Strategy and formation
+Ordered branching paths, aligned corner marks and deliberate geometric transitions
+A suggested slot remains a preview until legal formation movement completes.
+Black
+Illusion, death, curses and damage over time
+Negative-space crescent, contained smoke or broken edge marks; quiet low texture
+Public state stays inspectable. Death, suppression and a continuing curse need different labeled results.
+White
+Healing, dispel and Enchantments
+Rejoining strokes for healing, clean separation for dispel, a steady bounded lattice for persistence
+White is not automatically healing. Show the operation and the actual health or effect change.
+
+Keep the spell's color identity separate from its damage channel. A Magic flame can be Red, and a Physical strike can carry a Blue Card identity. A temporary effect that changes a rule must name that rule, regardless of how familiar its color association feels. At the midpoint where two spell colors overlap, retain their source badges instead of blending them into a new unrecognized color.
+
+Figure 4  Visual vocabulary proposal. Hue, suit, owner, channel, incoming face and action state use separate marks. Symbols and text preserve meaning when color or motion is reduced.
+6 Territory identity enhancement and card banks
+Start with a quiet alignment glow
+Yes: territories should communicate their alignment from the start. Use a thin emissive inlay, a small suit or alignment plaque and a stable inspector chip. The large walking surface keeps its material colors. Active columns receive an additional patterned edge and named header; they do not simply become more saturated versions of their Mana hues.
+Four facts must remain distinct: geographic alignment, current control, effect source ownership, and interaction priority. Capturing or cutting off a region does not repaint its geography. Team identity uses a crest and boundary shape, with owner labels on demand. Hover uses a neutral outline. Legality uses line style and symbols. A Red attack can belong to either player, and a Blue-colored Physical weapon remains Physical.
+The column pairings below are fixed in global coordinates from player A's view. The first color is on A's home half; the second is on B's. The active production curve may give some rows zero Mana while their geographic identity remains visible. [REQ03]
+Global column
+Geographic pair
+Suit
+A home Mount role
+C1
+Red to Green
+Wands
+Castle
+C2
+Purple to Yellow
+Pentacles
+Knight
+C3
+Blue to Orange
+Cups
+Bishop
+C4
+Black to White
+Swords
+King
+C5
+Rainbow to Rainbow
+Wildcard
+Commander
+C6
+White to Black
+Swords
+Queen
+C7
+Orange to Blue
+Cups
+Bishop
+C8
+Yellow to Purple
+Pentacles
+Knight
+C9
+Green to Red
+Wands
+Castle
+
+An alignment icon and a suit icon are not interchangeable. Blue and Orange share Cups but have different color identities. Show both on a produced Card and its inspection record. Rainbow uses a stable segmented emblem rather than a continuously cycling hue. Motion must not be necessary to recognize it.
+Make resource production visible as a causal path
+Selecting a column should trace from the player's home edge through eligible territory to the actual income frontier. Use a restrained line along the column edge, small contributions at qualifying rows and a termination mark at the cutoff. Highlight the eligible friendly center and the first eligible enemy center that limits it. Retainers and airborne bodies can remain visible without being mistaken for those anchors.
+For a concrete example, in the ten-row fixture an A-side C1 frontier on R6 can produce a rank-6 Wands Card with six Supply and a Mana payload of three Red plus one Green. The card separates the large rank, Supply value and colored Mana pips. The inspection breakdown names which rows contributed. A starting R2 frontier instead produces rank 2, two Supply and zero Mana; a bright suit emblem must not imply a Mana payment that does not exist. [REQ03]
+At the next Tick boundary, old unspent pooled Mana expires before new spending and new minting uses the completed prior state. The client may animate eligible row marks gathering toward the bank and the new Card turning face-up. The authoritative batch remains atomic. If an unused Card is replaced, briefly show the outgoing Card as a labeled replacement and preserve the event in history. If the column does not produce a Card, retain its existing bank occupant without a misleading fade.
+Only eligible active columns mint in the baseline. A full Round may produce seventeen Cards per player, with a single center-column Card on its activation and two on paired activations. The interface cannot imply that all nine columns pay every Tick. The opening prologue and the repeated outer-pair activation at Ticks 9 and 10 need explicit timing labels so apparent repetition looks intentional.
+Distinguish an enhancement from ownership or production
+“Enhance territory” is a family of effects, not one universal bonus. Every visual treatment needs a named rules operation, area, source, lifetime and resulting change. A soil improvement might alter a movement modifier; a fortification might add directional protection; an authored Card might change a row's production. These are future content examples until their effect definitions exist. The initial excavation, mining and armor fixtures already have specified behavior.
+Use three visual components for an active enhancement. A small source emblem establishes what caused it. An accurate footprint establishes what it affects. A restrained material change establishes that the effect persists. For example, a fortification may assemble low ribs along a stated face; a growth effect may add foliage along existing seams; a magical barrier may introduce a transparent plane with an unmistakable hard boundary. Each inherits its declared alignment hue but keeps the actual territory surface readable.
+The material change cannot invent a statistical promise. A stone rib should not imply cover unless the effect grants cover. If the only operation is a resource multiplier, emphasize an income glyph and explain the multiplier instead of drawing a wall. An effect that raises solid terrain must change the actual volume and traversal representation. A cosmetic embellishment must be labeled as such in the creator pipeline and cannot block picking.
+Show lifetime and stacking in the inspector, with concise persistent badges on the field. If two effects share a surface, show one quiet base treatment and a count badge; inspection reveals the full source list and the calculated result. Avoid additive bloom from each stack. If effects conflict or suppress each other, identify the effective result and the suppressed source rather than averaging their colors into an unexplained new identity.
+Row Enchantments and Major Arcana
+The Enchantment bank sits on each player's own left side of the board. In a shared global view those are opposite physical sides. An Enchantment's source stays in its bank slot and its effect identifies the affected row. A thin patterned rail can run along that row's edge, with an endpoint emblem and a short leader on selection. It should not paint the whole row opaque or look like a wall.
+Major Arcana sit in the rear bank behind the Mount row. The Card's physical bank slot stays fixed even when its effect binds to a Mount, a region or both. Inspecting it reveals those bindings with explicit labeled leaders. A decorative light column is acceptable only if the effect actually applies to that column. Otherwise it falsely broadens the area. The visual contract follows the effect definition, not the historical name of the bank.
+When a row Enchantment and a column effect cross, do not create a new mixed-color checkerboard. Draw the lower-priority persistent treatments at restrained strength, preserve both source emblems and highlight the intersection only when it changes a selected calculation. The inspector can state “Physical Defense from this row effect; movement modifier from this Major Arcana” with source links. The crossing itself does not imply synergy.
+Hapa Cards as objects worth understanding
+Let a Card feel like a personal illustrated artifact in inspection, with excellent image presentation, a suit, an alignment identity and readable structured rules. In the hand dock, prioritize rank, Supply, Mana payload, ability availability and source column. Card art and decorative borders come forward when expanded. A nine-slot hand cannot carry nine full pages of tiny text.
+A Minor Arcana has three exclusive uses: load its Supply, burn it for its Mana payload, or use its attached ability while paying the required cost. Present these as three clearly named actions, never one ambiguous “Use” button. Loading Supply is available for an eligible owned party regardless of whether that party's column is currently active. A Card with zero Mana may still be useful for Supply. Consuming an in-match instance does not erase the reusable Card definition from the collection.
+After a match, the Card's record can show where it was used, what it affected and which rules it helped the player learn. That provides a meaningful connection between collectible identity and play. Do not invent XP quantities, rarity-based combat power, permanent equipment ownership or financial value in the visual layer. The selected progression and retention profile governs what persists. Show a clear distinction between match history, received Card definitions and their attribution, and assets retained under an explicitly enabled profile.
+Creator attribution belongs in a discoverable details view. Preserve inspiration references, generation prompt, prompt author, source illustration and derivative assets as specified in Hapa's earlier provenance preference. This metadata should support discovery and trust without putting production jargon in the middle of a combat choice. [HC01]
+7 Spells terrain and persistent effects
+A timing contract for every effect
+An effect has a source event, targets, surfaces, incoming face when relevant, a presentation envelope and a persistent remainder if one is needed. Record event identity so retries or replay seeking do not duplicate particles, floating numbers or sound. Use the simulation event time to order effects; use local presentation time to animate them. The milliseconds below are illustrative presentation offsets from a named event, not the duration of a Tick or a promise that the game runs in real time.
+Separate anticipation, commitment, emphasis and settlement. Anticipation says what a proposed or pending action may do. Commitment is the rule event that actually changes state. Emphasis makes that event noticeable. Settlement leaves enough information to inspect the new state after the flourish has ended. A reduced-motion rendition can replace anticipation and emphasis with static markers while preserving commitment and settlement.
+Digging and raising terrain
+Before acceptance, show the exact target cube or surface with a dashed outline, intended final height and the cost stated by the ability. After acceptance, show work progress in simulation Ticks if the definition has a work duration. Pick swings, dust and small chips can loop while work actually progresses. If the game pauses for a public choice, the progress bar pauses; cosmetic motion may settle to a quiet hold.
+At the accepted terrain-change event, update the real surface geometry and its exposure state immediately in the presentation state. Over the next proposed 0–120 milliseconds, show a short fracture or earth-lift emphasis; during 120–300 milliseconds, move a few chips or clods away from the changed face; by about 450 milliseconds, clear the dust. Never keep the old opaque roof on screen until a long cinematic finishes while the rules already treat the surface as open.
+The settled result shows the new band, usable connection, solid faces and whether a roof remains. Digging sideways into a tunnel retains the roof outline in inspection. Removing that roof changes the exposed-surface badge when the rule event says it does. A hill uses the same event sequence with an outward push and a new top surface. A ramp is a real connection; decorative rubble cannot promise a route the path rules reject.
+For mining, distinguish the deposit from generic glitter in the rock. A stable deposit badge marks available material; accepted extraction changes it to an exhausted record and produces the resource instance once. Crafting has its own work indicator and input-to-output explanation. Equipping the sample armor adds a small frontal shield segment and an inspectable item badge. The illustration communicates a recorded item and modifier; it does not imply that the item will persist into future matches under every format.
+Mining reveals an identifiable public mineral seam. Extraction empties it once and delivers Metal to the material inventory. Its resource Card uses a material frame labeled “Metal,” separate from Minor Arcana storage. Rebuilding and redigging do not restore the deposit. Inspection preserves its extraction history.
+Row Enchantments and column or identity effects
+When a row Enchantment resolves, illuminate its source reserve Card and trace a restrained ribbon along the target row. A proposed 0–180 millisecond outward trace can establish the affected region; a 180–450 millisecond settle leaves a quiet patterned border and source badge. Retain the written row identity while the camera rotates. A looping brightness pulse is optional and should be slow, shallow and removable.
+Use separate bindings for effects that follow a Mount and effects that apply to a region. A Major Arcana that stays behind C3 but follows its original Bishop keeps a small source badge on that Bishop after it enters C4. The C3 production effect remains on C3. Only selection needs the tether between source and bound character. Covering both C3 and C4 in the same glow would suggest the wrong targeting rule.
+For Row Mana Double, the enduring mark says that contributions from the row are modified. At the next relevant mint, show the affected contributions entering the new card and explain their arithmetic. Do not double the printed rank or repaint every contribution Blue merely because the example Enchantment was paid for with Blue Mana. When the source expires or leaves play, remove its badge and region mark at that rule event, with an optional short fade afterward.
+Spells responses and resolved hits
+The Ember Strike example announces a caster, target, cost and pending Magic effect from the target's Front. Begin with a compact source flare and a target-face marker. When the response window opens, show a stable pending rune and a clear Response paused state. There is no decorative countdown unless a selected format actually defines a response time limit. Players may inspect the pending Card, pay for a response or pass without world movement continuing behind the prompt.
+A countered spell collapses its pending rune and leaves a Countered record. It does not send a successful damage number into the target. If it resolves legally, anchor its short travel or burst to the recorded source and incoming face. For example, use a 0–120 millisecond local impact emphasis and a 120–360 millisecond decay from the resolution event. The inspector distinguishes power, applicable Defense and damage received. A visually spectacular burst may still deal zero damage after protection.
+Ordinary combat can resolve simultaneously even when the readable replay staggers its flourishes. Group those flourishes under one exchange identifier and timestamp. A killed member that had an entitled hit in that exchange still appears as its source. Above-arriving arrows get overhead trails and an Above badge, without frontal shields flashing as if they blocked them. In shared-health experiments, emphasize the shared pool and resulting maintenance losses; in individual-health modes, identify the actual injured members. Never use one generic health animation for both.
+
+Figure 5  Terrain presentation storyboard. Simulation work lasts the defined number of Ticks; the millisecond timings describe only local presentation after the accepted change.
+
+Figure 6  Persistent and pending effects use different states. These diagrams show source bindings and event order, not the physical arrangement of the Card banks.
+8 Signature moments and pacing
+Make five moments exceptional
+The opening reveals a calm board from the player's home view. Commander and Capital insignia establish orientation; nine column plaques appear, and the outer active pair gains its edge treatment. The first two rank-2 Wands Cards show their Supply value and zero-Mana explanation. Skipping this sequence preserves every choice.
+The first merge should feel like a party becoming a coordinated company. The Mount arrives at the Pawn formation, the member positions reconcile into the accepted arrangement, and a subtle crest closes around the combined party. The center becomes visually identifiable. The overview badge reports the actual member count. Do not spawn duplicate retainers for spectacle or fill an intentionally empty slot with a decorative body.
+The first excavation reveals a surprising interior with convincing strata, a clean opening and a depth marker. The camera stays put unless the player chooses Inspect opening. A short stone impact and low settling sound give weight to the visibly changed ground.
+The first significant spell should connect its Card to its source, legal target, response opportunity and accepted effect. A restrained announcement establishes intent; a paused response panel gives both players the information the rules allow; the resolved event produces the impact. A countered spell visibly stops at the response stage and does not briefly show the damage or terrain change it failed to cause.
+The closing moment frames the exact winning event: Commander death or an enemy party center anchor entering the fixed Capital, including a simultaneous draw when required. Briefly hold the composition with a labeled outcome, then offer inspection of the decisive event and preceding public choices.
+A calm match makes the peaks possible
+Use small idle motion in flags, breathing, water and embers. Keep it spatially anchored and low contrast. Most persistent effects should settle into static material changes or sparse motion after their introduction. Nine constantly pulsing columns and several orbiting runes around every party would make an important cast indistinguishable from background activity.
+Music should support thought, with separate layers for planning, active resolution and conclusion. Changes should be gradual enough that repeated Ticks do not sound like nine separate battle starts. Distinct short cues for Ready, an opponent-plan update, required response, Card replacement and a completed action can establish rhythm. Every essential audio cue has a visible equivalent and remains in the event history when it carries a rule fact.
+Recommended presentation durations are tunable and never rules time. A hover can settle in about 100–150 milliseconds; a small resolved impact can read in 150–300 milliseconds. The standard terrain effect clears decorative debris by about 450 milliseconds; an optional larger flourish or replay treatment can use 500–900 milliseconds while the accepted geometry is already visible. Simultaneous events remain simultaneous in the record even when the client presents them in a readable sequence. No player gets extra command time because their computer rendered an effect faster.
+Fast playback, reduced motion and reduced effects preserve the hard boundary, source, target, result and event entry. They may suppress flying debris, camera shake and long trails. A replay may pause or scrub at any point without replaying rewards or altering the underlying match. A still frame should still communicate which object an effect belongs to and whether it is pending, persistent or resolved.
+9 The battlefield interface
+The questions the screen must answer
+The screen should answer three questions immediately: what requires a decision, what is happening on the board, and why an outcome is expected. Put the current phase and required choice above decorative information. A Spell response must not compete with a cosmetic notification; a Capital threat below ground must remain discoverable when the camera is looking at the surface.
+Priority
+Persistent information
+Detail on selection
+Required decision
+Planning, reviewing a changed opponent plan, responding, allocating damage or waiting for agreement.
+Legal options, cost, consequence and the relevant source Card.
+Match situation
+Global Tick, prologue or Round, active columns, next activation, both Capitals and Commanders.
+Objective threats and the current profile's capture condition.
+Physical action
+Party anchors, occupied and empty local slots, facing, contacts and continuing routes.
+Individual members, exact Supply, Speed, protection and work progress.
+Available resources
+Both public hand banks and both Mana pools.
+Card definition, exclusive uses, contribution origins and replacement forecast.
+Explanation
+Recent meaningful events and a visible inspection control.
+Per-hit arithmetic, applied effects, rejected commands and recorded choices.
+
+The initial roster contains 162 members across 36 party anchors: each player has nine four-member Mount parties and nine five-member Pawn parties. These are stress-scene counts, not engine limits. At tactical zoom, show actual formation gaps and center positions. Healthy, idle members do not need permanent numeric labels. Damaged, engaged and selected members receive stronger annotations; every member remains selectable through the roster and formation inspector.
+At a distant overview, simplify costumes and text while retaining occupancy, ownership and activity. At inspection distance, show all nine positions, incoming attack faces and member identities. A transition between detail levels must never make a living fighter resemble an empty slot. In party-health mode, show the shared pool and maintenance consequences instead of inventing individual health bars.
+Stable ownership beneath a freely rotating camera
+Three separate facts must stay visible: who controls the client, which participant owns an object, and where the camera is looking. The human controlling Player B remains Player B after orbiting behind Player A. A spectator can adopt either viewing orientation without acquiring that participant's controls. Labels say You, Opponent and the permanent seat A or B where useful; a camera reset is never called Switch sides.
+Global coordinates identify the same territory on both computers. Home coordinates describe the board from one participant's starting edge. On the ten-row board, Player B's home R1C1 is global R10C9. Show a hovered or selected territory's global address, with the home-relative address alongside it when different. The camera compass identifies both home edges and the fixed column axes.
+Keep the player's hand ribbon in their fixed home-column order, C1 through C9. The opponent ribbon uses those same physical columns so corresponding resources can be compared vertically. Each tile identifies its owner and global column; a home-column alias is shown when needed. For Player B, the first own-hand tile is home C1, global C9. Orbiting never reorders either ribbon. Keyboard numbers select positions in this fixed own-hand ribbon, not whichever lane currently appears leftmost in the world.
+World banks remain attached to the correct board edges. The screen ribbons are alternate views of those same instances, not extra storage. Hover or keyboard focus draws a restrained tether between a tile, its physical bank slot and its generating column. The inspector can say “Your C1 bank, global C9.” This association is more reliable than asking the player to reinterpret a moving row of small cards after every camera turn.
+
+Figure 7  Reference layout schematic at 1600 by 1000. Enlarged labels and illustrative roster entries explain placement; this is not a saved match or final artwork. Column strips show geographic pairs, not a Card's Mana payload. Exact contents and responsive behavior are specified in the text.
+The main battlefield layout
+Use a 1600 by 1000 reference canvas, with eight- and sixteen-pixel spacing increments. The board receives the central area; persistent controls surround it without covering its important contact regions. All measurements are interface pixels at the reference scale.
+Region
+Exact reference rectangle
+Contents
+Match bar
+x0 y0 width1600 height56
+Participant crests, Tick and Round, active and next columns, phase, connection state.
+Opponent hand
+x240 y64 width960 height72
+Nine public slots with owner, column, rank, Supply, Mana summary and ability indicator.
+Party roster
+x16 y152 width208 height600
+Both armies, ownership filter, search, selected party and offscreen activity.
+World viewport
+x240 y152 width960 height600
+Diorama, anchored selection, route previews, terrain and contextual effects.
+Inspector
+x1216 y152 width368 height600
+Selected object, formation grid, explanation and contextual actions.
+Own hand
+x240 y768 width960 height144
+Nine resource tiles and their exclusive actions through selection.
+Resource summary
+x16 y768 width208 height144
+Both actual Mana pools, planned payments and selected party Supply; expand named color quantities when needed.
+Plan agreement
+x1216 y768 width368 height144
+Both plan states, changes requiring review and the contextual agreement button.
+Event strip
+x16 y928 width1568 height56
+Recent events, inspect event, live position and replay entry.
+
+Each nine-slot ribbon uses 96-pixel tiles, ten-pixel gaps and eight-pixel side padding. The larger own-hand tiles show rank and suit, Supply, a named Mana breakdown, attached ability and next mint opportunity. Unusual multi-color payloads expand within the inspector; a visible overflow count prevents their omission from looking like zero. An empty slot still displays its column and forecast. The opponent ribbon is compact but supports the same complete inspection.
+The right inspector begins with a plain-language identity and current state, not internal record IDs. A party view contains its 3×3 formation, current destination, remaining Supply, Speed and legal action buttons. A member view retains the parent party context. Advanced provenance and copyable identifiers sit behind an expandable Details section. The left roster selects by stable identity, so a player never has to hit a small moving sprite.
+On narrower windows, collapse the roster into a searchable drawer before compressing the battlefield or reducing text. The inspector can become a deliberate side sheet. Preserve access to all nine bank positions and the current decision; do not place a response button under an offscreen panel. Larger text preferences may use a scrollable bank with a persistent nine-position index. These are presentation layouts with the same information and rules.
+10 Controls public planning and responses
+Mouse keyboard and remapping contract
+The default control scheme separates camera manipulation from issuing orders. Actions normally add or edit a public plan; they do not advance game time immediately. A selected party's source identity remains selected while the camera moves. Cosmetic particles, trails and floating labels never become accidental gameplay targets.
+Input and context
+Exact proposed behavior
+Left click in world
+Select a member, party badge or territory. During a targeting tool, select and lock the intended target for its preview.
+Right click with an owned party selected and no targeting tool
+Stage one destination at the clicked legal territory. An existing planned destination is replaced. An invalid click explains why and preserves the prior target.
+Right click while a targeting tool is open
+Cancel that uncommitted targeting tool. It does not delete an accepted destination or retreat a party.
+Middle-button drag over world
+Orbit around the selected focus or board focus. Capture the pointer; releasing a camera drag never issues an order.
+Shift plus middle-button drag
+Pan the camera. Equivalent explicit Pan and Orbit toolbar modes support trackpads.
+Wheel over world
+Zoom toward the inspected area within usable camera limits. Over a list, scroll that list instead.
+W A S D
+Pan in screen directions while the world has focus.
+Q and E
+Rotate camera yaw by 45 degrees left or right.
+Z and X
+Raise or lower viewing pitch by 15 degrees within its limits.
+F
+Focus the camera on the selected party, member, territory or event.
+Home
+Restore the controlling participant's home view; retain selection and pending action.
+V
+Toggle the near-overhead tactical view and the previous angled view.
+Left and right bracket
+Step the inspection slice down or up through the six occupied bands.
+Backslash
+Restore the All layers presentation.
+1 through 9
+Select the corresponding own-hand slot in its fixed dock order; never spend it immediately.
+M U B C G
+Open Move, Supply, Burn, attached ability and formation tools respectively when their required source exists. Unsupported contexts show the missing source.
+P
+Open or close the public plan comparison.
+Control Enter or Command Enter
+Activate the visible plan-agreement button when eligible; never silently answer a different choice.
+Escape
+Cancel the current uncommitted tool, then close the current sheet, then open the match menu. Never concede.
+Control Z or Command Z
+Undo an edit to the user's unfrozen plan, publishing its new revision. No game-state rollback.
+Space in replay
+Toggle local replay playback. It has no Ready or live simulation meaning.
+
+Tab and Shift Tab traverse visible controls. In a keyboard-focused board, arrow keys move one territory in the player's fixed home-grid axes, whose compass remains visible; Page Up and Page Down change inspection height. Enter selects that territory or the explicitly focused candidate. An overlapping-object picker uses ordinary list navigation. Formation editing selects a member and then a destination slot with the same keyboard pattern. Every command is also available through a labeled button, including Retreat, Begin work and Cancel work.
+Suppress gameplay shortcuts while editing text. Do not intercept operating-system and browser navigation shortcuts. A remapping screen shows context, existing conflicts and the resulting key glyph, and supports hold-versus-toggle alternatives for modifiers. Save interface preferences locally, separately from the match profile. Mouse sensitivity, invert orbit, zoom rate, reduced motion, text size and visible keyboard focus are adjustable. Gamepad interaction is later usability research, not an additional v3 delivery gate.
+Camera movement without targeting mistakes
+Use continuous yaw, the 50-degree home view and 30–75-degree ordinary pitch defined in the camera chapter. Near-overhead and below-board inspection remain explicit view choices. A director camera never interrupts targeting, payment, allocation or plan review.
+A hover is a provisional candidate. Clicking a Card target locks its entity or terrain-cell identity into the inspector, together with the relevant height and choice state. The player can orbit, inspect the underside, or read a defense calculation without changing that target. A Change target control explicitly unlocks it. Only Stage ability or the response's payment button submits the completed action. The label names the target and consequence.
+This extra target-lock step is justified for Cards because selecting the wrong member, cube or payment branch can consume a unique resource. Frequent movement uses the faster right-click staging path, with an immediate visible route and a reversible plan edit before Ready. Both approaches retain the single-destination rule. Shift-click does not create waypoints, and marquee inspection does not invent a group movement formation. A future bulk-order tool must expose each actual party command and its independent legality.
+When several objects lie under the cursor, show a candidate list with owner, member or party name, global territory, band and current state. Never silently choose the uppermost decorative mesh. Picking an obscured candidate opens the appropriate slice and highlights its anchor. If a target dies, a party ID retires after merging, or an effect changes legality, retain the explanation and mark the selection stale instead of redirecting the action to a similar-looking object.
+Seeing a six-band volume
+The right-edge layer rail has six bands, separated by the Ground 0 boundary. All and Follow selection are viewing presets, not extra bands. Each band shows occupancy counts and unresolved activity even when filtered out.
+All layers retains discoverable markers for covered occupants. A selected band cuts away obstructing terrain, preserving ghost boundaries and a cutaway label. Follow selection opens the relevant view for the member or work target. Visually removed terrain remains solid for movement and attacks.
+The inspector distinguishes band, movement mode, support surface, exposure and logistical effect. For example: “Band −2; grounded; open to sky; eligible enemy blocker,” versus “Band −2; grounded; roof overhead; does not cut the ground supply line.” A flyer in +3 does not block that line; a grounded party on an exposed hill in +2 can. Draw the relevant center anchor and the vertical exposure check, then show the actual fallback frontline separately.
+Do not reuse this logistics explanation for every spatial rule. The supplied initial profile allows a live enemy anchor to capture a Capital's horizontal territory at any occupied height or movement mode. The Capital therefore needs a vertical objective marker through the volume and an activity warning for covered or airborne approaches. “Does not block supply” must never be rendered as “cannot threaten this Capital.” Attacks separately inspect their own range, height and path rules.
+Use silhouettes, named list entries, patterns and outline contrast alongside color. White Mana needs a visible dark edge; Black must not look like a disabled control. Layer and ownership filters may reduce annotations, but must show filtered counts and a direct Show all control. Covered opponents remain inspectable through the roster and search; filtering introduces no fog of war. Every slice and candidate picker is keyboard accessible and has a textual coordinate alternative.
+Public planning Ready and response choices
+After the Tick's automatic mint and replacement transaction, show the new actual bank contents and begin planning. The previous card is already retired; the interface must not offer an animation-time opportunity to spend it. Plan actions display a separate projected result. A planned Supply loading can show “Current 1; after plan 3,” but the actual allowance does not change before execution.
+Every addition, removal or reorder of a submitted plan publishes a new public revision. Camera movement, hovering and an unfinished target picker are local interface activity, not hidden game commands. Show both ordered action queues and the current first-action participant; the fixture alternates their actions while preserving each participant's internal order. A burn placed after the Spell it should fund receives a clear dependency warning. There is no gameplay order quota.
+The first Ready freezes the player's own plan. The button should say “Ready and freeze my plan,” with that consequence visible before activation. If the opponent later edits, show “Your plan is frozen. Review the opponent's changes.” Highlight added, removed and changed actions, then offer Acknowledge updated plan. Do not add an Unready control that silently reopens the frozen plan. A future mutually agreed reopening feature would require an explicit protocol change.
+Resolve only when both acknowledgments identify the same current plan pair. An empty plan may be acknowledged; label it “Continue with existing orders” so a player understands that armies can still move and fight. During agreement or a required choice, game time does not advance. Ordinary menus and local animation speed cannot consume movement, crafting time or response opportunities.
+A response panel shows the announced Spell, targets, pending stack, current priority, eligible responses and Pass. Consecutive passes resolve the newest pending effect first. Payment names the consumed ability and resources; a paid counter receives no invented refund if countered. Keep pending effects inspectable. Never auto-pass a human because no obvious counter is highlighted.
+11 Cards formations and combat inspection
+
+Figure 8  The v3 A-side C1 R6 resource example. Rank and Supply are six; the separate Mana payload is three Red plus one Green. Each in-match instance has one exclusive use.
+Offer Supply a party, Burn for Mana and Use attached ability explicitly. A Supply drag shows legal recipients; empty-terrain drops cancel. Moving, turning, fighting and inactive-column parties can receive Supply unless an effect forbids it. Unmounted Pawns can receive Supply, with ordinary movement still requiring a Mount.
+Supply still enters the agreed action sequence; a frozen plan stays frozen. Ability staging selects its required source, targets, modes and payment. The Card definition controls permissions; its generating column cannot replace the acting party's eligibility check.
+Name each Mana quantity. Reserve expressly required Rainbow before offering substitutions, list consumed instances and never silently burn another slot. An instance reserved by the plan cannot serve a second exclusive use. Forecasts say “Next mint opportunity Tick 10; replacement expected from current state,” because future production is conditional.
+The formation inspector uses a party-relative 3×3 grid, numbered 1–9 with center slot 5 and a Front arrow. Four cardinal facings remain fixed during diagonal travel. Preview the new arrangement, one-Tick transition, old combat arrangement and invalid overlaps or escapes from hostile contact. Instant Wheel Formation changes duration; other legality conditions remain.
+For combat, show contributing bodies and separate front, flank and Above attack cues. The explanation reads “Physical hit 3 minus Front protection 1 gives 2 damage.” An overhead arrow uses Above protection; unused Magic Defense cannot cancel it. Damage allocation changes with the selected profile: choose raw-hit recipients before individual defense, assign permitted residual damage within a shared protection scope, or display the party pool and maintenance casualties. Read those choices from the engine's request rather than reproducing their logic independently in interface code.
+Retreat preview identifies own touching casualties, returning helpers, required Supply, any turn, the eligible follower and possible loss of movement if the ordinary Mount dies. Deliberate staging uses the normal public-plan flow. The simulation determines the final outcome.
+12 Learning replay and recoverable errors
+Replay and explanation across time
+The live event strip groups events by Tick and simultaneous exchange. Expanding it provides mint, order, payment, movement, contact, damage, terrain and outcome tracks. The player can jump to the next meaningful event instead of stepping through every simulation quantum. Fine inspection can display “Tick 6 plus 0.125” and the precise recorded event time.
+A replay may animate individual blows in a readable sequence, but brackets them as one simultaneous exchange and applies the recorded batch outcome together. Selecting a casualty highlights its actual sources and protection. A dead fighter's valid same-exchange attack remains visible. Planned routes, actual travel and interrupted travel use distinct line styles and labels; a pretty trajectory must not conceal the place where movement stopped.
+Inspecting earlier live history enters an explicit history view with orders disabled and a persistent Return to current decision control. A response arriving during that inspection raises a clear notice without auto-answering it. Dedicated replay playback never edits the original match, duplicates progression or changes the participants' clocks. Its header identifies the profile, outcome and whether the record is complete, interrupted or still awaiting verification. Camera bookmarks are local viewing aids, separate from the signed match state.
+Progressive onboarding through small playable tasks
+Onboarding teaches how to play and inspect this game. It does not claim to settle Hapa's later educational curriculum or award permanent mastery. Use short, resumable training fixtures with their altered starting states clearly labeled. Experienced players can skip them. Context help remains available in ordinary matches, and restarting a lesson does not rewrite a completed match.
+Lesson
+Playable task and explanation
+Observable completion
+Read the table
+Select both Capitals, a party center and an empty local slot. Orbit and restore home view.
+The same selected object remains selected after rotation; the player can identify its owner and global territory.
+Supply the opening
+Load the opening 2 of Wands onto a Castle, choose the Pawn square and agree the plan.
+One step consumes one Supply, merges nine identified members and leaves one Supply.
+Continuing orders
+Use a prepared next-Tick position with a Castle already traveling outside the highlighted columns. Supply it from an available different-column card.
+Travel continues; Supply is legal; a new ordinary destination remains subject to active-column permission.
+Choose a card use
+Inspect a mixed-Mana fixture and compare its three exclusive uses. Fund an ability using another card.
+The player can explain why burning its source prevents using that same instance's ability.
+Forecast replacement
+Inspect the consecutive outer activations and retain a card through its replacement.
+The slot contains the new instance, while loaded Supply and spent history remain separate.
+Read contact and protection
+Compare a front sword hit with arrows from Above in a mirrored formation.
+The selected explanation identifies the incoming face and correct protection; animation order does not change casualties.
+Inspect the volume
+Compare a flyer, a roofed tunnel occupant and an exposed pit occupant at a shared horizontal area.
+The player selects the intended height and correctly locates the logistical blocker.
+Agree and respond
+Freeze a public plan, review an opponent revision, then answer a Spell with a counter or Pass.
+The player distinguishes freezing their plan, acknowledging a new pair and answering a response.
+
+Each lesson begins with one concrete goal and a visible example, then hands control to the player. Explain a failed action at its source: “This party is in C1; new Move orders return on Tick 9. Supply is available now.” Offer Show me to demonstrate the current rule and Try again to resume from a checkpoint. Use observed successful actions and a short explain-back prompt to evaluate comprehension, rather than forcing an unrelated quiz before play.
+Alternate wireframes for decisions and explanation
+These briefs reuse the main 1600×1000 frame. They describe deliverable screen states rather than separate game modes.
+Screen state
+Exact changed regions
+Required visible content
+Underground target locked
+Keep the base frame. Put the six-band rail at x1152 y208 width48 height432. Right inspector remains x1216 y152 width368 height600.
+Locked owner, global territory, band, support/exposure, target validity, cutaway label and Change target. Terrain removed by the view has visible outlines.
+Public plan comparison
+Overlay a drawer at x240 y392 width960 height360. Two 440-pixel action panes flank an 80-pixel execution-order strip.
+Own and opponent revisions, added/removed changes, interleaving, costs and current freeze state. The upper world stays visible; Inspect action can restore the full board without editing.
+Spell response
+Use x1032 y152 width552 height232 for pending effects, and x1032 y400 width552 height352 for response/payment.
+Current priority, original Spell and counters, target, payment sources and explicit Respond or Pass. Keep both public banks accessible.
+Expanded replay
+Overlay event tracks at x240 y616 width960 height136; preserve the bank rows. Replace the inspector with a causal event explanation.
+Tick and exchange brackets, planned/actual movement, source and target, channel/face arithmetic, playback and Return to current decision where applicable.
+Guided opening
+Use the normal board. Place one instruction panel at x16 y152 width208 height240 within the roster area.
+One goal, highlighted source card, its actual target, current plan and optional Show me. Do not darken the only path to the action or move controls between lessons.
+
+The desired memorable moments are useful transformations: a column's income visibly becomes its card; a formation opens around a newly merged leader; a tunnel becomes readable through a precise cutaway; an exchange pauses on the exact shields and arrows that explain its result. Make these moments optional to replay and immediately dismissible under reduced motion. The player should leave them with a better model of the game, not merely a brighter screen.
+Failure states and acceptance gates
+Show failures where the user can recover. An inactive actor names its next permission; an unpayable ability names the missing color or already-reserved instance; a blocked route shows the body or terrain; stale targeting preserves the original identity and asks for a fresh selection. Unsupported content prevents starting with an explanation of the missing operation. A connection interruption pauses agreement without a forfeit countdown. Divergent state results stop progression, preserve both records and offer diagnostics; the UI must not nominate its own winner.
+Concession is a separate menu action with an explicit match-ending confirmation. Closing a panel, cancelling an unsubmitted target, losing a connection and reaching an automated experiment budget are not concessions. Empty legal plans remain usable, and a full nine-slot bank is normal storage rather than an error requiring a discard modal.
+Accept the UX implementation when representative users can complete the opening, find a partly obscured member among the 162-member stress roster, deliver off-column Supply, distinguish ground exposure from Capital capture, acknowledge an updated public plan without reopening their own, and explain one combat result using the event inspector. Repeat those tasks with camera rotation, keyboard-only navigation, enlarged text, reduced motion and a color-independent display. Replays must show identical outcomes under all presentation settings. These are usability and correctness gates for the proposed interface, not additional gameplay restrictions or new owner decisions.
+13 Sprite production and asset generation
+Author a small visual kit before multiplying variants
+Begin with one complete party: center character, Swordsman, Pike, Archer, Mage and Priest. A center is a character whose Mount type supplies movement rules; its movement crest can communicate Castle, Knight, Bishop, King, Queen or Commander without forcing every center to be a literal chess figurine. The Commander's crest and the fixed Capital marker must remain distinguishable after the Commander moves.
+The initial production trial is a 128 by 128 pixel frame with roughly 64 authored texels per displayed member width. This gives more room for brushed pixel clusters than upstream's 32 by 32 character cells. It is a visual trial, not a change to the member's collision width or to vertical rules. Store the pixels-per-unit conversion after the agreed render adapter is applied. Use a shared foot anchor and frame size across actions; transparent padding accommodates a spear or casting pose without changing the character's world position. [LV06]
+Create higher-resolution source paintings when useful, then perform an intentional pixel cleanup at delivery size. Keep silhouette edges controlled, material clusters readable and ink selective. Test two opposed views at the actual battlefield zoom before producing every animation. If fine brushwork disappears or shimmers, adjust its scale and contrast in the source rather than sharpening the whole screen. Use a stable material palette and a common light model. Avoid painting a strong permanently screen-left highlight that contradicts the world light after orbiting.
+Author eight camera-relative views at 45-degree intervals for the proposed full production set. Four views are a useful early proof but should not be silently advertised as eight-direction support. Lumina currently selects four directions, preserves animation phase during directional changes and can mirror a missing left or right animation. Eight-view selection and naming require a Hapa adapter or engine extension. [LV04]
+Never mirror a whole finished asymmetric character to obtain its opposite view. A sword held in the right hand, a left-arm shield, an eye patch, lettering and a one-sided cape must stay on their anatomical sides. Use a turnaround sheet that labels anatomical left and right independently of screen-left and screen-right. For each view, identify the visible hand, the hidden hand, equipment attachment points and front/back ordering. Camera orbit must not move a shield to the wrong defensive side.
+Equipment can be precomposed into approved variants or rendered as separately authored layers. A layered approach needs per-view and per-frame socket positions, draw-behind/draw-in-front information and a common foot anchor. It cannot rely on translating one sword image beside every pose. Armor's visual appearance is also separate from its modifier: the sample crafted armor grants frontal Physical Defense because its item definition says so, not because any shiny chest plate grants the same rule.
+Animation clips are presentation assets
+Use a compact proposed baseline: idle two frames at four frames per second; walk six at ten; weapon action six at twelve; cast six at ten; hit reaction two at twelve; fall four at eight; and work four at eight. These are authoring examples, adjustable per character. Idle, walk and work may loop. Attacks, casts, reactions and falls do not loop by default. Add explicit hold poses for a pending response and an interrupted action. A turn can blend or step between directional poses while the rules retain the full configured turn duration.
+Frame count is not hit count. An Archer's two Physical hits remain two rule events even if one animation contains many bow and arrow frames. Give each hit a small distinct trail and an entry in the inspector. A six-arrow exchange may be grouped aesthetically, but the player must still recover all six calculations. A charge impact uses the recorded approach speed for its visual force; a later stationary exchange uses the ordinary attack pose. Do not keep drawing a charge streak while the party is stationary.
+An attack clip may start before its impact to communicate preparation, but damage and casualties follow accepted rule events. Animation markers help align the drawing with those events; they never call the damage function. When a replay is accelerated, skip intermediate decorative frames and retain the event summary. When the camera changes view, retain normalized clip phase. When a response pauses the simulation, hold the relevant pose and stop any progress indicator that would suggest continued game movement.
+Local member motion must respect identity. A corner helper can step into a neighboring contact strip while its home center stays put. Draw a subtle home tether on selection and preserve its home badge. When the neighboring supported party retreats, the surviving helper returns to its own reserved slot; it does not become part of the retreating group. A helper whose own party retreats follows the actual-contact casualty rule. Artwork should show the result delivered by the event log rather than infer survival from a generic retreat animation.
+All cosmetic renditions keep the same meaningful target boundary. Riot's published VFX process likewise treats inaccurate indicators as a primary problem and carries corrected sizes across skins; Hapa applies that principle to a common effect contract. [REF02]
+Package the asset and its provenance together
+Deliver lossless RGBA PNG atlases, separate masks where supported, an editable source file and a versioned manifest. The manifest records asset identity, content hash, file dimensions, cell dimensions, frame coordinates, pixels per unit, foot anchor, views, animation frame lists, frame rates, loop flags, sockets, material layers and approved fallback. Bound dimensions, decoded memory, texture count, clip duration and particle requests through a content profile. Validation should give a specific error for a missing view or out-of-range frame.
+Keep the original inspiration references, the prompt or prompt history, prompt author, generation settings available from the tool, generated image artifacts, edited derivatives, artist credits, source Hapa Cards and parent asset identities. Preserve the lineage through atlas slicing and later revisions. Search and filter by those fields. Do not replace the original artifact with the final cropped sheet or treat a generated output as evidence that its characters and equipment are already consistent across views.
+For generated concept imagery, request controlled views, a neutral backdrop, a shared silhouette and explicit equipment handedness. Treat the output as source material. A human or image-processing pass still needs to verify the turnaround, repaint inconsistent anatomy, align anchors and separate frames. Do not accept a montage containing invented labels as an importable sprite sheet. Exact rules, icons and frame coordinates come from the manifest and authored assets.
+Lumina accepts a texture and a SpriteSheet description containing frame dimensions, columns, rows, optional pixels per unit and anchor, and named animations with frame coordinates, rate and looping. Its pixel texture helper uses nearest magnification, with different minification choices available for sprites and world materials. Those are reusable foundations; a verified external-image loader, Hapa manifest importer and eight-view resolver are new integration work. [LV04, LV05, LV06]
+Treat alpha and glow deliberately. The inspected combat shader reserves partially transparent texels, including alpha 204, for selective emissive behavior after its alpha test. Ordinary soft transparency in an imported PNG could therefore glow unexpectedly. The initial importer should either enforce the documented binary-alpha and reserved-glow convention or use a separately implemented explicit glow mask. Record which convention the asset uses. Never assume a standard external emissive map is already supported. [LV04]
+Load and verify assets before match use where practical. A missing cosmetic asset may use an agreed neutral placeholder with the correct role, owner and source identity. Missing executable behavior is a different error and cannot be repaired by choosing a similar-looking effect. Presentation assets must not introduce arbitrary opponent-supplied code. These boundaries preserve both attribution and identical rules while letting authors experiment with art.
+A recipe for a character generation brief
+Start with an approved Hapa identity and a concrete battlefield role. Supply references for the character, equipment and material style, then request one controlled proof view. A useful brief reads as follows:
+“Create a full-body Hapa Swordsman with Shield rendition of the supplied identity. Preserve the face, costume identity and proportions of the approved reference. Use brushed-pixel comic painting with broad material planes, selective structural ink, navy cloth, worn leather and restrained aged metal. Sword in anatomical right hand; shield on anatomical left arm. Calm ready pose, feet on one shared baseline, camera pitched 50 degrees down toward the character, three-quarter front view. Neutral even background, no scenery, no lettering, no frame, no particles, no dramatic cast shadow. Keep the silhouette legible at the final tactical size. Leave clear space around the spear or blade and head. This is concept source material for a manually verified sprite, not a ready-to-import atlas.”
+For the opposite view, reuse the approved identity image and ask for a true turnaround. Do not ask the model to mirror the first result. Check anatomy, gear handedness and material continuity before requesting additional views. The export pipeline, not the prompt, supplies exact frame dimensions, transparent margins, anchors and animation coordinates. A failed view is repaired or rejected before it becomes a reusable source for later generations.
+A recipe for an effect brief
+The effect brief begins with rules: “Magic channel, Red identity, incoming Front face, one accepted hit, exact target footprint supplied, response window before resolution.” Then describe its presentation: “Contained ember source, a clear forward travel shape, one angular local burst, short decay, no expanding damage-looking ring beyond the supplied footprint, no fullscreen flash.” End with required renditions: “Normal, reduced motion and reduced effects; identical source, target boundary and outcome labels.”
+For a terrain effect, replace the hit fields with the exact cube or surface IDs, old and new solid/void state, support and roof changes, work duration and allowed traversal changes. For an Enchantment, provide the source bank instance, binding rule, affected rows or objects, lifetime and stacking result. The artist should be able to answer what persists after the introductory animation ends.
+The minimum handoff package
+Every asset handoff contains an editable source, lossless export, immutable asset identity, hash, Card or character lineage, artist or prompt-author attribution, exact prompt history when generated, dimensions, anchors, view names, animation declarations and any mirror permissions. An effect also includes its legal-boundary example and normal/reduced presentation captures. A terrain set includes exposed face, floor, roof and cut-edge examples at the same material scale.
+Record review failures as specific corrections: “The shield moves from left arm to right during the rear view,” “The pending spell appears to hit before Pass,” or “The tunnel marker projects onto the roof.” Avoid vague approval labels such as “more epic” without identifying the visual change. This vocabulary lets a human or agent improve the artifact without changing its gameplay meaning.
+14 Sound accessibility and readable text
+Give effects recognizable timbre before adding volume. Physical contact uses brief material sounds: a shield knock, string release or dull stone impact. Magic uses a tonal onset and a shaped decay. Earth work uses a scrape and falling grains. A successful resource mint uses a short ledger-like chime; replacing an occupied slot adds a visible replacement label rather than an alarming failure sound. A response request needs a restrained attention cue, distinct from victory or damage.
+Use spatial panning as reinforcement, not the only way to identify a source. Camera rotation can change screen-relative panning while the caption and coordinate remain stable. Avoid asking players to memorize eight musical pitches to identify colors. A source label and emblem carry the identity; a subtle color-associated motif may enrich it. Black-themed effects must not become inaudible, and a White effect should not play a healing-success cue unless healing actually happened.
+Prioritize important sounds when many parties act together. Mix simultaneous impacts into a controlled group while preserving separate inspection records. Duck ambience around a response request and allow independent levels for music, ambience, effects and interface cues. Provide captions for meaningful sound events and a quiet mode that retains visual information. Lumina already has procedural WebAudio, named cues and separate audio buses; the Hapa event-to-cue map and custom authored media import remain integration tasks. [LV14]
+Provide controls for bloom, particles, camera shake, animated UI emphasis and motion reduction. Camera shake starts at zero in the tactical profile. Reduced motion replaces sweeping row traces with immediate boundaries and uses static response markers. Important information remains available with sound muted and with decorative motion disabled. Microsoft XAG 103 supports redundant visual and audio channels, and XAG 117 supports control over distracting motion; these are design references, not a claim of complete accessibility certification. [REF04, REF05]
+Avoid rapid full-screen flashes and repeated saturated-red strobes in the base effect vocabulary. Review combinations of effects, not only isolated clips: several individually restrained hits can combine into a distracting flash pattern. W3C's flash guidance considers frequency, area and luminance; checking each clip's flash count independently does not evaluate the combined image. The default Hapa recommendation is to communicate impact through shape, displacement, sound and a localized emphasis rather than a screen-wide flash. [REF07]
+Acceptance should use representative scenes: the complete opening army, simultaneous exchanges away from active columns, an asymmetric shield bearer during a full camera orbit, stacked parties with a roofed tunnel, exposed-pit income interruption, a helper returning home, six Above arrows, a paused counter window, shared-health maintenance loss and an exhausted deposit revisited. Check each at the normal battlefield zoom, in grayscale, with sound muted and with motion reduction enabled. Confirm that the same rule result remains legible.
+The performance test is a measured scene, not an unsupported frame-rate promise. Record visible sprites, animated layers, transparent overdraw, texture memory, particles, lights and frame time on declared machines. Reuse materials and atlases, pool effects and reduce decorative density before hiding meaningful state. The inspected engine has a four-light VFX pool and does not automatically batch every gameplay sprite; production budgets must respect measured capacity and any renderer work added to the fork. [LV10, LV15]
+Deliver the visual kit as source files, validated export assets, manifests, semantic examples and capture-based acceptance cases. This makes the art reusable by people and agents: they can see what a mark means, know which rule event drives it, and trace every final sprite back to its authored or generated source.
+Practical color and typography tokens
+The starting interface palette uses slate #17212D and ivory #F5F0E3, with secondary slate #9AA8B2. The identity accent values are recorded in the visual grammar chapter and plate. Calculated solid-color sRGB contrast is approximately 14.29 to 1 between ivory and slate. Black #40394B against slate is only about 1.47 to 1, while White #F3E9D2 against ivory is about 1.06 to 1. Therefore Black needs an ivory rim and White needs a dark rim. These calculations concern flat token pairs; they do not certify a finished interface. [REF03]
+Use slate text on colored chips, ivory text on slate, and a high-contrast keyline around essential world marks. Avoid small accent-colored text directly on ivory: most proposed accents have weak contrast there. Test final composited scenes because lighting, opacity, bloom and adjacent terrain change the effective result. Grayscale checks supplement testing with players who perceive color differently; they are not an accessibility certification.
+Use a clear sans-serif family for rules and interface text, with tabular numerals for ranks, resources and timers. A display face can identify the game or a large Card title, but never carries dense rules. Proposed runtime text sizes start around 16–18 interface pixels for body copy and 20–24 for decision headings at the reference layout, with scalable text and reflow. The document's enlarged wireframe labels are an explanatory drawing, not the final typographic scale. Do not shrink text to make all card prose fit nine compact slots.
+15 Rendering architecture and performance
+Preserve one physical world beneath every view
+The shared game rules calculate positions, contact, terrain, resources and outcomes. Rendering receives that state and displays it. Camera motion, changing a slice, fading a roof, disabling bloom or skipping an animation must never alter a position, target, supply connection or match record.
+Create a presentation adapter that gives each visible member its stable identity, world position, world-facing direction, occupied band, movement mode, supporting surface and artwork reference. A party also exposes its center, occupied local slots and authoritative footprint. The renderer may interpolate a resolved trajectory, but it must not invent a different route because a sprite overlaps a decorative rock.
+Define the coordinate conversion once. Lumina uses X and Z across the ground and Y upward; its existing map tile is one world unit. Hapa's physical geometry includes member widths, a three-by-three formation and the gap between territories. These are distinct scales. Convert Hapa positions into render units through one documented function, and use its inverse for picking. The art's foot anchor must meet the member's supporting floor even when a large cape or weapon extends beyond its logical body. [LV01, LV04]
+Terrain enhancements should attach to identified surfaces or volumes. A fortified tile, enchanted floor, mined deposit and temporary ice sheet should each retain an identity, owner, affected area and lifetime from the rules. Their artwork may change with the theme. Filling a mined cavity must not visually suggest a renewed deposit if the deposit record says it was extracted.
+Full orbit without changing facing or ownership
+Allow the player to turn completely around the board, adjust pitch, zoom and restore a familiar home view. Use a stable board or selected-party pivot. Keep the current coordinate orientation and selected height band visible, and provide a direct reset. Camera orbit is a viewing action; it never rotates formations, changes column numbering or transfers the player's home edge.
+CameraRig already has configurable free yaw, eased framing, zoom and continuous scripted orbit. Its ordinary default limits yaw, so Hapa must deliberately select its full-orbit behavior and board controls. The existing Player stores a world-facing vector and refreshes its idle sprite when the camera turns. Generalize that pattern to all members, including stationary, engaged and underground members. [LV02, LV03]
+Keep two directions separate: the direction the member faces in the world and the artwork view selected for the camera. Sprite3D already chooses among four camera-relative directions with hysteresis, which prevents rapid switching near a boundary. It preserves the current animation phase when changing direction. An eight-view art set is a reasonable production proposal for smoother orbit, but needs an extended selector and atlas contract; it does not add eight legal formation facings to the rules. [LV04]
+Do not mirror asymmetrical art automatically. A shield, sword, insignia or damaged limb must stay on the correct side of the body. Record which views may be mirrored and provide separate frames when they cannot. Test a stationary unit through a complete camera turn and through every animation transition. For a steep tactical overhead view, offer clear footprint tokens and facing arrows: an upright billboard becomes difficult to read near overhead. An orthographic camera would be an explicit extension because the current rig is built around a perspective camera. [LV02, LV04, LV06]
+Pixel stability and the brushed material style
+Lumina's bundled art uses sixteen texels per world unit and ordinary character frames of thirty-two by thirty-two pixels. SpriteSheet accepts its own frame size and pixels-per-unit, so these are starting asset conventions rather than mandatory Hapa resolutions. Larger art can retain the same world footprint by declaring the appropriate scale. Choose Hapa's character proportions and brush-cluster density at the actual tactical display size before producing many assets. [LV04, LV06]
+Nearest-neighbor texture magnification preserves sharp painted clusters. World textures can use filtered mipmaps to reduce distant shimmer, while the existing sprite convention uses nearest sampling without mipmaps. Use color space correctly: painted color is sRGB; masks and normals are data. Test atlas padding, transparent edges and distant silhouettes under rotation, not only in an enlarged art sheet. [LV05]
+A perspective world cannot maintain one integer screen pixel scale for every surface at every angle and distance. Therefore, do not promise perfect pixel alignment during arbitrary orbit. Stabilize anchors, camera easing, texture density and interface placement; keep selection outlines and text legible. Let smooth physical trajectories remain smooth. Snapping authoritative movement to the camera's pixel grid would change gameplay, and snapping every visual member independently can make a formation appear to deform.
+Treat a lower-resolution world compositor as an optional measured style mode. Compare it against native-resolution brushed textures using the same scene and camera path. Adopt it only if it improves the desired look without erasing slots, gaps, surface marks or distant members. Global pixelation is not the mechanism that makes Hapa's materials feel painted.
+A board with excavatable volume
+Original ground is the boundary at height zero. The three occupied bands above it cover heights zero to one, one to two and two to three; the underground bands cover minus one to zero, minus two to minus one and minus three to minus two. A party remains a horizontal three-by-three arrangement. A walking party on a hill and a flyer may share a height band while using different movement modes and support relationships.
+Lumina's TileMap constructs terrain tops, sides and stairs from a height field. Its height query returns one top height or the highest bridge-like walk surface at a horizontal location. That is useful for an exposed plateau but cannot represent a usable tunnel beneath an intact roof. Adding negative heights would produce lower terrain, not a volumetric excavation system. [LV07]
+Build a volume presentation layer from the rules' solid cells, empty spaces, supporting floors, roofs and connections. Emit only exposed faces, grouping them by material and manageable region. Reuse MeshBuilder's face construction and world-scaled texture conventions where appropriate. A digging event changes the authoritative volume first; the renderer refreshes the affected faces, neighboring boundaries, selection surfaces and shadows. Keep a precise preview or pending outline visible if mesh rebuilding is spread over frames. [LV07, LV08]
+Provide three cooperating inspection tools. The normal view shows the dimensional surface. Selecting an underground object opens a local cutaway exposing its floor and connected space. A layer control isolates a band while retaining context for the ground boundary, entrances and other occupied bands. Use vertical guides and explicit band labels where several objects share a horizontal location.
+Prefer a clean, opaque selected floor with cut edges over a stack of translucent floors. Mark removed roofs with restrained hatching or a ghost boundary and label the view as a cutaway. Other public occupants remain discoverable through layer badges or the roster. The first iteration has public information; terrain occlusion is a presentation problem, not permission to conceal an enemy.
+Removing a roof from the view does not remove it from the game. A unit in a roofed tunnel still differs from one standing in an exposed pit. The inspector must state the actual support surface, whether overhead ground is intact and whether the party interrupts supply. Area previews and shot traces use the same physical surfaces as the rules, including roofs that block attacks. Camera cutaways must never imply a newly legal attack path.
+Transparency and surface-aware effects
+Ordinary Sprite3D bodies are alpha-tested cutouts that write depth. They use a separate shadow proxy and contact shadow. The engine also offers dither fading, including a body-only fade that retains its shadow, and the game has a player x-ray silhouette. These are useful components for occasional obstruction; they do not implement the entire underground view. [LV03, LV04]
+Keep ordinary unit bodies and selected floors opaque. Reserve translucent effects for specific visual jobs such as a brief magical veil or an inspection ghost. Define their depth behavior and drawing order explicitly. Overlapping transparent quads, particles, water and cut surfaces must be tested from all camera directions. A layer number or outlined footprint should remain readable when the atmospheric effect is disabled.
+GroundMarkers already supports instanced circles, sectors, lanes, rings and rectangles, with patterns tied to world-space pixels. Its draping data contains one height per horizontal position. Hapa must bind a marker to the affected surface or volume instead: a tunnel-floor effect cannot be placed on the roof above it. Split a preview across distinct affected surfaces and preserve an accurate hard boundary beneath any soft particles. [LV09]
+Use the same principle for row Enchantments and column effects from Major Arcana. The bank icon identifies the source; an edge band or restrained surface pattern identifies the affected row or column. Selecting the effect can strengthen that pattern and explain its extent. Continuous opaque carpets of light would cover the formations that the player needs to inspect.
+Light and shadow that support tactical reading
+Reuse the renderer's dimensional light, textured shading and contact grounding. Lumina supplies a directional shadow map with a texel-snapped center, wrapped sprite lighting and separate sprite shadow proxies. Point lights do not cast shadows. Its effect lights come from a fixed pool, which avoids recompiling lit materials as the number of lights changes. These are useful implementation patterns, not guaranteed capacity figures for Hapa. [LV04, LV10]
+Give every grounded member a clear relation to its actual floor. A flyer needs an altitude cue or projection marker that cannot be mistaken for ground occupancy. Avoid dropping a tunnel member's contact mark onto the surface above. The sun-facing sprite proxy uses the current displayed frame; check for obvious shadow popping during orbit, and treat its shape as stylized visual grounding rather than an exact body reconstruction.
+Keep strategic colors recognizable in light and shadow. Terrain can have warm or cool painted variation, but the semantic color chips, suit symbols and ownership indicators should stay stable. Underground inspection needs enough fill light to distinguish members and terrain connections. That fill is a viewing aid and does not create illumination-based gameplay rules.
+Choose cutaway shadows independently from cutaway geometry. A visually removed roof may continue casting an appropriate enclosing shadow, while controlled inspection fill reveals the floor. Another acceptable presentation may simplify that shadow while retaining a roof indicator. Either choice must preserve the actual roof in rules and picking data. Shadow darkness never substitutes for a line-of-sight explanation.
+Postprocessing and the interface compositor
+The existing PostFX chain renders an HDR scene, optional scene stage, depth of field, bloom, tone mapping and grading. Ordinary defaults include depth blur, grain, vignette and chromatic aberration; an additional cinematic mode adds further treatments. Those controls should be explicitly tuned for the tactical view. [LV11]
+Propose a clarity-first match preset: disable tactical depth blur, grain and chromatic aberration, avoid a vignette that darkens reserve banks, and keep bloom restrained. Preserve the appealing material light and depth. Stronger cinematic treatments can belong to an optional inspection or replay view, but returning to play must restore the clear preset without hiding a new command opportunity.
+Separate semantic information from the beauty treatment. Cards, resource quantities, Ready states, warnings, focus outlines and layer labels belong in a sharp interface above world postprocessing. For a world-anchored legal boundary, either composite a depth-aware semantic pass after grading or use a carefully tested world marker plus a sharp explanatory overlay. A new semantic pass is proposed work; the existing engine should not be described as already providing it.
+Lumina's current UI is HTML over the canvas. Its art scale follows whole device pixels, and its pooled world labels avoid HUD rectangles. Those labels intentionally lack depth occlusion. Hapa must therefore add layer-aware eligibility, leader lines and overlap resolution rather than projecting every underground label over the surface indiscriminately. Preserve the distinction between a screen control, a location marker and a public off-layer indicator. [LV12]
+Controls and presentation events
+Reuse named keyboard and pointer actions, then supply Hapa-specific bindings and focus behavior. A camera drag, a party selection, a card action and a Ready press are different intentions. Panning or orbiting must not issue a destination. Scrolling a Card inspector must not zoom the board. Keep a keyboard route to party selection and command entry so selecting a tiny moving sprite is never required. The engine's existing input abstraction supplies useful primitives, while its ARPG bindings remain examples. [LV13]
+Drive combat and spell presentation from resolved event identities and simulation timestamps. Artwork may show a simultaneous exchange in a readable sequence, but the event's hits and losses remain simultaneous. Animation-end callbacks cannot award damage, spend Supply or advance the game. Seeking a replay rebuilds the visible state and presentation timeline without duplicating particles, sounds or floating numbers from earlier playback.
+AudioSystem already provides gesture unlock, named effects and separate sound, ambience and music controls. Map Hapa events to clear cues for targeting, replacement, supply delivery, digging and resolved impact. Include visual equivalents and a quiet/reduced-effects option. Music or audio availability never controls whether a command resolves. [LV14]
+Asset and runtime boundaries
+The existing game paints much of its world art procedurally. Sprite3D can consume an external texture in its sheet contract, but a complete Hapa media import and attribution pipeline is new work. Each imported rendition needs an immutable identity, source attribution, dimensions, frame layout, anchor, physical scale, view directions, animation mappings, color-space settings and explicit mirror permissions. Keep those rendering declarations separate from the Card's executable effect. [LV04, LV06]
+Validate the asset before play, warm its required materials, and substitute a legible neutral fallback if a rendition fails. A missing image cannot remove a member or conceal a Card's rules. The current combat shader treats alpha 204 as a glow signal; normalize imported cutouts to the chosen convention or add an explicit emissive-mask path. Do not accidentally interpret every partly transparent brush edge as magical emission. [LV04]
+Keep arbitrary creator animation code outside the authoritative rules. A visual descriptor selects supported presentation operations and assets. Its duration, camera shake and particle intensity can follow accessibility preferences while preserving event identity, target boundaries and outcomes.
+Performance work and acceptance
+Begin with a representative scene containing both complete armies, all banks, multiple occupied height bands, asymmetric sprites, an excavation, overlapping row and column effects, and public command previews. Use the same scene for art decisions, camera checks and profiling. It must include the demanding combinations rather than only an attractive empty board.
+Measure scene submission, shadow cost, postprocessing, texture memory, mesh rebuilding, sprite updates and DOM work separately. Existing SpriteManager updates objects individually; BlobBatch batches contact shadows. The editor has an instanced SpriteBatch, but it excludes combat effects and unlit sprites and falls back during dithering. Extracting and adapting that path may help after profiling; assuming every Hapa member is already batched would be inaccurate. [LV15]
+The existing resolution governor can reduce rendering cost, but its upstream thresholds are not Hapa targets. Test stable quality presets before allowing adaptive changes that visibly alter brush clusters during planning. Reduce decorative particles, reflection work or cinematic effects before removing required markers. Record hardware, operating system, browser/runtime, viewport, device scale, content hash and quality settings with each capture. [LV16]
+The first visual acceptance set should demonstrate these observable results:
+A stationary asymmetric unit keeps its world-facing direction, correct equipment side and animation phase through a complete camera orbit. Its footprint stays attached to its real slot.
+A surface party, flyer and tunnel party at one horizontal location remain individually selectable, with correct height and support labels. Switching views changes no rules-state digest.
+Digging a pit and then a roofed tunnel exposes the intended geometry. The roof still blocks ordinary attacks and affects exposed-ground supply eligibility after it is removed from the view.
+Every ordinary occupied slot, empty slot, contact edge and formation front remains readable at the agreed tactical zoom. Reduced effects and reduced motion retain that information.
+Enchantment, column and spell previews touch the surfaces they actually affect. Their boundaries remain accurate with bloom and particles disabled.
+Public Card uses, mint replacement, loaded Supply and expiring Mana remain readable during camera motion and effect overlap. The interface stays sharp on the selected PC and Mac display configurations.
+Replay seeking, interrupted animation and quality changes preserve the same event outcomes without duplicate presentation events.
+Record failures as concrete adjustments to art, projection, layering or performance. These checks support iterative friends-and-family play and automation; they do not impose a fixed launch scope or turn unmeasured frame budgets into product promises.
+16 Prototype sequence acceptance and decisions
+Build one demanding visual test scene first
+Begin with the complete opening roster: eighteen parties per player and 162 members total. Prepare a second dense inspection state using those existing member identities, with compatible parties merged and selected parties placed in the terrain and flight demonstrations. Record its actual party count; merges reduce that count without creating additional members. Include all rear and side banks, an asymmetric shield-bearing member, an empty Pawn center, a merged nine-member party, a contact strip, one open shaft, one roofed tunnel, a raised supported surface, a flyer and two crossing persistent effects. Use explicit test data for this prepared state; it is not the ordinary opening.
+Record one camera orbit and a repeatable sequence of selections, layer changes, resource minting, Supply loading, movement, formation inspection, digging and spell response. Use the same scene at every proposed art quality level. This gives artists and agents a shared reference for what “readable” means. An isolated hero on an empty tile is useful for material work, but cannot prove the full game is understandable.
+Deliver the visual system in successive working slices
+Slice 1 establishes truthful geometry and interaction. Draw the field and banks with proxy materials, show stable party anchors and member footprints, implement full orbit and layer-aware picking, and prove the surface/shaft/tunnel/flyer distinction. Present public plans and exact costs with plain components. Completion means camera and inspection changes leave the rules digest unchanged and every public party remains selectable.
+Slice 2 establishes the Hapa material and sprite language. Finish one representative terrain set, one asymmetric member in two opposed views, one Card face, one bank and the standard UI typography. Test them at Overview, Tactics and Inspect before expanding to eight sprite views or a large roster. Completion means the same member, face direction and target remain recognizable across views and themes.
+Slice 3 establishes the full visual vocabulary. Add all alignment/suit glyphs, owner marks, persistent effect treatments, response presentation, production tracing and the three Minor Arcana actions. Add the excavation, extraction, crafting and equipment demonstrations. Completion means a player can explain why an outcome happened using the interface rather than developer narration.
+Slice 4 adds spectacle and validates scale. Add signature effects, restrained audio, optional replay framing and the onboarding path. Profile the full-army scene and inspect reduced-effects, large-text and reduced-motion settings. Completion means those settings preserve identical selectable targets, costs and rule explanations. Visual polish may not delay the foundational rules experiments in v3, but effects that communicate an incorrect rule must be corrected before people test that mechanic.
+Observable acceptance criteria
+Review area
+Required observation
+Spatial truth
+A viewer distinguishes a grounded hilltop member, a flyer, an exposed pit member and a covered tunnel member without inferring from height alone.
+Orientation
+A full orbit preserves target identity, global coordinates, formation front, equipment handedness and stable dock order. Reset returns to a familiar home view.
+Resource clarity
+A player explains why an R2 Wands Card has Supply but zero Mana, and traces the separate payload of the R6 example to its contributing rows.
+Timing
+The UI identifies the prologue, the current Round and active columns; planning and response choices do not appear to consume simulation time.
+Card use
+Supply loading, Mana burning and attached-ability use are distinct actions with explicit payment and target summaries.
+Terrain
+Pending work looks different from completed work. A visual cutaway retains the logical roof. Re-excavation cannot look like a replenished deposit.
+Combat
+Separate hits, channel, incoming face, protection source and health mode can be inspected; a decorative animation never becomes the damage calculation.
+Dense state
+All 162 members can be located through party and slot inspection; overlapping effects remain attributable without making the field opaque.
+Accessibility
+All decisive states are available without color-only distinctions, forced camera motion, audio-only alerts or tiny-sprite pointing.
+Replay
+Seeking or skipping effects reproduces the same visible state and outcomes without duplicated costs, sounds, rewards or casualties.
+
+Questions that remain after this design pass
+These questions are bounded prototype decisions. They do not prevent an agent from beginning the truthful geometry, rules-driven UI and proxy-art slices. Each question includes the context needed to answer it without reading another chapter.
+Which default camera makes a crowded battlefield easiest to understand? The game has nine columns, ten baseline rows, six height bands and many small members. Lumina currently uses a perspective camera. Start with the proposed 50-degree three-quarter view and compare it with a higher tactical view using the same full-army scene. Decide whether the perspective default is sufficient or whether an orthographic tactical view merits implementation. Choose after players locate a tunnel occupant, identify a formation front and select a precise target from both sides; do not choose from an empty-board beauty shot.
+How much character detail survives the actual play distance? The proposed art trial uses larger brushed-pixel source cells than Lumina's bundled sprites. At Overview, member role, facing and party membership matter more than facial detail. Approve a two-view proof of one shield bearer and one ranged member at the actual display scale before generating a full roster. The decision sets sprite dimensions, brush-cluster density and the threshold for replacing distant bodies with clear tokens; it does not change physical member size or roster composition.
+Which territory-enhancement Card should demonstrate the visual language first? Digging, extraction and sample armor have executable fixture rules, while “enhance territory” covers several possible operations. Select one authored effect with an exact area, source, duration, stacking behavior and modifier before artists imply a specific bonus. A movement modifier, a directional fortification and an income change need different footprints and explanations. Until that definition exists, use labeled visual studies rather than an unpriced playable buff.
+Which computers and display sizes define the first performance target? The source build passed, but this review obtained no runtime performance measurement. Name the initial PC and Mac configurations, viewport sizes and acceptable quality presets, then profile the same dense scene. A provisional ambition is smooth 60-frame-per-second presentation with a readable reduced-effects mode; it is not a verified requirement or hardware promise. Decide measured budgets before broad content production makes expensive effects difficult to revise.
+What must remain visually constant across collectible variants? Hapa Cards may have distinctive illustrations and creator attribution. For competitive readability, role silhouette, world-facing cues, exact effect boundary, channel marks and source identity must remain recognizable across variants. Approve a base unit and two deliberately different cosmetic renditions using the same action. The decision can permit expressive portraits and materials while fixing the small set of gameplay signals that every rendition must preserve. No variant gains an unclear target boundary or a more distracting persistent aura because it is rarer.
+The design companion is ready to guide implementation of the first slices with these defaults. Final visual lock should follow the small comparative tests above. The outcome should be a versioned presentation profile and approved asset examples, so human artists and development agents can make the next hundred choices consistently.
+17 Evidence and source register
+This companion was prepared on 21 November 2026, using the supplied v3 requirements and a pinned Lumina source inspection. Gameplay statements refer to that requirements snapshot. External design sources support the cited principles; the proposed Hapa interface, palette, art recipes and timing values are design recommendations.
+REQ03 Gameplay authority
+Hapa Versus Master Requirements v3, supplied by CJ. The attached DOCX is 1,123,861 bytes. SHA256: 64c910803e0791c7c89d4c92ecdddc5f255c72f94a5ce6bb60609ef48dbbe91d. Its configurable fixture values remain configurable; this companion does not convert them into final balance.
+Hapa Versus Master Requirements v3
+HC01 Hapa visual continuity
+CJ's earlier Hapa discussions included the descriptions “Pixel-ish + Comic book,” “less anime and a little more brushed pixel,” and an authored high-resolution visual world. Retrieved context also preserves the requirement to retain inspiration, prompts, prompt author and image artifacts for provenance. Detailed material, camera and production choices in this companion are recommendations developed from that continuity. Earlier assistant-generated style proposals are not treated as additional approved gameplay rules.
+REF01 Riot Games Clarity in League
+Visual hierarchy, readable silhouettes and the relationship between attention and gameplay importance.
+Open primary source
+REF02 Riot Games Behind the Scenes of VFX Updates
+Effect boundaries, clarity priorities and consistent indicator changes across cosmetic variants.
+Open primary source
+REF03 Microsoft Xbox Accessibility Guideline 102 Contrast
+Contrast and configuration of important text and visual elements. Flat palette ratios in this companion are calculations, not a conformance assessment.
+Open primary source
+REF04 Microsoft Xbox Accessibility Guideline 103 Additional channels
+Use additional visual and audio channels rather than depending on one sense or hue alone.
+Open primary source
+REF05 Microsoft Xbox Accessibility Guideline 117 Visual distractions
+Controls for camera motion, animated content and distracting interface movement.
+Open primary source
+REF06 W3C Understanding Use of Color
+Color-independent meaning through text, shape and other visible cues.
+Open primary source
+REF07 W3C Understanding Three Flashes or Below Threshold
+Review flashing across the combined output rather than counting each individual effect in isolation.
+Open primary source
+LV01 Engine setup and coordinate conventions
+src/engine/core/Engine.js 60–114; src/engine/constants.js 1–35.
+src/engine/core/Engine.js
+src/engine/constants.js
+LV02 CameraRig
+src/engine/core/CameraRig.js 82–143 (settings); 213–234 (rotate/zoom); 403–468 (framing/orbit); 588–600 (camera-relative basis).
+src/engine/core/CameraRig.js
+LV03 Player world facing and x-ray
+src/game/Player.js 43–80 (silhouette); 161–162 (world facing); 427–437 (idle orbit refresh).
+src/game/Player.js
+LV04 Sprite3D
+src/engine/sprite/Sprite3D.js 148–187 (glow); 298–309 (sheet); 330–475 (options/material/quad); 476–510 (shadows); 536–565 (cutout); 615–675 (fades); 804–817 (mirrors); 877–905 (direction phase); 984–1030 (billboards/direction calculation).
+src/engine/sprite/Sprite3D.js
+LV05 Procedural pixel buffer and texture sampling
+src/engine/pixel/PixelCanvas.js 5–14; 480–529.
+src/engine/pixel/PixelCanvas.js
+LV06 Character generators and current art conventions
+src/engine/pixel/CharacterSprites.js 1–11; 80–85; 3631–3725. docs/design/VISUAL_DESIGN.md 56–79. docs/architecture/modules/pixel.md 1–29 describes procedural shipping art, not every file in the repository; documentation screenshots are image files.
+src/engine/pixel/CharacterSprites.js
+docs/design/VISUAL_DESIGN.md
+docs/architecture/modules/pixel.md
+LV07 Heightfield terrain and incremental updates
+src/engine/world/TileMap.js 237–317; 626–694; 1430–1469; 1536–1597.
+src/engine/world/TileMap.js
+LV08 MeshBuilder and terrain module explanation
+src/engine/world/props/MeshBuilder.js 5–22; docs/architecture/modules/world.md 15–24, 101–119.
+src/engine/world/props/MeshBuilder.js
+docs/architecture/modules/world.md
+LV09 GroundMarkers
+src/engine/fx/GroundMarkers.js 5–66, especially 12–25 one heightfield and 45–46 world-space texel grid.
+src/engine/fx/GroundMarkers.js
+LV10 Lighting and effect light pools
+src/engine/lighting/LightingSystem.js 314–398; 610–613; 859–895. src/engine/lighting/VfxLights.js 16–51, 86–109.
+src/engine/lighting/LightingSystem.js
+src/engine/lighting/VfxLights.js
+LV11 PostFX
+src/engine/render/PostFX.js 37–79; 201–264; 455–542. docs/architecture/RENDER_PIPELINE.md 74–98 and 201–225.
+src/engine/render/PostFX.js
+docs/architecture/RENDER_PIPELINE.md
+LV12 UI overlay and world-label projection
+src/engine/ui/UI.js 106–137; src/engine/ui/WorldLabels.js 17–79; src/engine/ui/UiScale.js 1–34 and 74–88.
+src/engine/ui/UI.js
+src/engine/ui/WorldLabels.js
+src/engine/ui/UiScale.js
+LV13 Input
+src/engine/core/Input.js 1–48 and 66–72.
+src/engine/core/Input.js
+LV14 Audio
+src/engine/audio/AudioSystem.js 4–35; 527–535; 618; 651–691; 743–750.
+src/engine/audio/AudioSystem.js
+LV15 Sprite update/batching distinction
+src/engine/sprite/SpriteManager.js 3–8 and 54–65. src/engine/sprite/BlobBatch.js 5–20. src/editor/viewport3d/SpriteBatch.js 57–90 and 157–164.
+src/engine/sprite/SpriteManager.js
+src/engine/sprite/BlobBatch.js
+src/editor/viewport3d/SpriteBatch.js
+LV16 Performance source context
+src/game/ResolutionGovernor.js 35–72. docs/architecture/PERFORMANCE.md 41–88. Upstream measurements are records on its stated Windows/GTX1060 setup, not independently reproduced here.
+src/game/ResolutionGovernor.js
+docs/architecture/PERFORMANCE.md
+LV17 Build/check/dependency evidence
+package.json; package-lock.json: Three at line 1463; puppeteer-core at line 1368; Vite at line 1535. tools/check.mjs 5–14, 36–44, 198–206, 259–269.
+package.json
+package-lock.json
+tools/check.mjs
+LV18 Upstream screenshot examples, visual evidence only
+Repository license was inspected at LICENSE, lines 1–21 (MIT; Copyright (c) 2026 Luminati); this fact does not certify unrelated external assets or generated creator content.
+docs/assets/screenshots/module-props-gallery.jpg
+docs/assets/screenshots/editor-3d-preview-postfx.jpg
+docs/assets/screenshots/cinderwatch-ruins-fight.jpg
+docs/assets/screenshots/module-character-sprites.jpg
+docs/assets/screenshots/module-postfx-sandbox.jpg
+docs/assets/screenshots/cinderwatch-party-tactics.jpg
+LICENSE
+Evidence limits
+The locked dependency install and production build passed at the inspected revision. Chromium failed before page load because a required socket operation was not permitted in the review environment. Therefore no fresh runtime rendering, frame-rate measurement, target-machine qualification or implemented Hapa visual feature is claimed. Upstream screenshots are credited as upstream examples. The new illustration and all labeled diagrams are design artifacts.
+Appendix A Illustration provenance and prompts
+The cover is an original generated art-direction study prepared for this companion on 21 November 2026. Prompt author: ChatGPT, working from CJ's request, earlier Hapa preferences and this design pass. Generator: the available image-generation tool. The illustration is not a Lumina runtime capture, a final Hapa asset, an exact board diagram or evidence that excavation and eight-view sprites have been implemented. Geometry diagrams and interface wireframes elsewhere in the companion define precise relationships.
+The first generated source was retained, then a second image edit changed only the two rear pedestal icons from playing-card symbols to a Wand and a Cup. The final image is embedded in the document. The source and edited image artifacts retain their generation records. No claim is made that a generative concept has consistent dimensions or production-ready character turnarounds.
+Original art direction prompt
+Create a premium art direction concept plate for HAPA VERSUS, a 2.5D tactical collectible-card battle game. Landscape 3:2 composition, no lettering, no logo, no UI text. This is an evocative close three-quarter view of part of a tangible cubic battlefield diorama, not a whole board coordinate diagram. The core style is HIGH-RESOLUTION BRUSHED-PIXEL COMIC BOOK: expressive but semi-realistic small tactical figures, less anime, intentional square brush clusters bound to surfaces, selective ink at structural seams, broad painted light planes, crisp silhouette edges. Not blanket low-res pixelation, not voxel people. Rich painted old-CRPG diorama with true dimensional lighting. Warm late-afternoon light against restrained cool slate shadows. Material-first: worn blue-grey stone platforms, slate and sandstone strata, weathered cedar bridges, linen, navy cloth, dull aged brass fasteners, deep green moss, dark blue water. Avoid excessive gold, glossy plastic, dense decorative runes, neon cyberpunk, chibi heads, film grain, chromatic aberration, depth-of-field blur. Keep the game surface clearly readable.
+The image centers on a handful of square territories on a coherent rectilinear grid, each with faint 3-by-3 position seams. Within some tiles are carefully spaced little tactical party members: a central caped hero, shield bearer, pikeman, archer, mage. At a near tile the earth has been cleanly excavated into an open square trench: vertical painted rock strata and small supported steps reveal three depths; at the lowest depth there is a quiet mineral seam. A roofed passage extends under a neighboring intact tile, visibly different from the open pit because an illustrative front-edge cutaway exposes its stone roof and walls. The cutaway is geometrically coherent; an above-ground unit stands on the intact roof. Make the board feel like an engineered relic built over living land, not a pile of disconnected floating cubes.
+One middle-right territory is being enhanced by earthy creative magic: a few stone ribs rise, moss and restrained green light follow the square's seams; its center and all troop silhouettes remain readable. A far-left tile has a tiny red ember spell with a clearly shaped directional travel trail; color effects are discrete signals, not whole-screen fireworks. In the upper air a single winged tactical unit hovers with a subtle broken projection stem to its actual square and restrained altitude chevrons. The air is mostly empty: no cage of wireframe cubes. Quiet opposing rear card pedestals are glimpsed near the edge, with abstract Tarot illustration backs and brass inset suit glyph shapes, no legible letters. Territory identities appear as thin local colored edge inlays, never giant rainbow floodlights. Only one major focal effect. Let the darkest empty background and uncluttered board margin frame the diorama. The result should feel exquisite, inhabitable, tactile, mythic and functionally understandable, with wow from layered construction and light, not bloom. No actual game screenshot claim.
+Icon correction prompt
+Keep this art direction image almost exactly unchanged: preserve composition, characters, terrain excavation, materials, light, colors, brushed-pixel style and clarity. Make just two icon corrections so the tabletop relic belongs to a Tarot-based Hapa world instead of standard poker. On the brass plaque beneath the left rear large card, replace the black spade symbol with a simple black silhouette of one upright wooden WAND with a small leaf, clean and iconic. On the brass plaque beneath the right rear large card, replace the black club symbol with a simple black silhouette of a CHALICE/CUP, clean and iconic. These should be etched solid dark icons, not letters. Do not add lettering or alter anything else.
