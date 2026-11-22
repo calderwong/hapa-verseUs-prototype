@@ -233,3 +233,31 @@ button.danger { background: #4A2A2E; border-color: var(--bad); }
 .card-sheet.setup .lede { text-align: center; max-width: 620px; margin: 0 auto 6px; }
 .card-sheet.setup details summary { cursor: pointer; color: var(--gold); margin-top: 6px; }
 #app:has(#overlay:not([hidden])) .area { filter: saturate(0.6) brightness(0.8); }
+
+/* inspector formation: the 3×3 drawn as stone slots, front edge marked; roles carry their color identity */
+.fgrid { grid-template-columns: repeat(3, 72px); gap: 3px; padding: 6px; background: #3B3024; border-radius: 6px; border-top: 3px solid var(--ivory); position: relative; }
+.fgrid::before { content: 'FRONT'; position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font: 700 9.5px var(--sans); letter-spacing: .12em; color: var(--ivory); }
+.slot { height: 56px; background: linear-gradient(160deg, #B3A794, #9C907C); border: 1px solid #1A140F; border-radius: 3px; color: var(--slate); box-shadow: inset 1px 1px 0 rgba(255,248,232,0.35), inset -1px -1px 0 rgba(18,13,9,0.35); }
+.slot b { color: var(--slate); font-weight: 800; letter-spacing: .02em; }
+.slot .sn { color: #4B4234; }
+.slot.center { border: 2px solid var(--brass); }
+.slot.empty { background: rgba(59,48,36,0.4); border: 1px dashed #7A6A54; box-shadow: none; }
+.slot.dead { background: repeating-linear-gradient(135deg, #5A3A34 0 6px, #4A2E2A 6px 12px); color: #F0D6CF; }
+.slot.dead b, .slot.dead small { color: #F0D6CF; }
+.slot:hover:not(.empty) { outline: 2px solid var(--ivory); }
+.hp { background: rgba(23,33,45,0.5); height: 6px; border-radius: 3px; }
+.hp i { background: linear-gradient(90deg, #5FAE74, #8FD3A0); }
+.role-swordsman { border-bottom: 4px solid #EF6A5B !important; } .role-pikeman { border-bottom: 4px solid #58B8F0 !important; }
+.role-archer { border-bottom: 4px solid #71BE83 !important; } .role-mage { border-bottom: 4px solid #E6A05D !important; }
+.role-priest { border-bottom: 4px solid #AA8DE1 !important; } .role-center { border-bottom: 4px solid var(--brass) !important; }
+
+/* roster and events */
+.rrow { border-radius: 4px; padding: 3px 6px; }
+.rrow:hover { background: rgba(245,240,227,0.06); }
+.rrow.sel { background: rgba(201,166,94,0.22); box-shadow: inset 3px 0 0 var(--brass); }
+.ev { background: rgba(245,240,227,0.05); border-color: #3A4D62; border-radius: 4px; color: #DCD5C5; }
+.ev:hover { border-color: var(--mist, #9AA8B2); }
+.ev-exchange { border-color: #B5675C; } .ev-card_minted { border-color: #5F8F6C; } .ev-member_died { color: #F2B2A8; border-color: #8A4A42; }
+.ev-helper_stepped, .ev-breach_advanced { border-color: var(--brass); }
+.kv > span:nth-child(odd) { color: var(--dim); }
+.fgrid { margin-top: 20px; }

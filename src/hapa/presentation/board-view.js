@@ -13,6 +13,7 @@ import { createCharacterSheet } from '../../../vendor/lumina/src/engine/pixel/Ch
 import { territoryColors } from '../rules/economy.js';
 import { TerrainView, bandY, textLabel, standingOf } from './terrain-view.js';
 import { paintGround, PX } from './ground-painter.js';
+import { HitFX } from './fx.js';
 
 export const S = 1.5; // world units per member width
 export const COLOR_HEX = {
@@ -77,6 +78,7 @@ export class BoardView {
     this._buildOverlays();
     this.terrain = new TerrainView(this.root, ctx, (x, y) => this.toWorld(x, y), S);
     this.terrain.onOpenCells = (cells) => this._punchGround(cells);
+    this.fx = new HitFX(this.root);
   }
 
   /** Repaint the surface and clear the member squares open to the sky. */
@@ -312,6 +314,7 @@ export class BoardView {
 
   /** Billboard + facing each frame. */
   update(dt, camera) {
+    this.fx.update(dt);
     for (const spr of this.sprites.values()) {
       if (!spr.visible) continue;
       const f = spr.userData.facing;

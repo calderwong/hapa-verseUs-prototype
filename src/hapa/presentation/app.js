@@ -279,6 +279,28 @@ export class VersusApp {
     });
   }
 
+  /** Hit marks for newly reached exchange and Card-damage events (at most 48 per batch). */
+  _spawnHits(events) {
+    const posOf = (id) => this.view.sprites.get(id)?.position ?? null;
+    const colorOfMember = (id) => activeCatalog.archetypes[this.state.members[id]?.archetype]?.color ?? null;
+    let n = 0;
+    for (const e of events) {
+      const hits = e.type === 'exchange' ? e.hits : e.type === 'card_damage' ? [e] : [];
+      const totals = new Map();
+      for (const hit of hits) { const t = totals.get(hit.recipient) ?? { damage: 0, hits: 0, seen: 0 }; t.damage += hit.damage; t.hits++; totals.set(hit.recipient, t); }
+      for (const hit of hits) {
+        if (n++ >= 48) return;
+        const to = posOf(hit.recipient);
+        if (!to) continue;
+        const from = hit.kind === 'card' ? null : posOf(hit.source);
+        const color = hit.kind === 'card' ? activeCatalog.cards[this.state.cards[hit.cardId]?.abilityId]?.color : colorOfMember(hit.source);
+        const t = totals.get(hit.recipient);
+        this.view.fx.hit(hit, from, to, color, this.ctx.U, { index: t.seen, total: t.seen === 0 ? t : null });
+        t.seen++;
+      }
+    }
+  }
+
   _stepPlayback(dt) {
     const pb = this.playback;
     if (!pb || pb.paused) return;
@@ -302,7 +324,7 @@ export class VersusApp {
     for (const m of Object.values(this.state.members)) if (!m.alive && !(m.id in pos)) pos[m.id] = [m.x, m.y, false];
     this.view.sync(this.state, k >= 1 ? null : Object.fromEntries(Object.entries(pos).map(([id, p]) => [id, p[2] === false ? [p[0], p[1], false] : p]).map(([id, p]) => [id, p])));
     for (const [id, p] of Object.entries(pos)) { const spr = this.view.sprites.get(id); if (spr && k < 1) spr.visible = p[2] !== false && (this.state.members[id]?.alive || !dead.has(id)); }
-    if (evLen > pb.shown) { pb.shown = evLen; this._renderEvents(); }
+    if (evLen > pb.shown) { this._spawnHits(pb.events.slice(pb.shown, evLen)); pb.shown = evLen; this._renderEvents(); }
     if (k >= 1) {
       this.playback = null;
       this.view.setWalking(new Set());
@@ -697,7 +719,7 @@ export class VersusApp {
     for (let slot = 1; slot <= 9; slot++) {
       const id = p.slots[String(slot)];
       const m = id ? s.members[id] : null;
-      grid.append(h('div', { class: `slot${m ? (m.alive ? '' : ' dead') : ' empty'}${slot === 5 ? ' center' : ''}`, onclick: () => { if (m) { this.selected = { kind: 'member', id: m.id }; this._renderAll(); } }, title: m ? memberName(s, m.id) : `slot ${slot} empty` },
+      grid.append(h('div', { class: `slot${m ? (m.alive ? '' : ' dead') : ' empty'}${slot === 5 ? ' center' : ''}${m ? ` role-${m.archetype}` : ''}`, onclick: () => { if (m) { this.selected = { kind: 'member', id: m.id }; this._renderAll(); } }, title: m ? memberName(s, m.id) : `slot ${slot} empty` },
         h('span', { class: 'sn' }, slot), m?.alive && m.helperAway ? h('span', { class: 'away', title: m.helperAway.kind === 'corner' ? `helping ${partyName(s, m.helperAway.helps)} in the contact strip` : 'advanced into an enemy gap' }, m.helperAway.kind === 'corner' ? '◇' : '▲') : null, m ? [h('b', {}, m.isCenter ? (p.mount ?? '★').slice(0, 3) : ROLE_ABBR[m.archetype]), m.alive && !p.pool ? h('div', { class: 'hp' }, h('i', { style: `width:${Math.max(0, m.hp / m.maxHp) * 100}%` })) : m.alive ? null : h('small', {}, '†')] : h('small', { class: 'dim' }, slot === 5 ? 'empty center' : '')));
     }
     const engagedWith = Object.values(s.engagements).filter((e) => e.active && (e.a === p.id || e.b === p.id)).map((e) => (e.a === p.id ? e.b : e.a));
@@ -709,7 +731,9 @@ export class VersusApp {
         h('span', {}, 'Global / home'), h('span', {}, `R${p.region.row}C${p.region.column} / R${local.row}C${local.column}`),
         h('span', {}, 'State'), h('span', {}, `${p.state}${p.mountLost ? ' (mount lost)' : ''}${engagedWith.length ? ` with ${engagedWith.map((id) => partyName(s, id)).join(', ')}` : ''}`),
         h('span', {}, 'Facing'), h('span', {}, `${p.facing}${p.turn ? ` → ${p.turn.to} at Tick end` : ''}`),
-        ...(() => { const st = standingOf(s, this.ctx, p); return [h('span', {}, 'Stands'), h('span', {}, `${st.label ?? 'surface ground'} · band ${fmtBand(p.band)} · ${st.exposed ? 'exposed (counts for income/blocking)' : 'not exposed (roofed)'}`, h('div', { class: 'dim small' }, st.note))]; })(),
+        ...(() => { const st = standingOf(s, this.ctx, p); return st.kind === 'ground'
+          ? [h('span', {}, 'Stands'), h('span', {}, 'surface ground (band +1, exposed)')]
+          : [h('span', {}, 'Stands'), h('span', {}, `${st.label} · ${st.exposed ? 'exposed (counts for income and blocking)' : 'not exposed (roofed)'}`, h('div', { class: 'dim small' }, st.note))]; })(),
         h('span', {}, 'Supply'), h('span', {}, `${pts(supplyOf(p))}${p.supply.length ? ` (${p.supply.map((x) => `${pts(x.units)} from ${x.cardId}`).join(', ')})` : ''}`),
         h('span', {}, 'Speed'), h('span', {}, p.mount ? `${this.ctx.profile.movement.speeds[p.mount].join('/')} step per Tick` : 'none (needs a Mount)'),
         h('span', {}, 'Destination'), h('span', {}, p.destination ? `R${p.destination.row}C${p.destination.column}` : '—'),

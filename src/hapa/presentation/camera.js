@@ -49,8 +49,8 @@ export class BoardCamera {
     this.goal.yaw = this.homeYaw;
     this.goal.pitch = 56 * DEG;
     this.goal.distance = this.board.size * 1.55;
-    // look a little past the center so the near home rows stay in view
-    this.goal.focus.copy(this.board.center).add(new THREE.Vector3(-Math.sin(this.homeYaw), 0, -Math.cos(this.homeYaw)).multiplyScalar(this.board.size * 0.04));
+    // aim a little toward the viewer's home edge so the near rows and the home banks stay in frame
+    this.goal.focus.copy(this.board.center).add(new THREE.Vector3(Math.sin(this.homeYaw), 0, Math.cos(this.homeYaw)).multiplyScalar(this.board.size * 0.07));
   }
 
   toggleTactical() {
