@@ -64,3 +64,13 @@ gameplay, visual quality or human acceptance; record what was observed on the bo
 
 After a coherent change: verify, review the staged boundary, scan for secrets, commit. Do not
 change Git identity configuration.
+
+## Design review handoffs
+
+For UI/design work, read `docs/reviews/README.md` and its current dated review. Compare the
+review's pinned source with the current branch and local work before changing anything. Treat
+findings as evidence and recommendations under the authority order above; CJ's latest scope
+and priorities govern. Preserve earlier dated reviews, and record implementation/reproduction
+evidence using `docs/reviews/IMPLEMENTATION_REPORT_TEMPLATE.md`. Append progress and evidence
+to the existing Overwatch board; these review files do not replace its task state or CJ's Done
+acceptance. The documented review loop does not itself authorize unrelated work or new services.

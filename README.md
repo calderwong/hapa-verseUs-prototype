@@ -129,3 +129,10 @@ characters, not commissioned Hapa art; the local tarot deck has faces for 12 of 
 ranks; the editor edits damage Cards only (others can be bound and exchanged); no experiment panel or
 creator statistics UI yet. Fixture identities are
 labeled local development identities, not verified Hapa DIDs.
+
+## Design review handoffs
+
+Start with [docs/reviews/README.md](docs/reviews/README.md) for the latest design review,
+implementation evidence template, and the CJ ↔ reviewer ↔ local coding agent iteration flow.
+The dated notes include the original screenshot, prioritized findings, source references and
+acceptance checks. Overwatch `hapa-versus` remains the canonical task tracker.
