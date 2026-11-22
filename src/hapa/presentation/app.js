@@ -24,6 +24,7 @@ import { profileById, PROFILE_IDS, BASE_PROFILE } from '../../../fixtures/hapa/p
 import { CATALOG } from '../../../fixtures/hapa/content.js';
 import { UI_FIXTURES } from '../../../fixtures/hapa/ui-fixtures.js';
 import { standingOf, fmtBand } from './terrain-view.js';
+import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 
 const U = 1e6;
 const SUIT = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
@@ -114,6 +115,7 @@ export class VersusApp {
   async startMatch({ profileId = BASE_PROFILE.id, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null }) {
     this.el.overlay.hidden = true;
     await loadCharacterKit(); // crowns, helmets and the guard preset are kit parts
+    await loadRenditions(); // optional local card faces; placeholders otherwise
     const fx = fixture ? UI_FIXTURES[fixture] : null;
     if (fx) {
       // a labeled diagnostic fixture: its state is prepared directly, not reached by ordinary play
@@ -574,6 +576,7 @@ export class VersusApp {
         title: card ? `${card.id}\n${def?.title}: ${def?.text ?? ''}` : `Empty · next mint ${forecast}`,
       },
       h('div', { class: 'tl' }, `C${lc}`, seat === 'B' ? h('small', {}, ` g${col}`) : null),
+      card && renditionFor(card) ? h('div', { class: 'art', style: `background-image:url("${renditionFor(card).url}")`, 'aria-hidden': 'true' }) : null,
       card ? [
         h('div', { class: 'rank' }, `${card.rank}`, h('span', { class: 'suit' }, SUIT[card.suit])),
         own ? h('div', { class: 'sup' }, `Supply ${pts(card.supply)}`) : h('div', { class: 'sup' }, `S${pts(card.supply)}`),
@@ -739,6 +742,9 @@ export class VersusApp {
       card.pips?.length ? h('div', { class: 'small' }, 'Mana provenance: ', ...card.pips.map((p) => h('span', { class: `chip c-${p.color}` }, `R${p.row}:${COLOR_LETTER[p.color]}${p.amount}`))) : null,
       h('h4', {}, def?.title ?? 'Ability'), h('p', {}, def?.text ?? ''),
       h('p', { class: 'dim small' }, `Definition ${card.ability} · creator ${def?.lineage?.creator?.label ?? '—'}`),
+      (() => { const art = renditionFor(card); return art
+        ? h('div', { class: 'artcredit small' }, h('img', { src: art.url, alt: `${art.title} — ${art.deck}` }), h('span', { class: 'dim' }, `Face: “${art.title}” from the ${art.deck} (local rendition; the art stays with its owner and never affects play)`))
+        : h('p', { class: 'dim small' }, 'Face: procedural placeholder (no local rendition for this rank and suit; play is identical)'); })(),
       own ? h('div', { class: 'actions' },
         h('div', { class: 'dim small' }, 'One instance, one use:'),
         h('div', { class: 'row' },
@@ -820,6 +826,12 @@ export function drawCardCanvas(card, state, w = 120, h2 = 160) {
     g.font = 'bold 15px serif'; g.fillText('MAJOR', w / 2, 34);
     g.font = 'bold 13px serif'; (def?.title ?? '').split(' ').forEach((wd, i) => g.fillText(wd, w / 2, 62 + i * 18));
     return cv;
+  }
+  const art = renditionFor(card);
+  if (art) { // the deck face as a band behind the rules text; the numbers stay legible on top
+    drawCover(g, art.img, 8, 8, w - 16, h2 - 16);
+    g.fillStyle = 'rgba(239,230,210,0.78)'; g.fillRect(8, 20, w - 16, 104);
+    g.fillStyle = '#1d1a24';
   }
   g.font = 'bold 46px serif'; g.fillText(String(card.rank ?? ''), w / 2 - 14, 60);
   g.font = '36px serif'; g.fillText(SUIT[card.suit] ?? '', w / 2 + 26, 58);

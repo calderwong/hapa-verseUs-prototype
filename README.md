@@ -47,6 +47,16 @@ window, then movement and combat play back → the next Tick mints.
 | `npm run experiment -- --profiles a,b --seeds 1-6 --ticks 250` | a batch across profiles with seat swaps; report + every replay under `.data/experiments/` |
 | `npm run peers -- --seed 2` | a **peer-verified** match: two OS processes, two identities, two Hypercore logs, a 127.0.0.1 socket |
 | `npm run replay -- file.replay.json` | recompute a recorded match; report the first diverging Tick or the verified result |
+| `npm run art:sync [-- --store path --copy]` | optional: link Minor Arcana faces from the Hapa Tarot Deck (Hapa Avatar Builder's `tarot-store.json`, read-only) into the ignored `public/renditions/`; ranks without a face keep the procedural placeholder, and play is identical either way |
+
+**Diagnostic fixtures.** The setup screen's *Diagnostic fixtures* list (or `?autostart=1&fixture=corner`,
+`contact_turn`, `terrain`) opens prepared states labeled **FIXTURE** in the match bar: corner helpers
+flanking an attacker, turning in contact, and a hill / open pit / roofed tunnel / flyer. Their replays
+carry the fixture state and still verify.
+
+**Height layers.** The right-edge rail (+3 +2 +1 · Ground 0 · −1 −2 −3 · All) or `[` `]` filters the view
+by band; below-ground bands make the surface see-through. Hills, ramps, open pits, roofed tunnels and
+flyers each carry a text label.
 
 A **rules simulation** applies both controllers in one process; a **peer-verified match** runs two
 independent peers that each validate, resolve and sign receipts. Reports say which one ran.
@@ -91,11 +101,16 @@ row Mana doubling placed through its Card; breach advance; retreat casualties an
 plan agreement with stale Ready pairs; signed peer records; replay verification; idempotent
 history.
 
-Known limitations (see the board for each): corner helpers (a neighbouring party's member stepping
-into the contact strip) are not implemented; formation changes are refused while
-engaged (a conservative reading); merges do not sweep each member's assembly path; uphill Speed,
-ramps and the Archer elevation curve wait for terrain presentation; damage allocation uses the
-recorded standing policy rather than a live per-exchange prompt; the battlefield uses Luminati's
-procedural characters, not commissioned Hapa art; no volume cutaway view yet; no deck/Card editor,
-experiment panel or creator statistics UI yet. Fixture identities are labeled local development
-identities, not verified Hapa DIDs.
+Also implemented since: corner helpers (a neighbour's corner member steps into the contact strip
+at zero time and Supply, returns home alive when the supported party retreats, dies with its own
+party's retreat); layered characteristics (base → set → add → multiply → limit); formation changes
+and Wheel Formation in contact (old arrangement until completion; never pulls a member out of
+contact); hills, ramps, cliffs, uphill Speed and charge at actual Speed; the Archer elevation curve
+and roof-blocked arcs; the terrain view with a layer rail and cutaway; optional tarot card faces.
+
+Known limitations (see the board for each): merges do not sweep each member's assembly path; heights
+are per territory (no slopes inside a territory); damage allocation uses the recorded standing
+policy rather than a live per-exchange prompt; the battlefield uses Luminati's procedural
+characters, not commissioned Hapa art; the local tarot deck has faces for 12 of the 40 Minor Arcana
+ranks; no deck/Card editor, experiment panel or creator statistics UI yet. Fixture identities are
+labeled local development identities, not verified Hapa DIDs.

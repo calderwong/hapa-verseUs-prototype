@@ -139,3 +139,8 @@ kbd { font: 11px 'Pixelify Sans', monospace; border: 1px solid #5a6380; border-b
 .layer-rail .band.on { border-color: #f2c14e; color: #f2c14e; outline: 2px solid #f2c14e; }
 .layer-rail .band small { color: var(--dim); }
 .layer-rail .ground0 { font: 10px 'Pixelify Sans'; color: #c9a86a; text-align: center; border-top: 1px solid #c9a86a; border-bottom: 1px solid #c9a86a; padding: 1px 0; }
+/* card renditions (optional local art; placeholders otherwise) */
+.tile .art { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.32; pointer-events: none; }
+.tile > .tl, .tile > .rank, .tile > .sup, .tile > .mana, .tile > .abil, .tile > .dim { position: relative; }
+.artcredit { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; }
+.artcredit img { width: 64px; height: 96px; object-fit: cover; border: 1px solid #5a5040; }
