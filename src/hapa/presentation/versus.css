@@ -279,3 +279,15 @@ button.danger { background: #4A2A2E; border-color: var(--bad); }
 #world.cam-panning { cursor: grabbing; }
 #world.cam-orbiting { cursor: move; }
 #world button, #world .layer-rail { cursor: pointer; }
+/* Supply loading */
+.planned-supply { color: var(--ok); font-weight: 700; margin-left: 4px; }
+.supply-loader { margin: 8px 0; padding: 6px 8px; border: 1px solid rgba(201,166,94,0.45); border-radius: 6px; background: rgba(201,166,94,0.07); }
+.supply-loader h4 { margin-top: 0; }
+.supply-loader button { font-weight: 700; }
+.rrow.target { outline: 1px dashed var(--ok); }
+.rrow.target:hover { background: rgba(143,211,160,0.15); }
+.tool-hint { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; gap: 10px; align-items: center; padding: 6px 10px; background: rgba(23,33,45,0.94); border: 1px solid var(--brass); border-radius: 6px; color: var(--ivory); font-weight: 600; }
+.tool-hint[hidden] { display: none; }
+.quickstart { padding-left: 18px; margin: 4px 0 8px; font-size: 13px; color: #DCD5C5; }
+.quickstart li { margin: 5px 0; }
+.toast { top: 52px; }

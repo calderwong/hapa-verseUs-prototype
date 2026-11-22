@@ -538,7 +538,7 @@ export class VersusApp {
     const card = this.state.cards[this.selected.id];
     if (card.owner !== this.viewSeat) return this._toast('That card belongs to the opponent');
     if (kind === 'burn') { if (this._addCommand(this.viewSeat, { type: 'burn', cardId: card.id })) this._toast(`Burn planned: +${fmtMana(card.mana)}`); return; }
-    if (kind === 'supply') { this.tool = { kind: 'supply', cardId: card.id }; this._toast('Click a friendly party to receive the Supply'); }
+    if (kind === 'supply') { this.tool = { kind: 'supply', cardId: card.id }; }
     if (kind === 'ability') {
       const def = activeCatalog.cards[card.abilityId];
       if (!def || def.category === 'resource') return this._toast('No attached ability');
@@ -585,6 +585,19 @@ export class VersusApp {
     this.el.compass.textContent = `▲ ${Math.round(this.cam.bearing)}° · ${this.cam.tactical ? 'Tactical' : 'Angled'} · home ${this.viewSeat}`;
   }
 
+  /** A persistent hint while a targeting tool is active (Esc cancels). */
+  _renderToolHint() {
+    const t = this.tool;
+    const text = !t ? null
+      : t.kind === 'supply' ? `Supply ${pts(this.state.cards[t.cardId]?.supply ?? 0)}: click one of your parties on the board or in the roster`
+      : t.kind === 'retreat' ? 'Retreat: right-click a legal territory away from contact'
+      : t.kind === 'ability' ? (t.step === 'actor' ? 'Ability: click a friendly party in an active column as the source' : 'Ability: choose the target')
+      : null;
+    if (!this.el.toolHint) { this.el.toolHint = h('div', { class: 'tool-hint', role: 'status' }); this.el.world.append(this.el.toolHint); }
+    this.el.toolHint.hidden = !text;
+    this.el.toolHint.replaceChildren(...(text ? [h('span', {}, text), h('button', { onclick: () => { this.tool = null; this._renderAll(); } }, 'Cancel (Esc)')] : []));
+  }
+
   _toast(msg, warn = false) {
     this.el.toast.textContent = msg;
     this.el.toast.className = `toast show${warn ? ' warn' : ''}`;
@@ -604,6 +617,7 @@ export class VersusApp {
     this._renderPlan();
     this._renderEvents();
     this._renderLayers();
+    this._renderToolHint();
     const sel = this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null;
     if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? legalDestinations(this.state, this.ctx, sel) : []);
     else if (!sel) this.view.select(this.state, null);
@@ -710,10 +724,17 @@ export class VersusApp {
     const row = (p) => {
       const living = Object.values(p.slots).filter((id) => id && s.members[id].alive).length;
       const engaged = p.state === 'engaged';
-      return h('div', { class: `rrow${this.selected?.id === p.id ? ' sel' : ''}${engaged ? ' engaged' : ''}`, onclick: () => { this.selected = { kind: 'party', id: p.id }; this._autoLayer(p); this._focusSelection(); this._renderAll(); } },
+      const planned = this._plannedSupply(p);
+      return h('div', { class: `rrow${this.selected?.id === p.id ? ' sel' : ''}${engaged ? ' engaged' : ''}${this.tool?.kind === 'supply' && p.owner === this.viewSeat ? ' target' : ''}`, onclick: () => {
+        if (this.tool?.kind === 'supply' && p.owner === this.viewSeat) {
+          if (this._addCommand(this.viewSeat, { type: 'load_supply', cardId: this.tool.cardId, partyId: p.id })) this._toast(`Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`);
+          this.tool = null; this._renderAll(); return;
+        }
+        this.selected = { kind: 'party', id: p.id }; this._autoLayer(p); this._focusSelection(); this._renderAll();
+      } },
         h('span', { class: `dot ${p.owner.toLowerCase()}` }), h('b', {}, p.mount ? p.mount[0].toUpperCase() + p.mount.slice(1) : 'Pawn'), p.commander ? ' ★' : '',
         h('span', { class: 'dim' }, ` R${p.region.row}C${p.region.column}`), ` ${living}/9`,
-        h('span', { class: 'dim' }, ` S${pts(supplyOf(p))}`), engaged ? h('span', { class: 'badge' }, '⚔') : p.state === 'moving' ? h('span', { class: 'badge' }, '→') : null);
+        h('span', { class: 'dim' }, ` S${pts(supplyOf(p))}`), planned ? h('span', { class: 'planned-supply' }, `+${pts(planned)}`) : null, engaged ? h('span', { class: 'badge' }, '⚔') : p.state === 'moving' ? h('span', { class: 'badge' }, '→') : null);
     };
     this.el.roster.replaceChildren(h('h3', {}, 'Parties'), h('div', { class: 'rgroup' }, h('div', { class: 'rhead a' }, 'A'), ...list('A').map(row)), h('div', { class: 'rgroup' }, h('div', { class: 'rhead b' }, 'B'), ...list('B').map(row)));
   }
@@ -758,7 +779,13 @@ export class VersusApp {
   _renderInspector() {
     const s = this.state, sel = this.selected, el = this.el.inspector;
     if (this.pendingChoice) return el.replaceChildren(this._responsePanel());
-    if (!sel) return el.replaceChildren(h('h3', {}, 'Inspector'), h('p', { class: 'dim' }, 'Select a party on the board or in the roster, a hand card (1–9) or an event below. Right-click a highlighted territory to give the selected party its one destination.'), this._hoverHelp());
+    if (!sel) return el.replaceChildren(h('h3', {}, 'How a Tick goes'),
+      h('ol', { class: 'quickstart' },
+        h('li', {}, h('b', {}, 'Supply. '), 'Select one of your parties and press a ', h('b', {}, 'Load Supply'), ' button — or pick a hand card and choose ', h('b', {}, 'Supply…'), '. Each step of movement costs 1 Supply.'),
+        h('li', {}, h('b', {}, 'Move. '), 'With the party selected, ', h('b', {}, 'right-click'), ' a highlighted territory. New orders need the party\'s column to be active (striped edges).'),
+        h('li', {}, h('b', {}, 'Ready. '), 'Press ', h('b', {}, 'Ready'), ' (Ctrl/⌘ + Enter). Both plans resolve together and play back.')),
+      h('p', { class: 'dim small' }, 'Opening: load the C1 card into your C1 Castle (R1), then right-click the Pawn ahead of it (R2) — they merge into one nine-member party.'),
+      this._hoverHelp());
     if (sel.kind === 'party') return el.replaceChildren(this._partyPanel(s.parties[sel.id]));
     if (sel.kind === 'member') return el.replaceChildren(this._memberPanel(s.members[sel.id]));
     if (sel.kind === 'card') return el.replaceChildren(this._cardPanel(s.cards[sel.id]));
@@ -804,16 +831,37 @@ export class VersusApp {
         ...(() => { const st = standingOf(s, this.ctx, p); return st.kind === 'ground'
           ? [h('span', {}, 'Stands'), h('span', {}, 'surface ground (band +1, exposed)')]
           : [h('span', {}, 'Stands'), h('span', {}, `${st.label} · ${st.exposed ? 'exposed (counts for income and blocking)' : 'not exposed (roofed)'}`, h('div', { class: 'dim small' }, st.note))]; })(),
-        h('span', {}, 'Supply'), h('span', {}, `${pts(supplyOf(p))}${p.supply.length ? ` (${p.supply.map((x) => `${pts(x.units)} from ${x.cardId}`).join(', ')})` : ''}`),
+        h('span', {}, 'Supply'), h('span', {}, `${pts(supplyOf(p))}${p.supply.length ? ` (${p.supply.map((x) => `${pts(x.units)} from ${x.cardId}`).join(', ')})` : ''}`, this._plannedSupply(p) ? h('b', { class: 'planned-supply' }, ` +${pts(this._plannedSupply(p))} planned`) : null),
         h('span', {}, 'Speed'), h('span', {}, p.mount ? `${this.ctx.profile.movement.speeds[p.mount].join('/')} step per Tick` : 'none (needs a Mount)'),
         h('span', {}, 'Destination'), h('span', {}, p.destination ? `R${p.destination.row}C${p.destination.column}` : '—'),
         p.pool ? h('span', {}, 'Party pool') : null, p.pool ? h('span', {}, `${pts(p.pool.hp)}/${pts(p.pool.max)} (maintenance)`) : null),
       h('h4', {}, 'Formation (front at top, seen from behind)'), grid,
+      own ? this._supplyLoader(p) : null,
       own ? h('div', { class: 'actions' },
-        h('div', { class: 'dim small' }, active ? (p.mount ? 'Right-click a highlighted territory: destination.' : 'An unmounted Pawn stores Supply but cannot move.') : `C${p.region.column} is not active: only Supply can reach this party now.`),
+        h('div', { class: 'dim small' }, active ? (p.mount ? 'Right-click a highlighted territory: destination (one step costs 1 Supply).' : 'An unmounted Pawn stores Supply but cannot move.') : `C${p.region.column} is not active: only Supply can reach this party now.`),
         h('div', { class: 'row' }, 'Face ', facing('N'), facing('E'), facing('S'), facing('W')),
         p.state === 'engaged' ? this._retreatPreview(p) : null,
         p.state === 'engaged' ? h('button', { disabled: !active, onclick: () => { this.tool = { kind: 'retreat', partyId: p.id }; this._toast('Retreat: right-click a legal destination away from contact. Touching members die.'); } }, 'Retreat…') : null) : null);
+  }
+
+  /** Supply already planned for a party this Tick (it lands when the Tick resolves). */
+  _plannedSupply(p) {
+    return this.plans[p.owner].filter((c) => c.type === 'load_supply' && c.partyId === p.id).reduce((n, c) => n + (this.state.cards[c.cardId]?.supply ?? 0), 0);
+  }
+
+  /** One-click Supply: each of your available hand cards as a button that loads it into this party. */
+  _supplyLoader(p) {
+    const s = this.state, seat = p.owner;
+    if (this.seats[seat] !== 'human' || s.outcome) return null;
+    const planned = this._plannedCardIds(seat);
+    const cards = Object.values(s.players[seat].bank.minor).filter(Boolean).map((id) => s.cards[id]).filter((c) => c.state === 'available' && !planned.has(c.id));
+    return h('div', { class: 'supply-loader' },
+      h('h4', {}, 'Load Supply'),
+      cards.length
+        ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._renderAll(); } } },
+          `+${pts(c.supply)} `, h('small', { class: 'dim' }, `C${c.localColumn} ${c.rank}${SUIT[c.suit] ?? ''}`))))
+        : h('p', { class: 'dim small' }, 'No unplanned hand cards. New cards mint from the highlighted columns each Tick.'),
+      h('p', { class: 'dim small' }, 'Any card can become Supply for any of your parties, in any column, at any time. Moving one step costs 1 Supply.'));
   }
 
   /** Retreat preview: own touching members are lost; neighbours' helpers go home alive. */
