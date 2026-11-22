@@ -30,6 +30,7 @@ import { UI_FIXTURES } from '../../../fixtures/hapa/ui-fixtures.js';
 import { standingOf, fmtBand } from './terrain-view.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
+import { VersusSound } from './sound.js';
 import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } from './palette.js';
 import { openEditor } from './editor.js';
 import { openLab, anyProfile, labProfiles } from './lab.js';
@@ -70,6 +71,7 @@ export class VersusApp {
 
   _initEngine() {
     if (this.engine) return;
+    try { this.sound = new VersusSound(); } catch { this.sound = null; }
     this.engine = new Engine({ container: this.el.world, clearColor: 0x17212d, maxPixelRatio: 2 });
     this.engine.renderer.toneMappingExposure = 1.12;
     this.engine.scene.fog = new THREE.Fog(0x17212d, 160, 320);
@@ -177,6 +179,7 @@ export class VersusApp {
     if (this.state.outcome) return this._showResult();
     const minted = openTick(this.session);
     this.tickEvents = [...minted];
+    if (!this.watch && minted.some((e) => e.type === 'card_minted')) this.sound?.play('chime', { volume: 0.35 });
     this.plans = { A: [], B: [] };
     this.rev = { A: 0, B: 0 };
     this.ready = { A: null, B: null };
@@ -214,6 +217,7 @@ export class VersusApp {
     if (this.playback || this.state.outcome) return;
     const seat = this.viewSeat;
     if (this.seats[seat] !== 'human') return;
+    this.sound?.play('confirm', { volume: 0.6 });
     this.ready[seat] = { ...this.rev };
     this._renderAll();
     if (this.seats.A === 'human' && this.seats.B === 'human' && !this._readyValid(seat === 'A' ? 'B' : 'A')) {
@@ -324,7 +328,7 @@ export class VersusApp {
     for (const m of Object.values(this.state.members)) if (!m.alive && !(m.id in pos)) pos[m.id] = [m.x, m.y, false];
     this.view.sync(this.state, k >= 1 ? null : Object.fromEntries(Object.entries(pos).map(([id, p]) => [id, p[2] === false ? [p[0], p[1], false] : p]).map(([id, p]) => [id, p])));
     for (const [id, p] of Object.entries(pos)) { const spr = this.view.sprites.get(id); if (spr && k < 1) spr.visible = p[2] !== false && (this.state.members[id]?.alive || !dead.has(id)); }
-    if (evLen > pb.shown) { this._spawnHits(pb.events.slice(pb.shown, evLen)); pb.shown = evLen; this._renderEvents(); }
+    if (evLen > pb.shown) { const fresh = pb.events.slice(pb.shown, evLen); this._spawnHits(fresh); this.sound?.events(fresh); pb.shown = evLen; this._renderEvents(); }
     if (k >= 1) {
       this.playback = null;
       this.view.setWalking(new Set());
@@ -567,6 +571,7 @@ export class VersusApp {
       h('div', { class: 'cmds' }, ...['A', 'B'].map((seat) => { const c = cmd(seat); return h('span', { class: `cmdhp ${seat.toLowerCase()}` }, `${seat} Commander ${c?.alive ? `${pts(c.hp)}/${pts(c.maxHp)} HP` : 'fallen'}`); })),
       h('div', { class: 'speed' }, h('label', {}, 'Playback ', h('select', { onchange: (e) => (this.speed = Number(e.target.value)) }, ...[0.5, 1, 2, 4].map((v) => h('option', { value: v, selected: v === this.speed }, `${v}×`))))),
       h('div', { class: 'crest b' }, 'B', h('small', {}, this.seats.B === 'bot' ? 'bot' : 'human')),
+      this.sound ? h('button', { class: 'menu', title: this.sound.muted ? 'Sound off (click to turn on)' : 'Sound on (click to mute)', 'aria-pressed': String(!this.sound.muted), onclick: () => { this.sound.toggle(); this._renderMatchBar(); } }, this.sound.muted ? '🔇' : '🔊') : null,
       h('button', { class: 'menu', onclick: () => this._menu() }, '☰'),
     );
   }
