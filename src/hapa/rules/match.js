@@ -16,7 +16,7 @@ import { clone } from './encoding.js';
 import { SEATS, other, livingMembers } from './state.js';
 import { activeColumnsAt, roundOf, mintAndClear, planPayment, supplyOf } from './economy.js';
 import { setDestination, simulateMovement, placeMembers, planRoute, routeOrigin, touchingPairs, contactTolerance, arrangementBlocked } from './movement.js';
-import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember, applyBreaches } from './combat.js';
+import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember, applyBreaches, applyCornerHelpers, returnHelpers } from './combat.js';
 import { workError, startWork, completeWork } from './terrain.js';
 
 // --- the Tick boundary ------------------------------------------------------------------------
@@ -375,6 +375,8 @@ function simulateTick(state, ctx, events) {
   state.phase = 'simulating';
   // breach: a member next to a casualty's vacated slot may step one slot in (no cascade)
   applyBreaches(state, ctx, events);
+  // corner support for engagements whose neighbours became eligible since setup
+  applyCornerHelpers(state, ctx, events);
   // existing engagements exchange once at the start of the movement phase
   const scheduled = Object.values(state.engagements).filter((E) => E.active && E.lastExchangeTick < state.tick).map((engagement) => ({ engagement, first: false }));
   if (scheduled.length) {
@@ -385,6 +387,8 @@ function simulateTick(state, ctx, events) {
   if (checkVictory(state, ctx, events)) return;
   simulateMovement(state, ctx, events, (contacts, quantum) => {
     const batch = openEngagements(state, ctx, events, contacts, quantum);
+    // engagement setup: eligible corner helpers step in at zero time and join the first exchange
+    for (const S of applyCornerHelpers(state, ctx, events, batch.map((b) => b.engagement), quantum)) batch.push({ engagement: S, first: true });
     if (batch.length && ctx.profile.combat.firstContactExchange === 'immediate') resolveExchange(state, ctx, events, batch, 'first_contact');
     return !!checkVictory(state, ctx, events);
   });
@@ -405,7 +409,14 @@ function applyRetreats(state, ctx, events) {
     }
     const lost = [...touching].filter((id) => state.members[id].homeParty === P.id);
     for (const id of lost) killMember(state, ctx, events, state.members[id], 'retreat');
-    emit(state, events, 'retreated', { partyId: P.id, lost, target: r.target });
+    // neighbours' helpers supporting the withdrawing party return home alive
+    const returned = [];
+    for (const S of Object.values(state.engagements)) {
+      if (!S.active || S.support?.helped !== P.id) continue;
+      for (const id of S.support.helpers) if (state.members[id]?.alive) returned.push(id);
+      returnHelpers(state, ctx, events, S, 'supported_party_retreated');
+    }
+    emit(state, events, 'retreated', { partyId: P.id, lost, helpersReturned: returned, target: r.target });
     // the engagement's attacker follows a withdrawing defender into the vacated territory (0 Supply)
     for (const E of Object.values(state.engagements)) {
       if (!E.active || E.defender !== P.id || !E.attacker) continue;
@@ -419,7 +430,7 @@ function applyRetreats(state, ctx, events) {
         A.pendingFollow = { ...vacated, continueRoute: onTheWay };
       }
     }
-    for (const E of Object.values(state.engagements)) if (E.active && (E.a === P.id || E.b === P.id)) { const Q = state.parties[E.a === P.id ? E.b : E.a]; E.active = false; delete state.engagements[E.id]; if (Q?.alive && !Object.values(state.engagements).some((x) => x.active && (x.a === Q.id || x.b === Q.id))) Q.state = Q.route.length && Q.mount && !Q.mountLost ? 'moving' : 'idle'; emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b, cause: 'retreat' }); }
+    for (const E of Object.values(state.engagements)) if (E.active && (E.a === P.id || E.b === P.id)) { const Q = state.parties[E.a === P.id ? E.b : E.a]; E.active = false; delete state.engagements[E.id]; if (E.support) returnHelpers(state, ctx, events, E, 'enemy_retreated'); if (Q?.alive && !Object.values(state.engagements).some((x) => x.active && (x.a === Q.id || x.b === Q.id))) Q.state = Q.route.length && Q.mount && !Q.mountLost ? 'moving' : 'idle'; emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b, cause: 'retreat' }); }
     if (P.alive && P.mount && !P.mountLost) {
       P.state = 'idle';
       setDestination(state, ctx, events, P, r.target, { seat: r.seat, command: 'retreat' });

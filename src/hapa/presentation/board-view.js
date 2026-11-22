@@ -218,7 +218,13 @@ export class BoardView {
         this.sprites.set(m.id, spr);
         this.root.add(spr);
         spr.add(this._ownerDisc(m.owner));
+        // away markers: a gold diamond for a corner helper, a red triangle for a breach step
+        spr.userData.awayCorner = this._awayMark(4, 0xf2c14e);
+        spr.userData.awayBreach = this._awayMark(3, 0xff6b5b);
+        spr.add(spr.userData.awayCorner, spr.userData.awayBreach);
       }
+      spr.userData.awayCorner.visible = m.alive && m.helperAway?.kind === 'corner';
+      spr.userData.awayBreach.visible = m.alive && m.helperAway?.kind === 'breach';
       seen.add(m.id);
       const pos = positions?.[m.id] ?? [m.x, m.y];
       const w = this.toWorld(pos[0], pos[1]);
@@ -247,6 +253,15 @@ export class BoardView {
     disc.position.y = 0.02;
     disc.renderOrder = 2;
     return disc;
+  }
+
+  _awayMark(sides, color) {
+    const mk = new THREE.Mesh(new THREE.RingGeometry(0.48 * S, 0.58 * S, sides, 1, Math.PI / 4), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide }));
+    mk.rotation.x = -Math.PI / 2;
+    mk.position.y = 0.025;
+    mk.renderOrder = 3;
+    mk.visible = false;
+    return mk;
   }
 
   _partyMarker(p) {

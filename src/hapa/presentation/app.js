@@ -14,7 +14,7 @@ import { BoardView, COLOR_HEX, OWNER_HEX } from './board-view.js';
 import { eventLine, explainHit, memberName, partyName, fmtMana } from './explain.js';
 import { createSession, openTick } from '../rules/session.js';
 import { validatePlan, resolveTick, responseOptions } from '../rules/match.js';
-import { legalDestinations, planRoute, routeOrigin } from '../rules/movement.js';
+import { legalDestinations, planRoute, routeOrigin, touchingPairs, contactTolerance } from '../rules/movement.js';
 import { mintForecast, nextActivation, roundOf, supplyOf } from '../rules/economy.js';
 import { stateFingerprint } from '../rules/state.js';
 import { clone } from '../rules/encoding.js';
@@ -628,7 +628,9 @@ export class VersusApp {
       h('div', {}, 'Square frame + arrow: a party anchor and its facing; a small dashed square marks an empty Pawn center.'),
       h('div', {}, 'Gold column wash: active columns this Tick (new unit orders).'),
       h('div', {}, 'Diamonds on a territory: its Mana color(s).'),
-      h('div', {}, 'Dashed gold square: a Capital.'));
+      h('div', {}, 'Dashed gold square: a Capital.'),
+      h('div', {}, 'Gold diamond under a member: a corner helper standing in the contact strip for a neighbour (it still belongs to its own party).'),
+      h('div', {}, 'Red triangle under a member: it advanced one slot into an enemy casualty\'s gap.'));
   }
 
   _partyPanel(p) {
@@ -639,7 +641,7 @@ export class VersusApp {
       const id = p.slots[String(slot)];
       const m = id ? s.members[id] : null;
       grid.append(h('div', { class: `slot${m ? (m.alive ? '' : ' dead') : ' empty'}${slot === 5 ? ' center' : ''}`, onclick: () => { if (m) { this.selected = { kind: 'member', id: m.id }; this._renderAll(); } }, title: m ? memberName(s, m.id) : `slot ${slot} empty` },
-        h('span', { class: 'sn' }, slot), m ? [h('b', {}, m.isCenter ? (p.mount ?? '★').slice(0, 3) : ROLE_ABBR[m.archetype]), m.alive && !p.pool ? h('div', { class: 'hp' }, h('i', { style: `width:${Math.max(0, m.hp / m.maxHp) * 100}%` })) : m.alive ? null : h('small', {}, '†')] : h('small', { class: 'dim' }, slot === 5 ? 'empty center' : '')));
+        h('span', { class: 'sn' }, slot), m?.alive && m.helperAway ? h('span', { class: 'away', title: m.helperAway.kind === 'corner' ? `helping ${partyName(s, m.helperAway.helps)} in the contact strip` : 'advanced into an enemy gap' }, m.helperAway.kind === 'corner' ? '◇' : '▲') : null, m ? [h('b', {}, m.isCenter ? (p.mount ?? '★').slice(0, 3) : ROLE_ABBR[m.archetype]), m.alive && !p.pool ? h('div', { class: 'hp' }, h('i', { style: `width:${Math.max(0, m.hp / m.maxHp) * 100}%` })) : m.alive ? null : h('small', {}, '†')] : h('small', { class: 'dim' }, slot === 5 ? 'empty center' : '')));
     }
     const engagedWith = Object.values(s.engagements).filter((e) => e.active && (e.a === p.id || e.b === p.id)).map((e) => (e.a === p.id ? e.b : e.a));
     const active = s.activeColumns.includes(p.region.column);
@@ -658,7 +660,23 @@ export class VersusApp {
       own ? h('div', { class: 'actions' },
         h('div', { class: 'dim small' }, active ? (p.mount ? 'Right-click a highlighted territory: destination.' : 'An unmounted Pawn stores Supply but cannot move.') : `C${p.region.column} is not active: only Supply can reach this party now.`),
         h('div', { class: 'row' }, 'Face ', facing('N'), facing('E'), facing('S'), facing('W')),
+        p.state === 'engaged' ? this._retreatPreview(p) : null,
         p.state === 'engaged' ? h('button', { disabled: !active, onclick: () => { this.tool = { kind: 'retreat', partyId: p.id }; this._toast('Retreat: right-click a legal destination away from contact. Touching members die.'); } }, 'Retreat…') : null) : null);
+  }
+
+  /** Retreat preview: own touching members are lost; neighbours' helpers go home alive. */
+  _retreatPreview(p) {
+    const s = this.state, tol = contactTolerance(this.ctx);
+    const lost = new Set();
+    for (const E of Object.values(s.engagements)) {
+      if (!E.active || (E.a !== p.id && E.b !== p.id)) continue;
+      const q = s.parties[E.a === p.id ? E.b : E.a];
+      for (const pr of touchingPairs(s, this.ctx, p, q, tol)) if (s.members[pr.a].homeParty === p.id) lost.add(pr.a);
+    }
+    const helpers = Object.values(s.engagements).filter((E) => E.active && E.support?.helped === p.id).flatMap((E) => E.support.helpers).filter((id) => s.members[id]?.alive);
+    return h('div', { class: 'preview small' },
+      h('div', {}, `Retreat would lose: ${lost.size ? [...lost].map((id) => memberName(s, id)).join(', ') : 'nobody'}`),
+      helpers.length ? h('div', {}, `Helpers returning alive: ${helpers.map((id) => memberName(s, id)).join(', ')}`) : null);
   }
 
   _memberPanel(m) {
@@ -667,6 +685,7 @@ export class VersusApp {
       h('h3', {}, memberName(s, m.id)),
       h('div', { class: 'kv' },
         h('span', {}, 'Party'), h('span', {}, partyName(s, m.party)),
+        m.helperAway ? h('span', {}, 'Away') : null, m.helperAway ? h('span', {}, m.helperAway.kind === 'corner' ? `corner helper for ${partyName(s, m.helperAway.helps)} against ${partyName(s, m.helperAway.against)}${m.helperAway.pendingReturn ? ' (return pending)' : ''}` : `breach into ${partyName(s, m.helperAway.intoParty)} slot ${m.helperAway.intoSlot}`) : null,
         h('span', {}, 'HP'), h('span', {}, s.parties[m.party]?.pool ? 'party pool (see party)' : `${pts(m.hp)} / ${pts(m.maxHp)}`),
         h('span', {}, 'Definition'), h('span', {}, `${arch.title} · ${m.definition}`)),
       h('h4', {}, 'Attacks'), h('ul', {}, ...arch.attacks.map((a) => h('li', {}, `${a.hits} × ${a.power} ${a.channel} (${a.kind}${a.range ? `, range ${a.range}` : ''}${a.face === 'above' ? ', from Above' : ''})`))),

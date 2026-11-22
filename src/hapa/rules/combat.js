@@ -9,7 +9,7 @@
  * representation (member | party_pool).
  */
 import { emit } from './context.js';
-import { FACINGS } from './geometry.js';
+import { FACINGS, slotOffset } from './geometry.js';
 import { livingMembers, other } from './state.js';
 import { touchingPairs, contactTolerance, engagementBetween, placeMembers as placeAll } from './movement.js';
 
@@ -392,13 +392,20 @@ export function refreshEngagements(state, ctx, events) {
     if (still) continue;
     E.active = false;
     delete state.engagements[E.id]; // the events keep its history
-    emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b, startTick: E.startTick });
+    emit(state, events, 'engagement_ended', { engagementId: E.id, a: E.a, b: E.b, startTick: E.startTick, support: E.support ? E.support.helped : undefined });
+    if (E.support) returnHelpers(state, ctx, events, E, 'support_ended');
     for (const p of [P, Q]) {
       if (!p?.alive || p.retired) continue;
       if (Object.values(state.engagements).some((x) => x.active && (x.a === p.id || x.b === p.id))) continue;
       if (recallBreaches(state, p)) placeAll(state, ctx, p);
       p.state = p.route.length && p.mount && !p.mountLost ? 'moving' : 'idle';
     }
+  }
+  // a living helper whose return was blocked tries again once its support has ended
+  for (const m of Object.values(state.members)) {
+    if (!m.alive || m.helperAway?.kind !== 'corner' || !m.helperAway.pendingReturn) continue;
+    if (Object.values(state.engagements).some((x) => x.active && x.support?.helpers.includes(m.id))) continue;
+    returnHelper(state, ctx, events, m, 'retry');
   }
 }
 
@@ -474,4 +481,136 @@ export function recallBreaches(state, party) {
   let any = false;
   for (const m of livingMembers(state, party)) if (m.helperAway?.kind === 'breach') { m.helperAway = null; any = true; }
   return any;
+}
+
+// --- corner support ---------------------------------------------------------------------------
+
+const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+const SIDES = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+/**
+ * Corner support (Chapter 7 "Contact lines corners and breaches"; Appendix A "Corner support").
+ * During engagement setup an eligible corner member of a friendly neighbouring party steps at most
+ * one local member width into an unblocked contact-strip position where it touches an enemy of
+ * the engagement face to face. Zero simulation time, zero party Supply; its party anchor does not
+ * move. It keeps its home party, home slot and its one identity and health record.
+ *
+ * The helper's contact is recorded as its own contact line: a support engagement between the
+ * helper's home party and the enemy, carrying `support: { helped, engagement, helpers }`. So its
+ * hits and the hits it receives use the ordinary exchange (damage debits the home party, party
+ * protection follows membership), its home party's ranged members may support it, and a retreat
+ * by its home party sacrifices it like any own touching member.
+ *
+ * Eligible: a living non-center melee member, not already away and not touching any enemy, of a
+ * friendly party that is idle, waiting for Supply or engaged (not travelling, turning or
+ * changing formation), whose anchor is within one board step of the supported party.
+ *
+ * @param {any[] | null} engagements the engagements being set up (default: every active one)
+ * @returns {any[]} support engagements created (they join the caller's exchange batch)
+ */
+export function applyCornerHelpers(state, ctx, events, engagements = null, quantum = 0) {
+  const cfg = ctx.profile.combat.cornerSupport;
+  if (!cfg?.enabled) return [];
+  const U = ctx.U, tol = contactTolerance(ctx), pitch = ctx.geo.pitch;
+  const created = [];
+  const list = (engagements ?? Object.values(state.engagements)).filter((E) => E.active && !E.support).sort(byId);
+  for (const E of list) {
+    for (const [P, Q] of [[state.parties[E.a], state.parties[E.b]], [state.parties[E.b], state.parties[E.a]]]) {
+      if (!P?.alive || !Q?.alive || P.retired || Q.retired) continue;
+      const enemies = livingMembers(state, Q).sort(bySlotThenId);
+      if (!enemies.length) continue;
+      const neighbors = Object.values(state.parties).filter((N) => N !== P && N.owner === P.owner && N.alive && !N.retired
+        && ['idle', 'waiting_supply', 'engaged'].includes(N.state) && !N.turn && !N.formationChange
+        && Math.abs(N.x - P.x) <= pitch + tol && Math.abs(N.y - P.y) <= pitch + tol).sort(byId);
+      for (const N of neighbors) {
+        const direct = engagementBetween(state, N.id, Q.id);
+        if (direct && !direct.support) continue; // already fighting that enemy itself
+        const foes = Object.values(state.members).filter((b) => b.alive && b.owner !== N.owner);
+        for (const h of livingMembers(state, N).sort(bySlotThenId)) {
+          if (h.isCenter || h.helperAway) continue;
+          if (!(archetype(ctx, h).attacks ?? []).some((a) => a.kind === 'melee')) continue;
+          if (foes.some((f) => Math.abs(f.x - h.x) <= U + tol && Math.abs(f.y - h.y) <= U + tol && !(Math.abs(f.x - h.x) > U && Math.abs(f.y - h.y) > U))) continue;
+          const spot = cornerSpot(state, U, h, enemies);
+          if (!spot) continue;
+          const from = { x: h.x, y: h.y };
+          h.x = spot.x; h.y = spot.y;
+          let S = engagementBetween(state, N.id, Q.id);
+          if (!S) {
+            state.engagementSeq = (state.engagementSeq ?? 0) + 1;
+            S = {
+              id: `E${state.tick}.${state.engagementSeq}`, a: N.id, b: Q.id, active: true,
+              attacker: null, defender: null, mutual: true, approach: { [N.id]: null, [Q.id]: null },
+              startTick: state.tick, startQuantum: quantum, lastExchangeTick: 0,
+              support: { helped: P.id, engagement: E.id, helpers: [] },
+            };
+            state.engagements[S.id] = S;
+            created.push(S);
+          }
+          S.support.helpers.push(h.id);
+          h.helperAway = { kind: 'corner', helps: P.id, against: Q.id, engagement: S.id, tick: state.tick };
+          if (N.state !== 'engaged') N.state = 'engaged';
+          emit(state, events, 'helper_stepped', { memberId: h.id, partyId: N.id, homeSlot: h.slot, helps: P.id, against: Q.id, touches: spot.touches, engagementId: S.id, supportOf: E.id, from, to: { x: spot.x, y: spot.y }, supplyCost: 0, quantum });
+        }
+      }
+    }
+  }
+  return created;
+}
+
+/** The nearest unblocked face-contact position within one local step, or null. */
+function cornerSpot(state, U, h, enemies) {
+  const bodies = Object.values(state.members).filter((b) => b.alive && b.id !== h.id);
+  let best = null;
+  for (const e of enemies) {
+    for (const [sx, sy] of SIDES) {
+      const x = e.x + sx * U, y = e.y + sy * U;
+      const step = Math.max(Math.abs(x - h.x), Math.abs(y - h.y));
+      if (step === 0 || step > U) continue;
+      if (bodies.some((b) => Math.abs(b.x - x) < U && Math.abs(b.y - y) < U)) continue; // a blocked helper cannot occupy another body
+      const manhattan = Math.abs(x - h.x) + Math.abs(y - h.y);
+      if (!best || step < best.step || (step === best.step && manhattan < best.manhattan)) best = { x, y, step, manhattan, touches: e.id };
+    }
+  }
+  return best;
+}
+
+/** Living helpers of a support engagement go back to their own formations (never resurrected). */
+export function returnHelpers(state, ctx, events, S, cause) {
+  for (const id of S.support?.helpers ?? []) {
+    const m = state.members[id];
+    if (m?.alive && m.helperAway?.kind === 'corner') returnHelper(state, ctx, events, m, cause);
+  }
+}
+
+/**
+ * Return one helper to its reserved home slot; if that is blocked, the nearest legal vacant
+ * home-party slot (then lowest number); if none, it stays where it legally stands with a pending
+ * return. It is never duplicated, overlapped or killed for want of a place.
+ */
+export function returnHelper(state, ctx, events, m, cause) {
+  const U = ctx.U;
+  const N = state.parties[m.party];
+  const bodies = Object.values(state.members).filter((b) => b.alive && b.id !== m.id);
+  const free = (p) => !bodies.some((b) => Math.abs(b.x - p.x) < U && Math.abs(b.y - p.y) < U);
+  const at = (slot) => { const off = slotOffset(slot, N.facing); return { x: N.x + off.dx * U, y: N.y + off.dy * U }; };
+  const from = { x: m.x, y: m.y };
+  let slot = m.slot, pos = at(slot);
+  if (!free(pos)) {
+    const vacant = [1, 2, 3, 4, 6, 7, 8, 9].filter((s) => s !== m.slot && !state.members[N.slots[String(s)]]?.alive)
+      .map((s) => ({ s, p: at(s) })).filter((v) => free(v.p))
+      .sort((a, b) => Math.max(Math.abs(a.p.x - m.x), Math.abs(a.p.y - m.y)) - Math.max(Math.abs(b.p.x - m.x), Math.abs(b.p.y - m.y)) || a.s - b.s);
+    if (!vacant.length) {
+      if (!m.helperAway.pendingReturn) emit(state, events, 'helper_return_pending', { memberId: m.id, partyId: N.id, homeSlot: m.slot, cause });
+      m.helperAway = { ...m.helperAway, pendingReturn: true };
+      return false;
+    }
+    if (N.slots[String(m.slot)] === m.id) N.slots[String(m.slot)] = null;
+    slot = vacant[0].s; pos = vacant[0].p;
+    N.slots[String(slot)] = m.id;
+    m.slot = slot;
+  }
+  m.x = pos.x; m.y = pos.y;
+  m.helperAway = null;
+  emit(state, events, 'helper_returned', { memberId: m.id, partyId: N.id, slot, homeSlot: m.homeSlot, cause, from, to: pos });
+  return true;
 }
