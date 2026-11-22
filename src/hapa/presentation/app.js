@@ -30,6 +30,7 @@ import { standingOf, fmtBand } from './terrain-view.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
 import { openEditor } from './editor.js';
+import { openLab, anyProfile, labProfiles } from './lab.js';
 import { localCatalog, localDecks } from './local-content.js';
 
 const U = 1e6;
@@ -79,7 +80,7 @@ export class VersusApp {
 
   // --- setup -------------------------------------------------------------------------------------
   showSetup() {
-    const profileSel = h('select', { id: 'set-profile' }, ...PROFILE_IDS.map((id) => h('option', { value: id }, `${id} — ${profileById(id).title}`)));
+    const profileSel = h('select', { id: 'set-profile' }, ...PROFILE_IDS.map((id) => h('option', { value: id }, `${id} — ${profileById(id).title}`)), ...labProfiles().map((p) => h('option', { value: p.id }, `${p.id} — lab revision: ${p.changes.join(', ')}`)));
     const seatSel = (seat, dflt) => h('select', { id: `set-${seat}` }, h('option', { value: 'human', selected: dflt === 'human' }, 'Human'), h('option', { value: 'bot', selected: dflt === 'bot' }, 'Heuristic bot'));
     const seed = h('input', { id: 'set-seed', type: 'number', value: '1', min: '1' });
     const policySel = (seat) => h('select', { id: `set-pol-${seat}` }, ...ALLOCATION_POLICIES.map((p) => h('option', { value: p }, { slot_order: 'Slot order (fixture)', center_first: 'Center first (sacrifice the center)', protect_ranged: 'Protect ranged members' }[p])));
@@ -97,6 +98,7 @@ export class VersusApp {
       h('div', { class: 'row' },
         h('button', { class: 'primary', onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: document.getElementById('set-A').value, B: document.getElementById('set-B').value }, seed: Number(seed.value) || 1, policies: { A: document.getElementById('set-pol-A').value, B: document.getElementById('set-pol-B').value } }) }, 'Start match'),
         h('button', { onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: 'bot', B: 'bot' }, seed: Number(seed.value) || 1, watch: true }) }, 'Watch bot vs bot')),
+      h('div', { class: 'row' }, h('button', { onclick: () => openLab(this) }, 'Rules & experiments…'), h('span', { class: 'dim small' }, 'Edit a copy of a profile, compare profiles, run bot batches.')),
       h('div', { class: 'row' }, h('button', { onclick: () => openEditor(this) }, 'Cards & decks…'), h('span', { class: 'dim small' }, 'Edit Cards, bind them to columns for either seat, exchange bundles.')),
       h('details', {}, h('summary', {}, 'Diagnostic fixtures (labeled, not ordinary play)'),
         ...Object.entries(UI_FIXTURES).map(([id, f]) => h('div', { class: 'row fixture' },
@@ -108,7 +110,7 @@ export class VersusApp {
     this.el.overlay.hidden = false;
   }
 
-  async startMatch({ profileId = BASE_PROFILE.id, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null }) {
+  async startMatch({ profileId = BASE_PROFILE.id, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null }) {
     this.el.overlay.hidden = true;
     await loadCharacterKit(); // crowns, helmets and the guard preset are kit parts
     await loadRenditions(); // optional local card faces; placeholders otherwise
@@ -117,7 +119,8 @@ export class VersusApp {
       // a labeled diagnostic fixture: its state is prepared directly, not reached by ordinary play
       this.session = createFixtureSession(fx.build(), { id: fixture, title: fx.title });
     } else {
-      const profile = profileById(profileId);
+      const profile = profileObj ? JSON.parse(JSON.stringify(profileObj)) : anyProfile(profileId) ?? profileById(BASE_PROFILE.id);
+      profileId = profile.id;
       this.session = createSession({
         matchId: `local-${profileId}-${seed}-${Date.now().toString(36)}`, profile, catalog: localCatalog(), decks: localDecks(profile), seed, allocationPolicies: policies,
         controllers: { A: { type: seats.A, revision: seats.A === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' }, B: { type: seats.B, revision: seats.B === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' } },

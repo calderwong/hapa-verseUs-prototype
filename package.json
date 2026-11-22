@@ -14,7 +14,8 @@
     "experiment": "node tools/hapa/experiment.mjs",
     "replay": "node tools/hapa/replay.mjs",
     "peers": "node tools/hapa/peers.mjs",
-    "art:sync": "node tools/hapa/sync-tarot-art.mjs"
+    "art:sync": "node tools/hapa/sync-tarot-art.mjs",
+    "history": "node tools/hapa/history.mjs"
   },
   "dependencies": {
     "@fontsource/cinzel": "^5.3.0",

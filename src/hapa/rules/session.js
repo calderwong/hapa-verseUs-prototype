@@ -86,14 +86,15 @@ export function playMatch(session, controllers, { tickBudget = 400, onTick } = {
 }
 
 /** Recompute a replay from its manifest and inputs; compare each Tick's checkpoint. */
-export function verifyReplay(replay) {
+export function verifyReplay(replay, { onEvents } = {}) {
   const ctx = createContext(replay.manifest);
   const state = replay.fixture?.initialState ? clone(replay.fixture.initialState) : initializeMatch(replay.manifest);
   if (stateFingerprint(state) !== replay.initialFingerprint) return { ok: false, tick: 0, reason: 'initial state differs' };
   for (const t of replay.ticks) {
-    beginCount(state, ctx);
+    const minted = beginCount(state, ctx);
     if (state.tick !== t.tick) return { ok: false, tick: t.tick, reason: `tick numbering differs (${state.tick})` };
-    runTick(state, ctx, t.plans, replayChooser(t.choices));
+    const r = runTick(state, ctx, t.plans, replayChooser(t.choices));
+    onEvents?.([...minted, ...r.events]);
     const fp = stateFingerprint(state);
     if (fp !== t.fingerprint) return { ok: false, tick: t.tick, reason: 'checkpoint fingerprint differs', expected: t.fingerprint, actual: fp };
   }

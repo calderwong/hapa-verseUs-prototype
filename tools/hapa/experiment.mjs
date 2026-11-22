@@ -10,7 +10,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createSession, playMatch, verifyReplay } from '../../src/hapa/rules/session.js';
 import { HeuristicBot } from '../../src/hapa/controllers/heuristic-bot.js';
-import { summarize } from '../../src/hapa/rules/stats.js';
+import { summarize, HistoryStore, combatCredit, creatorStats } from '../../src/hapa/rules/stats.js';
 import { profileById, BASE_PROFILE } from '../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../fixtures/hapa/content.js';
 
@@ -20,7 +20,9 @@ const [s0, s1] = arg('seeds', '1-4').split('-').map(Number);
 const ticks = Number(arg('ticks', 250));
 const out = arg('out', `.data/experiments/${new Date().toISOString().replace(/[:.]/g, '-')}`);
 mkdirSync(out, { recursive: true });
-const report = { kind: 'hapa-versus-rules-simulation', controllers: 'heuristic-bot/0.1.0 vs heuristic-bot/0.1.0', tickBudget: ticks, seeds: [s0, s1], profiles: {} };
+const history = new HistoryStore();
+const experimentId = out.split('/').pop();
+const report = { kind: 'hapa-versus-rules-simulation', experimentId, controllers: 'heuristic-bot/0.1.0 vs heuristic-bot/0.1.0', tickBudget: ticks, seeds: [s0, s1], profiles: {} };
 for (const pid of profiles) {
   const agg = { runs: 0, wins: { A: 0, B: 0 }, draws: 0, unfinished: 0, ticksToOutcome: [], firstEngagement: [], casualties: { A: 0, B: 0 }, damage: { physical: 0, magic: 0 }, damageByFace: {}, casts: {}, manaExpired: 0, replacedUnused: 0, matches: [] };
   for (let seed = s0; seed <= s1; seed++) {
@@ -31,6 +33,7 @@ for (const pid of profiles) {
     const o = playMatch(session, bots, { tickBudget: ticks });
     const v = verifyReplay(JSON.parse(JSON.stringify(session.replay)));
     const s = summarize(session.events, session.state);
+    history.importMatch({ manifest: session.manifest, events: session.events, outcome: o, experimentId });
     agg.runs++;
     if (o.result === 'win') { agg.wins[o.winner]++; agg.ticksToOutcome.push(o.tick); } else if (o.result === 'draw') agg.draws++; else agg.unfinished++;
     if (s.firstEngagementTick) agg.firstEngagement.push(s.firstEngagementTick);
@@ -48,6 +51,8 @@ for (const pid of profiles) {
   const mean = (a) => (a.length ? +(a.reduce((x, y) => x + y, 0) / a.length).toFixed(1) : null);
   report.profiles[pid] = { ...agg, meanTicksToOutcome: mean(agg.ticksToOutcome), meanFirstEngagement: mean(agg.firstEngagement) };
 }
+// combat credit and creator use as separate projections over the same events (repeated runs labeled)
+report.history = { events: history.size, combatCredit: combatCredit(history), creators: creatorStats(history) };
 writeFileSync(`${out}/report.json`, JSON.stringify(report, null, 1));
 for (const [pid, a] of Object.entries(report.profiles)) console.log(`${pid}: A ${a.wins.A} · B ${a.wins.B} · draw ${a.draws} · unfinished ${a.unfinished} · mean outcome Tick ${a.meanTicksToOutcome} · first contact ${a.meanFirstEngagement} · casualties ${a.casualties.A}/${a.casualties.B}`);
 console.log(`report: ${out}/report.json`);

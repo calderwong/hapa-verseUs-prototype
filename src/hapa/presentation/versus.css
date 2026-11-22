@@ -162,3 +162,13 @@ kbd { font: 11px 'Pixelify Sans', monospace; border: 1px solid #5a6380; border-b
 .ed-valid.bad { color: #ff8a7a; }
 .ed-deck table { border-collapse: collapse; }
 .ed-deck td, .ed-deck th { padding: 3px 8px; text-align: left; }
+/* Rules & experiments */
+.lab-fields { border-collapse: collapse; width: 100%; }
+.lab-fields td, .lab-fields th { padding: 4px 8px; vertical-align: top; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left; }
+.lab-fields tr.changed td { background: rgba(226,189,98,0.10); }
+.lab-fields input[type=number] { width: 56px; }
+.lab-result { margin: 6px 0; padding: 6px 8px; border: 1px solid; }
+.lab-result.ok { border-color: var(--ok); }
+.lab-result.bad { border-color: #ff8a7a; color: #ff8a7a; }
+.lab table { border-collapse: collapse; }
+.lab table td, .lab table th { padding: 3px 8px; text-align: left; }
