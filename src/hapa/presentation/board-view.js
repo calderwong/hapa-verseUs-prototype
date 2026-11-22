@@ -14,6 +14,8 @@ import { territoryColors } from '../rules/economy.js';
 import { TerrainView, bandY, textLabel, standingOf } from './terrain-view.js';
 import { paintGround, PX } from './ground-painter.js';
 import { HitFX } from './fx.js';
+import { attachGear, placeGear } from './gear.js';
+import { FACINGS } from '../rules/geometry.js';
 
 export const S = 1.5; // world units per member width
 export const COLOR_HEX = {
@@ -242,6 +244,8 @@ export class BoardView {
         spr.userData.awayCorner = this._awayMark(4, 0xf2c14e);
         spr.userData.awayBreach = this._awayMark(3, 0xff6b5b);
         spr.add(spr.userData.awayCorner, spr.userData.awayBreach);
+        // the archetype's held gear (sword in the right hand, shield on the left arm), from catalog data
+        spr.userData.gear = attachGear(spr, this.ctx.catalog.archetypes[m.archetype], m.owner);
       }
       spr.userData.awayCorner.visible = m.alive && m.helperAway?.kind === 'corner';
       spr.userData.awayBreach.visible = m.alive && m.helperAway?.kind === 'breach';
@@ -265,6 +269,11 @@ export class BoardView {
         spr.userData.flyLine.position.y = -hgt / 2;
       }
       spr.userData.facing = party?.facing ?? 'N';
+      if (spr.userData.gear) {
+        const F = FACINGS[spr.userData.facing] ?? FACINGS.N;
+        // rules (x, y) → world (x, −z)
+        placeGear(spr.userData.gear, { x: F.fx, z: -F.fy }, { x: F.rx, z: -F.ry }, spr.visible);
+      }
     }
     for (const [id, spr] of this.sprites) if (!seen.has(id)) { spr.visible = false; }
     // party markers
