@@ -88,7 +88,8 @@ export class BoardCamera {
   orbit(dx, dy) { this.goal.yaw -= dx * 0.006; this.goal.pitch = Math.min(86 * DEG, Math.max(18 * DEG, this.goal.pitch + dy * 0.004)); }
   /** Did the last pointer gesture move far enough to count as a camera drag (not a click)? */
   wasDrag() { return this._moved > 5; }
-  focusOn(v) { this.goal.focus.set(v.x, 0, v.z); this.goal.distance = Math.min(this.goal.distance, this.board.size * 0.55); }
+  /** Focus a world point at its own height (a flyer, a hilltop or a tunnel floor), closing in if far. */
+  focusOn(v) { this.goal.focus.set(v.x, v.y ?? 0, v.z); this.goal.distance = Math.min(this.goal.distance, this.board.size * 0.55); }
 
   /** Pan in screen directions (world units scaled by distance). */
   pan(dx, dy) {
@@ -116,9 +117,10 @@ export class BoardCamera {
     this.distance = damp(this.distance, this.goal.distance, 8, dt);
     this.focus.x = damp(this.focus.x, this.goal.focus.x, 8, dt);
     this.focus.z = damp(this.focus.z, this.goal.focus.z, 8, dt);
+    this.focus.y = damp(this.focus.y, this.goal.focus.y, 8, dt);
     const c = this.camera;
     const r = this.distance * Math.cos(this.pitch);
-    c.position.set(this.focus.x + Math.sin(this.yaw) * r, this.distance * Math.sin(this.pitch), this.focus.z + Math.cos(this.yaw) * r);
+    c.position.set(this.focus.x + Math.sin(this.yaw) * r, this.focus.y + this.distance * Math.sin(this.pitch), this.focus.z + Math.cos(this.yaw) * r);
     c.lookAt(this.focus);
     globalUniforms.uCameraYaw.value = this.yaw;
     globalUniforms.uCameraPosition?.value?.copy?.(c.position);

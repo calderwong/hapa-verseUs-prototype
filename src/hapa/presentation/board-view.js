@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { Sprite3D } from '../../../vendor/lumina/src/engine/sprite/Sprite3D.js';
 import { createCharacterSheet } from '../../../vendor/lumina/src/engine/pixel/CharacterSprites.js';
 import { territoryColors } from '../rules/economy.js';
+import { surfaceBand } from '../rules/terrain.js';
 import { TerrainView, bandY, textLabel, standingOf } from './terrain-view.js';
 import { paintGround, PX } from './ground-painter.js';
 import { HitFX } from './fx.js';
@@ -154,6 +155,25 @@ export class BoardView {
 
   get center() { return new THREE.Vector3((this.w / 2) * S, 0, -(this.h / 2) * S); }
   get size() { return Math.max(this.w, this.h) * S; }
+  /**
+   * The world height at which a party is drawn: its members' band (a flyer at its flight band, a
+   * hilltop party on the hill, a tunnel party below ground). Overlays and focus use it so markers
+   * sit with what the player sees.
+   */
+  partyY(p) { return bandY(p.band ?? 1); }
+
+  /** The world height of a territory's walking surface (a hill top, or the ground); under a cutaway, the shown band's floor. */
+  surfaceY(column, row) {
+    const layer = this.terrain.cutaway;
+    if (layer !== null && layer < 1) return bandY(layer);
+    return bandY(surfaceBand(this._state?.terrain ?? { hills: {} }, column, row));
+  }
+
+  /** The height an overlay for travel to a territory sits at, for this party's movement mode. */
+  travelY(party, column, row) {
+    return party.movementMode === 'air' || (party.band ?? 1) < 1 ? this.partyY(party) : bandY(surfaceBand(this._state?.terrain ?? { hills: {} }, column, row));
+  }
+
   /** rules units → world */
   toWorld(x, y) { return new THREE.Vector3((x / this.ctx.U) * S, 0, -(y / this.ctx.U) * S); }
   /** world → member-width board coordinates */
@@ -254,6 +274,7 @@ export class BoardView {
 
   /** Create or update every member sprite and party marker from a state (positions optional override). */
   sync(state, positions = null) {
+    this._state = state;
     const seen = new Set();
     this.terrain.sync(state);
     const layer = this.terrain.cutaway;
@@ -411,8 +432,9 @@ export class BoardView {
   select(state, party, dests = []) {
     this.destGroup.clear();
     if (!party) { this.selectRing.visible = false; this.routeLine.visible = false; return; }
+    this._state = state;
     const w = this.toWorld(party.x, party.y);
-    this.selectRing.position.set(w.x, 0.05, w.z);
+    this.selectRing.position.set(w.x, this.partyY(party) + 0.05, w.z);
     this.selectRing.visible = true;
     for (const d of dests) {
       const c = this.ctx.geo.center(d.column, d.row);
@@ -421,7 +443,7 @@ export class BoardView {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(2.9 * S, 2.9 * S), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.22, depthWrite: false }));
       m.rotation.x = -Math.PI / 2;
       const p = this.toWorld(c.x, c.y);
-      m.position.set(p.x, 0.03, p.z);
+      m.position.set(p.x, this.travelY(party, d.column, d.row) + 0.03, p.z);
       m.renderOrder = 2;
       this.destGroup.add(m);
     }
@@ -430,7 +452,14 @@ export class BoardView {
 
   showRoute(party, nodes) {
     if (!nodes.length) { this.routeLine.visible = false; return; }
-    const pts = [[party.x, party.y], ...nodes].map(([x, y]) => { const v = this.toWorld(x, y); v.y = 0.12; return v; });
+    const U = this.ctx.U, geo = this.ctx.geo;
+    const pts = [[party.x, party.y], ...nodes].map(([x, y], i) => {
+      const v = this.toWorld(x, y);
+      // each point at the surface it crosses (a hill top, the ground) or at a flyer / tunnel band
+      const col = Math.floor(x / U / 4) + 1, row = Math.floor(y / U / 4) + 1;
+      v.y = (i === 0 ? this.partyY(party) : geo.onBoard(col, row) ? this.travelY(party, col, row) : this.partyY(party)) + 0.12;
+      return v;
+    });
     this.routeLine.geometry.dispose();
     this.routeLine.geometry = new THREE.BufferGeometry().setFromPoints(pts);
     this.routeLine.visible = true;
@@ -440,27 +469,72 @@ export class BoardView {
     if (!territory) { this.hoverRing.visible = false; return; }
     const c = this.ctx.geo.center(territory.column, territory.row);
     const w = this.toWorld(c.x, c.y);
-    this.hoverRing.position.set(w.x, 0.035, w.z);
+    this.hoverRing.position.set(w.x, this.surfaceY(territory.column, territory.row) + 0.035, w.z);
     this.hoverRing.visible = true;
   }
 
-  /** Pick: world point on the ground → territory and nearest member/party. */
+  /**
+   * Pick what the pointer is over, by visible height (Design Companion "Seeing a six-band volume"):
+   *  1. member bodies the player can see — drawn at their band, in the shown layer, and not under a
+   *     roof while all layers are shown — nearest the ray wins within a party;
+   *  2. otherwise the territory surface under the pointer (a hill top, the ground, or the shown
+   *     band's floor in a cutaway) and the parties occupying it in the shown layers.
+   * When more than one party qualifies the result is ambiguous: `party` is null and `candidates`
+   * lists them for the player to choose. A filtered-out layer never wins. Presentation only: rules
+   * collision and legality stay in the rules module.
+   * @returns {{ territory: {column:number,row:number}|null, member: any, party: any, point: {x:number,y:number}|null, candidates: Array<{ party: any, member: any, band: number, covered: boolean }>, layer: number|null } | null}
+   */
   pick(raycaster, state) {
-    const hit = raycaster.intersectObject(this.ground)[0];
-    if (!hit) return null;
-    const b = this.toBoard(hit.point);
-    const U = this.ctx.U;
-    const column = Math.floor(b.x / 4) + 1, row = Math.floor(b.y / 4) + 1;
-    let member = null, best = 0.75;
+    this._state = state;
+    const U = this.ctx.U, ray = raycaster.ray, layer = this.terrain.cutaway;
+    const shown = (band) => layer === null || band === layer;
+    const coveredParty = (p) => layer === null && (p.band ?? 1) < 0 && standingOf(state, this.ctx, p).kind === 'tunnel';
+    const reach = 0.55 * S, body = new THREE.Vector3();
+    // 1. visible bodies
+    const byParty = new Map();
     for (const m of Object.values(state.members)) {
       if (!m.alive) continue;
-      const d = Math.max(Math.abs(m.x / U - b.x), Math.abs(m.y / U - b.y));
-      if (d < best) { best = d; member = m; }
+      const spr = this.sprites.get(m.id), p = state.parties[m.party];
+      if (!spr || !p || !shown(m.band ?? 1) || coveredParty(p)) continue;
+      body.copy(spr.position); body.y += 0.45;
+      const d = Math.sqrt(ray.distanceSqToPoint(body));
+      if (d > reach) continue;
+      const along = body.clone().sub(ray.origin).dot(ray.direction);
+      const prev = byParty.get(p.id);
+      if (!prev || d < prev.d) byParty.set(p.id, { party: p, member: m, d, along, band: m.band ?? 1, covered: false });
     }
-    let party = member ? state.parties[member.party] : null;
-    if (!party) party = Object.values(state.parties).find((p) => p.alive && !p.retired && Math.abs(p.x / U - b.x) < 1.6 && Math.abs(p.y / U - b.y) < 1.6) ?? null;
-    const onBoard = this.ctx.geo.onBoard(column, row);
-    return { territory: onBoard ? { column, row } : null, member, party, point: b };
+    // the surface under the pointer: hill tops first, then the ground (or the cutaway floor)
+    let point = null;
+    if (layer !== null && layer < 1) {
+      const v = new THREE.Vector3();
+      if (ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -bandY(layer)), v)) point = v;
+    } else {
+      const hit = raycaster.intersectObjects([...this.terrain.hillMeshes, this.ground], false)[0];
+      point = hit?.point ?? null;
+    }
+    const b = point ? this.toBoard(point) : null;
+    const column = b ? Math.floor(b.x / 4) + 1 : 0, row = b ? Math.floor(b.y / 4) + 1 : 0;
+    const territory = b && this.ctx.geo.onBoard(column, row) ? { column, row } : null;
+    let candidates = [...byParty.values()].sort((x, y) => x.along - y.along);
+    // 2. no body under the pointer: the occupants of that territory body in the shown layers
+    if (!candidates.length && b) {
+      for (const p of Object.values(state.parties)) {
+        if (!p.alive || p.retired || !shown(p.band ?? 1)) continue;
+        if (Math.abs(p.x / U - b.x) >= 1.6 || Math.abs(p.y / U - b.y) >= 1.6) continue;
+        let member = null, best = Infinity;
+        for (const id of Object.values(p.slots)) {
+          const m = id && state.members[id];
+          if (!m?.alive) continue;
+          const d = Math.max(Math.abs(m.x / U - b.x), Math.abs(m.y / U - b.y));
+          if (d < best) { best = d; member = m; }
+        }
+        candidates.push({ party: p, member, d: best, band: p.band ?? 1, covered: coveredParty(p) });
+      }
+      candidates.sort((x, y) => (y.band - x.band) || (x.d - y.d));
+    }
+    candidates = candidates.map(({ party, member, band, covered }) => ({ party, member, band, covered }));
+    const one = candidates.length === 1 ? candidates[0] : null;
+    return { territory, member: one?.member ?? null, party: one?.party ?? null, point: b, candidates, layer };
   }
 
   /** The bank card tile under the pointer, or null. */

@@ -28,10 +28,11 @@ export class CardDrag {
     this._key = (e) => { if (e.code === 'Escape' && this.drag) this._cancel(); };
   }
 
-  /** Can this card be picked up by the viewing player now? */
+  /** Can this card be picked up by the viewing player now (its plan is editable and the card unused)? */
   canLift(card) {
     const a = this.app;
-    return !!card && !a.playback && !a.state.outcome && card.owner === a.viewSeat && a.seats[card.owner] === 'human' && card.state === 'available' && !a._plannedCardIds(card.owner).has(card.id);
+    // the same rule as every other plan edit: not while frozen after Ready, resolving or responding
+    return !!card && card.owner === a.viewSeat && a._can(card.owner).edit && card.state === 'available' && !a._plannedCardIds(card.owner).has(card.id);
   }
 
   /** Press on a card (ribbon tile or bank tile). `origin` is the screen rect the card returns to. */
@@ -103,7 +104,10 @@ export class CardDrag {
     const canvas = a.engine.renderer.domElement;
     if (under !== canvas) return null;
     const pick = a._rayFrom(e);
-    const p = pick?.party;
+    // stacked heights: a drop can only Supply your own parties, so one own candidate is unambiguous
+    const own = pick?.candidates?.filter((c) => c.party.owner === card.owner) ?? [];
+    if (!pick?.party && own.length > 1) return { key: `stack:${own.map((c) => c.party.id).join(',')}`, kind: 'none', valid: false, reason: 'Several of your parties are stacked here — open one layer ([ ]) or use its Load Supply buttons.' };
+    const p = pick?.party ?? (own.length === 1 ? own[0].party : pick?.candidates?.[0]?.party ?? null);
     if (!p || !p.alive || p.retired) return pick?.territory ? { key: `ground:${pick.territory.column},${pick.territory.row}`, kind: 'none', valid: false, reason: 'Drop the card on one of your formations to Supply it.' } : null;
     if (p.owner !== card.owner) return { key: p.id, kind: 'supply', party: p, valid: false, reason: 'Supply only goes to your own parties.' };
     return { key: p.id, kind: 'supply', party: p, valid: true };

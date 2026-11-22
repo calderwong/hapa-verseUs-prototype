@@ -17,9 +17,9 @@ import { createSession, createFixtureSession, openTick } from '../rules/session.
 import { validatePlan, resolveTick, responseOptions } from '../rules/match.js';
 import { legalDestinations, planPartyRoute, routeOrigin, touchingPairs, contactTolerance } from '../rules/movement.js';
 import { mintForecast, nextActivation, roundOf, supplyOf } from '../rules/economy.js';
-import { stateFingerprint } from '../rules/state.js';
+import { stateFingerprint, other } from '../rules/state.js';
 import { summarize } from '../rules/stats.js';
-import { clone } from '../rules/encoding.js';
+import { clone, canonicalize } from '../rules/encoding.js';
 import { HeuristicBot } from '../controllers/heuristic-bot.js';
 import { ALLOCATION_POLICIES } from '../rules/combat.js';
 import { profileById, PROFILE_IDS, BASE_PROFILE } from '../../../fixtures/hapa/profiles.js';
@@ -27,6 +27,8 @@ import { CATALOG } from '../../../fixtures/hapa/content.js';
 
 /** The catalog the running match agreed (bundled + local Cards); presentation reads definitions from it. */
 let activeCatalog = CATALOG;
+/** A plan command's identity for change highlighting (canonical JSON, so key order never matters). */
+const cmdKey = (c) => canonicalize(c);
 import { UI_FIXTURES } from '../../../fixtures/hapa/ui-fixtures.js';
 import { standingOf, fmtBand } from './terrain-view.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
@@ -75,7 +77,10 @@ export class VersusApp {
   _initEngine() {
     if (this.engine) return;
     try { this.sound = new VersusSound(); } catch { this.sound = null; }
-    this.engine = new Engine({ container: this.el.world, clearColor: 0x17212d, maxPixelRatio: 2 });
+    // Versus reads its own keys and pointers; the engine's game Input (which claims Enter, Space and
+    // Tab on the window for its adventure bindings) listens to a detached target, so keyboard focus
+    // and button activation work in the HUD (the engine's documented inputTarget option)
+    this.engine = new Engine({ container: this.el.world, clearColor: 0x17212d, maxPixelRatio: 2, inputTarget: new EventTarget() });
     this.engine.renderer.toneMappingExposure = 1.12;
     this.engine.scene.fog = new THREE.Fog(0x17212d, 160, 320);
     // restrained post (Design Companion ch.2): no depth blur, grain or chromatic aberration over
@@ -190,6 +195,7 @@ export class VersusApp {
     this.lastEvents = [];
     this.inspectEvent = null;
     this.playback = null;
+    this.resolving = false;
     this.view.sync(this.state);
     this._newTick();
   }
@@ -214,45 +220,96 @@ export class VersusApp {
     if (this.watch) setTimeout(() => this._tryResolve(), 350 / this.speed);
   }
 
+  /**
+   * What the local interface allows a seat now: one reading of the agreement state shared by every
+   * button, shortcut, drag and plan edit (Master Requirements v3 ch.16 "Ready names … the exact pair";
+   * Design Companion "Public planning Ready and response choices").
+   *  - frozen: the seat pressed Ready this phase, so its own plan can no longer change;
+   *  - stale: its acknowledgment names an older pair (the opponent revised) — it must acknowledge again;
+   *  - busy: a resolution, its playback or a response window is in progress, or the match is over.
+   */
+  _can(seat = this.viewSeat) {
+    const human = this.seats?.[seat] === 'human';
+    const busy = !!(this.resolving || this.playback || this.pendingChoice || this.state?.outcome);
+    const frozen = !!this.ready?.[seat];
+    const current = this._readyValid(seat);
+    return { human, busy, frozen, current, stale: frozen && !current, edit: human && !busy && !frozen, ready: human && !busy && !current };
+  }
+
+  /** Why a seat's plan cannot change now (for the toast), or null. */
+  _editRefusal(seat) {
+    const c = this._can(seat);
+    if (c.edit) return null;
+    if (!c.human) return `${seat} is not a human seat`;
+    if (this.pendingChoice) return 'A response window is open: plans cannot change until it closes';
+    if (this.resolving || this.playback) return 'The Tick is resolving: plans reopen at the next Tick';
+    if (this.state.outcome) return 'The match is over';
+    return c.stale
+      ? `Your plan is frozen after Ready. Review ${other(seat)}'s changes, then Acknowledge updated plan`
+      : 'Your plan is frozen after Ready (one Ready per phase; there is no Unready)';
+  }
+
   /** Change a seat's public plan: a new revision; any Ready of the old pair becomes stale. */
   _setPlan(seat, cmds) {
+    const refusal = this.bots[seat] ? null : this._editRefusal(seat);
+    if (refusal) { this._toast(refusal, true); this._renderAll(); return false; }
     this.plans[seat] = cmds;
     this.rev[seat] += 1;
     for (const s of ['A', 'B']) if (this.bots[s]) this.ready[s] = { ...this.rev }; // bots re-acknowledge the new pair
     this._renderAll();
+    return true;
   }
 
   _addCommand(seat, cmd) {
+    const refusal = this._editRefusal(seat);
+    if (refusal) { this._toast(refusal, true); return false; }
     let plan = [...this.plans[seat]];
     if (cmd.type === 'set_destination' || cmd.type === 'change_formation' || cmd.type === 'retreat') plan = plan.filter((c) => !(c.type === cmd.type && c.partyId === cmd.partyId));
     plan.push(cmd);
     const v = validatePlan(this.state, this.ctx, seat, plan);
     const err = v.errors.find((e) => e.index === plan.length - 1);
     if (err) { this._toast(`Not added: ${err.error}`, true); return false; }
-    this._setPlan(seat, plan);
-    return true;
+    return this._setPlan(seat, plan);
   }
 
   _readyValid(seat) { const r = this.ready[seat]; return !!r && r.A === this.rev.A && r.B === this.rev.B; }
 
+  /**
+   * Ready (first press) freezes the viewing seat's plan and acknowledges the current pair; after the
+   * opponent revises, the same action acknowledges the updated pair. Refused while busy (resolving,
+   * playback, a response window) or when this seat's acknowledgment is already current.
+   */
   _pressReady() {
-    if (this.playback || this.state.outcome) return;
+    if (!this.session) return;
     const seat = this.viewSeat;
-    if (this.seats[seat] !== 'human') return;
+    if (!this._can(seat).ready) return;
     this.sound?.play('confirm', { volume: 0.6 });
-    this.ready[seat] = { ...this.rev };
+    // remember both plans as acknowledged, to show what the opponent changed afterwards
+    this.ready[seat] = { ...this.rev, seen: { A: this.plans.A.map(cmdKey), B: this.plans.B.map(cmdKey) } };
     this._renderAll();
-    if (this.seats.A === 'human' && this.seats.B === 'human' && !this._readyValid(seat === 'A' ? 'B' : 'A')) {
-      this.viewSeat = seat === 'A' ? 'B' : 'A';
-      this._toast(`${seat} is Ready. ${this.viewSeat} plans now (hotseat).`);
+    const opp = other(seat);
+    if (this.seats.A === 'human' && this.seats.B === 'human' && !this._readyValid(opp)) {
+      this.viewSeat = opp;
+      this._toast(this.ready[opp]
+        ? `${seat} changed its plan after ${opp}'s Ready. ${opp}: your plan is frozen — review ${seat}'s changes, then Acknowledge updated plan.`
+        : `${seat} is Ready and its plan is frozen. ${opp} plans now (hotseat).`);
       this._renderAll();
       return;
     }
     this._tryResolve();
   }
 
+  /** Resolve once both acknowledgments name the current pair; a latch makes it single-entry. */
   async _tryResolve() {
+    if (this.resolving) return;
     if (!(this._readyValid('A') && this._readyValid('B'))) return this._renderAll();
+    this.resolving = true;
+    try { await this._resolveAgreed(); } finally { this.resolving = false; }
+    if (this.state.outcome) this._showResult();
+    else this._newTick();
+  }
+
+  async _resolveAgreed() {
     const { state, ctx } = this;
     const before = clone(state);
     const accepted = {};
@@ -285,8 +342,6 @@ export class VersusApp {
     this.tickEvents.push(...events);
     this.lastEvents = this.tickEvents;
     await this._play(before, frames, events);
-    if (state.outcome) this._showResult();
-    else this._newTick();
   }
 
   /** Play back a resolved Tick: members follow the traced trajectories; casualties fall at their event. */
@@ -383,7 +438,8 @@ export class VersusApp {
       this.keys.add(e.code);
       if (!this.session) return;
       const k = e.key.toLowerCase();
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); return this._pressReady(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (!e.repeat) this._pressReady(); return; }
+      if (e.code === 'Escape' && this.el.pickList) { this._closePickList(); return; }
       if (e.code === 'Escape') { if (this.tool) { this.tool = null; this._renderAll(); } else { this.selected = null; this.view?.select(this.state, null); this._renderAll(); } return; }
       if (k === 'q') this.cam.rotate(45);
       else if (k === 'e') this.cam.rotate(-45);
@@ -392,7 +448,7 @@ export class VersusApp {
       else if (k === 'v') this.cam.toggleTactical();
       else if (e.code === 'Home') this.cam.home();
       else if (k === 'f') this._focusSelection();
-      else if (e.code === 'Space') { e.preventDefault(); if (this.playback) this.playback.paused = !this.playback.paused; }
+      else if (e.code === 'Space' && document.activeElement?.tagName !== 'BUTTON') { e.preventDefault(); if (this.playback) this.playback.paused = !this.playback.paused; }
       else if (/^[1-9]$/.test(e.key)) this._selectHandSlot(Number(e.key));
       else if (k === 'u') this._cardTool('supply');
       else if (k === 'b') this._cardTool('burn');
@@ -474,9 +530,17 @@ export class VersusApp {
 
   _onPointer(e) {
     if (!this.session || e.button === 1) return;
+    this._closePickList();
     if (e.button === 0) { const id = this._cardTileAt(e); if (id) { this.selected = { kind: 'card', id }; this._renderAll(); return; } }
     const pick = this._rayFrom(e);
     if (!pick) return;
+    // several parties under the pointer (stacked heights): the player chooses; never a silent guess
+    if (e.button === 0 && pick.candidates.length > 1) return this._showPickList(e, pick, (chosen) => this._onPick(e, chosen));
+    this._onPick(e, pick);
+  }
+
+  /** Act on a resolved pick (one party or none), for the current tool or plain selection. */
+  _onPick(e, pick) {
     const seat = this.viewSeat;
     if (e.button === 2) {
       // right click: one destination for the selected own party (or a retreat target)
@@ -526,6 +590,42 @@ export class VersusApp {
     this._renderAll();
   }
 
+  /**
+   * A candidate list where several parties lie under the pointer at different heights (Design
+   * Companion: owner, name, territory, band and state; keyboard accessible; picking a covered
+   * candidate opens its layer). `then` receives the pick narrowed to the chosen party.
+   */
+  _showPickList(e, pick, then) {
+    this._closePickList();
+    const s = this.state;
+    const rect = this.el.world.getBoundingClientRect();
+    const describe = (c) => {
+      const p = c.party, st = standingOf(s, this.ctx, p);
+      const where = st.kind === 'flying' ? 'flying' : st.kind === 'tunnel' ? 'roofed tunnel' : st.kind === 'pit' ? 'open pit' : st.kind === 'hilltop' ? 'hilltop' : 'ground';
+      return [h('span', { class: `dot ${p.owner.toLowerCase()}` }), h('b', {}, partyName(s, p.id)), h('span', { class: 'dim' }, ` · band ${fmtBand(c.band)} · ${where} · ${p.state}${c.covered ? ' · under a roof' : ''}`)];
+    };
+    const choose = (c) => { this._closePickList(); then({ ...pick, party: c.party, member: c.member, candidates: [c] }); };
+    const list = h('div', { class: 'pick-list', role: 'dialog', 'aria-label': 'Choose what to select' },
+      h('div', { class: 'pl-head' }, `${pick.candidates.length} here${pick.territory ? ` · R${pick.territory.row}C${pick.territory.column}` : ''} — choose one`),
+      ...pick.candidates.map((c) => h('button', { onclick: (ev) => { ev.stopPropagation(); choose(c); } }, ...describe(c))),
+      h('button', { class: 'pl-cancel', onclick: (ev) => { ev.stopPropagation(); this._closePickList(); } }, 'Cancel (Esc)'));
+    list.addEventListener('keydown', (ev) => {
+      if (ev.code !== 'ArrowDown' && ev.code !== 'ArrowUp') return;
+      ev.preventDefault(); ev.stopPropagation();
+      const bs = [...list.querySelectorAll('button')], i = bs.indexOf(document.activeElement);
+      bs[(i + (ev.code === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length]?.focus();
+    });
+    list.addEventListener('pointerup', (ev) => ev.stopPropagation());
+    list.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+    list.style.left = `${Math.min(e.clientX - rect.left + 12, rect.width - 330)}px`;
+    list.style.top = `${Math.min(e.clientY - rect.top + 12, rect.height - 60 - 34 * pick.candidates.length)}px`;
+    this.el.world.append(list);
+    this.el.pickList = list;
+    list.querySelector('button')?.focus();
+  }
+
+  _closePickList() { this.el.pickList?.remove(); this.el.pickList = null; }
+
   /** Burn the fewest other cards needed to pay a colored cost (a declared payment, never silent). */
   _autoBurns(seat, def, sourceId) {
     const cost = def.cost?.mana ?? {};
@@ -569,6 +669,8 @@ export class VersusApp {
     if (this.selected?.kind !== 'card') return this._toast('Select one of your hand cards first (1–9)');
     const card = this.state.cards[this.selected.id];
     if (card.owner !== this.viewSeat) return this._toast('That card belongs to the opponent');
+    const refusal = this._editRefusal(card.owner);
+    if (refusal) return this._toast(refusal, true);
     if (kind === 'burn') { if (this._addCommand(this.viewSeat, { type: 'burn', cardId: card.id })) this._toast(`Burn planned: +${fmtMana(card.mana)}`); return; }
     if (kind === 'supply') { this.tool = { kind: 'supply', cardId: card.id }; }
     if (kind === 'ability') {
@@ -603,8 +705,8 @@ export class VersusApp {
 
   _focusSelection() {
     const s = this.selected;
-    if (s?.kind === 'party') { const p = this.state.parties[s.id]; this.cam.focusOn(this.view.toWorld(p.x, p.y)); }
-    else if (s?.kind === 'member') { const m = this.state.members[s.id]; this.cam.focusOn(this.view.toWorld(m.x, m.y)); }
+    if (s?.kind === 'party') { const p = this.state.parties[s.id]; this.cam.focusOn(this.view.toWorld(p.x, p.y).setY(this.view.partyY(p))); }
+    else if (s?.kind === 'member') { const m = this.state.members[s.id]; this.cam.focusOn(this.view.toWorld(m.x, m.y).setY(this.view.partyY(m))); }
   }
 
   // --- frame -------------------------------------------------------------------------------------
@@ -787,19 +889,50 @@ export class VersusApp {
       const v = validatePlan(s, this.ctx, seat, this.plans[seat]);
       const bad = new Map(v.errors.map((e) => [e.index, e.error]));
       const rd = this.ready[seat];
-      const status = this._readyValid(seat) ? h('span', { class: 'ok' }, `Ready (A r${rd.A} · B r${rd.B})`) : rd ? h('span', { class: 'warn' }, 'Ready is stale: the pair changed') : h('span', { class: 'dim' }, 'editing');
-      return h('div', { class: `planbox ${seat.toLowerCase()}` },
+      const status = this._readyValid(seat) ? h('span', { class: 'ok', title: `Ready acknowledges the pair A r${rd.A} · B r${rd.B}; this plan is frozen for the phase` }, `Ready · acks A r${rd.A}·B r${rd.B}`)
+        : rd ? h('span', { class: 'warn', title: `Frozen. Its Ready named A r${rd.A} · B r${rd.B}; the pair has changed since, so it must acknowledge again` }, `Frozen · ack stale`) : h('span', { class: 'dim' }, 'editing');
+      // what changed in this plan since the viewing seat acknowledged it (Companion: highlight added / removed)
+      const mine = this.ready[this.viewSeat];
+      const seen = seat !== this.viewSeat && mine && !this._readyValid(this.viewSeat) ? mine.seen?.[seat] ?? null : null;
+      const keys = this.plans[seat].map(cmdKey);
+      const removed = seen ? seen.filter((k) => !keys.includes(k)) : [];
+      const editable = seat === this.viewSeat && this._can(seat).edit;
+      return h('div', { class: `planbox ${seat.toLowerCase()}${rd ? ' frozen' : ''}` },
         h('div', { class: 'phead' }, h('b', {}, `${seat} plan r${this.rev[seat]}`), ' ', status),
-        h('ol', {}, ...this.plans[seat].map((c, i) => h('li', { class: bad.has(i) ? 'bad' : '' }, describeCmd(s, c), bad.has(i) ? h('div', { class: 'err' }, bad.get(i)) : null,
-          seat === this.viewSeat && this.seats[seat] === 'human' && !this.playback ? h('button', { class: 'x', onclick: () => this._setPlan(seat, this.plans[seat].filter((_, j) => j !== i)) }, '×') : null))),
-        this.plans[seat].length ? null : h('div', { class: 'dim' }, 'empty plan (a legal pass)'));
+        h('ol', {}, ...this.plans[seat].map((c, i) => {
+          const added = seen && !seen.includes(keys[i]);
+          return h('li', { class: `${bad.has(i) ? 'bad' : ''}${added ? ' added' : ''}` }, added ? h('span', { class: 'chg' }, 'new') : null, describeCmd(s, c), bad.has(i) ? h('div', { class: 'err' }, bad.get(i)) : null,
+            editable ? h('button', { class: 'x', title: 'Remove this order (a new public revision)', onclick: () => this._setPlan(seat, this.plans[seat].filter((_, j) => j !== i)) }, '×') : null);
+        }),
+          ...removed.map((k) => h('li', { class: 'removed' }, h('span', { class: 'chg' }, 'removed'), describeCmd(s, JSON.parse(k))))),
+        this.plans[seat].length || removed.length ? null : h('div', { class: 'dim' }, 'empty plan (a legal pass)'));
     };
     const me = this.viewSeat;
-    const canReady = this.seats[me] === 'human' && !this.playback && !this.pendingChoice && !this.state.outcome;
-    // the plans scroll; the Ready button stays pinned at the bottom of the panel
-    this.el.plan.replaceChildren(h('h3', {}, 'Public plans'), h('div', { class: 'plans' }, box('A'), box('B')),
-      h('button', { class: `primary ready${this._readyValid(me) ? ' done' : ''}`, disabled: !canReady, onclick: () => this._pressReady() }, this._readyValid(me) ? `Ready ✓ (${me})` : `Ready as ${me} (Ctrl/⌘+Enter)`));
+    const can = this._can(me);
+    // stale: one compact row (notice + the acknowledge action) instead of the pinned button, so the
+    // marked changes keep the room to be read
+    const action = can.stale && !can.busy
+      ? h('div', { class: 'frozen-notice', role: 'status' }, h('span', {}, h('b', {}, '🔒 Your plan is frozen.'), ` Review ${other(me)}'s changes (NEW / REMOVED).`),
+        h('button', { class: 'primary', onclick: () => this._pressReady() }, 'Acknowledge updated plan'))
+      : h('button', { class: `primary ready${can.current ? ' done' : ''}`, disabled: !can.ready, onclick: () => this._pressReady() }, this._readyLabel(me).pinned);
+    // the plans scroll; the Ready action stays pinned at the bottom of the panel
+    this.el.plan.replaceChildren(h('h3', {}, 'Public plans'), h('div', { class: 'plans' }, box('A'), box('B')), action);
+    if (can.stale) this.el.plan.querySelector('.plans li.added, .plans li.removed')?.scrollIntoView({ block: 'nearest' });
     this._renderReadyButton();
+  }
+
+  /** The words for the Ready action in its current state (shared by both Ready controls). */
+  _readyLabel(me) {
+    const c = this._can(me), opp = other(me), n = this.plans[me]?.length ?? 0, tick = this.state.tick;
+    if (this.state.outcome) return { state: 'over', main: 'Match over', sub: '', pinned: 'Match over' };
+    if (this.playback || this.resolving && !this.pendingChoice) return { state: 'resolving', main: 'Resolving…', sub: '', pinned: 'Resolving…' };
+    if (this.pendingChoice) return { state: 'choice', main: 'Response window', sub: `${this.pendingChoice.req.seat} to respond or pass`, pinned: 'Response window open' };
+    if (!c.human) return { state: 'watch', main: '', sub: '', pinned: `${me} is a bot` };
+    if (c.stale) return { state: 'ack', main: 'Acknowledge ▶', sub: `Updated plan from ${opp} · yours stays frozen · Ctrl/⌘+Enter`, pinned: `Acknowledge updated plan (${me})` };
+    if (c.current) return { state: 'waiting', main: `Waiting for ${opp}…`, sub: `Your plan is frozen · ${opp} is planning`, pinned: `Ready ✓ · frozen (${me})` };
+    return n
+      ? { state: 'ready', main: 'Ready ▶', sub: `Freeze my plan (${n} order${n > 1 ? 's' : ''}) · Tick ${tick} · Ctrl/⌘+Enter`, pinned: `Ready and freeze my plan (${me})` }
+      : { state: 'ready', main: 'Ready ▶', sub: `Continue with existing orders · Tick ${tick} · Ctrl/⌘+Enter`, pinned: `Ready: continue with existing orders (${me})` };
   }
 
   /** The big Ready button at the end of your hand ribbon: ends your planning for this Tick. */
@@ -807,17 +940,11 @@ export class VersusApp {
     if (!this.el.readyBig) this.el.readyBig = h('button', { class: 'ready-big', onclick: () => this._pressReady() });
     if (this.el.readyBig.parentElement !== this.el.ownhand) this.el.ownhand.append(this.el.readyBig); // beside your hand, like "end turn"
     const me = this.viewSeat, b = this.el.readyBig;
-    const human = this.seats[me] === 'human';
-    const other = me === 'A' ? 'B' : 'A';
-    const waiting = this._readyValid(me) && !this._readyValid(other);
-    const state = this.state.outcome ? 'over' : this.playback ? 'resolving' : this.pendingChoice ? 'choice' : !human ? 'watch' : waiting ? 'waiting' : 'ready';
-    b.hidden = state === 'watch' || state === 'over';
-    b.disabled = state !== 'ready';
-    b.className = `ready-big ${state === 'ready' ? 'can' : state}`;
-    const n = this.plans[me]?.length ?? 0;
-    b.replaceChildren(
-      h('span', { class: 'rb-main' }, state === 'resolving' ? 'Resolving…' : state === 'choice' ? 'Response window' : state === 'waiting' ? `Waiting for ${other}…` : 'Ready ▶'),
-      h('span', { class: 'rb-sub' }, state === 'ready' ? `Resolve Tick ${this.state.tick} · ${n ? `${n} order${n > 1 ? 's' : ''}` : 'pass'} · Ctrl/⌘+Enter` : state === 'waiting' ? `${other} is planning (hotseat)` : ''));
+    const L = this._readyLabel(me);
+    b.hidden = L.state === 'watch' || L.state === 'over';
+    b.disabled = !this._can(me).ready;
+    b.className = `ready-big ${L.state === 'ready' ? 'can' : L.state === 'ack' ? 'can ack' : L.state}`;
+    b.replaceChildren(h('span', { class: 'rb-main' }, L.main), h('span', { class: 'rb-sub' }, L.sub));
   }
 
   _renderEvents() {
@@ -875,7 +1002,7 @@ export class VersusApp {
     }
     const engagedWith = Object.values(s.engagements).filter((e) => e.active && (e.a === p.id || e.b === p.id)).map((e) => (e.a === p.id ? e.b : e.a));
     const active = s.activeColumns.includes(p.region.column);
-    const facing = (f) => h('button', { disabled: !own || !active || f === p.facing || !!p.formationChange, title: p.state === 'engaged' ? 'In contact: combat keeps the old arrangement this Tick; the change fails if it would pull a touching member out of contact' : `face ${f} (one Tick)`, onclick: () => this._addCommand(p.owner, { type: 'change_formation', partyId: p.id, facing: f }) && this._toast(`Formation change to face ${f} planned (takes one Tick${p.state === 'engaged' ? '; legality is rechecked at completion' : ''})`) }, f);
+    const facing = (f) => h('button', { disabled: !own || !active || f === p.facing || !!p.formationChange || !this._can(p.owner).edit, title: p.state === 'engaged' ? 'In contact: combat keeps the old arrangement this Tick; the change fails if it would pull a touching member out of contact' : `face ${f} (one Tick)`, onclick: () => this._addCommand(p.owner, { type: 'change_formation', partyId: p.id, facing: f }) && this._toast(`Formation change to face ${f} planned (takes one Tick${p.state === 'engaged' ? '; legality is rechecked at completion' : ''})`) }, f);
     return h('div', {},
       h('h3', {}, partyName(s, p.id)),
       h('div', { class: 'kv' },
@@ -895,7 +1022,7 @@ export class VersusApp {
         h('div', { class: 'dim small' }, active ? (p.mount ? 'Right-click a highlighted territory: destination (one step costs 1 Supply).' : 'An unmounted Pawn stores Supply but cannot move.') : `C${p.region.column} is not active: only Supply can reach this party now.`),
         h('div', { class: 'row' }, 'Face ', facing('N'), facing('E'), facing('S'), facing('W')),
         p.state === 'engaged' ? this._retreatPreview(p) : null,
-        p.state === 'engaged' ? h('button', { disabled: !active, onclick: () => { this.tool = { kind: 'retreat', partyId: p.id }; this._toast('Retreat: right-click a legal destination away from contact. Touching members die.'); } }, 'Retreat…') : null) : null);
+        p.state === 'engaged' ? h('button', { disabled: !active || !this._can(p.owner).edit, onclick: () => { this.tool = { kind: 'retreat', partyId: p.id }; this._toast('Retreat: right-click a legal destination away from contact. Touching members die.'); } }, 'Retreat…') : null) : null);
   }
 
   /** Supply already planned for a party this Tick (it lands when the Tick resolves). */
@@ -912,7 +1039,7 @@ export class VersusApp {
     return h('div', { class: 'supply-loader' },
       h('h4', {}, 'Load Supply'),
       cards.length
-        ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._renderAll(); } } },
+        ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { disabled: !this._can(seat).edit, title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._renderAll(); } } },
           `+${pts(c.supply)} `, h('small', { class: 'dim' }, `C${c.localColumn} ${c.rank}${SUIT[c.suit] ?? ''}`))))
         : h('p', { class: 'dim small' }, 'No unplanned hand cards. New cards mint from the highlighted columns each Tick.'),
       h('p', { class: 'dim small' }, 'Any card can become Supply for any of your parties, in any column, at any time. Moving one step costs 1 Supply.'));

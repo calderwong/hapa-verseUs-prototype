@@ -332,3 +332,23 @@ body.card-dragging .cam-pad, body.card-dragging .layer-rail, body.card-dragging 
 @media (prefers-reduced-motion: reduce) { .ready-big.can { animation: none; } }
 body.card-dragging .ready-big { pointer-events: none; }
 .compass { right: auto; left: 10px; }
+
+/* --- Ready freezes the plan (2026-11-22 review UX-01/02) --------------------------------------- */
+.planbox.frozen .phead::before { content: '🔒 '; font-size: 11px; }
+.planbox li.added { background: rgba(143, 211, 160, 0.14); border-radius: 2px; }
+.planbox li.removed { color: var(--mist, #9AA8B2); text-decoration: line-through; opacity: 0.8; }
+.planbox .chg { display: inline-block; margin-right: 4px; padding: 0 4px; border-radius: 2px; font: 700 10px var(--sans); letter-spacing: .04em; text-transform: uppercase; text-decoration: none; background: #8FD3A0; color: #17212D; }
+.planbox li.removed .chg { background: #E8857A; }
+.frozen-notice { flex: none; margin-top: 6px; padding: 4px 6px; display: flex; align-items: center; gap: 6px; border: 1px solid #C9A65E; border-left-width: 4px; border-radius: 3px; background: rgba(201, 166, 94, 0.14); font-size: 11.5px; line-height: 1.3; }
+.frozen-notice button { flex: none; white-space: nowrap; padding: 4px 8px; }
+.ready-big.ack { background: linear-gradient(180deg, #9FD8B0, #5FA877); border-color: #C8F0D4; box-shadow: 0 6px 0 #2C5E3B, 0 12px 24px rgba(0,0,0,0.5); }
+.ready-big.ack .rb-main { font-size: 19px; }
+
+/* --- Stacked-height candidate list (2026-11-22 review UX-03) ------------------------------------ */
+.pick-list { position: absolute; z-index: 30; min-width: 280px; max-width: 320px; padding: 6px; border: 1px solid #C9A65E; border-radius: 6px; background: rgba(23, 33, 45, 0.97); box-shadow: 0 10px 28px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 4px; }
+.pick-list .pl-head { font: 600 11.5px var(--sans); color: var(--mist, #9AA8B2); padding: 2px 4px 4px; }
+.pick-list button { text-align: left; font-size: 12.5px; padding: 6px 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.pick-list button:focus-visible { outline: 2px solid #F5F0E3; outline-offset: 1px; }
+.pick-list .pl-cancel { justify-content: center; opacity: 0.8; }
+.pick-list .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.pick-list .dot.a { background: var(--a); } .pick-list .dot.b { border: 2px solid var(--b); width: 7px; height: 7px; }
