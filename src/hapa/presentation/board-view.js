@@ -19,6 +19,7 @@ import { attachGear, placeGear } from './gear.js';
 import { FACINGS } from '../rules/geometry.js';
 import { bodyVisible } from './playback.js';
 import { ResourceSites } from './firepit.js';
+import { buildBoardFrame } from './boardframe.js';
 import { pieceOf, standardSprite, pieceTexture, zoomLevel, STANDARD_PX, STANDARD_OPACITY } from './pieces.js';
 
 export const S = 1.5; // world units per member width
@@ -32,20 +33,27 @@ const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(pre
 const SUIT_GLYPH = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
 
 /** Sprite specs per role (procedural Luminati pixel characters; the owner color is the tabard). */
+/**
+ * Hapa party recipes — a provisional sample (addendum 01 §9, review 03 R3-04): the native Luminati
+ * procedural painter (CharacterSprites at the vendored pin), no external media. One shared
+ * proportion and material language per owner: A slate-blue, B oxblood, both with ivory trim and
+ * brass accents (Design Companion's slate / ivory / brass); shields keep the owner value.
+ */
 function spriteSpec(role, mount, owner) {
-  const top = owner === 'A' ? '#3d6db4' : '#b44a3d';
-  const trim = owner === 'A' ? '#cfe0ff' : '#ffd9cf';
-  const base = { outfit: { top, bottom: '#4a4a5e', accent: 'metal', style: 'tunic', shirt: 'cream' }, cape: false, beard: false };
+  const top = owner === 'A' ? '#2f4a6e' : '#7a2e2a';
+  const trim = owner === 'A' ? '#e8e2d0' : '#efe3d0';
+  const lining = owner === 'A' ? '#1d2f48' : '#4a1a18';
+  const base = { outfit: { top, bottom: owner === 'A' ? '#363c4c' : '#3c3236', accent: 'gold', style: 'tabard', shirt: 'metal' }, cape: false, beard: false };
   switch (role) {
-    case 'swordsman': return { ...base, preset: 'swordsman', weapon: 'sword', gear: { shield: owner === 'A' ? '#2c4f86' : '#862c2c', boots: 'black' } };
+    case 'swordsman': return { ...base, preset: 'swordsman', weapon: 'sword', gear: { shield: owner === 'A' ? '#24405f' : '#6a2522', boots: 'black' } };
     case 'pikeman': return { ...base, preset: 'guard', weapon: 'spear', hat: 'helmet' };
-    case 'archer': return { ...base, preset: 'hunter', weapon: 'bow', hat: 'hood', hatColor: top };
-    case 'mage': return { ...base, preset: 'scholar', weapon: 'staff', hat: 'wide', hatColor: '#d9853b', outfit: { ...base.outfit, style: 'robe' } };
-    case 'priest': return { ...base, preset: 'cleric', weapon: 'holystaff', hat: 'circlet', outfit: { ...base.outfit, style: 'robe', top: '#7b4fa8' } };
+    case 'archer': return { ...base, preset: 'hunter', weapon: 'bow', hat: 'hood', hatColor: top, outfit: { ...base.outfit, style: 'tunic', shirt: 'cream' } };
+    case 'mage': return { ...base, preset: 'scholar', weapon: 'staff', hat: 'wide', hatColor: lining, outfit: { ...base.outfit, style: 'robe', shirt: 'cream' } };
+    case 'priest': return { ...base, preset: 'cleric', weapon: 'holystaff', hat: 'circlet', outfit: { ...base.outfit, style: 'robe', top: trim, shirt: 'cream' } };
     default: {
       const hats = { castle: 'helmet', knight: 'helmet', bishop: 'circlet', queen: 'circlet', king: 'crown', commander: 'crown' };
       const weapon = mount === 'bishop' ? 'holystaff' : mount === 'queen' ? 'staff' : 'sword';
-      return { ...base, preset: 'guard', hat: hats[mount] ?? 'helmet', weapon, cape: { color: trim, style: mount === 'commander' ? 'cloak' : 'short', lining: top } };
+      return { ...base, preset: 'guard', hat: hats[mount] ?? 'helmet', weapon, cape: { color: trim, style: mount === 'commander' ? 'cloak' : 'short', lining } };
     }
   }
 }
@@ -139,6 +147,7 @@ export class BoardView {
     this.terrain.onOpenCells = (cells) => this._punchGround(cells);
     this.fx = new HitFX(this.root);
     this.sites = new ResourceSites(this.root, (x, y) => new THREE.Vector3(x * S, 0, -y * S), { w: this.w, h: this.h, S });
+    this.frame = buildBoardFrame(this.root, { w: this.w, h: this.h, S });
     this._time = 0;
   }
 

@@ -77,7 +77,7 @@ export function paintPiece(owner, piece, o = {}) {
   } else {
     g.shadowColor = 'rgba(0,0,0,0.55)'; g.shadowBlur = 8; g.shadowOffsetY = 3;
     g.fillStyle = fill; g.fill();
-    g.shadowColor = 'transparent'; g.lineWidth = 5; g.strokeStyle = edge; g.stroke();
+    g.shadowColor = 'transparent'; g.lineWidth = owner === 'A' ? 5 : 3; g.strokeStyle = edge; g.stroke(); // B: a thin light edge so the dark body carries the value cue
   }
   if (piece === 'commander') { // a star on the crown: distinct from an ordinary King
     star(g, 50, 66, 13, o.ghost ? 'rgba(217,184,106,0.6)' : INK.brass, edge);
