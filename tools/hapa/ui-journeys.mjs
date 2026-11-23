@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -264,6 +264,26 @@ if (want.has('ux07')) {
     }
   }
   report.journeys.ux07 = j;
+}
+
+// --- UX-08: one Card anatomy — follow the same card through ribbon, inspector and drag -----------
+if (want.has('ux08')) {
+  const page = await open('autostart=1&a=human&b=bot&seed=1');
+  const j = { steps: [] };
+  for (let i = 0; i < 8; i++) { await page.keyboard.down('Control'); await page.keyboard.press('Enter'); await page.keyboard.up('Control'); await sleep(2600); }
+  const pickCard = await page.evaluate(() => { // prefer a card with a local Tarot face
+    const a = window.__versus, own = Object.entries(a.state.players.A.bank.minor).filter(([, id]) => id);
+    const withArt = own.find(([, id]) => document.querySelector('#ownhand .face:not(.fallback)') && a.state.cards[id]);
+    return { tick: a.state.tick, cards: own.map(([c, id]) => `${c}:${a.state.cards[id].rank}${a.state.cards[id].suit[0]}`), faces: document.querySelectorAll('#ownhand .face:not(.fallback)').length, fallbacks: document.querySelectorAll('#ownhand .face.fallback').length, overflowTags: document.querySelectorAll('.tile .more').length, oppAbilityLabels: document.querySelectorAll('#opphand .abil').length };
+  });
+  j.steps.push({ name: 'hand after 8 Ticks', ...pickCard });
+  const tile = await page.$('#ownhand .tile:not(.empty)');
+  if (tile) { await tile.click(); await sleep(500); }
+  j.steps.push({ name: 'first own card selected', inspector: await page.evaluate(() => ({ face: !!document.querySelector('#inspector .inspect-face'), label: document.querySelector('#inspector .inspect-face')?.getAttribute('aria-label'), heading: document.querySelector('#inspector h3')?.innerText })) });
+  j.shot = await shot(page, 'ux08-hand-and-inspector');
+  j.errors = page.errors;
+  report.journeys.ux08 = j;
+  await page.close();
 }
 
 await browser.close();

@@ -362,3 +362,20 @@ body.card-dragging .ready-big { pointer-events: none; }
 .ribbon-label { flex: none; width: 16px; white-space: nowrap; overflow: hidden; } /* equal on both ribbons so the nine columns align */
 /* the reserved use of a planned card, in words (UX-09) */
 .tile .plannedtag { position: static; display: block; margin-top: 1px; padding: 0 3px; border: 1px dashed currentColor; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 700 10px var(--sans); }
+
+/* --- One Card anatomy (2026-11-22 review UX-08): identity, bounded face, resources, ability band --- */
+.tile:not(.empty) { display: flex; flex-direction: column; gap: 2px; }
+.tile .thead { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; min-width: 0; }
+.tile .thead .tl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .face { flex: none; height: 30px; border-radius: 3px; background-size: cover; background-position: center 30%; border: 1px solid rgba(23,33,45,0.55); }
+.tile .face.fallback { display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(135deg, rgba(23,33,45,0.08) 0 6px, rgba(23,33,45,0.02) 6px 12px); font: 18px Georgia, serif; color: rgba(23,33,45,0.45); }
+.tile .art { display: none; }
+.tile .res { display: flex; align-items: center; flex-wrap: wrap; gap: 3px; min-width: 0; }
+.tile .res .mana { display: inline-flex; flex-wrap: nowrap; }
+.tile .nomana { font-size: 10px; color: #6B7783; }
+.tile .more { font: 700 10px var(--sans); padding: 0 3px; border-radius: 2px; background: var(--slate); color: var(--ivory); }
+.tile .abil { font-style: normal; font: 600 10.5px/1.2 var(--sans); background: var(--slate); color: var(--ivory); border-radius: 2px; padding: 1px 4px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tile .abil.none { background: transparent; color: #6B7783; font-weight: 400; }
+#opphand .tile .abil { -webkit-line-clamp: 1; font-size: 10px; }
+.tile .fc { position: static; margin-top: auto; }
+.inspect-face { display: block; width: 150px; height: 200px; margin: 0 auto 8px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.45); }

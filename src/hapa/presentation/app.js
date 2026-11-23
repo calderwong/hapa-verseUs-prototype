@@ -644,6 +644,25 @@ export class VersusApp {
     return burns;
   }
 
+  /**
+   * A card's face band: its local Tarot rendition, bounded and at full strength; without one, an
+   * intentional suit fallback. The face is the card's art identity only — the attached ability is
+   * named separately (review UX-08).
+   */
+  _faceBand(card) {
+    const art = renditionFor(card);
+    return art
+      ? h('div', { class: 'face', style: `background-image:url("${art.url}")`, role: 'img', 'aria-label': `Face: ${art.title}` })
+      : h('div', { class: `face fallback suit-${card.suit}`, 'aria-hidden': 'true' }, h('span', {}, SUIT[card.suit] ?? '◆'));
+  }
+
+  /** Mana chips, at most `max`, then an explicit "+n" so an overflow never reads as zero; "no Mana" when none. */
+  _manaCompact(mana, max) {
+    const chips = manaChips(mana);
+    if (!chips.length) return [h('span', { class: 'nomana' }, 'no Mana')];
+    return chips.length > max ? [...chips.slice(0, max), h('span', { class: 'more', title: fmtMana(mana) }, `+${chips.length - max}`)] : chips;
+  }
+
   /** The reserved use of a planned card, in words ("Supply → Knight R1C8", "Burn", "Ember Strike", "pays for …"). */
   _plannedUse(seat, cardId) {
     const c = this.plans[seat].find((x) => x.cardId === cardId);
@@ -862,14 +881,16 @@ export class VersusApp {
         onpointerdown: (e) => { if (card && own) { const r = e.currentTarget.getBoundingClientRect(); this.cardDrag?.press(e, card, { x: r.left + r.width / 2, y: r.top + r.height / 2 }); } },
         title: card ? `${card.id}\n${def?.title}: ${def?.text ?? ''}` : `Empty · next mint ${forecast}`,
       },
-      own ? h('div', { class: 'tl' }, `C${lc}`, col !== lc ? h('small', {}, ` · g${col}`) : null)
-        : h('div', { class: 'tl' }, `g${col}`, h('small', {}, ` · ${seat} C${ownerLc}`)),
-      card && renditionFor(card) ? h('div', { class: 'art', style: `background-image:url("${renditionFor(card).url}")`, 'aria-hidden': 'true' }) : null,
+      // one Card anatomy in every view (review UX-08): identity row, a bounded face, resources,
+      // then the attached ability on its own band — the same order as the drag / world-bank face
+      h('div', { class: 'thead' },
+        card ? h('span', { class: 'rank' }, `${card.rank}`, h('span', { class: 'suit' }, SUIT[card.suit])) : null,
+        own ? h('span', { class: 'tl' }, `C${lc}`, col !== lc ? h('small', {}, ` · g${col}`) : null)
+          : h('span', { class: 'tl' }, `g${col}`, h('small', {}, ` · ${seat} C${ownerLc}`))),
       card ? [
-        h('div', { class: 'rank' }, `${card.rank}`, h('span', { class: 'suit' }, SUIT[card.suit])),
-        own ? h('div', { class: 'sup' }, `Supply ${pts(card.supply)}`) : h('div', { class: 'sup' }, `S${pts(card.supply)}`),
-        h('div', { class: 'mana' }, ...(Object.keys(card.mana).length ? manaChips(card.mana) : [h('span', { class: 'dim' }, 'no Mana')])),
-        own ? h('div', { class: 'abil' }, def?.title ?? '—') : null,
+        own ? this._faceBand(card) : null,
+        h('div', { class: 'res' }, h('span', { class: 'sup' }, own ? `Supply ${pts(card.supply)}` : `S${pts(card.supply)}`), h('span', { class: 'mana' }, ...this._manaCompact(card.mana, own ? 3 : 2))),
+        h('div', { class: `abil${def?.category === 'resource' || !def ? ' none' : ''}` }, def?.category === 'resource' || !def ? 'no ability' : def.title),
         planned.has(id) ? h('div', { class: 'plannedtag' }, this._plannedUse(seat, id)) : null,
       ] : h('div', { class: 'dim' }, 'empty'),
       own ? h('div', { class: 'fc' }, forecast) : null));
@@ -1093,7 +1114,11 @@ export class VersusApp {
     const s = this.state, def = activeCatalog.cards[card.abilityId];
     const own = card.owner === this.viewSeat && this.seats[card.owner] === 'human' && card.state === 'available';
     const planned = this._plannedCardIds(card.owner).has(card.id);
-    return h('div', {},
+    const face = drawCardCanvas(card, s, 240, 320);
+    face.className = 'inspect-face';
+    face.setAttribute('role', 'img');
+    face.setAttribute('aria-label', `${card.rank} of ${SUIT_NAME[card.suit] ?? card.suit}: Supply ${pts(card.supply)}, ${Object.keys(card.mana ?? {}).length ? fmtMana(card.mana) : 'no Mana'}, ability ${def?.title ?? 'none'}`);
+    return h('div', {}, face,
       h('h3', {}, `${card.rank} of ${SUIT_NAME[card.suit]} · ${card.owner} C${card.localColumn}`),
       h('div', { class: 'kv' },
         h('span', {}, 'Supply'), h('span', {}, pts(card.supply)),
