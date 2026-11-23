@@ -1,0 +1,82 @@
+{
+  "date": "2026-11-23",
+  "sourceCommit": "53481b90f0909f16108b30b163acb69c8649d6ea",
+  "implementationCommit": "95c88bf3dbb412df8388f99391ed293d5ae6ed44",
+  "engineGitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "independentHeadless": {
+    "node": "v24.22.3",
+    "command": [
+      "node",
+      "--test",
+      "tests/hapa/boundaries.test.js",
+      "tests/hapa/content.test.js",
+      "tests/hapa/contracts.test.js",
+      "tests/hapa/corner.test.js",
+      "tests/hapa/effects.test.js",
+      "tests/hapa/elevation.test.js",
+      "tests/hapa/funding.test.js",
+      "tests/hapa/glossary.test.js",
+      "tests/hapa/golden.test.js",
+      "tests/hapa/history.test.js",
+      "tests/hapa/inspection.test.js",
+      "tests/hapa/payment.test.js",
+      "tests/hapa/play.test.js",
+      "tests/hapa/playback.test.js",
+      "tests/hapa/profile-lab.test.js",
+      "tests/hapa/terrain.test.js",
+      "tests/hapa/ui-fixtures.test.js"
+    ],
+    "excluded": {
+      "tests/hapa/protocol.test.js": "hypercore-crypto unavailable; four protocol tests not independently executed"
+    },
+    "exitCode": 0,
+    "tests": 104,
+    "passed": 104,
+    "failed": 0,
+    "durationMs": 20700.010123
+  },
+  "probes": {
+    "cases": 10,
+    "inspectionTerrain": 5,
+    "interaction": 5,
+    "method": "Actual rules plus isolated checked-in presentation methods with explicit doubles; see README. Diagnostic baseline assertions, not permanent regression expectations."
+  },
+  "live": {
+    "url": "http://127.0.0.1:5199/versus.html?autostart=1&a=human&b=human&seed=1",
+    "profile": "hapa_open_10x9_v3_02",
+    "commit": null,
+    "dirty": null,
+    "initialViewportCss": [
+      2223,
+      1076
+    ],
+    "captureViewportCss": [
+      1280,
+      720
+    ],
+    "dpr": null,
+    "textScale": "not independently varied",
+    "browserVersion": null,
+    "os": null,
+    "viewportReset": true,
+    "readySubmitted": false,
+    "scope": [
+      "ordinary own-party selection",
+      "explicit close inspection",
+      "compact labels",
+      "expanded hover overlap",
+      "navigator enemy activation replaces selection and moves camera"
+    ]
+  },
+  "implementerReported": {
+    "headlessTests": 108,
+    "browserAssertions": 270,
+    "browserFailures": 0,
+    "negativeControlAssertions": 26,
+    "negativeControlFailures": 2,
+    "fullCheckIndependentlyRerun": false
+  },
+  "videoReview": "Paths/scripts/logs inventoried; binary content unavailable through connector; no claim to have watched recordings.",
+  "overwatch": "Not read or updated by this review",
+  "cjAcceptance": "Not recorded"
+}

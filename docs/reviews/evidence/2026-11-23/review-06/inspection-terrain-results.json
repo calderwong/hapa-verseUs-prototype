@@ -1,0 +1,731 @@
+{
+  "head": "53481b90f0909f16108b30b163acb69c8649d6ea",
+  "implementation": "95c88bf3dbb412df8388f99391ed293d5ae6ed44",
+  "scope": "Headless actual-rules probes; no browser or visual acceptance claimed",
+  "cases": {
+    "playback_ward": {
+      "profile": "hapa_open_10x9_v3_02",
+      "events": [
+        {
+          "id": "fixture-scenario:1",
+          "seq": 1,
+          "tick": 5,
+          "phase": "resolving",
+          "type": "plans_locked",
+          "plans": {
+            "A": [
+              {
+                "type": "set_destination",
+                "partyId": "A.p",
+                "target": {
+                  "column": 5,
+                  "row": 6
+                }
+              }
+            ],
+            "B": []
+          }
+        },
+        {
+          "id": "fixture-scenario:2",
+          "seq": 2,
+          "tick": 5,
+          "phase": "resolving",
+          "type": "destination_set",
+          "partyId": "A.p",
+          "target": {
+            "column": 5,
+            "row": 6
+          },
+          "route": [
+            {
+              "column": 5,
+              "row": 6
+            }
+          ],
+          "cost": 1,
+          "turn": null,
+          "cause": {
+            "seat": "A",
+            "command": "set_destination"
+          }
+        },
+        {
+          "id": "fixture-scenario:3",
+          "seq": 3,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "contact",
+          "engagementId": "E5.1",
+          "a": "A.p",
+          "b": "B.p",
+          "attacker": "A.p",
+          "defender": "B.p",
+          "mutual": false,
+          "quantum": 250,
+          "approach": {
+            "A.p": [
+              1,
+              1
+            ],
+            "B.p": null
+          },
+          "pairs": 1,
+          "anchors": {
+            "A.p": {
+              "x": 18000000,
+              "y": 19000000
+            },
+            "B.p": {
+              "x": 18000000,
+              "y": 22000000
+            }
+          }
+        },
+        {
+          "id": "fixture-scenario:4",
+          "seq": 4,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "exchange",
+          "cause": "first_contact",
+          "engagements": [
+            "E5.1"
+          ],
+          "first": [
+            true
+          ],
+          "mode": {
+            "protection": "individual",
+            "allocation": "attacker",
+            "health": "member"
+          },
+          "hits": [
+            {
+              "kind": "melee",
+              "source": "A.p.s2",
+              "attack": "sword",
+              "recipient": "B.p.s2",
+              "channel": "physical",
+              "face": "front",
+              "power": 3,
+              "ratio": [
+                1,
+                1
+              ],
+              "protection": 0,
+              "sources": [],
+              "damage": 3000000,
+              "allocator": "contact",
+              "pikeTransfer": false,
+              "line": "B.p:front"
+            },
+            {
+              "kind": "ranged",
+              "source": "B.p.s2",
+              "attack": "bolt",
+              "recipient": "A.p.s2",
+              "channel": "magic",
+              "face": "front",
+              "power": 2,
+              "ratio": [
+                1,
+                1
+              ],
+              "protection": 0,
+              "sources": [],
+              "damage": 2000000,
+              "allocator": "B",
+              "pikeTransfer": false,
+              "line": "A.p:front"
+            },
+            {
+              "kind": "ranged",
+              "source": "B.p.s8",
+              "attack": "bow",
+              "recipient": "A.p.s2",
+              "channel": "physical",
+              "face": "above",
+              "power": 1,
+              "ratio": [
+                1,
+                1
+              ],
+              "protection": 0,
+              "sources": [],
+              "damage": 1000000,
+              "allocator": "B",
+              "pikeTransfer": false,
+              "line": "A.p:above"
+            },
+            {
+              "kind": "ranged",
+              "source": "B.p.s8",
+              "attack": "bow",
+              "recipient": "A.p.s5",
+              "channel": "physical",
+              "face": "above",
+              "power": 1,
+              "ratio": [
+                1,
+                1
+              ],
+              "protection": 0,
+              "sources": [],
+              "damage": 1000000,
+              "allocator": "B",
+              "pikeTransfer": false,
+              "line": "A.p:above"
+            }
+          ]
+        },
+        {
+          "id": "fixture-scenario:5",
+          "seq": 5,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "member_died",
+          "memberId": "A.p.s2",
+          "partyId": "A.p",
+          "archetype": "swordsman",
+          "slot": 2,
+          "reason": "damage",
+          "commander": false
+        },
+        {
+          "id": "fixture-scenario:6",
+          "seq": 6,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "member_died",
+          "memberId": "B.p.s2",
+          "partyId": "B.p",
+          "archetype": "mage",
+          "slot": 2,
+          "reason": "damage",
+          "commander": false
+        },
+        {
+          "id": "fixture-scenario:7",
+          "seq": 7,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "engagement_ended",
+          "engagementId": "E5.1",
+          "a": "A.p",
+          "b": "B.p",
+          "startTick": 5
+        },
+        {
+          "id": "fixture-scenario:8",
+          "seq": 8,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "region_entered",
+          "partyId": "A.p",
+          "from": {
+            "column": 5,
+            "row": 5
+          },
+          "to": {
+            "column": 5,
+            "row": 6
+          },
+          "quantum": 501
+        },
+        {
+          "id": "fixture-scenario:9",
+          "seq": 9,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "contact",
+          "engagementId": "E5.2",
+          "a": "A.p",
+          "b": "B.p",
+          "attacker": "A.p",
+          "defender": "B.p",
+          "mutual": false,
+          "quantum": 750,
+          "approach": {
+            "A.p": [
+              1,
+              1
+            ],
+            "B.p": null
+          },
+          "pairs": 1,
+          "anchors": {
+            "A.p": {
+              "x": 18000000,
+              "y": 21000000
+            },
+            "B.p": {
+              "x": 18000000,
+              "y": 22000000
+            }
+          }
+        },
+        {
+          "id": "fixture-scenario:10",
+          "seq": 10,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "exchange",
+          "cause": "first_contact",
+          "engagements": [
+            "E5.2"
+          ],
+          "first": [
+            true
+          ],
+          "mode": {
+            "protection": "individual",
+            "allocation": "attacker",
+            "health": "member"
+          },
+          "hits": [
+            {
+              "kind": "melee",
+              "source": "A.p.s5",
+              "attack": "blade",
+              "recipient": "B.p.s5",
+              "channel": "physical",
+              "face": "front",
+              "power": 3,
+              "ratio": [
+                1,
+                1
+              ],
+              "protection": 1,
+              "sources": [
+                {
+                  "source": "B.p.s5",
+                  "kind": "center-guard",
+                  "amount": 1,
+                  "scope": "individual"
+                }
+              ],
+              "damage": 2000000,
+              "allocator": "contact",
+              "pikeTransfer": false,
+              "line": "B.p:front"
+            },
+            {
+              "kind": "melee",
+              "source": "B.p.s5",
+              "attack": "blade",
+              "recipient": "A.p.s5",
+              "channel": "physical",
+              "face": "front",
+              "power": 3,
+              "ratio": [
+                1,
+                1
+              ],
+              "protection": 1,
+              "sources": [
+                {
+                  "source": "A.p.s5",
+                  "kind": "center-guard",
+                  "amount": 1,
+                  "scope": "individual"
+                }
+              ],
+              "damage": 2000000,
+              "allocator": "contact",
+              "pikeTransfer": false,
+              "line": "A.p:front"
+            }
+          ]
+        },
+        {
+          "id": "fixture-scenario:11",
+          "seq": 11,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "supply_spent",
+          "partyId": "A.p",
+          "units": 750000,
+          "portions": {
+            "fixture.supply.A.p": 750000
+          },
+          "remaining": 250000
+        },
+        {
+          "id": "fixture-scenario:12",
+          "seq": 12,
+          "tick": 5,
+          "phase": "simulating",
+          "type": "tick_finished",
+          "parties": 4,
+          "members": 11
+        }
+      ],
+      "shownEvents": 2,
+      "beforeFirstContactQuantum": 250,
+      "displayedMageAlive": true,
+      "displayedMageHp": 3,
+      "expectedArcherMagicProtectionBeforeHit": 1,
+      "actualArcherMagicProtectionBeforeHit": 0,
+      "expectedPartyLivingBeforeHit": 3,
+      "partyFactsLivingUsedByApp": 2,
+      "conclusion": "The earlier living Mage is paired with already-removed ward and final headcount. Only HP/alive is time-indexed."
+    },
+    "playback_pool": {
+      "profile": "hapa_open_10x9_v3_01_party_maintenance",
+      "events": [
+        {
+          "id": "fixture-scenario:1",
+          "seq": 1,
+          "tick": 0,
+          "phase": "ready",
+          "type": "card_damage",
+          "kind": "card",
+          "source": "A.mount.C5",
+          "cardId": "fixture.review.ember",
+          "recipient": "B.p.s5",
+          "channel": "magic",
+          "face": "front",
+          "power": 2,
+          "ratio": [
+            1,
+            1
+          ],
+          "protection": 0,
+          "sources": [],
+          "damage": 2000000
+        },
+        {
+          "id": "fixture-scenario:2",
+          "seq": 2,
+          "tick": 0,
+          "phase": "ready",
+          "type": "member_died",
+          "memberId": "B.p.s1",
+          "partyId": "B.p",
+          "archetype": "swordsman",
+          "slot": 1,
+          "reason": "maintenance",
+          "commander": false
+        },
+        {
+          "id": "fixture-scenario:3",
+          "seq": 3,
+          "tick": 0,
+          "phase": "ready",
+          "type": "maintenance_removed",
+          "partyId": "B.p",
+          "pool": 13000000,
+          "allowedRetainers": 2,
+          "removed": [
+            "B.p.s1"
+          ]
+        }
+      ],
+      "shownEvents": 0,
+      "expectedPoolBeforeHit": 15,
+      "actualPoolBeforeHit": 13,
+      "displayedFirstRetainerAlive": true,
+      "finalFirstRetainerAlive": false,
+      "expectedPartyLivingBeforeHit": 4,
+      "partyFactsLivingUsedByApp": 3,
+      "conclusion": "memberFacts ignores the playback snapshot for party pools; partyFacts has no snapshot parameter."
+    },
+    "line_defense": {
+      "profile": "hapa_open_10x9_v3_01_line_attacker",
+      "memberLabelValue": 1,
+      "allMembersInspectionHelperValue": 4,
+      "actualAttackedFrontLineValue": 3,
+      "actualSwordHits": [
+        {
+          "kind": "melee",
+          "source": "B.q.s1",
+          "attack": "sword",
+          "recipient": "A.q.s1",
+          "channel": "physical",
+          "face": "front",
+          "power": 3,
+          "ratio": [
+            1,
+            1
+          ],
+          "protection": 3,
+          "sources": [
+            {
+              "source": "A.q.s1",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "A.q.s2",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "A.q.s3",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            }
+          ],
+          "damage": 0,
+          "allocator": "B",
+          "pikeTransfer": false,
+          "line": "A.q:front"
+        },
+        {
+          "kind": "melee",
+          "source": "B.q.s2",
+          "attack": "sword",
+          "recipient": "A.q.s1",
+          "channel": "physical",
+          "face": "front",
+          "power": 3,
+          "ratio": [
+            1,
+            1
+          ],
+          "protection": 3,
+          "sources": [
+            {
+              "source": "A.q.s1",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "A.q.s2",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "A.q.s3",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            }
+          ],
+          "damage": 0,
+          "allocator": "B",
+          "pikeTransfer": false,
+          "line": "A.q:front"
+        },
+        {
+          "kind": "melee",
+          "source": "B.q.s3",
+          "attack": "sword",
+          "recipient": "A.q.s1",
+          "channel": "physical",
+          "face": "front",
+          "power": 3,
+          "ratio": [
+            1,
+            1
+          ],
+          "protection": 3,
+          "sources": [
+            {
+              "source": "A.q.s1",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "A.q.s2",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "A.q.s3",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            }
+          ],
+          "damage": 0,
+          "allocator": "B",
+          "pikeTransfer": false,
+          "line": "A.q:front"
+        },
+        {
+          "kind": "melee",
+          "source": "A.q.s1",
+          "attack": "sword",
+          "recipient": "B.q.s1",
+          "channel": "physical",
+          "face": "front",
+          "power": 3,
+          "ratio": [
+            1,
+            1
+          ],
+          "protection": 3,
+          "sources": [
+            {
+              "source": "B.q.s1",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "B.q.s2",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "B.q.s3",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            }
+          ],
+          "damage": 0,
+          "allocator": "A",
+          "pikeTransfer": false,
+          "line": "B.q:front"
+        },
+        {
+          "kind": "melee",
+          "source": "A.q.s2",
+          "attack": "sword",
+          "recipient": "B.q.s1",
+          "channel": "physical",
+          "face": "front",
+          "power": 3,
+          "ratio": [
+            1,
+            1
+          ],
+          "protection": 3,
+          "sources": [
+            {
+              "source": "B.q.s1",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "B.q.s2",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "B.q.s3",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            }
+          ],
+          "damage": 0,
+          "allocator": "A",
+          "pikeTransfer": false,
+          "line": "B.q:front"
+        },
+        {
+          "kind": "melee",
+          "source": "A.q.s3",
+          "attack": "sword",
+          "recipient": "B.q.s1",
+          "channel": "physical",
+          "face": "front",
+          "power": 3,
+          "ratio": [
+            1,
+            1
+          ],
+          "protection": 3,
+          "sources": [
+            {
+              "source": "B.q.s1",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "B.q.s2",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            },
+            {
+              "source": "B.q.s3",
+              "kind": "shield",
+              "amount": 1,
+              "scope": "line"
+            }
+          ],
+          "damage": 0,
+          "allocator": "A",
+          "pikeTransfer": false,
+          "line": "B.q:front"
+        }
+      ],
+      "conclusion": "The label uses own contribution 1 as Def; the unused helper across all living members would return 4, while the actual front line has 3. A target line context is required for an applied value."
+    },
+    "terrain_rebuild": {
+      "method": "Actual checked-in TerritoryDiorama.sync, geometry constructor stubbed; real workError/startWork/completeWork",
+      "events": [
+        {
+          "id": "fixture-scenario:1",
+          "seq": 1,
+          "tick": 5,
+          "phase": "planning",
+          "type": "work_started",
+          "taskId": "W5.1",
+          "partyId": "A.worker",
+          "kind": "excavate",
+          "target": {
+            "x": 19,
+            "y": 18,
+            "band": -1
+          },
+          "completesAtEndOfTick": 5
+        },
+        {
+          "id": "fixture-scenario:2",
+          "seq": 2,
+          "tick": 5,
+          "phase": "planning",
+          "type": "terrain_changed",
+          "taskId": "W5.1",
+          "cell": {
+            "x": 19,
+            "y": 18,
+            "band": -1
+          },
+          "solid": false,
+          "by": "A.worker"
+        }
+      ],
+      "target": {
+        "x": 19,
+        "y": 18,
+        "band": -1
+      },
+      "cellsBefore": 2,
+      "cellsAfter": 2,
+      "cacheBefore": "5,5|{}|2|",
+      "cacheAfter": "5,5|{}|2|",
+      "callsBefore": 9,
+      "callsAfter": 9,
+      "expectedOpenAfterExcavation": true,
+      "lastBuiltOpenMask": false,
+      "conclusion": "An excavated previously-filled surface cube does not invalidate the environment; existing opaque surface decal is retained over the newly open cell until another key component changes."
+    },
+    "hill_cutaway": {
+      "method": "Actual checked-in TerritoryDiorama.update with rendering stubbed; intended inspected hill stands on +2 and cutaway selects +1",
+      "cutawayBand": 1,
+      "hillSurfaceBand": 2,
+      "decorationOpacity": 1,
+      "visible": true,
+      "sourceContext": "TerrainView.setCutaway makes a +2 hill translucent at +1; TerritoryDiorama.update only hides decoration for cutaway < 1.",
+      "conclusion": "Source-level visibility mismatch: higher hill decoration stays fully opaque while the chosen cutaway is below that hill. Visual obstruction was not measured in a browser."
+    }
+  }
+}

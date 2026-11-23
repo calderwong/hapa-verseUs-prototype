@@ -1,0 +1,61 @@
+{
+  "sourceCommit": "53481b90f0909f16108b30b163acb69c8649d6ea",
+  "captures": [
+    {
+      "path": "docs/reviews/evidence/2026-11-23/response-06/states/after-95c88bf-A-mount.C3-1-selected-default-zoom.jpg",
+      "sha": "00f1de05afdf62006527250ed5b936fc9a12a452",
+      "width": 1280,
+      "height": 720,
+      "bytes": 407199,
+      "verifiedGitBlob": "00f1de05afdf62006527250ed5b936fc9a12a452"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/response-06/states/after-95c88bf-A-mount.C3-2-close.jpg",
+      "sha": "244be802c5abce0c81f53d82bcee46a1cc545e55",
+      "width": 1280,
+      "height": 720,
+      "bytes": 304130,
+      "verifiedGitBlob": "244be802c5abce0c81f53d82bcee46a1cc545e55"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/response-06/states/after-95c88bf-A-mount.C3-3-close-orbit135.jpg",
+      "sha": "b90fcd5056f838e81762a10dd13231ed0d8f6ca0",
+      "width": 1280,
+      "height": 720,
+      "bytes": 315817,
+      "verifiedGitBlob": "b90fcd5056f838e81762a10dd13231ed0d8f6ca0"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/response-06/regress/after-95c88bf/z03-nine-members.jpg",
+      "sha": "aa4a51305bd99a5ee10f78f02e015794c375fa7a",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 428190,
+      "verifiedGitBlob": "aa4a51305bd99a5ee10f78f02e015794c375fa7a"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/response-06/regress/after-95c88bf/z03-expanded-member.jpg",
+      "sha": "b5145155c425349e32a24338445b97aff0c7fcc1",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 431241,
+      "verifiedGitBlob": "b5145155c425349e32a24338445b97aff0c7fcc1"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/response-06/states/after-95c88bf-A-hill-2-close.jpg",
+      "sha": "708d847f59c1d66f34734d8bc30f82962449ffc9",
+      "width": 1280,
+      "height": 720,
+      "bytes": 287746,
+      "verifiedGitBlob": "708d847f59c1d66f34734d8bc30f82962449ffc9"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/response-06/regress/after-95c88bf/z07-tunnel-cutaway.jpg",
+      "sha": "893184af29f96c4eecbfa71162522b48ccad0f80",
+      "width": 1600,
+      "height": 1000,
+      "bytes": 261621,
+      "verifiedGitBlob": "893184af29f96c4eecbfa71162522b48ccad0f80"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "navigatorEnemyActivation": {
+    "selectedBefore": "A",
+    "selectedAfter": "B",
+    "cameraFocusCalls": 1
+  },
+  "wheelZoomAtElevation": [
+    {
+      "targetY": 0,
+      "focusYAfter": 0,
+      "beforePx": 400,
+      "afterPx": 400,
+      "driftPx": 0
+    },
+    {
+      "targetY": 6,
+      "focusYAfter": 0,
+      "beforePx": 345.1087386847322,
+      "afterPx": 285.25541167621606,
+      "driftPx": -59.853327008516146
+    },
+    {
+      "targetY": -6,
+      "focusYAfter": 0,
+      "beforePx": 450.52169619476933,
+      "afterPx": 497.17560782474726,
+      "driftPx": 46.65391162997793
+    }
+  ],
+  "previewCache": {
+    "keyChanged": false,
+    "beforeBuiltDetail": "Bow: 2 × 1 Physical, base range 2 (elevation changes it) No protection on any face Preview vs enemy: power 1, range 2 — not a result",
+    "afterBuiltDetail": "Bow: 2 × 1 Physical, base range 2 (elevation changes it) No protection on any face Preview vs enemy: power 2, range 3 (high ground), blocked (needs open sky) — not a result",
+    "displayedChanged": false,
+    "displayedAfter": "Archer  5/5 HP Atk 2×1 Phys r2 · Def none Bow: 2 × 1 Physical, base range 2 (elevation changes it) No protection on any face Preview vs enemy: power 1, range 2 — not a result"
+  },
+  "outsideSummary": {
+    "hostWidth": 960,
+    "anchorX": 980,
+    "hidden": false,
+    "transform": "translate(980px, 300px) translate(0, -50%)"
+  },
+  "homeButtonState": {
+    "homeCalls": 1,
+    "returnPoseAfter": {
+      "name": "old non-home pose"
+    },
+    "inspectPartyAfter": {
+      "partyId": "A",
+      "via": "focus"
+    }
+  }
+}
