@@ -1,0 +1,55 @@
+{
+ "label": "after-95c88bf",
+ "base": "http://127.0.0.1:5199",
+ "chrome": "Chrome/157.0.8103.80",
+ "viewport": "1280x720@1",
+ "home": {
+  "frames": {
+   "median": 16.7,
+   "p95": 16.8,
+   "max": 16.8
+  },
+  "scene": {
+   "calls": 1,
+   "triangles": 1,
+   "geometries": 1291,
+   "textures": 140,
+   "dom": 434
+  }
+ },
+ "selectFeedbackMs": 178,
+ "selectFeedback": "command bar",
+ "zoomEntry": {
+  "maxFrame": 16.8,
+  "firstLabelMs": 501
+ },
+ "close": {
+  "frames": {
+   "median": 16.7,
+   "p95": 16.8,
+   "max": 16.8
+  },
+  "scene": {
+   "calls": 1,
+   "triangles": 1,
+   "geometries": 1391,
+   "textures": 144,
+   "dom": 513
+  }
+ },
+ "orbitCpuMs": {
+  "script": 1076.8,
+  "layout": 23.1,
+  "style": 54.8,
+  "task": 1279.6
+ },
+ "afterOrbit": {
+  "scene": {
+   "calls": 1,
+   "triangles": 1,
+   "geometries": 1391,
+   "textures": 144,
+   "dom": 513
+  }
+ }
+}

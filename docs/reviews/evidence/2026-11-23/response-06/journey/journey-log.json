@@ -1,0 +1,243 @@
+{
+ "clips": {
+  "opening": {
+   "frames": 1258,
+   "seconds": 21.626
+  },
+  "terrain": {
+   "frames": 933,
+   "seconds": 15.599
+  }
+ },
+ "steps": [
+  {
+   "clip": "journey-opening",
+   "at": 0,
+   "step": "home view",
+   "state": {
+    "tick": 1,
+    "selected": null,
+    "inspect": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 815,
+   "step": "click the C1 Castle (command selection)",
+   "state": {
+    "tick": 1,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 2047,
+   "step": "Supply ▾",
+   "state": {
+    "tick": 1,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 2581,
+   "step": "Load 2♣ (C1)",
+   "state": {
+    "tick": 1,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [
+     "load_supply"
+    ],
+    "labels": 0
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 3132,
+   "step": "Move to R2C1 (funded, joins your Pawn)",
+   "state": {
+    "tick": 1,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [
+     "load_supply",
+     "set_destination"
+    ],
+    "labels": 0
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 5083,
+   "step": "Ready",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 7129,
+   "step": "Inspect (F) the merged party",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": "A.mount.C1",
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 9
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 9341,
+   "step": "hover an Archer: its breakdown expands",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": "A.mount.C1",
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 9
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 11340,
+   "step": "orbit 360° (Q ×8)",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": "A.mount.C1",
+    "level": "identity",
+    "bearing": 360,
+    "plans": [],
+    "labels": 9
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 17778,
+   "step": "Return (R)",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "level": "none",
+    "bearing": 360,
+    "plans": [],
+    "labels": 0
+   }
+  },
+  {
+   "clip": "journey-opening",
+   "at": 19283,
+   "step": "another command: Supply ▾ on the same party",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "level": "none",
+    "bearing": 360,
+    "plans": [],
+    "labels": 0
+   }
+  },
+  {
+   "clip": "journey-terrain",
+   "at": 0,
+   "step": "select A.hill (raised ground) and Inspect",
+   "state": {
+    "tick": 5,
+    "selected": "A.hill",
+    "inspect": "A.hill",
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 5
+   }
+  },
+  {
+   "clip": "journey-terrain",
+   "at": 2931,
+   "step": "orbit half a turn",
+   "state": {
+    "tick": 5,
+    "selected": "A.hill",
+    "inspect": "A.hill",
+    "level": "identity",
+    "bearing": 180,
+    "plans": [],
+    "labels": 5
+   }
+  },
+  {
+   "clip": "journey-terrain",
+   "at": 6551,
+   "step": "Home, then the roofed tunnel party: no x-ray",
+   "state": {
+    "tick": 5,
+    "selected": "B.tunnel",
+    "inspect": "B.tunnel",
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0
+   }
+  },
+  {
+   "clip": "journey-terrain",
+   "at": 9767,
+   "step": "open layer −2: the members can be read; the surface dressing steps aside",
+   "state": {
+    "tick": 5,
+    "selected": "B.tunnel",
+    "inspect": "B.tunnel",
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 2
+   }
+  },
+  {
+   "clip": "journey-terrain",
+   "at": 12283,
+   "step": "All layers, Return",
+   "state": {
+    "tick": 5,
+    "selected": "B.tunnel",
+    "inspect": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0
+   }
+  }
+ ]
+}
