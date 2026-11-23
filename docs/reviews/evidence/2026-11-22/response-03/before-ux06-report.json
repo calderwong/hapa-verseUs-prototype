@@ -1,0 +1,187 @@
+{
+  "label": "before",
+  "base": "http://127.0.0.1:5199",
+  "viewport": {
+    "width": 1600,
+    "height": 1000,
+    "dpr": 1
+  },
+  "chrome": "Chrome/157.0.8103.80",
+  "journeys": {
+    "ux12": {
+      "frames": [
+        {
+          "yawDeg": 0,
+          "members": [
+            {
+              "id": "A.mid.s1",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s2",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s3",
+              "shieldSide": "left",
+              "swordSide": "right"
+            }
+          ],
+          "shot": "before-ux12-orbit-0.jpg"
+        },
+        {
+          "yawDeg": 45,
+          "members": [
+            {
+              "id": "A.mid.s1",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s2",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s3",
+              "shieldSide": "left",
+              "swordSide": "right"
+            }
+          ],
+          "shot": "before-ux12-orbit-45.jpg"
+        },
+        {
+          "yawDeg": 90,
+          "members": [
+            {
+              "id": "A.mid.s1",
+              "shieldSide": "right",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s2",
+              "shieldSide": "right",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s3",
+              "shieldSide": "right",
+              "swordSide": "right"
+            }
+          ],
+          "shot": "before-ux12-orbit-90.jpg"
+        },
+        {
+          "yawDeg": 135,
+          "members": [
+            {
+              "id": "A.mid.s1",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s2",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s3",
+              "shieldSide": "left",
+              "swordSide": "right"
+            }
+          ],
+          "shot": "before-ux12-orbit-135.jpg"
+        },
+        {
+          "yawDeg": 180,
+          "members": [
+            {
+              "id": "A.mid.s1",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s2",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s3",
+              "shieldSide": "left",
+              "swordSide": "right"
+            }
+          ],
+          "shot": "before-ux12-orbit-180.jpg"
+        },
+        {
+          "yawDeg": 225,
+          "members": [
+            {
+              "id": "A.mid.s1",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s2",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s3",
+              "shieldSide": "left",
+              "swordSide": "right"
+            }
+          ],
+          "shot": "before-ux12-orbit-225.jpg"
+        },
+        {
+          "yawDeg": 270,
+          "members": [
+            {
+              "id": "A.mid.s1",
+              "shieldSide": "left",
+              "swordSide": "left"
+            },
+            {
+              "id": "A.mid.s2",
+              "shieldSide": "left",
+              "swordSide": "left"
+            },
+            {
+              "id": "A.mid.s3",
+              "shieldSide": "left",
+              "swordSide": "left"
+            }
+          ],
+          "shot": "before-ux12-orbit-270.jpg"
+        },
+        {
+          "yawDeg": 315,
+          "members": [
+            {
+              "id": "A.mid.s1",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s2",
+              "shieldSide": "left",
+              "swordSide": "right"
+            },
+            {
+              "id": "A.mid.s3",
+              "shieldSide": "left",
+              "swordSide": "right"
+            }
+          ],
+          "shot": "before-ux12-orbit-315.jpg"
+        }
+      ],
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    }
+  }
+}
