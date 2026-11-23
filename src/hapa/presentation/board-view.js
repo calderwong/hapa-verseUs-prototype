@@ -17,6 +17,7 @@ import { paintGround, PX } from './ground-painter.js';
 import { HitFX } from './fx.js';
 import { attachGear, placeGear } from './gear.js';
 import { FACINGS } from '../rules/geometry.js';
+import { bodyVisible } from './playback.js';
 
 export const S = 1.5; // world units per member width
 export const COLOR_HEX = {
@@ -315,11 +316,15 @@ export class BoardView {
       spr.userData.awayCorner.visible = m.alive && m.helperAway?.kind === 'corner';
       spr.userData.awayBreach.visible = m.alive && m.helperAway?.kind === 'breach';
       seen.add(m.id);
-      const pos = positions?.[m.id] ?? [m.x, m.y];
+      // during playback a pose (playback.js) says where the body is, whether it is alive yet and its
+      // band at that moment; this is the one place a body's visibility is decided (R2-01)
+      const pose = positions?.[m.id];
+      const pos = pose ?? [m.x, m.y];
       const w = this.toWorld(pos[0], pos[1]);
-      const band = m.band ?? 1;
-      spr.position.set(w.x, bandY(band) + 0.03, w.z);
-      spr.visible = (m.alive || (positions?.[m.id] !== undefined && positions[m.id][2])) && (layer === null || band === layer);
+      const band = pose ? pose[3] : (m.band ?? 1);
+      const hgt = pose ? pose[4] : bandY(band);
+      spr.position.set(w.x, hgt + 0.03, w.z);
+      spr.visible = bodyVisible(pose ? pose[2] : m.alive, band, layer);
       // a flyer keeps a line to the floor below it, so height is never the only cue
       const flying = party?.movementMode === 'air';
       if (flying && !spr.userData.flyLine) {
@@ -328,7 +333,6 @@ export class BoardView {
         spr.userData.flyLine = line;
       }
       if (spr.userData.flyLine) {
-        const hgt = bandY(band);
         spr.userData.flyLine.visible = flying;
         spr.userData.flyLine.scale.y = Math.max(0.01, hgt);
         spr.userData.flyLine.position.y = -hgt / 2;
@@ -345,9 +349,10 @@ export class BoardView {
     for (const p of Object.values(state.parties)) {
       let mk = this.markers.get(p.id);
       if (!mk) { mk = this._partyMarker(p); this.markers.set(p.id, mk); this.root.add(mk); }
-      const pos = positions?.[`party:${p.id}`] ?? [p.x, p.y];
+      const pose = positions?.[`party:${p.id}`];
+      const pos = pose ?? [p.x, p.y];
       const w = this.toWorld(pos[0], pos[1]);
-      mk.position.set(w.x, (p.movementMode === 'air' ? 0 : bandY(p.band ?? 1)) + 0.04, w.z);
+      mk.position.set(w.x, (p.movementMode === 'air' ? 0 : pose ? pose[4] : bandY(p.band ?? 1)) + 0.04, w.z);
       mk.visible = p.alive && !p.retired;
       if (mk.userData.crest) mk.userData.crest.visible = !p.mountLost;
       // decisive terrain facts in words: hilltop, open pit, roofed tunnel or flying

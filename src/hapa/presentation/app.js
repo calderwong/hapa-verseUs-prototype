@@ -30,7 +30,8 @@ let activeCatalog = CATALOG;
 /** A plan command's identity for change highlighting (canonical JSON, so key order never matters). */
 const cmdKey = (c) => canonicalize(c);
 import { UI_FIXTURES } from '../../../fixtures/hapa/ui-fixtures.js';
-import { standingOf, fmtBand } from './terrain-view.js';
+import { standingOf, fmtBand, bandY } from './terrain-view.js';
+import { snapshot, poseAt, timeline } from './playback.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
 import { VersusSound } from './sound.js';
@@ -331,12 +332,7 @@ export class VersusApp {
     for (const s of ['A', 'B']) accepted[s] = validatePlan(state, ctx, s, this.plans[s]).accepted;
     // trace member positions during simulation (presentation only)
     const frames = [];
-    const snap = (q, evLen) => {
-      const pos = {};
-      for (const m of Object.values(state.members)) pos[m.id] = [m.x, m.y];
-      for (const p of Object.values(state.parties)) pos[`party:${p.id}`] = [p.x, p.y];
-      frames.push({ q, pos, evLen });
-    };
+    const snap = (q, evLen) => frames.push({ q, pos: snapshot(state), evLen });
     let lastQ = -1;
     ctx.trace = (s, q, events) => { if (q - lastQ >= 20 || events.length !== frames.at(-1)?.evLen) { snap(q, events.length); lastQ = q; } };
     const gen = resolveTick(state, ctx, accepted);
@@ -361,11 +357,8 @@ export class VersusApp {
 
   /** Play back a resolved Tick: members follow the traced trajectories; casualties fall at their event. */
   _play(before, frames, events) {
-    const startPos = {};
-    for (const m of Object.values(before.members)) startPos[m.id] = [m.x, m.y];
-    for (const p of Object.values(before.parties)) startPos[`party:${p.id}`] = [p.x, p.y];
-    const all = [{ q: 0, pos: startPos, evLen: 0 }, ...frames];
-    if (all.length === 1) all.push({ q: 1000, pos: startPos, evLen: events.length });
+    const startPos = snapshot(before);
+    const all = timeline(startPos, frames, events.length);
     const duration = (this.watch ? 0.9 : 1.4) / this.speed;
     const moving = new Set();
     for (const m of Object.values(this.state.members)) { const a = startPos[m.id], b = [m.x, m.y]; if (a && (a[0] !== b[0] || a[1] !== b[1])) moving.add(m.id); }
@@ -410,24 +403,9 @@ export class VersusApp {
     if (!pb || pb.paused) return;
     pb.t += dt;
     const k = Math.min(1, pb.t / pb.duration);
-    const q = k * 1000;
-    const all = pb.all;
-    let i = 0;
-    while (i < all.length - 1 && all[i + 1].q <= q) i++;
-    const a = all[i], b = all[Math.min(i + 1, all.length - 1)];
-    const f = b.q > a.q ? (q - a.q) / (b.q - a.q) : 1;
-    const pos = {};
-    for (const id of Object.keys(b.pos)) {
-      const pa = a.pos[id] ?? b.pos[id], pb2 = b.pos[id];
-      pos[id] = [pa[0] + (pb2[0] - pa[0]) * f, pa[1] + (pb2[1] - pa[1]) * f, true];
-    }
-    // casualties reveal at their event
-    const evLen = a.evLen;
-    const dead = new Set(pb.events.slice(0, evLen).filter((e) => e.type === 'member_died').map((e) => e.memberId));
-    for (const id of Object.keys(pos)) if (dead.has(id)) pos[id][2] = false;
-    for (const m of Object.values(this.state.members)) if (!m.alive && !(m.id in pos)) pos[m.id] = [m.x, m.y, false];
-    this.view.sync(this.state, k >= 1 ? null : Object.fromEntries(Object.entries(pos).map(([id, p]) => [id, p[2] === false ? [p[0], p[1], false] : p]).map(([id, p]) => [id, p])));
-    for (const [id, p] of Object.entries(pos)) { const spr = this.view.sprites.get(id); if (spr && k < 1) spr.visible = p[2] !== false && (this.state.members[id]?.alive || !dead.has(id)); }
+    // one pose for the moment; BoardView.sync alone decides what is visible from it (R2-01)
+    const { pos, evLen } = poseAt(pb.all, k * 1000, bandY);
+    this.view.sync(this.state, k >= 1 ? null : pos);
     if (evLen > pb.shown) { const fresh = pb.events.slice(pb.shown, evLen); this._spawnHits(fresh); this.sound?.events(fresh); pb.shown = evLen; this._renderEvents(); }
     if (k >= 1) {
       this.playback = null;
