@@ -9,52 +9,72 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink); font: 14.5px/1.4 var(--sans); font-variant-numeric: tabular-nums; overflow: hidden; }
 #app {
-  position: fixed; inset: 0; display: grid; gap: 6px; padding: 6px;
-  grid-template-columns: 220px minmax(0, 1fr) 360px;
-  grid-template-rows: 48px 86px minmax(0, 1fr) 150px 40px;
-  /* both ribbons span the battlefield (UX-05); the right column is the current decision: the
-     inspector above the public plans, Ready pinned at their foot (review 02, R2-02) */
-  grid-template-areas: 'bar bar bar' 'roster opp side' 'roster world side' 'res own side' 'ev ev ev';
+  position: fixed; inset: 0; display: grid; gap: 4px; padding: 4px;
+  /* the board is the interface (human-feedback addendum 01 §2): a compact decision strip, the
+     world and a thin event strip; no permanent hand ribbons, inspector, Mana panel or roster */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 44px minmax(0, 1fr) 30px;
+  grid-template-areas: 'bar' 'world' 'ev';
 }
 .area { background: var(--slate2); border: 1px solid var(--line); border-radius: 4px; min-width: 0; min-height: 0; }
-#matchbar { grid-area: bar; display: flex; align-items: center; gap: 14px; padding: 0 10px; font-family: var(--sans); }
-#opphand { grid-area: opp; }
-#roster { grid-area: roster; overflow: auto; padding: 8px; }
+#matchbar { grid-area: bar; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-family: var(--sans); white-space: nowrap; }
+#matchbar > * { flex: none; }
+#matchbar .phase { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 #world { grid-area: world; position: relative; overflow: hidden; background: #0e1018; }
-#world canvas { position: absolute !important; inset: 0; }
-#side { grid-area: side; display: flex; flex-direction: column; gap: 6px; min-height: 0; min-width: 0; }
-#inspector { flex: 1 1 0; min-height: 96px; overflow: auto; padding: 10px; }
-#side > #plan { flex: 0 1 auto; max-height: 46%; min-height: 120px; }
-body.plans-review #side > #inspector { flex: 0 1 22%; }
-body.plans-review #side > #plan { flex: 1 1 auto; max-height: none; }
-body.responding #side > #plan { max-height: 30%; }
-#ownhand { grid-area: own; }
-#resources { grid-area: res; overflow: auto; padding: 8px; }
-#plan { overflow: auto; padding: 8px; }
+#world > canvas { position: absolute !important; inset: 0; }
 #events { grid-area: ev; display: flex; gap: 6px; align-items: center; overflow-x: auto; overflow-y: hidden; padding: 0 8px; white-space: nowrap; font-size: 12.5px; }
-.roster-toggle { display: none; grid-area: tog; }
-@media (max-width: 1440px) {
-  /* narrower windows and enlarged text (review UX-06, R2-03): the roster becomes a drawer, the
-     Mana pools (and the Burn drop target) keep a real column beside your hand, both ribbons stay
-     aligned; the battlefield takes the roster's width */
-  #app {
-    grid-template-columns: 150px minmax(0, 1fr) 320px;
-    grid-template-areas: 'bar bar bar' 'tog opp side' 'world world side' 'res own side' 'ev ev ev';
-  }
-  .roster-toggle { display: block; margin: 0; border-radius: 4px; font-weight: 600; }
-  #matchbar { gap: 8px; white-space: nowrap; }
-  #matchbar > * { flex: none; } #matchbar .phase { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  #matchbar .active small, #matchbar .cmdhp { display: none; }
-  #roster { grid-area: auto; position: fixed; z-index: 40; top: 60px; bottom: 52px; left: 6px; width: 260px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-  body.roster-open #roster { display: block; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+/* drawers over the board: the navigator on the left, Orders on the right, a required decision on top */
+.drawer { position: absolute; z-index: 30; top: 8px; bottom: 8px; overflow: auto; padding: 8px 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); background: color-mix(in srgb, var(--slate2) 96%, transparent); }
+#roster { left: 8px; width: 300px; display: none; }
+body.roster-open #roster { display: block; }
+#orders { right: 8px; width: min(400px, 46%); }
+#orders[hidden], #decision[hidden] { display: none; }
+#decision { position: absolute; z-index: 35; right: 8px; top: 8px; width: min(420px, 60%); max-height: calc(100% - 16px); overflow: auto; padding: 10px; border-color: var(--gold); box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+.orders-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.orders-head h3 { flex: 1; margin: 0; }
+.strip-btn { font-size: 13px; padding: 3px 9px; }
+.strip-btn .badge { margin-left: 6px; font: 700 10px var(--sans); text-transform: uppercase; padding: 0 4px; border-radius: 2px; }
+.strip-btn .badge.warn { background: var(--warn); color: var(--slate); } .strip-btn .badge.bad { background: var(--bad); color: var(--slate); }
+.strip-btn.stale { border-color: var(--warn); }
+#matchbar .ready-big { margin: 0; min-width: 0; padding: 3px 14px; border-radius: 7px; box-shadow: 0 3px 0 #6B4F1E; flex-direction: row; gap: 8px; }
+#matchbar .ready-big .rb-main { font-size: 15px; }
+#matchbar .ready-big .rb-sub { display: none; }
+#matchbar .ready-big.blocked { background: linear-gradient(180deg, #6b3a34, #4f2a26); border-color: var(--bad); color: var(--ivory); animation: none; box-shadow: 0 3px 0 #2a1512; cursor: pointer; }
+#matchbar .ready-big:disabled { box-shadow: 0 2px 0 #1A2430; }
+.navseat { margin-top: 8px; }
+.navgroup > summary { cursor: pointer; font: 600 11px var(--display); letter-spacing: .06em; color: #cdb98a; margin: 4px 0; }
+#roster .rrow { display: block; width: 100%; text-align: left; margin: 1px 0; padding: 3px 6px; background: transparent; border: 1px solid transparent; font-size: 13px; }
+#roster .rrow:hover, #roster .rrow:focus-visible { border-color: var(--gold); background: #243245; }
+/* contextual inspection views (addendum §3): anchored, upright, readable, nonmodal */
+.peek { position: absolute; z-index: 25; width: clamp(280px, 30vw, 380px); overflow: auto; background: #1b2633; color: var(--ink); border: 1px solid #8f7a4a; border-radius: 6px; box-shadow: 0 12px 30px rgba(0,0,0,0.55); font-size: 13.5px; }
+.peek.pinned { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(217,184,106,.35), 0 14px 34px rgba(0,0,0,0.6); z-index: 26; }
+.peek-head { position: sticky; top: 0; display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #22303f; border-bottom: 1px solid var(--line); z-index: 1; }
+.peek-title { flex: 1; margin: 0; font-size: 13px; }
+.peek-tag { font: 600 10.5px var(--sans); color: var(--dim); }
+.peek-btn { padding: 0 7px; font-size: 13px; line-height: 20px; }
+.peek-body { padding: 8px 10px; }
+.peek-body .inspect-face { width: 132px; height: 176px; float: right; margin: 0 0 6px 8px; border-radius: 6px; }
+.peek-leaders { position: absolute; inset: 0; pointer-events: none; z-index: 24; }
+.peek-leaders i { position: absolute; height: 0; border-top: 1px solid rgba(217,184,106,.75); transform-origin: 0 0; }
+/* Mana basin counters attached to the world basins (§7) */
+.basin-counter { position: absolute; left: 0; top: 0; z-index: 20; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 12px; background: rgba(23,33,45,0.9); border: 1px solid var(--brass); font: 700 13px var(--sans); color: var(--ivory); }
+.basin-counter.a { border-color: var(--a); } .basin-counter.b { border-color: var(--b); }
+.basin-counter.edge { opacity: .9; border-style: dashed; }
+.basin-counter .bc-seat { font: 700 11px var(--display); color: var(--dim); }
+.basin-counter .bc-chip { display: inline-flex; align-items: center; gap: 1px; }
+.basin-counter .bc-chip img { width: 14px; height: 14px; }
+.basin-counter .c-white img { filter: drop-shadow(0 0 0 #000) drop-shadow(0 0 1px #000); } .basin-counter .c-black img { filter: drop-shadow(0 0 1px #fff); }
+.basin-counter .bc-empty { font-weight: 500; color: var(--dim); font-size: 12px; }
+.basin-counter .bc-proj { font-size: 11px; color: var(--ok); }
+.mana-table { border-collapse: collapse; width: 100%; } .mana-table th, .mana-table td { text-align: left; padding: 1px 6px 1px 0; font-size: 13px; } .mana-table img { width: 14px; height: 14px; vertical-align: -2px; }
+.card-sheet.help .keys { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; font-size: 13px; }
+@media (max-width: 1100px) {
+  #matchbar { gap: 6px; } #matchbar .cmds, #matchbar .speed { display: none; }
+  .peek { width: min(340px, calc(100% - 20px)); }
 }
 @media (max-height: 760px) {
-  /* short windows: give the battlefield the height the bars do not need */
-  #app { grid-template-rows: 40px 70px minmax(0, 1fr) 128px 32px; gap: 4px; padding: 4px; }
-  #opphand .tile .abil, #opphand .tile .plannedtag { display: none; }
-  .tile .face { display: none; } /* short tiles keep the ability; the face stays in the inspector */
-  .tile .fc { display: none; } /* the forecast stays in the tile's title and the inspector */
-  #plan .ready-big { padding: 4px 8px; } #plan .ready-big .rb-sub { display: none; }
+  #app { grid-template-rows: 40px minmax(0, 1fr) 28px; gap: 3px; padding: 3px; }
 }
 h3 { margin: 0 0 6px; font: 600 12px/1.2 var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 h4 { margin: 10px 0 4px; font: 600 11px var(--display); letter-spacing: .08em; color: #cdb98a; }
@@ -446,3 +466,15 @@ details.movelist button { padding: 2px 6px; }
 button.linkish { background: none; border: none; padding: 1px 0; color: var(--ink); text-align: left; text-decoration: underline dotted; text-underline-offset: 3px; display: block; }
 button.linkish:hover:not(:disabled) { color: var(--gold); }
 #inspector .why { margin: 4px 0; font-size: 12.5px; }
+/* Card view in the contextual inspector (addendum §4) */
+.cardview .cv-top { display: grid; grid-template-columns: 112px 1fr; gap: 10px; align-items: start; }
+.peek-body .cardview .inspect-face { float: none; width: 112px; height: 149px; margin: 0; }
+.cardview .cv-top > div { min-width: 0; }
+.cv-id { font: 700 16px var(--display); }
+.cv-state { font-size: 12.5px; margin: 2px 0; } .cv-state.available { color: var(--ok); }
+.cv-res { margin-top: 4px; display: grid; gap: 2px; font-size: 13px; }
+.cv-res .mchip { margin-right: 6px; } .cv-res img { vertical-align: -2px; }
+.cardview .actions { display: grid; gap: 4px; margin-top: 6px; }
+.cardview .actions .col { display: grid; gap: 2px; margin-top: 2px; }
+.cardview .actions .col button { text-align: left; }
+.supplyto > summary { cursor: pointer; padding: 3px 8px; border: 1px solid #4a5573; border-radius: 3px; background: #262d3f; }

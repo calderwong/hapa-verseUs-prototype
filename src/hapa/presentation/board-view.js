@@ -18,6 +18,7 @@ import { HitFX } from './fx.js';
 import { attachGear, placeGear } from './gear.js';
 import { FACINGS } from '../rules/geometry.js';
 import { bodyVisible } from './playback.js';
+import { ResourceSites } from './firepit.js';
 
 export const S = 1.5; // world units per member width
 export const COLOR_HEX = {
@@ -136,6 +137,22 @@ export class BoardView {
     this.terrain = new TerrainView(this.root, ctx, (x, y) => this.toWorld(x, y), S);
     this.terrain.onOpenCells = (cells) => this._punchGround(cells);
     this.fx = new HitFX(this.root);
+    this.sites = new ResourceSites(this.root, (x, y) => new THREE.Vector3(x * S, 0, -y * S), { w: this.w, h: this.h, S });
+    this._time = 0;
+  }
+
+  /**
+   * World anchor of an inspectable subject (addendum 01 §3): a bank Card tile, a party's marker at
+   * its height, a member body, or a Fire Pit / Mana basin. Null when it is not on the board.
+   */
+  anchorOf(subject, state) {
+    if (!subject) return null;
+    if (subject.kind === 'card') { const t = [...this.cardTiles.values()].find((x) => x.userData.cardId === subject.id); return t ? t.position.clone().setY(0.3) : null; }
+    if (subject.kind === 'party') { const mk = this.markers.get(subject.id), p = state?.parties[subject.id]; return mk && p && !p.retired ? mk.position.clone().setY(this.partyY(p) + 1.6 * S) : null; }
+    if (subject.kind === 'member') { const sp = this.sprites.get(subject.id); return sp?.visible ? sp.position.clone().setY(sp.position.y + 1.2) : null; }
+    if (subject.kind === 'basin' || subject.kind === 'pit') return this.sites.anchor(subject.id, subject.kind);
+    if (subject.kind === 'territory') { const [c, r] = subject.id.split(',').map(Number); const p = this.ctx.geo.center(c, r); return this.toWorld(p.x, p.y).setY(0.2); }
+    return null;
   }
 
   /** Repaint the surface and clear the member squares open to the sky. */
@@ -161,10 +178,11 @@ export class BoardView {
   get size() { return Math.max(this.w, this.h) * S; }
   /**
    * The camera's framing subject: the playable territory plus a one-member-width allowance (edge
-   * labels, Capitals, active-column headers). The banks are not part of it: the hand ribbons show
-   * the same instances, and fitting the world banks too would halve the board (review UX-07).
+   * labels, Capitals, active-column headers) plus both owners' real Card banks (Minor, Major, row
+   * Enchantments), Fire Pits and Mana basins: with the hand ribbons gone the banks are the Card
+   * surface, so the default view must reach them (addendum 01 §2; review 04, R4-01).
    */
-  get subject() { const m = 1; return { x0: -m * S, x1: (this.w + m) * S, z0: -(this.h + m) * S, z1: m * S }; }
+  get subject() { const e = ResourceSites.extents(this.w, this.h); return { x0: e.x0 * S, x1: e.x1 * S, z0: -e.y1 * S, z1: -e.y0 * S }; }
   /**
    * The world height at which a party is drawn: its members' band (a flyer at its flight band, a
    * hilltop party on the hill, a tunnel party below ground). Overlays and focus use it so markers
@@ -432,6 +450,8 @@ export class BoardView {
   /** Billboard + facing each frame. */
   update(dt, camera) {
     this.fx.update(dt);
+    this._time += dt;
+    this.sites.update(dt, this._time);
     const still = reducedMotion();
     if (this.dropRing?.visible) {
       this.dropRing.userData.t += dt;

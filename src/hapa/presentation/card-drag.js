@@ -4,7 +4,8 @@
  * field and drop it.
  *   - over one of your formations: Supply (the formation lights up; a tooltip shows the Supply
  *     before and after and how far it would carry the party);
- *   - over the Mana pool panel: Burn for its Mana;
+ *   - over your Fire Pit on the board frame: Burn for its Mana (a zero-Mana Card says so plainly:
+ *     "Burn for 0 Mana — consumes this Card"); the opponent's pit refuses;
  *   - anywhere else: the card slides back to its slot.
  * A drop only plans the command (the same validated command as the buttons); the rules apply it
  * when the Tick resolves. A short pick-up threshold keeps a plain click as "select".
@@ -93,16 +94,18 @@ export class CardDrag {
     this._place(e.clientX, e.clientY, tilt);
   }
 
-  /** What lies under the pointer: a formation on the board, the Mana pool panel, or nothing. */
+  /** What lies under the pointer: a formation, a Fire Pit / Mana basin, or nothing. */
   _targetAt(e) {
     const a = this.app, s = a.state, card = this.drag.card;
     const under = document.elementFromPoint(e.clientX, e.clientY);
-    if (under?.closest?.('#resources')) {
-      const mana = Object.values(card.mana ?? {}).reduce((n, v) => n + v, 0);
-      return { key: 'burn', kind: 'burn', valid: mana > 0, reason: mana ? null : 'This card carries no Mana — burning it gives nothing.' };
-    }
     const canvas = a.engine.renderer.domElement;
     if (under !== canvas) return null;
+    const site = a._siteAt(e);
+    if (site) {
+      if (site.seat !== card.owner) return { key: `pit:${site.seat}`, kind: 'burn', seat: site.seat, valid: false, reason: `That is ${site.seat}'s Fire Pit: burn your Cards in your own.` };
+      const mana = Object.values(card.mana ?? {}).reduce((n, v) => n + v, 0);
+      return { key: `pit:${site.seat}`, kind: 'burn', seat: site.seat, valid: true, zero: mana === 0 };
+    }
     const pick = a._rayFrom(e);
     // stacked heights: a drop can only Supply your own parties, so one own candidate is unambiguous
     const own = pick?.candidates?.filter((c) => c.party.owner === card.owner) ?? [];
@@ -116,8 +119,7 @@ export class CardDrag {
   _showTarget(t) {
     const a = this.app, d = this.drag, { pts, supplyOf, partyName } = this.h;
     a.view.dropHighlight(a.state, t?.party ?? null, !!t?.valid);
-    document.getElementById('resources')?.classList.toggle('drop-burn', t?.kind === 'burn' && t.valid);
-    document.getElementById('resources')?.classList.toggle('drop-bad', t?.kind === 'burn' && !t.valid);
+    a.view.sites.highlight(t?.kind === 'burn' ? t.seat : null, t?.valid ? 'ok' : 'bad');
     d.el.classList.toggle('over-valid', !!t?.valid);
     d.el.classList.toggle('over-invalid', !!t && !t.valid);
     const tip = d.tip;
@@ -128,8 +130,8 @@ export class CardDrag {
     if (!t.valid) { line('tip-bad', t.reason); return; }
     const card = d.card;
     if (t.kind === 'burn') {
-      line('tip-head', `Burn for ${this.h.fmtMana(card.mana)}`);
-      line('tip-dim', 'Mana goes to your pool for this Tick and expires at its end.');
+      line('tip-head', t.zero ? 'Burn for 0 Mana — consumes this Card' : `Burn for ${this.h.fmtMana(card.mana)}`);
+      line('tip-dim', t.zero ? 'It gives no Mana; the Card is gone when the Tick resolves.' : 'Mana goes to your basin when the Tick resolves and expires at that Tick\'s end.');
       line('tip-dim', `Gives up: Supply ${pts(card.supply)} and its ability.`);
       return;
     }
@@ -158,7 +160,7 @@ export class CardDrag {
     if (t?.valid && t.kind === 'supply') ok = a._addCommand(d.card.owner, { type: 'load_supply', cardId: d.card.id, partyId: t.party.id });
     else if (t?.valid && t.kind === 'burn') ok = a._addCommand(d.card.owner, { type: 'burn', cardId: d.card.id });
     a.view.dropHighlight(a.state, null, false);
-    document.getElementById('resources')?.classList.remove('drop-burn', 'drop-bad');
+    a.view.sites.highlight(null);
     d.tip.remove();
     if (ok) this._land(d, t, e); else this._return(d, t);
   }
@@ -171,8 +173,7 @@ export class CardDrag {
       const w = a.view.toWorld(t.party.x, t.party.y);
       to = this._screenOf(w);
     } else {
-      const r = document.getElementById('resources').getBoundingClientRect();
-      to = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      to = this._screenOf(a.view.sites.anchor(t.seat, 'pit'));
     }
     const fly = reduced() ? 0 : 320;
     d.el.style.transition = `transform ${fly}ms cubic-bezier(.5,-0.2,.7,1), opacity ${fly}ms ease-in`;
@@ -190,9 +191,7 @@ export class CardDrag {
         a._toast(`+${pts(d.card.supply)} Supply planned for ${this.h.partyName(a.state, t.party.id)} — it lands when the Tick resolves`);
       } else {
         a.sound?.play('blip', { volume: 0.45 });
-        document.getElementById('resources')?.classList.add('flash');
-        setTimeout(() => document.getElementById('resources')?.classList.remove('flash'), 700);
-        a._toast(`Burn planned: +${this.h.fmtMana(d.card.mana)} this Tick`);
+        a._toast(t.zero ? 'Burn planned for 0 Mana: the Card is consumed when the Tick resolves' : `Burn planned: +${this.h.fmtMana(d.card.mana)} when the Tick resolves`);
       }
       a._renderAll();
       this.drag = null;
@@ -217,7 +216,7 @@ export class CardDrag {
     }, back);
   }
 
-  _cancel() { const d = this.drag; this._unlisten(); if (!d) return; if (!d.live) { this.drag = null; return; } this.app.view.dropHighlight(this.app.state, null, false); d.tip.remove(); this._return(d, null); }
+  _cancel() { const d = this.drag; this._unlisten(); if (!d) return; if (!d.live) { this.drag = null; return; } this.app.view.dropHighlight(this.app.state, null, false); this.app.view.sites.highlight(null); d.tip.remove(); this._return(d, null); }
 
   _unlisten() {
     window.removeEventListener('pointermove', this._move);

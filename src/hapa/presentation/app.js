@@ -39,6 +39,7 @@ import { buildScenery } from './scenery.js';
 import { CardDrag } from './card-drag.js';
 import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } from './palette.js';
 import { openEditor } from './editor.js';
+import { InspectController } from './inspect.js';
 import { openLab, anyProfile, labProfiles } from './lab.js';
 import { localCatalog, localDecks } from './local-content.js';
 
@@ -79,22 +80,38 @@ export class VersusApp {
     const r = this.root;
     r.innerHTML = '';
     const area = (id, cls = '') => (this.el[id] = h('div', { id, class: `area ${cls}` }));
-    // the right column is the current decision (review 02, R2-02): the inspector above, the public
-    // plans below with the one Ready / Acknowledge pinned at their foot; plans grow when reviewing
-    this.el.side = h('div', { id: 'side' });
-    r.append(area('matchbar'), area('opphand', 'ribbon'), area('roster', 'panel'), area('world'), this.el.side, area('ownhand', 'ribbon'), area('resources', 'panel'), area('events'));
-    this.el.side.append(area('inspector', 'panel'), area('plan', 'panel'));
-    this.el.plan.setAttribute('role', 'region'); this.el.plan.setAttribute('aria-label', 'Public plans');
-    this.el.inspector.setAttribute('role', 'region'); this.el.inspector.setAttribute('aria-label', 'Inspector');
-    // narrow windows (or enlarged text): the roster becomes a drawer opened from this toggle (review UX-06)
-    this.el.rosterToggle = h('button', { class: 'roster-toggle', 'aria-controls': 'roster', 'aria-expanded': 'false', onclick: () => this._toggleRoster() }, '☰ Parties');
-    r.append(this.el.rosterToggle);
+    // ordinary play is the board (human-feedback addendum 01 §2): a compact decision strip, the
+    // world and a thin event strip. Cards and parties are inspected where they are; Orders, the
+    // Parties & Cards navigator and a required decision open over the board when needed.
+    r.append(area('matchbar'), area('world'), area('events'));
+    this.el.roster = h('nav', { id: 'roster', class: 'area panel drawer', 'aria-label': 'Parties and Cards' });
+    this.el.orders = h('section', { id: 'orders', class: 'area panel drawer', role: 'region', 'aria-label': 'Orders and public plans', hidden: true });
+    this.el.plan = h('div', { id: 'plan', role: 'region', 'aria-label': 'Public plans' });
+    this.el.decision = h('section', { id: 'decision', class: 'area panel', role: 'region', 'aria-label': 'Required decision', hidden: true });
+    this.el.basins = { A: h('button', { class: 'basin-counter a', 'aria-label': "A's Mana basin" }), B: h('button', { class: 'basin-counter b', 'aria-label': "B's Mana basin" }) };
     this.el.overlay = h('div', { id: 'overlay' });
     r.append(this.el.overlay);
     this._containModals();
     this.el.world.append(this.el.toast = h('div', { class: 'toast' }));
     this.el.world.append(this.el.compass = h('div', { class: 'compass' }));
     this.el.world.append(this.el.layers = h('div', { class: 'layer-rail', role: 'toolbar', 'aria-label': 'Height layers' }));
+    this.el.world.append(this.el.basins.A, this.el.basins.B, this.el.roster, this.el.orders, this.el.decision);
+    for (const seat of ['A', 'B']) {
+      const b = this.el.basins[seat], subject = { kind: 'basin', id: seat };
+      b.addEventListener('pointerenter', () => this.inspect?.hover(subject));
+      b.addEventListener('pointerleave', () => this.inspect?.hover(null));
+      b.addEventListener('focus', () => this.inspect?.focusSubject(subject));
+      b.addEventListener('blur', () => this.inspect?.blurSubject());
+      b.addEventListener('click', () => { this.selected = { kind: 'basin', id: seat }; this._renderAll(); });
+    }
+    // one contextual inspection system for Cards, parties, members, basins and events (§3)
+    this.inspect = new InspectController({
+      host: this.el.world,
+      generation: () => this.generation ?? 0,
+      build: (sub) => (this.session ? this._contentFor(sub) : null),
+      project: (sub) => this._screenAnchor(sub),
+      onPin: (sub) => { if (!sub && this.selected) { this.selected = null; this.view?.select(this.state, null); this._renderAll(); } },
+    });
   }
 
   _initEngine() {
@@ -140,6 +157,7 @@ export class VersusApp {
       this._onPointer(e);
     });
     canvas.addEventListener('pointermove', (e) => { if (!this.cam?.dragging && !this.dragging) this._onHover(e); });
+    canvas.addEventListener('pointerleave', () => this.inspect.hover(null));
     this.el.world.addEventListener('contextmenu', (e) => e.preventDefault());
     this.engine.addSystem({ name: 'versus', update: (dt) => this._frame(dt) });
     this.engine.start();
@@ -185,6 +203,8 @@ export class VersusApp {
     const gen = this.generation = (this.generation ?? 0) + 1;
     this._detachMatch();
     this._closeSheet({ restore: false });
+    this.inspect.reset();
+    this.view?.sites.clearEffects();
     await loadCharacterKit(); // crowns, helmets and the guard preset are kit parts
     await loadRenditions(); // optional local card faces; placeholders otherwise
     if (gen !== this.generation) return; // a newer New match replaced this one while loading
@@ -220,6 +240,10 @@ export class VersusApp {
     this.cam.setHome(this.viewSeat);
     this._renderCamPad();
     this.selected = null;
+    this.inspect.reset();
+    this.ordersOpen = false;
+    this._staleKey = null;
+    this._shownEvents = new Set();
     this.tool = null;
     this.lastEvents = [];
     this.inspectEvent = null;
@@ -263,7 +287,17 @@ export class VersusApp {
     const busy = !!(this.resolving || this.playback || this.pendingChoice || this.state?.outcome);
     const frozen = !!this.ready?.[seat];
     const current = this._readyValid(seat);
-    return { human, busy, frozen, current, stale: frozen && !current, edit: human && !busy && !frozen, ready: human && !busy && !current };
+    // an invalid draft order (e.g. a destination whose funding Card was removed) blocks the first
+    // Ready until it is repaired or removed — the plan is never silently shortened (addendum §6)
+    const invalid = !frozen && human && !busy ? this._planErrors(seat).length : 0;
+    return { human, busy, frozen, current, invalid, stale: frozen && !current, edit: human && !busy && !frozen, ready: human && !busy && !current && !invalid };
+  }
+
+  /** The seat's plan errors, cached per plan revision. */
+  _planErrors(seat) {
+    const key = `${this.generation}:${this.state.tick}:${seat}:${this.rev?.[seat]}`;
+    if (this._errCache?.[seat]?.key !== key) (this._errCache ??= {})[seat] = { key, errors: validatePlan(this.state, this.ctx, seat, this.plans[seat] ?? []).errors };
+    return this._errCache[seat].errors;
   }
 
   /** Why a seat's plan cannot change now (for the toast), or null. */
@@ -312,6 +346,7 @@ export class VersusApp {
   _pressReady() {
     if (!this.session) return;
     const seat = this.viewSeat;
+    if (this._can(seat).invalid) { this._toast(`Ready is blocked: ${this._can(seat).invalid} invalid order${this._can(seat).invalid > 1 ? 's' : ''} — repair or remove them in Orders`, true); this._toggleOrders(true); return; }
     if (!this._can(seat).ready) return;
     this.sound?.play('confirm', { volume: 0.6 });
     // remember both plans as acknowledged, to show what the opponent changed afterwards
@@ -457,7 +492,7 @@ export class VersusApp {
       this.viewSeat = req.seat;
       this.selected = { kind: 'choice' };
       // the decision takes the keyboard: its first available choice (a response, else Pass)
-      this._focusAfter = () => this.el.inspector.querySelector('.response button:not(:disabled)');
+      this._focusAfter = () => this.el.decision.querySelector('.response button:not(:disabled)');
       this._renderAll();
     });
   }
@@ -474,6 +509,8 @@ export class VersusApp {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (!e.repeat) this._pressReady(); return; }
       if (e.code === 'Escape' && this.el.pickList) { this._closePickList(); return; }
       if (e.code === 'Escape' && document.body.classList.contains('roster-open')) { this._toggleRoster(false); return; }
+      if (e.code === 'Escape' && this.inspect.dismissTop()) return; // the top contextual view first
+      if (e.code === 'Escape' && this.ordersOpen && !this._can(this.viewSeat).stale) { this._toggleOrders(false); return; }
       if (e.code === 'Escape') { if (this.tool) { this.tool = null; this._renderAll(); } else { this.selected = null; this.view?.select(this.state, null); this._renderAll(); } return; }
       if (k === 'q') this.cam.rotate(45);
       else if (k === 'e') this.cam.rotate(-45);
@@ -488,8 +525,8 @@ export class VersusApp {
       else if (k === 'b') this._cardTool('burn');
       else if (k === 'c') this._cardTool('ability');
       else if (k === 'm') this._showDestinations();
-      else if (k === 'g') this._renderInspector();
-      else if (k === 'p') this.el.plan.scrollIntoView();
+      else if (k === 'p') this._toggleOrders();
+      else if (k === 'n') this._toggleRoster();
       else if (['[', ']'].includes(e.key) || ['BracketLeft', 'BracketRight'].includes(e.code)) { const b = this.view.stepLayer(e.key === ']' || e.code === 'BracketRight' ? 1 : -1); this.view.sync(this.state); this._toast(b === null ? 'All layers (surface opaque)' : `Layer ${b > 0 ? '+' : ''}${b}${b < 1 ? ' — cutaway: the surface is see-through' : ''}`); this._renderAll(); }
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
@@ -545,6 +582,30 @@ export class VersusApp {
     const p = this._rayFrom(e);
     this.view.hover(p?.territory ?? null);
     this.hoverInfo = p;
+    if (this.cardDrag?.active || this.cam?.dragging) return;
+    // hover inspects; it never selects, orders, moves the camera or takes focus (addendum §3)
+    const card = this._cardTileAt(e);
+    const site = card ? null : this._siteAt(e);
+    const party = p?.candidates?.length === 1 ? p.candidates[0].party : p?.party ?? null;
+    this.inspect.hover(card ? { kind: 'card', id: card } : site ? { kind: 'basin', id: site.seat } : party ? { kind: 'party', id: party.id } : null);
+  }
+
+  /** The Fire Pit or Mana basin under a pointer event, or null. */
+  _siteAt(e) {
+    const rect = this.engine.renderer.domElement.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
+    this.raycaster.setFromCamera(ndc, this.engine.camera);
+    return this.view.sites.pick(this.raycaster);
+  }
+
+  /** A subject's world anchor projected into the world element (null when behind the camera). */
+  _screenAnchor(sub) {
+    const w = this.view?.anchorOf(sub, this.state);
+    if (!w) return null;
+    const v = w.clone().project(this.engine.camera);
+    if (v.z > 1) return null;
+    const r = this.el.world.getBoundingClientRect(), c = this.engine.renderer.domElement.getBoundingClientRect();
+    return { x: c.left - r.left + ((v.x + 1) / 2) * c.width, y: c.top - r.top + ((1 - v.y) / 2) * c.height };
   }
 
   /** The bank card tile under a pointer event, or null. */
@@ -565,7 +626,12 @@ export class VersusApp {
   _onPointer(e) {
     if (!this.session || e.button === 1) return;
     this._closePickList();
-    if (e.button === 0) { const id = this._cardTileAt(e); if (id) { this.selected = { kind: 'card', id }; this._renderAll(); return; } }
+    if (e.button === 0) {
+      const id = this._cardTileAt(e);
+      if (id) { this.selected = { kind: 'card', id }; this._renderAll(); return; }
+      const site = this._siteAt(e);
+      if (site) { this.selected = { kind: 'basin', id: site.seat }; this._renderAll(); return; }
+    }
     const pick = this._rayFrom(e);
     if (!pick) return;
     // several parties under the pointer (stacked heights): the player chooses; never a silent guess
@@ -619,8 +685,7 @@ export class VersusApp {
     // plain selection
     if (pick.member && e.altKey) this.selected = { kind: 'member', id: pick.member.id };
     else if (pick.party) { this.selected = { kind: 'party', id: pick.party.id }; this._autoLayer(pick.party); }
-    else if (pick.territory) this.selected = { kind: 'territory', ...pick.territory };
-    else this.selected = null;
+    else this.selected = null; // empty ground: quiet board, nothing pinned
     this._renderAll();
   }
 
@@ -775,6 +840,10 @@ export class VersusApp {
     this._stepPlayback(dt);
     this.scenery?.update(dt);
     this.view.update(dt, this.engine.camera);
+    const busy = !!(this.cardDrag?.active || this.cam?.dragging);
+    if (busy !== this._inspectBusy) { this._inspectBusy = busy; this.inspect.setSuspended(busy); }
+    this.inspect.update();
+    this._placeBasinCounters();
     this.el.compass.textContent = `▲ ${Math.round(this.cam.bearing)}° · ${this.cam.tactical ? 'Tactical' : 'Angled'} · home ${this.viewSeat}`;
   }
 
@@ -815,12 +884,12 @@ export class VersusApp {
     }
     if (this._focusInspectorNext) {
       this._focusInspectorNext = false;
-      const head = this.el.inspector.querySelector('h3');
+      const head = this._inspectorEl().querySelector('h3');
       if (head) { head.setAttribute('tabindex', '-1'); head.focus({ preventScroll: true }); return; }
     }
     if (panel && !document.contains(prev)) {
       const same = [...panel.querySelectorAll('button, [tabindex="0"], summary')].find((e) => (e.getAttribute('aria-label') || e.textContent || '').trim() === key);
-      const head = this.el.inspector.querySelector('h3');
+      const head = this._inspectorEl().querySelector('h3');
       const target = same ?? (head && (head.setAttribute('tabindex', '-1'), head));
       target?.focus({ preventScroll: true });
     }
@@ -828,12 +897,11 @@ export class VersusApp {
 
   _renderAllInner() {
     this._renderMatchBar();
-    this._renderHand(this.el.ownhand, this.viewSeat, true);
-    this._renderHand(this.el.opphand, this.viewSeat === 'A' ? 'B' : 'A', false);
     this._renderRoster();
-    this._renderInspector();
-    this._renderResources();
-    this._renderPlan();
+    this._renderOrders();
+    this._renderDecision();
+    this._renderBasins();
+    this._syncInspection();
     this._renderEvents();
     this._renderLayers();
     this._renderToolHint();
@@ -845,22 +913,49 @@ export class VersusApp {
     else if (!sel) this.view.select(this.state, null);
   }
 
+  /**
+   * The compact decision strip (addendum §2): seat, Tick/phase, active columns, Commander status,
+   * Orders (count, stale badge), the one Ready / Acknowledge, the navigator, help, sound and menu.
+   * Operational state only — no permanent tutorial.
+   */
   _renderMatchBar() {
     const s = this.state, p = this.ctx.profile;
     const r = roundOf(p, Math.max(1, s.tick));
     const cmd = (seat) => Object.values(s.members).find((m) => m.commander && m.owner === seat);
-    const next = s.tick + 1;
-    this.el.matchbar.replaceChildren(
-      h('div', { class: 'crest a', title: `Seat A · ${this.seats.A}` }, 'A', h('small', {}, this.seats.A === 'bot' ? 'bot' : this.viewSeat === 'A' ? 'you' : 'human')),
-      h('div', { class: 'tick' }, this.session.fixture ? h('span', { class: 'fixture-tag', title: 'This state was prepared directly as a diagnostic fixture; it did not emerge from ordinary play.' }, `FIXTURE · ${this.session.fixture.title}`) : null, h('b', {}, `Tick ${s.tick}`), ` · ${r.period === 'prologue' ? 'Prologue' : `Round ${r.round}`}`),
-      h('div', { class: 'active' }, 'Active ', ...s.activeColumns.map((c) => h('span', { class: 'colchip' }, `C${c}`)), h('small', {}, ` next T${next}: ${this.ctx.profile.clock.activation[(next - 1) % 9].map((c) => `C${c}`).join('/')}`)),
-      h('div', { class: 'phase' }, this.playback ? 'Resolving…' : this.pendingChoice ? `Response window · ${this.pendingChoice.req.seat} to act` : s.outcome ? 'Match over' : `Planning · you are ${this.viewSeat}`),
-      h('div', { class: 'cmds' }, ...['A', 'B'].map((seat) => { const c = cmd(seat); return h('span', { class: `cmdhp ${seat.toLowerCase()}` }, `${seat} Commander ${c?.alive ? `${pts(c.hp)}/${pts(c.maxHp)} HP` : 'fallen'}`); })),
-      h('div', { class: 'speed' }, h('label', {}, 'Playback ', h('select', { onchange: (e) => (this.speed = Number(e.target.value)) }, ...[0.5, 1, 2, 4].map((v) => h('option', { value: v, selected: v === this.speed }, `${v}×`))))),
-      h('div', { class: 'crest b', title: `Seat B · ${this.seats.B}` }, 'B', h('small', {}, this.seats.B === 'bot' ? 'bot' : this.viewSeat === 'B' ? 'you' : 'human')),
-      this.sound ? h('button', { class: 'menu', title: this.sound.muted ? 'Sound off (click to turn on)' : 'Sound on (click to mute)', 'aria-pressed': String(!this.sound.muted), onclick: () => { this.sound.toggle(); this._renderMatchBar(); } }, this.sound.muted ? '🔇' : '🔊') : null,
+    const me = this.viewSeat, can = this._can(me);
+    const n = (seat) => this.plans[seat]?.length ?? 0;
+    const bad = this._planErrors(me).length;
+    this._renderReadyButton();
+    this.el.ordersBtn = h('button', { class: `strip-btn orders${can.stale ? ' stale' : ''}${bad ? ' bad' : ''}`, 'aria-expanded': String(!!this.ordersOpen), 'aria-controls': 'orders', onclick: () => this._toggleOrders(), title: 'Public plans (P)' },
+      'Orders ', h('b', {}, `${me} ${n(me)}`), ` · ${other(me)} ${n(other(me))}`, can.stale ? h('span', { class: 'badge warn' }, 'changed') : null, bad ? h('span', { class: 'badge bad' }, `${bad} invalid`) : null);
+    this.el.navBtn = h('button', { class: 'strip-btn', 'aria-expanded': String(document.body.classList.contains('roster-open')), 'aria-controls': 'roster', title: 'Parties and Cards (N)', onclick: () => this._toggleRoster() }, '☰ Parties & Cards');
+    this.el.matchbar.replaceChildren(...[
+      h('div', { class: `crest ${me.toLowerCase()}`, title: `You are seat ${me}` }, me, h('small', {}, this.seats[me] === 'bot' ? 'bot' : 'you')),
+      h('div', { class: 'tick' }, this.session.fixture ? h('span', { class: 'fixture-tag', title: 'This state was prepared directly as a diagnostic fixture; it did not emerge from ordinary play.' }, 'FIXTURE') : null, h('b', {}, `Tick ${s.tick}`), ` · ${r.period === 'prologue' ? 'Prologue' : `Round ${r.round}`}`),
+      h('div', { class: 'active', title: 'Columns that mint Cards and take new unit orders this Tick' }, 'Active ', ...s.activeColumns.map((c) => h('span', { class: 'colchip' }, `C${this.ctx.geo.toLocal(me, c, 1).column}`))),
+      h('div', { class: 'phase' }, this.playback ? 'Resolving…' : this.pendingChoice ? `Response · ${this.pendingChoice.req.seat} to act` : s.outcome ? 'Match over' : can.stale ? 'Review the changed plan' : can.current ? 'Ready — waiting' : 'Planning'),
+      h('div', { class: 'cmds', title: 'Commander health (the match ends if one falls)' }, ...['A', 'B'].map((seat) => { const c = cmd(seat); return h('span', { class: `cmdhp ${seat.toLowerCase()}` }, `${seat}★ ${c?.alive ? `${pts(c.hp)}/${pts(c.maxHp)}` : 'fallen'}`); })),
+      this.el.navBtn, this.el.ordersBtn, this.el.readyBig,
+      h('div', { class: 'speed' }, h('label', {}, h('span', { class: 'sr' }, 'Playback speed '), h('select', { 'aria-label': 'Playback speed', onchange: (e) => (this.speed = Number(e.target.value)) }, ...[0.5, 1, 2, 4].map((v) => h('option', { value: v, selected: v === this.speed }, `${v}×`))))),
+      h('button', { class: 'menu', 'aria-label': 'Help', 'aria-haspopup': 'dialog', onclick: () => this._help() }, '?'),
+      this.sound ? h('button', { class: 'menu', 'aria-label': this.sound.muted ? 'Sound off' : 'Sound on', 'aria-pressed': String(!this.sound.muted), onclick: () => { this.sound.toggle(); this._renderMatchBar(); } }, this.sound.muted ? '🔇' : '🔊') : null,
       this.el.menuBtn = h('button', { class: 'menu', 'aria-label': 'Match menu', 'aria-haspopup': 'dialog', onclick: () => this._menu() }, '☰'),
-    );
+    ].filter(Boolean));
+  }
+
+  /** Help on demand (the long teaching text that used to fill the inspector). */
+  _help() {
+    const keys = [['Hover / focus', 'inspect a Card, party or basin where it is'], ['Click / Enter', 'pin that view; Esc closes the top view'], ['N', 'Parties & Cards navigator'], ['P', 'Orders (public plans)'], ['Right click', 'set the selected party\'s destination'], ['1–9', 'inspect your Card in that home column'], ['U / B / C', 'Supply, Burn or Ability with the inspected Card'], ['Ctrl/⌘ + Enter', 'Ready (freezes your plan)'], ['Q / E · Z / X', 'rotate · tilt the camera'], ['V · Home · F', 'tactical · home · focus'], ['[ ]', 'height layers'], ['Space', 'pause playback']];
+    this._sheet(h('div', { class: 'card-sheet help', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Help' },
+      h('h2', {}, 'How a Tick goes'),
+      h('ol', { class: 'quickstart' },
+        h('li', {}, h('b', {}, 'Inspect. '), 'Hover or focus any Card in the banks, any party, or a Mana basin: its details open beside it. Click to pin.'),
+        h('li', {}, h('b', {}, 'Choose each Card\'s one use. '), 'Supply for a party (Load Supply, or drag onto the party); Burn in your Fire Pit for its Mana (Burn, or drag onto the pit); or its ability.'),
+        h('li', {}, h('b', {}, 'Move. '), 'In a party\'s view, Move to… lists every destination its Supply can fund for the whole route (held plus earlier planned loads). Speed is how fast it travels.'),
+        h('li', {}, h('b', {}, 'Ready. '), 'Orders shows both public plans. Ready (in the strip, or Ctrl/⌘ + Enter) freezes your plan; when both are Ready the Tick resolves and plays back.')),
+      h('h3', {}, 'Keys'), h('div', { class: 'keys' }, ...keys.map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v))),
+      this._hoverHelp(),
+      h('div', { class: 'row' }, h('button', { 'data-autofocus': true, onclick: () => this._closeSheet() }, 'Close'))));
   }
 
   /**
@@ -990,92 +1085,53 @@ export class VersusApp {
     this.sound?.play(o.result === 'win' ? 'levelup' : 'close', { volume: 0.6 });
   }
 
-  _renderHand(el, seat, own) {
-    const s = this.state, geo = this.ctx.geo;
-    const planned = this._plannedCardIds(seat);
-    const tiles = [];
-    // both ribbons follow the viewer's home columns, so position i is the same physical column in each
-    // (Design Companion: "The opponent ribbon uses those same physical columns"); review UX-05
-    for (let lc = 1; lc <= 9; lc++) {
-      const col = geo.toGlobal(this.viewSeat, lc, 1).column;
-      const ownerLc = geo.toLocal(seat, col, 1).column;
-      const id = s.players[seat].bank.minor[String(col)];
-      const card = id ? s.cards[id] : null;
-      const next = s.activeColumns.includes(col) && s.phase === 'planning' ? nextActivation(this.ctx.profile, col, s.tick) : nextActivation(this.ctx.profile, col, s.tick);
-      const fc = mintForecast(s, this.ctx, seat, col);
-      const forecast = fc ? `T${next}: ${fc.rank} · S${fc.rank}${Object.keys(fc.mana).length ? ` · ${fmtMana(fc.mana)}` : ''}${card ? ' (replaces)' : ''}` : `T${next}: no frontier`;
-      const sel = this.selected?.kind === 'card' && this.selected.id === id;
-      const def = card ? activeCatalog.cards[card.abilityId] : null;
-      const where = own ? `your C${lc}${col !== lc ? `, global C${col}` : ''}` : `${seat}'s C${ownerLc}, global C${col}`;
-      const pick = () => { if (card && !this.dragging) { this.selected = { kind: 'card', id }; this._renderAll(); } };
-      tiles.push(h('div', {
-        class: `tile owner-${seat.toLowerCase()}${card && own && this.cardDrag?.canLift(card) ? ' liftable' : ''}${card ? '' : ' empty'}${sel ? ' sel' : ''}${planned.has(id) ? ' planned' : ''} suit-${card?.suit ?? ''}`,
-        tabindex: card ? '0' : '-1', role: card ? 'button' : null,
-        'aria-label': card ? `${card.rank} of ${SUIT_NAME[card.suit] ?? card.suit}, ${where}: Supply ${pts(card.supply)}, ${Object.keys(card.mana).length ? fmtMana(card.mana) : 'no Mana'}, ${def?.title ?? 'no ability'}${card.state !== 'available' ? `, ${card.state}` : ''}${planned.has(id) ? ` (planned: ${this._plannedUse(seat, id)})` : ''}` : `Empty, ${where}`,
-        onclick: pick,
-        onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); pick(); } },
-        // a restrained tether to the physical bank slot and its column on the board
-        onpointerenter: () => this.view?.tether(id, col), onpointerleave: () => this.view?.tether(null, null),
-        onfocus: () => this.view?.tether(id, col), onblur: () => this.view?.tether(null, null),
-        onpointerdown: (e) => { if (card && own) { const r = e.currentTarget.getBoundingClientRect(); this.cardDrag?.press(e, card, { x: r.left + r.width / 2, y: r.top + r.height / 2 }); } },
-        title: card ? `${card.id}\n${def?.title}: ${def?.text ?? ''}` : `Empty · next mint ${forecast}`,
-      },
-      // one Card anatomy in every view (review UX-08): identity row, a bounded face, resources,
-      // then the attached ability on its own band — the same order as the drag / world-bank face
-      h('div', { class: 'thead' },
-        card ? h('span', { class: 'rank' }, `${card.rank}`, h('span', { class: 'suit' }, SUIT[card.suit])) : null,
-        own ? h('span', { class: 'tl' }, `C${lc}`, col !== lc ? h('small', {}, ` · g${col}`) : null)
-          : h('span', { class: 'tl' }, `g${col}`, h('small', {}, ` · ${seat} C${ownerLc}`))),
-      card ? [
-        own ? this._faceBand(card) : null,
-        h('div', { class: 'res' }, h('span', { class: 'sup' }, own ? `Supply ${pts(card.supply)}` : `S${pts(card.supply)}`), h('span', { class: 'mana' }, ...this._manaCompact(card.mana, own ? 3 : 2))),
-        h('div', { class: `abil${def?.category === 'resource' || !def ? ' none' : ''}` }, def?.category === 'resource' || !def ? 'no ability' : def.title),
-        planned.has(id) ? h('div', { class: 'plannedtag' }, this._plannedUse(seat, id)) : null,
-      ] : h('div', { class: 'dim' }, 'empty'),
-      own ? h('div', { class: 'fc' }, forecast) : null));
-    }
-    el.replaceChildren(h('div', { class: 'ribbon-label', title: own ? `Your hand (seat ${seat})` : `Opponent's public hand (seat ${seat})` }, own ? `Your hand · ${seat}` : `Opp. · ${seat}`), h('div', { class: 'tiles' }, ...tiles));
-  }
-
   /** Open or close the roster drawer (narrow layouts only; at wide layouts the roster is a column). */
   _toggleRoster(open = !document.body.classList.contains('roster-open')) {
     document.body.classList.toggle('roster-open', open);
-    this.el.rosterToggle?.setAttribute('aria-expanded', String(open));
-    // the keyboard follows the drawer: into its first party on open, back to the toggle on close
-    if (open) requestAnimationFrame(() => this.el.roster.querySelector('.rrow')?.focus());
-    else if (this.el.roster.contains(document.activeElement) && getComputedStyle(this.el.rosterToggle).display !== 'none') this.el.rosterToggle.focus();
+    this.el.navBtn?.setAttribute('aria-expanded', String(open));
+    // the keyboard follows the drawer: into its first entry on open, back to the toggle on close
+    if (open) requestAnimationFrame(() => this.el.roster.querySelector('.rrow, button')?.focus());
+    else if (this.el.roster.contains(document.activeElement)) this.el.navBtn?.focus();
   }
 
+  /**
+   * The Parties & Cards navigator (addendum §2): an on-demand list of the same instances the board
+   * shows — every party, every Card in both owners' Minor / Major / row banks, both basins. Focus
+   * inspects (no click needed); Enter pins and moves into the view; Escape closes.
+   */
   _renderRoster() {
     const s = this.state;
-    const list = (seat) => Object.values(s.parties).filter((p) => p.owner === seat && p.alive && !p.retired).sort((a, b) => a.localColumn - b.localColumn || (a.kind < b.kind ? -1 : 1));
-    const row = (p) => {
-      const living = Object.values(p.slots).filter((id) => id && s.members[id].alive).length;
-      const engaged = p.state === 'engaged';
-      const planned = this._plannedSupply(p);
-      const pickRow = (e) => {
-        if (e?.type === 'keydown') this._focusInspectorNext = true; // a keyboard pick continues in the inspector
-        if (this.tool?.kind === 'supply' && p.owner === this.viewSeat) {
-          if (this._addCommand(this.viewSeat, { type: 'load_supply', cardId: this.tool.cardId, partyId: p.id })) this._toast(`Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`);
-          this.tool = null; this._renderAll(); return;
-        }
-        this.selected = { kind: 'party', id: p.id }; this._autoLayer(p); this._focusSelection(); this._toggleRoster(false); this._renderAll();
-      };
-      return h('div', { class: `rrow${this.selected?.id === p.id ? ' sel' : ''}${engaged ? ' engaged' : ''}${this.tool?.kind === 'supply' && p.owner === this.viewSeat ? ' target' : ''}`, onclick: pickRow,
-        ...kbd(pickRow, `${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' Commander' : ''} at R${p.region.row}C${p.region.column}, ${living} of 9 members, Supply ${pts(supplyOf(p))}${engaged ? ', in combat' : ''}`) },
-        h('span', { class: `dot ${p.owner.toLowerCase()}` }), h('b', {}, p.mount ? p.mount[0].toUpperCase() + p.mount.slice(1) : 'Pawn'), p.commander ? ' ★' : '',
-        h('span', { class: 'dim' }, ` R${p.region.row}C${p.region.column}`), ` ${living}/9`,
-        h('span', { class: 'dim' }, ` S${pts(supplyOf(p))}`), planned ? h('span', { class: 'planned-supply' }, `+${pts(planned)}`) : null, engaged ? h('span', { class: 'badge' }, '⚔') : p.state === 'moving' ? h('span', { class: 'badge' }, '→') : null);
+    const subjectRow = (subject, label, text, cls = '') => {
+      const pin = () => { this.selected = subject.kind === 'party' ? { kind: 'party', id: subject.id } : { kind: subject.kind, id: subject.id }; if (subject.kind === 'party') { this._autoLayer(s.parties[subject.id]); this._focusSelection(); } this._focusInspectorNext = true; this._renderAll(); };
+      return h('button', { class: `rrow ${cls}${this.selected?.id === subject.id ? ' sel' : ''}`, 'aria-label': label, onclick: pin, onfocus: () => this.inspect.focusSubject(subject), onblur: () => this.inspect.blurSubject() }, ...text);
     };
-    this.el.roster.replaceChildren(h('h3', {}, 'Parties'), h('div', { class: 'rgroup' }, h('div', { class: 'rhead a' }, 'A'), ...list('A').map(row)), h('div', { class: 'rgroup' }, h('div', { class: 'rhead b' }, 'B'), ...list('B').map(row)));
-  }
-
-  _renderResources() {
-    const s = this.state;
-    const pool = (seat) => h('div', { class: 'pool' }, h('b', {}, `${seat} pool `), ...(Object.keys(s.players[seat].pool).length ? manaChips(s.players[seat].pool) : [h('span', { class: 'dim' }, 'empty')]),
-      seat === this.viewSeat && this.plans[seat].some((c) => c.type === 'burn') ? h('div', { class: 'dim' }, 'after planned burns: ', ...manaChips(this._plannedPool(seat))) : null);
-    const sel = this.selected?.kind === 'party' ? s.parties[this.selected.id] : null;
-    this.el.resources.replaceChildren(...[h('h3', {}, 'Mana pools'), pool('A'), pool('B'), h('div', { class: 'dim small' }, 'Burned Mana expires at the Tick boundary.'), sel ? h('div', {}, h('b', {}, 'Selected Supply '), pts(supplyOf(sel))) : null].filter(Boolean));
+    const parties = (seat) => Object.values(s.parties).filter((p) => p.owner === seat && p.alive && !p.retired).sort((a, b) => a.localColumn - b.localColumn || (a.kind < b.kind ? -1 : 1)).map((p) => {
+      const living = Object.values(p.slots).filter((id) => id && s.members[id].alive).length;
+      const planned = this._plannedSupply(p);
+      if (this.tool?.kind === 'supply' && p.owner === this.viewSeat) return h('button', { class: 'rrow target', onclick: () => { if (this._addCommand(this.viewSeat, { type: 'load_supply', cardId: this.tool.cardId, partyId: p.id })) this._toast(`Supply planned for ${partyName(s, p.id)}`); this.tool = null; this._renderAll(); } }, `Load into ${partyShort(s, p.id)}`);
+      return subjectRow({ kind: 'party', id: p.id }, `${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' Commander' : ''} at R${p.region.row}C${p.region.column}, ${living} of 9 members, Supply ${pts(supplyOf(p))}${planned ? ` plus ${pts(planned)} planned` : ''}${p.state === 'engaged' ? ', in combat' : ''}`,
+        [h('span', { class: `dot ${p.owner.toLowerCase()}` }), h('b', {}, p.mount ? cap(p.mount) : 'Pawn'), p.commander ? ' ★' : '', h('span', { class: 'dim' }, ` R${p.region.row}C${p.region.column}`), ` ${living}/9`, h('span', { class: 'dim' }, ` S${pts(supplyOf(p))}`), planned ? h('span', { class: 'planned-supply' }, `+${pts(planned)}`) : null, p.state === 'engaged' ? h('span', { class: 'badge' }, '⚔') : null]);
+    });
+    const cards = (seat) => {
+      const out = [];
+      const bank = s.players[seat].bank, planned = this._plannedCardIds(seat);
+      for (let lc = 1; lc <= 9; lc++) {
+        const col = this.ctx.geo.toGlobal(seat, lc, 1).column, id = bank.minor[String(col)];
+        if (!id) continue;
+        const c = s.cards[id], def = activeCatalog.cards[c.abilityId];
+        out.push(subjectRow({ kind: 'card', id }, `${seat}'s C${lc} Minor Arcana: ${c.rank} of ${SUIT_NAME[c.suit] ?? c.suit}, Supply ${pts(c.supply)}, ${Object.keys(c.mana ?? {}).length ? fmtMana(c.mana) : 'no Mana'}, ${def?.title ?? 'no ability'}${planned.has(id) ? ` (planned: ${this._plannedUse(seat, id)})` : ''}`,
+          [h('span', { class: 'dim' }, `C${lc} `), h('b', {}, `${c.rank}${SUIT[c.suit] ?? ''}`), ` S${pts(c.supply)} `, Object.keys(c.mana ?? {}).length ? fmtMana(c.mana) : h('span', { class: 'dim' }, '0 Mana'), planned.has(id) ? h('span', { class: 'planned-supply' }, ' planned') : null]));
+      }
+      for (const [lc, id] of Object.entries(bank.major ?? {})) if (id) out.push(subjectRow({ kind: 'card', id }, `${seat}'s Major Arcana in C${lc}: ${activeCatalog.cards[s.cards[id].abilityId]?.title ?? id}`, [h('span', { class: 'dim' }, `Major C${lc} `), activeCatalog.cards[s.cards[id].abilityId]?.title ?? id]));
+      for (const [row, id] of Object.entries(bank.rows ?? {})) if (id) out.push(subjectRow({ kind: 'card', id }, `${seat}'s row Enchantment on R${row}: ${activeCatalog.cards[s.cards[id].abilityId]?.title ?? id}`, [h('span', { class: 'dim' }, `Row R${row} `), activeCatalog.cards[s.cards[id].abilityId]?.title ?? id]));
+      return out;
+    };
+    const group = (title, items) => h('details', { class: 'navgroup', open: true }, h('summary', {}, `${title} (${items.length})`), ...(items.length ? items : [h('div', { class: 'dim small' }, 'none')]));
+    this.el.roster.replaceChildren(
+      h('div', { class: 'orders-head' }, h('h3', {}, 'Parties & Cards'), h('button', { class: 'peek-btn', 'aria-label': 'Close Parties and Cards', onclick: () => this._toggleRoster(false) }, '×')),
+      ...['A', 'B'].map((seat) => h('div', { class: 'navseat' }, h('div', { class: `rhead ${seat.toLowerCase()}` }, `${seat}${seat === this.viewSeat ? ' (you)' : ''}`),
+        group('Parties', parties(seat)), group('Cards', cards(seat)),
+        subjectRow({ kind: 'basin', id: seat }, `${seat}'s Fire Pit and Mana basin: ${Object.keys(s.players[seat].pool).length ? fmtMana(s.players[seat].pool) : 'empty'}`, [h('b', {}, 'Fire Pit & Mana basin'), h('span', { class: 'dim' }, ` ${Object.keys(s.players[seat].pool).length ? fmtMana(s.players[seat].pool) : 'empty'}`)]))));
   }
 
   /**
@@ -1120,8 +1176,6 @@ export class VersusApp {
       return h('div', { class: `planbox ${seat.toLowerCase()}${rd ? ' frozen' : ''}` }, head, ...body);
     };
     const ch = changes(opp);
-    const review = !this.pendingChoice && (can.stale || !!this.planExpanded);
-    document.body.classList.toggle('plans-review', review);
     document.body.classList.toggle('responding', !!this.pendingChoice);
     const n = this.plans[me]?.length ?? 0;
     const banner = this.playback || this.resolving ? null
@@ -1129,14 +1183,12 @@ export class VersusApp {
       : can.current ? h('div', { class: 'plan-banner', role: 'status' }, `You are Ready: your ${n} order${n === 1 ? '' : 's'} are frozen for Tick ${s.tick}. Waiting for ${opp}.`)
       : can.edit ? h('div', { class: 'plan-banner dim' }, 'Your orders can change until you press Ready. Ready freezes them; there is no Unready.')
       : null;
-    const toggle = h('button', { class: 'plan-toggle', 'aria-pressed': String(review), disabled: can.stale, title: can.stale ? 'Plans stay expanded while you review a change' : '', onclick: () => { this.planExpanded = !this.planExpanded; this._renderAll(); } }, review ? 'Show inspector' : 'Expand plans');
     this._renderReadyButton();
     const order = can.stale ? [opp, me] : [me, opp];
     this.el.plan.replaceChildren(...[
-      h('div', { class: 'plan-head' }, h('h3', {}, `Public plans · Tick ${s.tick}`), toggle),
+      h('div', { class: 'plan-head' }, h('h4', {}, `Public plans · Tick ${s.tick}`)),
       banner,
-      h('div', { class: 'plans' }, ...order.map(box)),
-      this.el.readyBig].filter(Boolean));
+      h('div', { class: 'plans' }, ...order.map(box))].filter(Boolean));
     if (can.stale) this.el.plan.querySelector('.plans li.added, .plans li.removed')?.scrollIntoView({ block: 'nearest' });
   }
 
@@ -1171,6 +1223,7 @@ export class VersusApp {
     if (!c.human) return { state: 'watch', main: '', sub: '', pinned: `${me} is a bot` };
     if (c.stale) return { state: 'ack', main: 'Acknowledge updated plan ▶', sub: `Your plan is frozen · review ${opp}'s changes (NEW / REMOVED)`, pinned: `Acknowledge updated plan (${me})` };
     if (c.current) return { state: 'waiting', main: `Waiting for ${opp}…`, sub: `Your plan is frozen · ${opp} is planning`, pinned: `Ready ✓ · frozen (${me})` };
+    if (c.invalid) return { state: 'blocked', main: `Fix ${c.invalid} order${c.invalid > 1 ? 's' : ''}`, sub: 'Open Orders: repair or remove the invalid orders before Ready', pinned: 'Ready blocked by invalid orders' };
     return n
       ? { state: 'ready', main: 'Ready ▶', sub: `Freeze my plan (${n} order${n > 1 ? 's' : ''}) · Tick ${tick} · Ctrl/⌘+Enter`, pinned: `Ready and freeze my plan (${me})` }
       : { state: 'ready', main: 'Ready ▶', sub: `Continue with existing orders · Tick ${tick} · Ctrl/⌘+Enter`, pinned: `Ready: continue with existing orders (${me})` };
@@ -1178,11 +1231,11 @@ export class VersusApp {
 
   /** The one Ready / Acknowledge button in the Public plans panel: freezes your plan for this Tick. */
   _renderReadyButton() {
-    if (!this.el.readyBig) this.el.readyBig = h('button', { class: 'ready-big', onclick: () => this._pressReady() });
+    if (!this.el.readyBig) this.el.readyBig = h('button', { class: 'ready-big', onclick: () => (this._can(this.viewSeat).invalid ? this._toggleOrders(true) : this._pressReady()) });
     const me = this.viewSeat, b = this.el.readyBig;
     const L = this._readyLabel(me);
     b.hidden = L.state === 'watch' || L.state === 'over';
-    b.disabled = !this._can(me).ready;
+    b.disabled = !this._can(me).ready && !this._can(me).invalid; // blocked: it opens Orders to repair
     b.className = `ready-big ${L.state === 'ready' ? 'can' : L.state === 'ack' ? 'can ack' : L.state}`;
     b.replaceChildren(h('span', { class: 'rb-main' }, L.main), h('span', { class: 'rb-sub' }, L.sub));
   }
@@ -1197,29 +1250,122 @@ export class VersusApp {
     this.el.events.scrollLeft = this.el.events.scrollWidth;
   }
 
-  _renderInspector() {
-    const s = this.state, sel = this.selected, el = this.el.inspector;
-    if (this.pendingChoice) return el.replaceChildren(this._responsePanel());
-    if (!sel) return el.replaceChildren(this._nowPanel(), h('h3', {}, 'How a Tick goes'),
-      h('ol', { class: 'quickstart' },
-        h('li', {}, h('b', {}, 'Supply. '), 'Select one of your parties and press a card under ', h('b', {}, 'Load Supply'), ' — or drag a card from your hand onto the party. Each step of movement costs 1 Supply. To burn a card for Mana, select it and press ', h('b', {}, 'Burn'), ' (or drop it on the Mana pools).'),
-        h('li', {}, h('b', {}, 'Move. '), 'With the party selected, open ', h('b', {}, 'Move to…'), ' in this panel and choose a territory — or right-click a highlighted one. New orders need the party\'s column to be active (striped edges).'),
-        h('li', {}, h('b', {}, 'Ready. '), 'Press the gold ', h('b', {}, 'Ready ▶'), ' button under the public plans (or Ctrl/⌘ + Enter). It freezes your plan; when both players are Ready the plans resolve together and play back.')),
-      h('p', { class: 'dim small' }, 'Opening: select your C1 Castle (R1), load the C1 card as Supply, then Move to… the Pawn ahead of it (R2) — they merge into one nine-member party. Orders can change only until you press Ready.'),
-      this._hoverHelp());
-    if (sel.kind === 'party') return el.replaceChildren(this._partyPanel(s.parties[sel.id]));
-    if (sel.kind === 'member') return el.replaceChildren(this._memberPanel(s.members[sel.id]));
-    if (sel.kind === 'card') return el.replaceChildren(this._cardPanel(s.cards[sel.id]));
-    if (sel.kind === 'event') return el.replaceChildren(this._eventPanel(sel.event));
-    if (sel.kind === 'territory') {
-      const c = this.ctx.geo.toLocal(this.viewSeat, sel.column, sel.row);
-      const occ = Object.values(s.parties).filter((p) => p.alive && !p.retired && p.region.column === sel.column && p.region.row === sel.row);
-      const mana = [...this.ctx.profile.board.manaRows, ...this.ctx.profile.board.dualRows].includes(sel.row);
-      return el.replaceChildren(h('h3', {}, `Territory R${sel.row}C${sel.column}`),
-        h('p', {}, (c.row !== sel.row || c.column !== sel.column) ? `Your R${c.row}C${c.column}. ` : '', mana ? 'A Mana row: cards minted from here can carry Mana. ' : '', s.activeColumns.includes(sel.column) ? 'Its column is active this Tick.' : ''),
-        h('p', {}, occ.length ? `Here: ${occ.map((p) => `${p.owner === this.viewSeat ? 'your' : `${p.owner}'s`} ${partyShort(s, p.id)} (band ${fmtBand(p.band ?? 1)})`).join('; ')}.` : 'Empty.'));
+  /** The pinned view follows the selection; hover views are the InspectController's own. */
+  _syncInspection() {
+    const sel = this.selected;
+    const subj = sel && ['card', 'party', 'member', 'event', 'basin', 'territory'].includes(sel.kind)
+      ? { kind: sel.kind, id: sel.kind === 'territory' ? `${sel.column},${sel.row}` : sel.id, event: sel.event } : null;
+    const cur = this.inspect.pinnedSubject;
+    if (subj && this.inspect.key(subj) !== this.inspect.key(cur)) this.inspect.pin(subj, { opener: document.activeElement });
+    else if (!subj && cur) this.inspect.unpin({ restoreFocus: false });
+    this.inspect.refresh();
+  }
+
+  /** Where keyboard routing lands: the required decision, else the pinned view. */
+  _inspectorEl() { return this.pendingChoice || !this.inspect.shown.pinned ? this.el.decision : this.inspect.shown.pinned.el; }
+
+  /**
+   * Content for an inspected subject, by stable id (addendum §3 "Lifecycle"): a consumed or
+   * replaced Card shows as that instance's history, a merged party names its survivor.
+   */
+  _contentFor(sub) {
+    const s = this.state;
+    if (sub.kind === 'card') {
+      const c = s.cards[sub.id];
+      if (!c) return null;
+      const def = activeCatalog.cards[c.abilityId];
+      const type = c.major ? 'Major Arcana' : c.placedRow ? 'row Enchantment' : 'Minor Arcana';
+      return { title: `${c.rank ?? ''} ${SUIT_NAME[c.suit] ? `of ${SUIT_NAME[c.suit]}` : def?.title ?? 'Card'}`.trim(), tag: `${c.owner === this.viewSeat ? 'Your' : `${c.owner}'s`} ${type}`, node: this._cardPanel(c) };
     }
-    return el.replaceChildren(h('h3', {}, 'Inspector'));
+    if (sub.kind === 'party') {
+      const p = s.parties[sub.id];
+      if (!p) return null;
+      if (p.retired) return { title: `${partyShort(s, p.id)} (merged)`, tag: 'history', node: h('div', {}, h('p', {}, `This party merged into ${partyShort(s, p.mergedInto)}.`), h('button', { class: 'linkish', onclick: () => { this.selected = { kind: 'party', id: p.mergedInto }; this._renderAll(); } }, `Inspect ${partyShort(s, p.mergedInto)}`)) };
+      return { title: `${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★ Commander' : ''}`, tag: p.owner === this.viewSeat ? 'Yours' : `${p.owner}'s`, node: this._partyPanel(p) };
+    }
+    if (sub.kind === 'member') { const m = s.members[sub.id]; return m ? { title: memberName(s, m.id), tag: 'Member', node: this._memberPanel(m) } : null; }
+    if (sub.kind === 'event') return sub.event ? { title: cap(sub.event.type.replace(/_/g, ' ')), tag: `Tick ${sub.event.tick ?? s.tick}`, node: this._eventPanel(sub.event) } : null;
+    if (sub.kind === 'basin') return { title: `${sub.id}'s Fire Pit and Mana basin`, tag: 'Mana', node: this._basinPanel(sub.id) };
+    if (sub.kind === 'territory') {
+      const [column, row] = sub.id.split(',').map(Number);
+      const occ = Object.values(s.parties).filter((p) => p.alive && !p.retired && p.region.column === column && p.region.row === row);
+      const mana = [...this.ctx.profile.board.manaRows, ...this.ctx.profile.board.dualRows].includes(row);
+      return { title: `Territory R${row}C${column}`, node: h('div', {}, h('p', {}, mana ? 'A Mana row: Cards minted from here can carry Mana. ' : '', s.activeColumns.includes(column) ? 'Its column is active this Tick.' : ''), h('p', {}, occ.length ? `Here: ${occ.map((p) => `${p.owner === this.viewSeat ? 'your' : `${p.owner}'s`} ${partyShort(s, p.id)}`).join('; ')}.` : 'Empty.')) };
+    }
+    return null;
+  }
+
+  /** The required response surface: shown at once, never behind a hover (addendum §2). */
+  _renderDecision() {
+    const pc = this.pendingChoice;
+    this.el.decision.hidden = !pc;
+    if (pc) this.el.decision.replaceChildren(this._responsePanel());
+    else this.el.decision.replaceChildren();
+  }
+
+  /** Orders: the public plans, opened on demand and automatically when an acknowledgment goes stale. */
+  _renderOrders() {
+    const me = this.viewSeat, can = this._can(me);
+    const staleKey = can.stale ? `${this.state.tick}:${this.rev.A}:${this.rev.B}:${me}` : null;
+    if (staleKey && staleKey !== this._staleKey) this.ordersOpen = true;
+    this._staleKey = staleKey;
+    this._renderPlan();
+    this.el.orders.hidden = !this.ordersOpen;
+    if (!this.ordersOpen) return;
+    this.el.orders.replaceChildren(
+      h('div', { class: 'orders-head' }, h('h3', {}, 'Orders'), h('button', { class: 'peek-btn', 'aria-label': 'Close Orders', disabled: can.stale, title: can.stale ? 'Review the changed plan, then Acknowledge' : 'Close (Esc)', onclick: () => this._toggleOrders(false) }, '×')),
+      this._nowPanel(), this.el.plan);
+  }
+
+  _toggleOrders(open = !this.ordersOpen) {
+    this.ordersOpen = open;
+    this._renderAll();
+    if (open) this.el.orders.querySelector('h3')?.setAttribute('tabindex', '-1'), this.el.orders.querySelector('h3')?.focus();
+    else this.el.ordersBtn?.focus();
+  }
+
+  /** Mana basin counters: sharp numerals attached to the world basins (§7). */
+  _renderBasins() {
+    const s = this.state;
+    for (const seat of ['A', 'B']) {
+      const pool = s.players[seat].pool, el = this.el.basins[seat];
+      const proj = this._plannedPool(seat);
+      const entries = Object.entries(pool).filter(([, n]) => n > 0);
+      const changed = JSON.stringify(Object.entries(proj).filter(([, n]) => n > 0).sort()) !== JSON.stringify(entries.slice().sort());
+      el.replaceChildren(...[h('span', { class: 'bc-seat' }, seat),
+        ...(entries.length ? entries.map(([c, n]) => h('span', { class: `bc-chip c-${c}` }, h('img', { src: emblemURL(c, 16), alt: '' }), String(n))) : [h('span', { class: 'bc-empty' }, 'Empty')]),
+        changed ? h('span', { class: 'bc-proj', title: 'Projected after this plan' }, '→ plan') : null].filter(Boolean));
+      el.setAttribute('aria-label', `${seat}'s Mana basin: ${entries.length ? fmtMana(pool) : 'empty'}${changed ? `; projected after its plan ${fmtMana(proj)}` : ''}`);
+    }
+    const offerings = (seat) => this.plans[seat].filter((c) => c.type === 'burn').map((c) => drawCardCanvas(s.cards[c.cardId], s, 120, 160));
+    for (const seat of ['A', 'B']) this.view.sites.setOfferings(seat, this.playback ? [] : offerings(seat));
+  }
+
+  /** Per frame: keep each basin counter on its basin, or at the viewport edge as a locator. */
+  _placeBasinCounters() {
+    for (const seat of ['A', 'B']) {
+      const el = this.el.basins[seat], a = this._screenAnchor({ kind: 'basin', id: seat });
+      const W = this.el.world.clientWidth, H = this.el.world.clientHeight;
+      const x = a ? Math.max(8, Math.min(a.x, W - 8)) : (seat === this.viewSeat ? 60 : W - 60), y = a ? Math.max(8, Math.min(a.y, H - 8)) : H - 30;
+      el.classList.toggle('edge', !a || a.x < 0 || a.x > W || a.y < 0 || a.y > H);
+      el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
+    }
+  }
+
+  /** The basin view: actual pool by named color, the plan's projection, and the conversion rules. */
+  _basinPanel(seat) {
+    const s = this.state, pool = s.players[seat].pool;
+    const proj = this._plannedPool(seat);
+    const burns = this.plans[seat].filter((c) => c.type === 'burn');
+    const all = ['red', 'green', 'purple', 'yellow', 'blue', 'orange', 'black', 'white', 'rainbow'];
+    const row = (c) => h('tr', {}, h('td', {}, h('img', { src: emblemURL(c, 16), alt: '' }), ` ${COLOR_NAME[c]}`), h('td', {}, String(pool[c] ?? 0)), h('td', { class: (proj[c] ?? 0) !== (pool[c] ?? 0) ? 'ok' : 'dim' }, String(proj[c] ?? 0)));
+    const shown = all.filter((c) => pool[c] || proj[c]);
+    return h('div', { class: 'basin-view' },
+      h('table', { class: 'mana-table' }, h('tr', {}, h('th', {}, 'Mana'), h('th', {}, 'Now'), h('th', {}, 'After plan')), ...(shown.length ? shown.map(row) : [h('tr', {}, h('td', { colspan: 3, class: 'dim' }, 'Empty — burn a Card in this Fire Pit to fill it.'))])),
+      h('p', { class: 'small' }, '“After plan” projects ', seat === this.viewSeat ? 'your' : `${seat}'s`, ' public plan in order (its burns and payments). The opponent\'s plan and responses can still change what is available.'),
+      burns.length ? h('div', { class: 'small' }, h('b', {}, 'Planned burns: '), burns.map((c) => cardShort(s, c.cardId)).join(', ')) : null,
+      h('p', { class: 'dim small' }, this.ctx.profile.resources.poolCarryover ? 'Unspent Mana carries over to the next Tick.' : 'Unspent Mana expires at the Tick boundary.'),
+      h('p', { class: 'dim small' }, 'A Card does one thing: Supply for a party, Burn in the Fire Pit for its Mana, or its ability. White has a dark rim, Black a light rim, Rainbow pays any color until it is assigned.'));
   }
 
   /**
@@ -1393,7 +1539,7 @@ export class VersusApp {
     return h('div', { class: 'supply-loader' },
       h('h4', {}, 'Load Supply'),
       cards.length
-        ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { disabled: !this._can(seat).edit, 'aria-label': `Load ${pts(c.supply)} Supply from ${cardShort(s, c.id)} into ${partyShort(s, p.id)}${Object.keys(c.mana ?? {}).length ? ` (gives up ${fmtMana(c.mana)} and its ability)` : ' (gives up its ability)'}`, title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._focusAfter = () => this.el.inspector.querySelector('details.movelist > summary') ?? this.el.inspector.querySelector('.supply-loader button'); this._renderAll(); } } },
+        ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { disabled: !this._can(seat).edit, 'aria-label': `Load ${pts(c.supply)} Supply from ${cardShort(s, c.id)} into ${partyShort(s, p.id)}${Object.keys(c.mana ?? {}).length ? ` (gives up ${fmtMana(c.mana)} and its ability)` : ' (gives up its ability)'}`, title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._focusAfter = () => this._inspectorEl().querySelector('details.movelist > summary') ?? this._inspectorEl().querySelector('.supply-loader button'); this._renderAll(); } } },
           `+${pts(c.supply)} `, h('small', { class: 'dim' }, `C${c.localColumn} ${c.rank}${SUIT[c.suit] ?? ''}`))))
         : h('p', { class: 'dim small' }, 'No unplanned hand cards. New cards mint from the highlighted columns each Tick.'),
       h('p', { class: 'dim small' }, 'While your plan is editable (before you press Ready), any available card can become Supply for any of your parties, in any column — not only active ones. Moving one step costs 1 Supply.'));
@@ -1428,34 +1574,69 @@ export class VersusApp {
       h('button', { onclick: () => { this.selected = { kind: 'party', id: m.party }; this._renderAll(); } }, '← party'));
   }
 
+  /**
+   * A Card where it lies (addendum 01 §4), in order: identity and face; actual state of this
+   * instance; exact resources (every Mana amount, zero included); its ability in plain words with
+   * cost and consumption; the actions the viewer can take, or why not; then Details (lineage,
+   * mint provenance, art attribution). The same validated commands as drag and drop.
+   */
   _cardPanel(card) {
-    const s = this.state, def = activeCatalog.cards[card.abilityId];
-    const own = card.owner === this.viewSeat && this.seats[card.owner] === 'human' && card.state === 'available';
-    const planned = this._plannedCardIds(card.owner).has(card.id);
+    const s = this.state, def = activeCatalog.cards[card.abilityId], seat = card.owner;
+    const mine = seat === this.viewSeat && this.seats[seat] === 'human';
+    const plannedUse = this._plannedCardIds(seat).has(card.id) ? this._plannedUse(seat, card.id) : null;
+    const slotCol = String(card.column), inSlot = s.players[seat].bank.minor[slotCol] === card.id;
+    const replacedBy = !inSlot && s.players[seat].bank.minor[slotCol] ? s.players[seat].bank.minor[slotCol] : null;
+    const manaN = Object.values(card.mana ?? {}).reduce((n, v) => n + v, 0);
     const face = drawCardCanvas(card, s, 240, 320);
     face.className = 'inspect-face';
     face.setAttribute('role', 'img');
-    face.setAttribute('aria-label', `${card.rank} of ${SUIT_NAME[card.suit] ?? card.suit}: Supply ${pts(card.supply)}, ${Object.keys(card.mana ?? {}).length ? fmtMana(card.mana) : 'no Mana'}, ability ${def?.title ?? 'none'}`);
-    return h('div', {}, face,
-      h('h3', {}, `${card.rank} of ${SUIT_NAME[card.suit]} · ${card.owner} C${card.localColumn}`),
-      h('div', { class: 'kv' },
-        h('span', {}, 'Supply'), h('span', {}, pts(card.supply)),
-        h('span', {}, 'Mana'), h('span', {}, fmtMana(card.mana)),
-        h('span', {}, 'Minted'), h('span', {}, `Tick ${card.tick} from ${card.frontierParty ? partyName(s, card.frontierParty) : '—'}${card.blocker ? `, cut at ${card.blocker}` : ''}`),
-        h('span', {}, 'State'), h('span', {}, `${card.state}${planned ? ' (planned)' : ''}`)),
-      card.pips?.length ? h('div', { class: 'small' }, 'Mana provenance: ', ...card.pips.map((p) => h('span', { class: `chip c-${p.color}` }, `R${p.row}:${COLOR_LETTER[p.color]}${p.amount}`))) : null,
-      h('h4', {}, def?.title ?? 'Ability'), h('p', {}, def?.text ?? ''),
-      h('p', { class: 'dim small' }, `Definition ${card.ability} · creator ${def?.lineage?.creator?.label ?? def?.lineage?.creator?.id ?? '—'}${def?.lineage?.parents?.length ? ` · derived from ${def.lineage.parents.map((p) => (typeof p === 'string' ? p : `${p.id}@${p.revision}`)).join(', ')}` : ''}`),
-      (() => { const art = renditionFor(card); return art
-        ? h('div', { class: 'artcredit small' }, h('img', { src: art.url, alt: `${art.title} — ${art.deck}` }), h('span', { class: 'dim' }, `Face: “${art.title}” from the ${art.deck} (local rendition; the art stays with its owner and never affects play)`))
-        : h('p', { class: 'dim small' }, 'Face: procedural placeholder (no local rendition for this rank and suit; play is identical)'); })(),
-      own ? h('div', { class: 'actions' },
-        h('div', { class: 'dim small' }, 'One instance, one use:'),
-        h('div', { class: 'row' },
-          h('button', { onclick: () => this._cardTool('supply') }, 'Supply… (U)'),
-          h('button', { onclick: () => this._cardTool('burn') }, `Burn → ${fmtMana(card.mana)} (B)`),
-          h('button', { disabled: !def || def.category === 'resource' || def.timing === 'response', onclick: () => this._cardTool('ability') }, `${def?.title ?? 'Ability'}… (C)`)),
-        this.tool?.cardId === card.id && this.tool.step === 'facing' ? h('div', { class: 'row' }, 'Facing ', ...['N', 'E', 'S', 'W'].map((f) => h('button', { onclick: () => { this._addCommand(card.owner, { type: 'play_ability', cardId: card.id, actorPartyId: this.tool.actorPartyId, target: { facing: f } }); this.tool = null; this._renderAll(); } }, f))) : null) : null);
+    face.setAttribute('aria-label', `${card.rank} of ${SUIT_NAME[card.suit] ?? card.suit}: Supply ${pts(card.supply ?? 0)}, ${manaN ? fmtMana(card.mana) : 'no Mana'}, ability ${def?.title ?? 'none'}`);
+    const STATE = { available: 'Available in its bank slot', supply: 'Consumed: loaded as Supply', burned: 'Consumed: burned for Mana', played: 'Consumed: its ability was used', replaced: 'Replaced by a newer mint', reserved: 'Reserved for a pending use' };
+    const stateLine = card.state === 'available' && !inSlot ? 'No longer in its slot' : STATE[card.state] ?? cap(card.state);
+    const manaRows = Object.entries(card.mana ?? {}).filter(([, n]) => n > 0);
+    const isMinor = card.supply != null;
+    // the viewer's actions on this instance, or the reason there are none
+    let actions;
+    if (!mine) actions = h('p', { class: 'dim small' }, `${seat}'s public Card: you can inspect it; only ${seat} can use it.`);
+    else if (card.state !== 'available' || !inSlot) actions = h('p', { class: 'dim small' }, 'This instance has been used; it has no actions.');
+    else if (plannedUse) {
+      const i = this.plans[seat].findIndex((c) => c.cardId === card.id || c.burns?.includes(card.id));
+      actions = h('div', { class: 'actions' }, h('p', { class: 'small' }, h('b', {}, 'Planned: '), plannedUse, '. One instance, one use.'),
+        this._can(seat).edit && i >= 0 ? h('button', { onclick: () => this._removeOrder(seat, i) }, 'Remove that order') : h('p', { class: 'dim small' }, this._editRefusal(seat) ?? ''));
+    } else if (!this._can(seat).edit) actions = h('p', { class: 'dim small' }, `${this._editRefusal(seat)}.`);
+    else {
+      const parties = Object.values(s.parties).filter((p) => p.owner === seat && p.alive && !p.retired).sort((a, b) => a.localColumn - b.localColumn);
+      actions = h('div', { class: 'actions' },
+        h('p', { class: 'dim small' }, 'Choose one use for this Card:'),
+        h('details', { class: 'supplyto' }, h('summary', {}, `Load Supply ${pts(card.supply)} into…`),
+          h('div', { class: 'col' }, ...parties.map((p) => h('button', { 'aria-label': `Load ${pts(card.supply)} Supply from ${cardShort(s, card.id)} into ${partyShort(s, p.id)}`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: card.id, partyId: p.id })) { this._toast(`+${pts(card.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this.selected = { kind: 'party', id: p.id }; this._focusInspectorNext = true; this._renderAll(); } } },
+            `${partyShort(s, p.id)}`, h('small', { class: 'dim' }, ` Supply ${pts(supplyOf(p) + this._plannedSupply(p))} → ${pts(supplyOf(p) + this._plannedSupply(p) + card.supply)}`))))),
+        h('button', { class: 'burn', 'aria-label': manaN ? `Burn ${cardShort(s, card.id)} for ${fmtMana(card.mana)}` : `Burn ${cardShort(s, card.id)} for 0 Mana; consumes this Card`, onclick: () => { if (this._addCommand(seat, { type: 'burn', cardId: card.id })) this._toast(manaN ? `Burn planned: +${fmtMana(card.mana)} when the Tick resolves` : 'Burn planned for 0 Mana: the Card is consumed when the Tick resolves'); } },
+          manaN ? `Burn for ${fmtMana(card.mana)}` : 'Burn for 0 Mana — consumes this Card'),
+        def && def.category !== 'resource' ? h('button', { disabled: def.timing === 'response', title: def.timing === 'response' ? 'A response: offered when the opponent announces a Spell' : '', onclick: () => { this.selected = { kind: 'card', id: card.id }; this._cardTool('ability'); } }, def.timing === 'response' ? `${def.title} (response only)` : `Use ${def.title}…`) : null,
+        this.tool?.cardId === card.id && this.tool.step === 'facing' ? h('div', { class: 'row' }, 'Facing ', ...['N', 'E', 'S', 'W'].map((f) => h('button', { onclick: () => { this._addCommand(seat, { type: 'play_ability', cardId: card.id, actorPartyId: this.tool.actorPartyId, target: { facing: f } }); this.tool = null; this._renderAll(); } }, f))) : null);
+    }
+    const art = renditionFor(card);
+    return h('div', { class: 'cardview' },
+      h('div', { class: 'cv-top' }, face,
+        h('div', {},
+          h('div', { class: 'cv-id' }, `${card.rank ?? ''}${SUIT[card.suit] ?? ''} ${SUIT_NAME[card.suit] ? `of ${SUIT_NAME[card.suit]}` : ''}`),
+          h('div', { class: 'small' }, `${seat === this.viewSeat ? 'Your' : `${seat}'s`} C${card.localColumn}${isMinor ? ' · Minor Arcana' : ''}`),
+          h('div', { class: `cv-state ${card.state}` }, stateLine, plannedUse ? ` · planned: ${plannedUse}` : ''),
+          replacedBy ? h('div', { class: 'small warn' }, `Its slot now holds ${cardShort(s, replacedBy)}.`) : null,
+          isMinor ? h('div', { class: 'cv-res' }, h('div', {}, h('b', {}, 'Supply '), pts(card.supply)),
+            h('div', {}, h('b', {}, 'Mana '), manaRows.length ? manaRows.map(([c, n]) => h('span', { class: `mchip c-${c}` }, h('img', { src: emblemURL(c, 14), alt: '' }), `${n} ${COLOR_NAME[c]}`)) : '0 (none)')) : null)),
+      h('h4', {}, def?.title ?? 'No attached ability'),
+      def ? h('p', { class: 'small' }, def.text, def.cost?.mana && Object.keys(def.cost.mana).length ? h('span', { class: 'dim' }, ` Cost: ${fmtMana(def.cost.mana)}${def.cost.consumeSourceInstance ? ', consumes this Card' : ''}.`) : null) : null,
+      actions,
+      h('details', { class: 'details' }, h('summary', {}, 'Details'),
+        h('div', { class: 'kv' },
+          h('span', {}, 'Instance'), h('span', { class: 'mono' }, card.id),
+          h('span', {}, 'Minted'), h('span', {}, `Tick ${card.tick}${card.frontierParty ? ` from ${partyName(s, card.frontierParty)}` : ''}${card.blocker ? `, cut at ${card.blocker}` : ''}`),
+          h('span', {}, 'Definition'), h('span', {}, `${card.ability} · creator ${def?.lineage?.creator?.label ?? def?.lineage?.creator?.id ?? '—'}${def?.lineage?.parents?.length ? ` · derived from ${def.lineage.parents.map((p) => (typeof p === 'string' ? p : `${p.id}@${p.revision}`)).join(', ')}` : ''}`)),
+        card.pips?.length ? h('div', { class: 'small' }, 'Mana provenance: ', ...card.pips.map((p) => h('span', { class: `chip c-${p.color}` }, `R${p.row}:${COLOR_LETTER[p.color]}${p.amount}`))) : null,
+        art ? h('div', { class: 'artcredit small' }, h('span', { class: 'dim' }, `Face: “${art.title}” from the ${art.deck} (local rendition; the art stays with its owner and never affects play)`))
+          : h('p', { class: 'dim small' }, 'Face: procedural placeholder (no local rendition for this rank and suit; play is identical)')));
   }
 
   _eventPanel(e) {
