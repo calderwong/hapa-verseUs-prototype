@@ -1,0 +1,26 @@
+{
+  "cwd": "repository root",
+  "command": [
+    "node",
+    "--test",
+    "tests/hapa/boundaries.test.js",
+    "tests/hapa/content.test.js",
+    "tests/hapa/contracts.test.js",
+    "tests/hapa/corner.test.js",
+    "tests/hapa/effects.test.js",
+    "tests/hapa/elevation.test.js",
+    "tests/hapa/funding.test.js",
+    "tests/hapa/glossary.test.js",
+    "tests/hapa/golden.test.js",
+    "tests/hapa/history.test.js",
+    "tests/hapa/payment.test.js",
+    "tests/hapa/play.test.js",
+    "tests/hapa/playback.test.js",
+    "tests/hapa/profile-lab.test.js",
+    "tests/hapa/terrain.test.js",
+    "tests/hapa/ui-fixtures.test.js"
+  ],
+  "excluded": {
+    "tests/hapa/protocol.test.js": "hypercore-crypto unavailable in review extraction; four tests not executed"
+  }
+}

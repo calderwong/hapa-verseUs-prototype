@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1160" viewBox="0 0 1800 1160" role="img" aria-labelledby="title desc">
+  <title id="title">Hapa Versus: zoom reveals the party and its territory</title>
+  <desc id="desc">Three proposed interface states. At overview a Castle is selected and has a two-step route, with no detail popup. At close range a real five-member Pawn formation contains three Swordsmen in front slots one, two and three, two Archers in rear slots seven and nine, and an empty center. Upright role and health labels sit beside those members. The third panel explains a territory diorama with a rim, ground, near props and far geometry, and separately illustrates an actual excavation. This is a design schematic, not a runtime capture. Health and combat values are illustrative engineering fixtures.</desc>
+  <defs>
+    <linearGradient id="page" x2="0" y2="1"><stop stop-color="#101b25"/><stop offset="1" stop-color="#17232d"/></linearGradient>
+    <linearGradient id="panel" x2="0" y2="1"><stop stop-color="#22313b"/><stop offset="1" stop-color="#192630"/></linearGradient>
+    <linearGradient id="ground" x2="0" y2="1"><stop stop-color="#586b51"/><stop offset="1" stop-color="#35473c"/></linearGradient>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#344e58"/><stop offset="1" stop-color="#81918a"/></linearGradient>
+    <pattern id="tilegrid" x="96" y="382" width="88" height="88" patternUnits="userSpaceOnUse"><rect x="4" y="4" width="80" height="80" rx="3" fill="#263942" stroke="#7c8c85" stroke-opacity=".45"/><path d="M13 21V13H21M67 13H75V21M75 67V75H67M21 75H13V67" fill="none" stroke="#c2b18b" stroke-opacity=".35"/></pattern>
+    <pattern id="earth" width="24" height="22" patternUnits="userSpaceOnUse"><rect width="24" height="22" fill="#695442"/><path d="M0 9H24M0 20H24" stroke="#4c4338" stroke-width="3"/><path d="M4 3H8M15 14H20" stroke="#99846a" stroke-width="2"/></pattern>
+    <pattern id="pebbles" width="44" height="40" patternUnits="userSpaceOnUse"><path d="M5 8h5v3H5M28 27h7v3h-7M18 19h3v2h-3" fill="#d2c9ab" opacity=".16"/></pattern>
+    <clipPath id="window"><rect x="1238" y="346" width="492" height="306" rx="3"/></clipPath>
+    <g id="sword">
+      <ellipse cy="3" rx="29" ry="9" fill="#0c151c" opacity=".4"/>
+      <path d="M-15-16H-3V0H-18V-7M4-16H16V-7H19V0H4" fill="#101b25"/>
+      <path d="M-19-48H18V-15H12V-9H-13V-15H-19Z" fill="#4d7190"/>
+      <path d="M-9-46H9V-16H-9Z" fill="#e5ddc8"/>
+      <path d="M-19-41H-27V-20H-20M18-42H25V-27H18" fill="#344957"/>
+      <path d="M-26-39H-14V-15L-20-10L-27-17Z" fill="#8babb8" stroke="#d9ddca" stroke-width="2"/>
+      <path d="M27-62H31V-24H27Z" fill="#d6ded9"/><path d="M22-24H36V-20H22M27-20H31V-10H27" fill="#c5a25f"/>
+      <path d="M-11-69H11V-49H-11Z" fill="#b99c7a"/><path d="M-15-75H11V-71H16V-58H-16V-70H-15Z" fill="#273644"/>
+      <path d="M-12-62H12V-58H-12" fill="#b1c2bd"/><path d="M-18-47H19V-43H-18M-18-22H19V-18H-18" fill="#b79b62"/>
+    </g>
+    <g id="archer">
+      <ellipse cy="3" rx="29" ry="9" fill="#0c151c" opacity=".4"/>
+      <path d="M-13-15H-2V0H-15M3-15H15V0H3" fill="#111d27"/>
+      <path d="M-18-48H17V-14H11V-8H-13V-14H-18Z" fill="#3e6178"/><path d="M-10-43H9V-18H-10Z" fill="#698979"/>
+      <path d="M-19-41H-25V-22H-18M17-41H24V-24H17" fill="#47646a"/>
+      <path d="M-11-69H11V-49H-11Z" fill="#b99c7a"/><path d="M-11-76H10V-72H16V-54H9V-66H-9V-53H-16V-70H-11Z" fill="#203b50"/>
+      <path d="M-14-46L12-17" stroke="#c3ad77" stroke-width="5"/><path d="M-19-20H18V-16H-19" fill="#b99a62"/>
+      <path d="M28-66Q48-38 28-11" fill="none" stroke="#cfb374" stroke-width="4"/><path d="M28-66V-11" stroke="#d6ddc6" stroke-width="1.5"/>
+    </g>
+    <g id="castle"><path d="M-23 29H23V20H17L15-5H23V-29H11V-19H4V-29H-4V-19H-11V-29H-23V-5H-15L-17 20H-23Z"/></g>
+    <g id="tree"><path d="M-6 0H7V-42H-6Z" fill="#594f3a"/><path d="M-33-31H-44V-49H-30V-66H-19V-86H1V-98H15V-82H27V-64H39V-41H26V-28Z" fill="#304c43"/><path d="M-30-62H-18V-79H1V-90H12V-72H23V-55H12V-47H-14V-52H-30Z" fill="#65816a"/><path d="M-25-44H-8V-52H15V-36H-25Z" fill="#465f4b"/></g>
+    <style>
+      text{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#eee8d9}
+      .muted{fill:#b4c2c5}.gold{fill:#d6b777}.green{fill:#a3c4a5}.kicker{font-size:17px;font-weight:700;letter-spacing:1.6px}
+      .heading{font-size:28px;font-weight:650}.body{font-size:22px}.small{font-size:19px}.role{font-size:22px;font-weight:650;text-anchor:middle;paint-order:stroke;stroke:#23312c;stroke-width:4px;stroke-linejoin:round}.hp{font-size:20px;text-anchor:middle;fill:#c7dfc0;paint-order:stroke;stroke:#23312c;stroke-width:4px}.slot{font-size:16px;fill:#92a18e}
+    </style>
+  </defs>
+  <rect width="1800" height="1160" fill="url(#page)"/>
+  <path d="M36 132H1764" stroke="#b79b62" stroke-opacity=".45"/>
+  <text x="36" y="65" font-size="41" font-weight="650">Zoom closer. Read the people. Enter the place.</text>
+  <text x="38" y="107" class="body muted">Hapa Versus · proposed interaction schematic · not a runtime capture or finished art</text>
+
+  <rect x="36" y="160" width="560" height="850" rx="14" fill="url(#panel)" stroke="#6b756d" stroke-opacity=".6"/>
+  <rect x="620" y="160" width="560" height="850" rx="14" fill="url(#panel)" stroke="#b49b66" stroke-opacity=".75"/>
+  <rect x="1204" y="160" width="560" height="850" rx="14" fill="url(#panel)" stroke="#6b756d" stroke-opacity=".6"/>
+
+  <text x="60" y="198" class="kicker gold">01 · COMMAND FROM THE BOARD</text>
+  <text x="60" y="239" class="heading">Select without obstruction</text>
+  <text x="60" y="278" class="body muted">Click selects. The route stays visible.</text>
+  <text x="60" y="308" class="body muted">No automatic party detail card.</text>
+  <rect x="80" y="366" width="472" height="472" rx="10" fill="#101c25" stroke="#ab915a" stroke-width="3"/>
+  <rect x="96" y="382" width="440" height="440" fill="url(#tilegrid)"/>
+  <rect x="188" y="650" width="80" height="80" rx="3" fill="#b8c8b9" fill-opacity=".16" stroke="#eee8d9" stroke-width="3"/>
+  <rect x="188" y="562" width="80" height="80" rx="3" fill="#8aac91" fill-opacity=".16"/>
+  <rect x="188" y="474" width="80" height="80" rx="3" fill="#8aac91" fill-opacity=".16"/>
+  <path d="M228 690V514" fill="none" stroke="#d6b777" stroke-width="4" stroke-dasharray="9 8"/>
+  <path d="M218 536L228 523L238 536" fill="none" stroke="#d6b777" stroke-width="3"/>
+  <use href="#castle" x="228" y="690" fill="#eee8d9" stroke="#11202b" stroke-width="3"/>
+  <use href="#castle" x="228" y="514" fill="#eee8d9" fill-opacity=".08" stroke="#d6b777" stroke-width="3" stroke-dasharray="7 4"/>
+  <use href="#castle" x="404" y="426" fill="#1b2730" stroke="#a7b3ac" stroke-width="2"/>
+  <use href="#castle" x="492" y="778" fill="#eee8d9" fill-opacity=".7" stroke="#11202b" stroke-width="2"/>
+  <path d="M186 667V647H207M249 647H270V667M270 713V733H249M207 733H186V713" fill="none" stroke="#eee8d9" stroke-width="4"/>
+  <text x="316" y="349" class="small muted" text-anchor="middle">Schematic crop · ordinary movement</text>
+  <path d="M62 873H570" stroke="#738078" stroke-opacity=".45"/>
+  <text x="62" y="909" class="body">Castle selected · 2 Supply · 2 steps</text>
+  <text x="62" y="947" class="small muted">Selection and orders survive zooming,</text>
+  <text x="62" y="976" class="small muted">inspection and closing a reference view.</text>
+
+  <text x="644" y="198" class="kicker gold">02 · APPROACH THE REAL FORMATION</text>
+  <text x="644" y="239" class="heading">The party is the inspector</text>
+  <text x="644" y="278" class="body muted">Upright labels beside the actual members.</text>
+  <text x="644" y="308" class="body muted">Pawn example · center stays empty.</text>
+  <path d="M900 357V335M892 344L900 335L908 344" fill="none" stroke="#d6b777" stroke-width="2"/>
+  <text x="926" y="349" class="small gold">Front · North</text>
+  <rect x="648" y="372" width="504" height="504" rx="9" fill="url(#ground)" stroke="#b7a36f" stroke-width="4"/>
+  <rect x="652" y="376" width="496" height="496" fill="url(#pebbles)"/>
+  <path d="M816 378V870M984 378V870M654 540H1146M654 708H1146" stroke="#c4c8aa" stroke-opacity=".25" stroke-dasharray="5 7"/>
+  <text x="664" y="398" class="slot">1</text><text x="832" y="398" class="slot">2</text><text x="1000" y="398" class="slot">3</text>
+  <text x="664" y="566" class="slot">4</text><text x="832" y="566" class="slot">5</text><text x="1000" y="566" class="slot">6</text>
+  <text x="664" y="734" class="slot">7</text><text x="832" y="734" class="slot">8</text><text x="1000" y="734" class="slot">9</text>
+  <use href="#sword" x="732" y="474"/><use href="#sword" x="900" y="474"/><use href="#sword" x="1068" y="474"/>
+  <text x="732" y="503" class="role">Swordsman</text><text x="900" y="503" class="role">Swordsman</text><text x="1068" y="503" class="role">Swordsman</text>
+  <text x="732" y="529" class="hp">HP 3 / 3</text><text x="900" y="529" class="hp">HP 3 / 3</text><text x="1068" y="529" class="hp">HP 3 / 3</text>
+  <rect x="870" y="590" width="60" height="52" rx="3" fill="none" stroke="#c8c4a5" stroke-opacity=".7" stroke-dasharray="5 6"/>
+  <text x="900" y="672" class="small muted" text-anchor="middle">Empty center</text>
+  <use href="#archer" x="732" y="807"/><use href="#archer" x="1068" y="807"/>
+  <path d="M1032 740V729H1044M1091 729H1104V740M1104 808V819H1091M1044 819H1032V808" fill="none" stroke="#e2c47f" stroke-width="2"/>
+  <text x="732" y="837" class="role">Archer</text><text x="1068" y="837" class="role">Archer</text>
+  <text x="732" y="864" class="hp">HP 3 / 3</text><text x="1068" y="864" class="hp">HP 3 / 3</text>
+  <path d="M1068 883V898H1013" fill="none" stroke="#d6b777" stroke-width="1.5"/>
+  <text x="644" y="917" class="small gold">Focused Archer · base attack</text>
+  <text x="644" y="949" class="body">2 × 1 Physical · range 2</text>
+  <text x="644" y="980" class="small muted">Full breakdown on member hover or focus.</text>
+
+  <text x="1228" y="198" class="kicker gold">03 · REVEAL THE TERRITORY</text>
+  <text x="1228" y="239" class="heading">A place inside the tile</text>
+  <text x="1228" y="278" class="body muted">Near props, ground and distant geometry</text>
+  <text x="1228" y="308" class="body muted">create depth as the camera moves.</text>
+  <rect x="1232" y="340" width="504" height="320" rx="6" fill="#263530" stroke="#c1a56b" stroke-width="5"/>
+  <g clip-path="url(#window)">
+    <rect x="1238" y="346" width="492" height="306" fill="url(#sky)"/>
+    <path d="M1238 474V442H1270V424H1306V400H1346V417H1376V440H1410V458H1456V432H1486V409H1512V399H1546V417H1586V442H1612V426H1647V411H1687V437H1730V474Z" fill="#53696c"/>
+    <path d="M1238 484H1262V465H1326V481H1370V460H1430V481H1490V453H1550V477H1620V459H1680V484H1730V652H1238Z" fill="#5c7666"/>
+    <path d="M1238 533H1292V521H1372V540H1448V516H1522V532H1588V511H1662V524H1730V652H1238Z" fill="#4a624d"/>
+    <use href="#tree" transform="translate(1632 540) scale(.96)"/><use href="#tree" transform="translate(1694 528) scale(.7)"/>
+    <path d="M1238 612L1366 583L1480 613L1604 590L1730 606V652H1238Z" fill="#6f7954"/>
+    <path d="M1238 627H1730V652H1238Z" fill="#8b8468"/>
+    <path d="M1244 610H1260V598H1282V588H1318V598H1332V616H1320V625H1258Z" fill="#65766e"/><path d="M1258 601H1284V594H1312V603H1323" fill="none" stroke="#9baba0" stroke-width="5"/>
+    <path d="M1360 617V605M1370 615V596M1380 613V603M1558 616V602M1568 614V591M1578 615V604" stroke="#a2ad79" stroke-width="4"/>
+    <use href="#sword" x="1480" y="624"/>
+    <text x="1512" y="375" class="small" fill="#f1ebd8">Far geometry</text>
+    <path d="M1586 385L1560 415" stroke="#eee8d9" stroke-width="1.5"/>
+    <text x="1255" y="544" class="small">Near props</text><path d="M1305 553L1299 586" stroke="#eee8d9" stroke-width="1.5"/>
+    <text x="1577" y="582" class="small">Real ground</text><path d="M1611 591L1634 621" stroke="#eee8d9" stroke-width="1.5"/>
+  </g>
+  <path d="M1232 658H1736V680H1232Z" fill="#514b3c" stroke="#af965d" stroke-width="2"/>
+  <path d="M1240 665H1728" stroke="#d8ba77" stroke-opacity=".7" stroke-width="2"/>
+  <text x="1250" y="713" class="small gold">Tile rim</text><path d="M1332 705L1354 681" stroke="#d6b777" stroke-width="1.5"/>
+  <text x="1438" y="713" class="small muted">One scene · full orbit</text>
+  <path d="M1232 740H1736" stroke="#738078" stroke-opacity=".45"/>
+  <text x="1232" y="773" class="kicker gold">ACTUAL DIG · SEPARATE RULES STATE</text>
+  <rect x="1238" y="813" width="492" height="80" fill="url(#earth)"/>
+  <path d="M1414 813H1554V871H1414Z" fill="#1a2427"/>
+  <path d="M1238 812H1414V872H1554V812H1730" fill="none" stroke="#b9bc98" stroke-width="4"/>
+  <path d="M1421 822V866M1547 822V866" stroke="#94795b" stroke-width="4"/>
+  <path d="M1420 878H1548" stroke="#897350" stroke-width="5"/>
+  <text x="1243" y="802" class="small muted">Surface +1</text>
+  <text x="1580" y="869" class="small">Band −1</text><path d="M1570 862L1549 870" stroke="#eee8d9" stroke-width="1.5"/>
+  <text x="1232" y="936" class="body">Only accepted terrain changes alter</text>
+  <text x="1232" y="967" class="body">playable height, exposure or movement.</text>
+
+  <path d="M36 1045H1764" stroke="#b79b62" stroke-opacity=".45"/>
+  <text x="36" y="1081" class="body">Decorative depth is not excavation. Close labels are not nine cards. Commands remain usable at every scale.</text>
+  <text x="36" y="1117" class="small muted">HP and combat examples are illustrative engineering fixtures, not new balance. Cards retain their hover inspection. Camera motion never changes rules.</text>
+</svg>

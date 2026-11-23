@@ -1,0 +1,56 @@
+{
+  "review": "2026-11-23 / review 05",
+  "sourceCommit": "b747d118bbb857d0ea08f98696d0714428d2f106",
+  "implementationCommit": "fc6df0de7d66452caec8b35bfaa277220715a07e",
+  "enginePin": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "sourceValidation": {
+    "matchedGitBlobs": 77,
+    "mismatches": 0,
+    "method": "Fetched or reused local files only after comparing SHA-1 Git blob identity against the pinned remote tree; transport-added final newlines normalized before final run."
+  },
+  "independentVerification": {
+    "headless": {
+      "passed": 97,
+      "failed": 0,
+      "excludedTests": 4,
+      "excludedModule": "tests/hapa/protocol.test.js",
+      "reason": "hypercore-crypto dependency unavailable in extracted review environment",
+      "exitCode": 0,
+      "node": "v24.22.3",
+      "durationMs": 13579.107966
+    },
+    "protectionObservation": {
+      "member": "A.C3.m5",
+      "baseFrontPhysical": 1,
+      "withBoundStandard": 2,
+      "profile": "hapa_open_10x9_v3_02",
+      "kind": "actual-rules probe, not browser automation"
+    }
+  },
+  "implementerReported": {
+    "headlessTestsPassed": 101,
+    "browserAssertionsPassed": 219,
+    "sourceCommit": "fc6df0de7d66452caec8b35bfaa277220715a07e",
+    "independentlyReranBrowser": false
+  },
+  "visualEvidence": {
+    "userScreenshot": "CJ attachment Screenshot 2026-11-23 at 12.34.12 AM.png; exact runtime revision not established",
+    "checkedInCapturesInspected": [
+      "docs/reviews/evidence/2026-11-22/response-05/after/after-1-quiet-1600x1000.jpg",
+      "docs/reviews/evidence/2026-11-22/response-05/after/after-3-party-hover-1280x720.jpg"
+    ],
+    "proposedSchematic": "zoom-inspection-concept.svg",
+    "schematicIsRuntimeEvidence": false
+  },
+  "notRun": [
+    "live browser play",
+    "npm run check/build",
+    "protocol tests",
+    "GPU benchmark",
+    "touch",
+    "screen reader",
+    "new text-scale checks"
+  ],
+  "overwatchUpdatedByReviewer": false,
+  "cjAcceptanceRecorded": false
+}

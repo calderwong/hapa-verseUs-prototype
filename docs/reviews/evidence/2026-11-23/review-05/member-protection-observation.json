@@ -1,0 +1,85 @@
+{
+  "member": "A.C3.m5",
+  "profile": "hapa_open_10x9_v3_02",
+  "combat": {
+    "preset": "individual",
+    "hitStructure": "separate_weapon_hits",
+    "protection": "individual",
+    "allocation": "attacker",
+    "health": "member",
+    "firstContactExchange": "immediate",
+    "exchangeCadence": "once_per_tick_at_movement_start",
+    "charge": {
+      "enabled": true,
+      "multiplier": "approach_speed"
+    },
+    "pike": {
+      "entrenchment": "stationary_front",
+      "transfer": true
+    },
+    "ranged": {
+      "policy": "nearest_engagement",
+      "volleysPerTick": 1,
+      "baseRange": 2,
+      "elevation": {
+        "down": [
+          1,
+          1
+        ],
+        "up": [
+          -1,
+          -1
+        ],
+        "minRange": 1,
+        "minPower": 0
+      }
+    },
+    "cornerSupport": {
+      "enabled": true,
+      "supplyCost": 0
+    },
+    "breach": {
+      "maxSlots": 1
+    },
+    "retreat": {
+      "sameTimeExchangeFirst": true,
+      "followerSupplyCost": 0
+    },
+    "maintenance": {
+      "centerReserve": 6,
+      "retainerRequirement": 3,
+      "removalOrder": "front_side_rear"
+    },
+    "autoAllocation": "slot_order_then_member_id"
+  },
+  "archetype": "center",
+  "rawPanelProtection": [
+    {
+      "id": "center-guard",
+      "channel": "physical",
+      "amount": 1,
+      "faces": [
+        "front"
+      ],
+      "scope": "line"
+    }
+  ],
+  "actualFrontPhysical": {
+    "total": 2,
+    "sources": [
+      {
+        "source": "A.C3.m5",
+        "kind": "center-guard",
+        "amount": 1,
+        "scope": "individual"
+      },
+      {
+        "source": "F.A.major.C3.0",
+        "kind": "fixture.bound_standard@1",
+        "amount": 1,
+        "scope": "bound_party",
+        "stage": "add"
+      }
+    ]
+  }
+}
