@@ -1,0 +1,74 @@
+{
+ "label": "after-b3a44af",
+ "base": "http://127.0.0.1:5199",
+ "chrome": "Chrome/157.0.8103.80",
+ "os": "Darwin 25.2.0 arm64",
+ "viewport": "1280x720@1",
+ "textScale": "100% (browser default 16 px)",
+ "camera": "Home, then F on A.mount.C1",
+ "drawCalls": "unavailable (post-processing resets renderer.info to its last pass)",
+ "home": {
+  "frames": {
+   "median": 16.7,
+   "p95": 16.7,
+   "max": 16.8
+  },
+  "scene": {
+   "geometries": 1291,
+   "textures": 140,
+   "dom": 497
+  }
+ },
+ "selectFeedbackMs": 192,
+ "zoomEntry": {
+  "maxFrame": 33.4,
+  "firstLabelMs": 484
+ },
+ "close": {
+  "frames": {
+   "median": 16.7,
+   "p95": 16.7,
+   "max": 16.8
+  },
+  "scene": {
+   "geometries": 1404,
+   "textures": 149,
+   "dom": 586
+  }
+ },
+ "orbitCpuMs": {
+  "script": 1079.2,
+  "layout": 24.1,
+  "style": 66.8,
+  "task": 1300.7,
+  "layoutCount": 257,
+  "styleCount": 791
+ },
+ "memberOpen": {
+  "panel": true,
+  "expandedLabel": true
+ },
+ "openIdleCpuMs": {
+  "script": 807,
+  "layout": 15.8,
+  "style": 27.2,
+  "task": 938,
+  "layoutCount": 180,
+  "styleCount": 360
+ },
+ "openOrbitCpuMs": {
+  "script": 1081.1,
+  "layout": 25.6,
+  "style": 66.5,
+  "task": 1306.9,
+  "layoutCount": 257,
+  "styleCount": 792
+ },
+ "afterOrbit": {
+  "scene": {
+   "geometries": 1404,
+   "textures": 149,
+   "dom": 594
+  }
+ }
+}

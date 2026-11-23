@@ -1,0 +1,380 @@
+{
+ "clips": {
+  "commandInspect": {
+   "frames": 1786,
+   "seconds": 30.158
+  },
+  "playbackMoment": {
+   "frames": 660,
+   "seconds": 11.531
+  },
+  "territory": {
+   "frames": 1121,
+   "seconds": 18.715
+  }
+ },
+ "steps": [
+  {
+   "clip": "journey-command-inspect",
+   "at": 0,
+   "step": "overview (home)",
+   "state": {
+    "tick": 1,
+    "selected": null,
+    "inspect": null,
+    "open": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0,
+    "reading": null,
+    "party": null
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 812,
+   "step": "click the C1 Castle: command selection, no camera move",
+   "state": {
+    "tick": 1,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "open": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0,
+    "reading": null,
+    "party": null
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 2048,
+   "step": "Supply ▾ → Load 2♣ (C1)",
+   "state": {
+    "tick": 1,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "open": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [
+     "load_supply"
+    ],
+    "labels": 0,
+    "reading": null,
+    "party": null
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 3147,
+   "step": "Move to R2C1 (funded)",
+   "state": {
+    "tick": 1,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "open": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [
+     "load_supply",
+     "set_destination"
+    ],
+    "labels": 0,
+    "reading": null,
+    "party": null
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 4883,
+   "step": "Ready: the merge plays",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "open": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0,
+    "reading": null,
+    "party": null
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 6946,
+   "step": "N, then the keyboard to \"Inspect B's Bishop\", Enter",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": "B.mount.C3",
+    "open": null,
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 4,
+    "reading": null,
+    "party": "Inspecting B's Bishop · R10C7 4/9 · faces South · Supply 0 · waiting · band +1 · exposed · commanding your Castle R2C1"
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 11394,
+   "step": "Esc closes the navigator; → and Enter open a member (keyboard)",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": "B.mount.C3",
+    "open": "B.C3.m5",
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 4,
+    "reading": "Bishop 6/6 HP · slot 5 · middle row Blade: 1 × 3 Physical, melee, charges Physical protection 1 on the front: 1 from its own center-guard Magic protection 1 on ",
+    "party": "Inspecting B's Bishop · R10C7 4/9 · faces South · Supply 0 · waiting · band +1 · exposed · commanding your Castle R2C1"
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 13555,
+   "step": "Esc, Esc, R: back to the overview; A's Castle still selected",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "open": null,
+    "level": "none",
+    "bearing": 0,
+    "plans": [],
+    "labels": 0,
+    "reading": null,
+    "party": null
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 15665,
+   "step": "F: inspect the merged Castle",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": "A.mount.C1",
+    "open": null,
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 9,
+    "reading": null,
+    "party": "Inspecting your Castle · R2C1 9/9 · faces North · Supply 1 · waiting · band +1 · exposed"
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 17889,
+   "step": "hover an Archer: its explanation opens beside the formation",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": "A.mount.C1",
+    "open": "A.C1.p7",
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 9,
+    "reading": "Archer 3/3 HP · slot 7 · rear row Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky Magic protection 1 on all six faces: 1 from the party Ma",
+    "party": "Inspecting your Castle · R2C1 9/9 · faces North · Supply 1 · waiting · band +1 · exposed"
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 19888,
+   "step": "orbit 360° (Q ×8)",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": "A.mount.C1",
+    "open": null,
+    "level": "identity",
+    "bearing": 360,
+    "plans": [],
+    "labels": 9,
+    "reading": null,
+    "party": "Inspecting your Castle · R2C1 9/9 · faces North · Supply 1 · waiting · band +1 · exposed"
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 26326,
+   "step": "R: Return",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "open": null,
+    "level": "none",
+    "bearing": 360,
+    "plans": [],
+    "labels": 0,
+    "reading": null,
+    "party": null
+   }
+  },
+  {
+   "clip": "journey-command-inspect",
+   "at": 27829,
+   "step": "Supply ▾ again on the same party (no reselection)",
+   "state": {
+    "tick": 2,
+    "selected": "A.mount.C1",
+    "inspect": null,
+    "open": null,
+    "level": "none",
+    "bearing": 360,
+    "plans": [],
+    "labels": 0,
+    "reading": null,
+    "party": null
+   }
+  },
+  {
+   "clip": "journey-playback-moment",
+   "at": 0,
+   "step": "N → keyboard \"Inspect B's Castle\" → Enter",
+   "state": {
+    "tick": 5,
+    "selected": null,
+    "inspect": "B.p",
+    "open": null,
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 3,
+    "reading": null,
+    "party": "Inspecting B's Castle · R6C5 3/9 · faces South · Supply 1 · waiting · band +1 · exposed"
+   }
+  },
+  {
+   "clip": "journey-playback-moment",
+   "at": 2782,
+   "step": "open B's Archer from the inspection bar",
+   "state": {
+    "tick": 5,
+    "selected": null,
+    "inspect": "B.p",
+    "open": "B.p.s8",
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 3,
+    "reading": "Archer 3/3 HP · slot 8 · rear row Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky Magic protection 1 on all six faces: 1 from the party Ma",
+    "party": "Inspecting B's Castle · R6C5 3/9 · faces South · Supply 1 · waiting · band +1 · exposed"
+   }
+  },
+  {
+   "clip": "journey-playback-moment",
+   "at": 4511,
+   "step": "Ready (A), Ready (B) at 0.3×: contact, the Mage falls, the ward ends",
+   "state": {
+    "tick": 6,
+    "selected": null,
+    "inspect": "B.p",
+    "open": "B.p.s8",
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 2,
+    "reading": "Archer 3/3 HP · slot 8 · rear row Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky No protection on any face Preview vs Queen R6C5 (engaged",
+    "party": "Inspecting your Castle · R6C5 2/9 · faces South · Supply 1 · in combat · band +1 · exposed"
+   }
+  },
+  {
+   "clip": "journey-territory",
+   "at": 0,
+   "step": "select A.hill (raised ground) and Inspect",
+   "state": {
+    "tick": 5,
+    "selected": "A.hill",
+    "inspect": "A.hill",
+    "open": null,
+    "level": "identity",
+    "bearing": 0,
+    "plans": [],
+    "labels": 5,
+    "reading": null,
+    "party": "Inspecting your Castle · R5C3 5/9 · faces North · Supply 2 · waiting · band +2 · exposed"
+   }
+  },
+  {
+   "clip": "journey-territory",
+   "at": 3134,
+   "step": "orbit in 45° steps (Q ×8)",
+   "state": {
+    "tick": 5,
+    "selected": "A.hill",
+    "inspect": "A.hill",
+    "open": null,
+    "level": "identity",
+    "bearing": 360,
+    "plans": [],
+    "labels": 5,
+    "reading": null,
+    "party": "Inspecting your Castle · R5C3 5/9 · faces North · Supply 2 · waiting · band +2 · exposed"
+   }
+  },
+  {
+   "clip": "journey-territory",
+   "at": 11156,
+   "step": "layer +1: the +3 hill turns see-through and its dressing steps aside",
+   "state": {
+    "tick": 5,
+    "selected": "A.hill",
+    "inspect": "A.hill",
+    "open": null,
+    "level": "identity",
+    "bearing": 360,
+    "plans": [],
+    "labels": 0,
+    "reading": null,
+    "party": "Inspecting your Castle · R5C3 5/9 · faces North · Supply 2 · waiting · band +2 · exposed"
+   }
+  },
+  {
+   "clip": "journey-territory",
+   "at": 13284,
+   "step": "All layers; open an Archer",
+   "state": {
+    "tick": 5,
+    "selected": "A.hill",
+    "inspect": "A.hill",
+    "open": "A.hill.s7",
+    "level": "identity",
+    "bearing": 360,
+    "plans": [],
+    "labels": 5,
+    "reading": "Archer 3/3 HP · slot 7 · rear row Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky No protection on any face No engaged target: a volley on",
+    "party": "Inspecting your Castle · R5C3 5/9 · faces North · Supply 2 · waiting · band +2 · exposed"
+   }
+  },
+  {
+   "clip": "journey-territory",
+   "at": 16594,
+   "step": "R: Return",
+   "state": {
+    "tick": 5,
+    "selected": "A.hill",
+    "inspect": null,
+    "open": null,
+    "level": "none",
+    "bearing": 360,
+    "plans": [],
+    "labels": 0,
+    "reading": null,
+    "party": null
+   }
+  }
+ ]
+}

@@ -1,0 +1,702 @@
+{
+ "runId": "sabotage-b3a44af",
+ "startedAt": "2026-11-23T23:07:59.479Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "b3a44af90704bc0a0871cdecd56a9533e8894006",
+  "dirty": true,
+  "diffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "untracked": [
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c1-stale-review.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c10-intents.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c12-orbit-end.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c14-confirm.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c14-response-menu.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c14-result.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c2-after-counter.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c2-after-spam.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c3-layer-minus2-tunnel.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c5-quiet-1280x720.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c5-quiet-1600x1000.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c6-pin-and-compare.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c7-keyboard-result.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c8-unfunded-draft.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/c9-planned-offering.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/report.json",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z01-pawn-reason.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z03-enemy-inspection.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z03-expanded-member.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z03-nine-members.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z03-pawn-five.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z07-orbit-180.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z07-orbit-270.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z07-orbit-360.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z07-orbit-90.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z07-tunnel-cutaway.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z08-enemy-read-friendly-kept.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-four-1280-b0.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-four-1280-b180.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-four-1280-b270.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-four-1280-b90.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-four-edge.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-four-low-pitch.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-four-text-150.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-four-text-200.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-nine-1280-b180.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-nine-1280-b270.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-nine-1280-b360.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-nine-1280-b90.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-nine-edge.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-nine-low-pitch.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-nine-text-150.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z09-nine-text-200.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z10-after-death.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z11-dug-again.png",
+   "docs/reviews/evidence/2026-11-23/response-07/regress/after-b3a44af/z11-hill-at-layer-plus1.png"
+  ],
+  "untrackedSha256": "1ad6d9f2761ad22cc68b90d3ce461613382144de386c09fe5a597ccee73764e0"
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/157.0.8103.80",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": true,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio. Text size (contract 4): the browser default font size is set through CDP Page.setFontSizes (16 px = 100%, 24 = 150%, 32 = 200%); inspection text, the command and inspection bars use rem and follow it, other HUD parts still use px. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "c1",
+   "title": "Ready freezes the own plan through an opponent revision (UX-01)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1",
+    "seat": "A then B (hotseat)",
+    "profile": "hapa_open_10x9_v3_02"
+   },
+   "assertions": [
+    {
+     "name": "control present: navigator row for your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Supply menu (command bar)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply from the C1 card (command bar)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "A entered one Supply order",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "control present: Ready (strip)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Ready hands the hotseat to B",
+     "pass": true,
+     "actual": "B",
+     "expected": "B"
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "view returns to A to acknowledge",
+     "pass": true,
+     "actual": "A",
+     "expected": "A"
+    },
+    {
+     "name": "A acknowledgment is stale",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "A plan unchanged after B revised and A tried to edit",
+     "pass": true,
+     "actual": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ],
+     "expected": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ]
+    },
+    {
+     "name": "A revision unchanged",
+     "pass": false,
+     "actual": 1,
+     "expected": 2,
+     "note": "SABOTAGE: deliberately wrong expectation (+1)"
+    },
+    {
+     "name": "Orders opened by itself for the stale review",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "no Remove controls on the frozen own plan",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "B's new order is marked NEW",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "banner says the own orders stay frozen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "B changed its plan after your Ready \u2014 1 new, 0 removed (marked below). Your 1 order stay frozen; Acknowledge accepts the new pair without changing them."
+    },
+    {
+     "name": "primary action is Acknowledge",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Acknowledge updated plan \u25b6"
+    },
+    {
+     "name": "control present: Acknowledge updated plan",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the resolved Tick used exactly the frozen A plan",
+     "pass": true,
+     "actual": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ],
+     "expected": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c1-stale-review.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "title": "Selection follows the visible height (UX-03)",
+   "config": {
+    "query": "autostart=1&fixture=stacked&a=human&b=human",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: layer -2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer \u22122: clicking the tunnel party picks it (B's: read, not commanded)",
+     "pass": false,
+     "actual": "B.tunnel",
+     "expected": "A.fly",
+     "note": "SABOTAGE: deliberately wrong expected target"
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: clicking the flyer picks it",
+     "pass": true,
+     "actual": "A.fly",
+     "expected": "A.fly"
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: the hidden tunnel party never wins a click",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "A.fly"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c3-layer-minus2-tunnel.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": []
+  },
+  {
+   "id": "z10",
+   "title": "Playback moment: ward provider, headcount and body agree before and after the displayed death; an open explanation refreshes; pause; New match (R6-03, R6-04)",
+   "config": {
+    "query": "autostart=1&fixture=ward&a=human&b=human",
+    "viewport": "1280x720@1",
+    "profile": "hapa_open_10x9_v3_02"
+   },
+   "assertions": [
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "playback was sampled across the death",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 245
+    },
+    {
+     "name": "before the displayed death: the Mage is labelled, the Archer is warded and the party counts 3 living",
+     "pass": false,
+     "actual": false,
+     "expected": true,
+     "note": [
+      {
+       "shown": 1,
+       "mageDiedShown": false,
+       "contactShown": false,
+       "mageLabel": true,
+       "party": "Your Castle \u00b7 2/9 \u00b7 faces South Supply 1 \u00b7 in combat Band +1 \u00b7 exposed Playing back: health as of the moment shown Hover or tap a member for its facts",
+       "reading": "Archer 3/3 HP \u00b7 slot 8 \u00b7 rear row Bow: 2 \u00d7 1 Physical, base range 2 (height changes it), needs open sky No protection on any face Preview vs Queen R6C5 (engaged): power 1, range 2 \u2014 a preview, not a result engaged"
+      },
+      {
+       "shown": 1,
+       "mageDiedShown": false,
+       "contactShown": false,
+       "mageLabel": true,
+       "party": "Your Castle \u00b7 2/9 \u00b7 faces South Supply 1 \u00b7 in combat Band +1 \u00b7 exposed Playing back: health as of the moment shown Hover or tap a member for its facts",
+       "reading": "Archer 3/3 HP \u00b7 slot 8 \u00b7 rear row Bow: 2 \u00d7 1 Physical, base range 2 (height changes it), needs open sky No protection on any face Preview vs Queen R6C5 (engaged): power 1, range 2 \u2014 a preview, not a result engaged"
+      }
+     ]
+    },
+    {
+     "name": "after it: no Mage label, no ward on the Archer, 2 living",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      {
+       "shown": 6,
+       "mageDiedShown": true,
+       "contactShown": true,
+       "mageLabel": false,
+       "party": "Your Castle \u00b7 2/9 \u00b7 faces South Supply 1 \u00b7 in combat Band +1 \u00b7 exposed Playing back: health as of the moment shown Hover or tap a member for its facts",
+       "reading": "Archer 3/3 HP \u00b7 slot 8 \u00b7 rear row Bow: 2 \u00d7 1 Physical, base range 2 (height changes it), needs open sky No protection on any face Preview vs Queen R6C5 (engaged): power 1, range 2 \u2014 a preview, not a result engaged"
+      },
+      {
+       "shown": 6,
+       "mageDiedShown": true,
+       "contactShown": true,
+       "mageLabel": false,
+       "party": "Your Castle \u00b7 2/9 \u00b7 faces South Supply 1 \u00b7 in combat Band +1 \u00b7 exposed Playing back: health as of the moment shown Hover or tap a member for its facts",
+       "reading": "Archer 3/3 HP \u00b7 slot 8 \u00b7 rear row Bow: 2 \u00d7 1 Physical, base range 2 (height changes it), needs open sky No protection on any face Preview vs Queen R6C5 (engaged): power 1, range 2 \u2014 a preview, not a result engaged"
+      }
+     ]
+    },
+    {
+     "name": "the open Archer explanation refreshed at contact without re-hovering (engaged, a named target)",
+     "pass": false,
+     "actual": false,
+     "expected": true,
+     "note": [
+      "y face Preview vs Queen R6C5 (engaged): power 1, range 2 \u2014 a preview, not a result engaged"
+     ]
+    },
+    {
+     "name": "pausing holds the moment and its facts",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "same": true,
+      "shown": 6
+     }
+    },
+    {
+     "name": "after playback the facts are the accepted state",
+     "pass": true,
+     "actual": [
+      2,
+      false
+     ],
+     "expected": [
+      2,
+      false
+     ]
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: New match",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Start (setup sheet)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "New match leaves no labels, explanation, inspection bar or subject",
+     "pass": true,
+     "actual": {
+      "labels": 0,
+      "reading": false,
+      "bar": false,
+      "sub": null,
+      "pin": null
+     },
+     "expected": {
+      "labels": 0,
+      "reading": false,
+      "bar": false,
+      "sub": null,
+      "pin": null
+     }
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z10-after-death.jpg"
+   ],
+   "setup": [
+    "ward fixture: B's Castle inspected with _focusInspect (the navigator route is z08)",
+    "SABOTAGE: inspection reads the final accepted state during playback (the review 06 defect)"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z11",
+   "title": "Terrain truth: an existing filled cube dug, filled and dug again changes the scenery with the terrain; hill dressing follows the cutaway (R6-05)",
+   "config": {
+    "query": "autostart=1&fixture=surface_dig&a=human&b=human; fixture=terrain",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "each work order was accepted for planning",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      {
+       "work": "start",
+       "solid": true,
+       "dressingSolid": false,
+       "terrainViewOpen": false,
+       "tick": 5,
+       "entries": 2
+      },
+      {
+       "work": "excavate",
+       "added": true,
+       "solid": false,
+       "dressingSolid": false,
+       "terrainViewOpen": true,
+       "tick": 6,
+       "entries": 2
+      },
+      {
+       "work": "fill",
+       "added": true,
+       "solid": true,
+       "dressingSolid": false,
+       "terrainViewOpen": false,
+       "tick": 15,
+       "entries": 2
+      },
+      {
+       "work": "excavate",
+       "added": true,
+       "solid": false,
+       "dressingSolid": false,
+       "terrainViewOpen": true,
+       "tick": 24,
+       "entries": 2
+      }
+     ]
+    },
+    {
+     "name": "the authoritative cube: solid \u2192 empty \u2192 solid \u2192 empty",
+     "pass": true,
+     "actual": [
+      true,
+      false,
+      true,
+      false
+     ],
+     "expected": [
+      true,
+      false,
+      true,
+      false
+     ]
+    },
+    {
+     "name": "the scenery agrees at every step (same entry count throughout)",
+     "pass": false,
+     "actual": [
+      false,
+      false,
+      false,
+      false
+     ],
+     "expected": [
+      true,
+      false,
+      true,
+      false
+     ]
+    },
+    {
+     "name": "the terrain view shows the opening exactly when the cube is empty",
+     "pass": true,
+     "actual": [
+      false,
+      true,
+      false,
+      true
+     ],
+     "expected": [
+      false,
+      true,
+      false,
+      true
+     ]
+    },
+    {
+     "name": "the entry count never changed, so a count-based key would have missed every step",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      2,
+      2,
+      2,
+      2
+     ]
+    },
+    {
+     "name": "control present: layer +1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: All layers",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the hill top carries dressing at All layers",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "hillShown": 16,
+      "hill": 16,
+      "flatShown": 11,
+      "cut": null,
+      "hillMeshOpacity": 1
+     }
+    },
+    {
+     "name": "at layer +1 (below the +3 surface) the hill dressing is hidden as the hill turns see-through; flat ground keeps its own",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "hillShown": 0,
+      "hill": 16,
+      "flatShown": 11,
+      "cut": 1,
+      "hillMeshOpacity": 0.3
+     }
+    },
+    {
+     "name": "All layers restores it",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "hillShown": 16,
+      "hill": 16,
+      "flatShown": 11,
+      "cut": null,
+      "hillMeshOpacity": 1
+     }
+    },
+    {
+     "name": "the dressing never changes what is picked on the hill",
+     "pass": true,
+     "actual": "A.hill",
+     "expected": "A.hill"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z11-dug-again.jpg",
+    "z11-hill-at-layer-plus1.jpg"
+   ],
+   "setup": [
+    "surface_dig fixture: the worker is inspected with _focusInspect; work orders added with _addCommand (the Work menu issues the same command); Ticks advanced with both Ready buttons until C5 is active",
+    "SABOTAGE: the scenery keys on the terrain entry count again (the review 06 defect)"
+   ],
+   "observed": {
+    "target": {
+     "x": 19,
+     "y": 18,
+     "band": -1
+    },
+    "steps": [
+     {
+      "work": "start",
+      "solid": true,
+      "dressingSolid": false,
+      "terrainViewOpen": false,
+      "tick": 5,
+      "entries": 2
+     },
+     {
+      "work": "excavate",
+      "added": true,
+      "solid": false,
+      "dressingSolid": false,
+      "terrainViewOpen": true,
+      "tick": 6,
+      "entries": 2
+     },
+     {
+      "work": "fill",
+      "added": true,
+      "solid": true,
+      "dressingSolid": false,
+      "terrainViewOpen": false,
+      "tick": 15,
+      "entries": 2
+     },
+     {
+      "work": "excavate",
+      "added": true,
+      "solid": false,
+      "dressingSolid": false,
+      "terrainViewOpen": true,
+      "tick": 24,
+      "entries": 2
+     }
+    ]
+   },
+   "allowedErrors": []
+  }
+ ],
+ "finishedAt": "2026-11-23T23:08:51.231Z",
+ "summary": {
+  "checks": 4,
+  "assertions": 52,
+  "failed": 5
+ },
+ "shotsConverted": "PNG screenshots converted to JPEG (quality 82, sips) after the run to keep the repository small; the run itself wrote PNG."
+}

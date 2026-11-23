@@ -1,0 +1,66 @@
+{
+  "scope": "Headless actual-rules probes on the corrected code; browser journeys are in the regression contract 4 report",
+  "cases": {
+    "playback_ward": {
+      "contactQuantum": 250,
+      "beforeContact": {
+        "mageAlive": true,
+        "mageHp": 3,
+        "archerWard": 1,
+        "living": 3
+      },
+      "justBeforeDeath": {
+        "mageAlive": true,
+        "mageHp": 0,
+        "archerWard": 1,
+        "living": 3
+      },
+      "afterDeath": {
+        "mageAlive": false,
+        "mageHp": 0,
+        "archerWard": 0,
+        "living": 2
+      },
+      "final": {
+        "mageAlive": false,
+        "mageHp": 0,
+        "archerWard": 0,
+        "living": 2
+      },
+      "conclusion": "Body, ward and headcount come from the same displayed moment; they change together at the displayed death."
+    },
+    "playback_pool": {
+      "shownEvents": 0,
+      "pool": 15,
+      "retainerAlive": true,
+      "living": 4,
+      "finalPool": 13,
+      "finalLiving": 3
+    },
+    "line_defense": {
+      "contributionLabel": 1,
+      "frontLinePreview": 3,
+      "actualExchangeProtection": [
+        3
+      ]
+    },
+    "terrain_rebuild": {
+      "entriesBefore": 2,
+      "entriesAfter": 2,
+      "rebuiltAfterDig": true,
+      "builtMaskOpen": true
+    },
+    "hill_cutaway": {
+      "cutaway": 1,
+      "hillDressing": {
+        "surface": 3,
+        "visible": false,
+        "opacity": 0
+      },
+      "flatDressing": {
+        "surface": 1,
+        "visible": true
+      }
+    }
+  }
+}
