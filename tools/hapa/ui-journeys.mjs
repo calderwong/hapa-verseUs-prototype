@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux09,ux10').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux09,ux10,ux14rm').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -328,6 +328,29 @@ if (want.has('ux10')) {
   j.errors = page.errors;
   report.journeys.ux10 = j;
   await page.close();
+}
+
+// --- UX-14 (part): the reduced-motion preference reaches the board's pulse and pop ----------------
+if (want.has('ux14rm')) {
+  const j = {};
+  for (const mode of ['no-preference', 'reduce']) {
+    const page = await browser.newPage();
+    await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: mode }]);
+    await page.goto(`${base}/versus.html?autostart=1&a=human&b=bot&seed=1`, { waitUntil: 'networkidle0' });
+    await page.waitForFunction(() => window.__versus?.view); await sleep(1500);
+    j[mode] = await page.evaluate(async () => {
+      const a = window.__versus, v = a.view;
+      v.dropHighlight(a.state, a.state.parties['A.mount.C1'], true);
+      const ring = []; for (let i = 0; i < 6; i++) { await new Promise((r) => setTimeout(r, 70)); ring.push(+v.dropRing.scale.x.toFixed(3)); }
+      v.dropHighlight(a.state, null, false);
+      v.syncSupplyTokens(a.state, { 'A.mount.C1': 2e6 });
+      const tok = v.supplyTokens.get('A.mount.C1'), pops = [];
+      for (let i = 0; i < 4; i++) { await new Promise((r) => setTimeout(r, 60)); pops.push(+(tok.scale.x / tok.userData.w).toFixed(3)); }
+      return { dropRingScales: ring, supplyTokenScale: pops };
+    });
+    await page.close();
+  }
+  report.journeys.ux14rm = j;
 }
 
 await browser.close();

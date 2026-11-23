@@ -24,6 +24,8 @@ export const COLOR_HEX = {
   black: '#2a2730', white: '#e9e4d6', rainbow: '#c08fd8',
 };
 export const OWNER_HEX = { A: '#7FB2E8', B: '#E8857A' }; // with single (A) / double (B) brackets
+/** The player's reduced-motion preference (cosmetic motion only; state changes stay visible). */
+const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SUIT_GLYPH = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
 
 /** Sprite specs per role (procedural Luminati pixel characters; the owner color is the tabard). */
@@ -421,12 +423,14 @@ export class BoardView {
   /** Billboard + facing each frame. */
   update(dt, camera) {
     this.fx.update(dt);
+    const still = reducedMotion();
     if (this.dropRing?.visible) {
       this.dropRing.userData.t += dt;
-      const k = 1 + Math.sin(this.dropRing.userData.t * 7) * 0.05;
+      const k = still ? 1 : 1 + Math.sin(this.dropRing.userData.t * 7) * 0.05; // a steady frame under reduced motion
       this.dropRing.scale.set(k, 1, k);
     }
     for (const tok of this.supplyTokens?.values() ?? []) {
+      if (still) tok.userData.pop = 1; // the new value shows at once, without the pop
       if (tok.userData.pop === undefined || tok.userData.pop >= 1) { tok.scale.set(tok.userData.w, tok.userData.h, 1); continue; }
       tok.userData.pop = Math.min(1, tok.userData.pop + dt * 2.2);
       const t = tok.userData.pop, k = 1 + Math.sin(t * Math.PI) * 0.6 * (1 - t);
