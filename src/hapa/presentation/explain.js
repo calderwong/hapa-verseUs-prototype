@@ -26,9 +26,16 @@ export function partyName(state, id) {
   return `${p.owner}'s ${kind}${p.commander ? ' (Commander)' : ''} at R${p.region.row}C${p.region.column}`;
 }
 
+const SUIT_GLYPH = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
+/** Name a Card instance for players: "2♣ (C9)" — its rank, suit and the owner's home column. */
+export function cardName(state, id) {
+  const c = state.cards[id];
+  return c ? `${c.owner}'s ${c.rank ?? ''}${SUIT_GLYPH[c.suit] ?? ''} (C${c.localColumn})` : id;
+}
+
 /** One hit in words. */
 export function explainHit(state, h) {
-  const src = h.kind === 'card' ? `Card ${h.cardId}` : memberName(state, h.source);
+  const src = h.kind === 'card' ? `Card ${cardName(state, h.cardId)}` : memberName(state, h.source);
   const what = h.kind === 'card' ? 'Card hit' : cap(ATTACK[h.attack] ?? h.attack);
   const ratio = h.ratio && h.ratio[0] !== h.ratio[1] ? ` × ${h.ratio[0]}/${h.ratio[1]}${h.pikeTransfer ? ' (Pike transfer)' : ' (charge)'}` : '';
   const protWords = h.protection ? `${cap(h.face)} ${cap(h.channel)} Defense ${h.protection}${(h.sources ?? []).length ? ` (${h.sources.map((s) => s.kind).join(', ')})` : ''}` : `No ${cap(h.channel)} Defense covers ${cap(h.face)}`;
@@ -42,10 +49,10 @@ export function eventLine(state, e) {
     case 'card_minted': return `${e.seat} minted ${e.rank} of ${cap(e.suit)} in C${e.column}: Supply ${pts(e.supply)}, ${fmtMana(e.mana)}${e.retired ? ` (replaced ${e.retired})` : ''}`;
     case 'mint_skipped': return null;
     case 'mana_expired': return `${e.seat}'s unspent ${fmtMana(e.mana)} expired at the Tick boundary`;
-    case 'supply_loaded': return `${e.seat} loaded ${pts(e.units)} Supply into ${partyName(state, e.partyId)} (now ${pts(e.total)})`;
-    case 'card_burned': return `${e.seat} burned ${e.cardId} for ${fmtMana(e.mana)}`;
+    case 'supply_loaded': return `${e.seat} loaded ${pts(e.units)} Supply from ${cardName(state, e.cardId)} into ${partyName(state, e.partyId)} (now ${pts(e.total)})`;
+    case 'card_burned': return `${e.seat} burned ${cardName(state, e.cardId)} for ${fmtMana(e.mana)}`;
     case 'destination_set': return `${partyName(state, e.partyId)} → R${e.target.row}C${e.target.column} (${e.cost} Supply${e.turn ? `, turns ${e.turn} first` : ''})`;
-    case 'parties_merged': return `${partyName(state, e.partyId)} merged with ${e.retired}: ${e.members.length} members, Supply ${pts(e.supply)}`;
+    case 'parties_merged': return `${partyName(state, e.partyId)} merged with ${state.parties[e.retired] ? `its ${state.parties[e.retired].mount ? cap(state.parties[e.retired].mount) : 'Pawn'}` : e.retired}: ${e.members.length} members, Supply ${pts(e.supply)}`;
     case 'destination_reached': return `${partyName(state, e.partyId)} arrived`;
     case 'travel_paused': return `${partyName(state, e.partyId)} paused: ${e.reason}`;
     case 'contact': return `Contact at quantum ${e.quantum}: ${partyName(state, e.a)} meets ${partyName(state, e.b)}${e.mutual ? ' (mutual)' : ` — attacker ${e.attacker?.split('.').slice(0, 1)}`}`;

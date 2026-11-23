@@ -10,9 +10,11 @@
 html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink); font: 14.5px/1.4 var(--sans); font-variant-numeric: tabular-nums; overflow: hidden; }
 #app {
   position: fixed; inset: 0; display: grid; gap: 6px; padding: 6px;
-  grid-template-columns: 220px minmax(0, 1fr) 340px;
+  grid-template-columns: 220px minmax(0, 1fr) 360px;
   grid-template-rows: 48px 86px minmax(0, 1fr) 150px 40px;
-  grid-template-areas: 'bar bar bar' 'roster opp insp' 'roster world insp' 'res own plan' 'ev ev ev'; /* both ribbons span the battlefield (UX-05) */
+  /* both ribbons span the battlefield (UX-05); the right column is the current decision: the
+     inspector above the public plans, Ready pinned at their foot (review 02, R2-02) */
+  grid-template-areas: 'bar bar bar' 'roster opp side' 'roster world side' 'res own side' 'ev ev ev';
 }
 .area { background: var(--slate2); border: 1px solid var(--line); border-radius: 4px; min-width: 0; min-height: 0; }
 #matchbar { grid-area: bar; display: flex; align-items: center; gap: 14px; padding: 0 10px; font-family: var(--sans); }
@@ -20,18 +22,24 @@ html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink
 #roster { grid-area: roster; overflow: auto; padding: 8px; }
 #world { grid-area: world; position: relative; overflow: hidden; background: #0e1018; }
 #world canvas { position: absolute !important; inset: 0; }
-#inspector { grid-area: insp; overflow: auto; padding: 10px; }
+#side { grid-area: side; display: flex; flex-direction: column; gap: 6px; min-height: 0; min-width: 0; }
+#inspector { flex: 1 1 0; min-height: 96px; overflow: auto; padding: 10px; }
+#side > #plan { flex: 0 1 auto; max-height: 46%; min-height: 120px; }
+body.plans-review #side > #inspector { flex: 0 1 22%; }
+body.plans-review #side > #plan { flex: 1 1 auto; max-height: none; }
+body.responding #side > #plan { max-height: 30%; }
 #ownhand { grid-area: own; }
 #resources { grid-area: res; overflow: auto; padding: 8px; }
-#plan { grid-area: plan; overflow: auto; padding: 8px; }
+#plan { overflow: auto; padding: 8px; }
 #events { grid-area: ev; display: flex; gap: 6px; align-items: center; overflow-x: auto; overflow-y: hidden; padding: 0 8px; white-space: nowrap; font-size: 12.5px; }
 .roster-toggle { display: none; grid-area: tog; }
-@media (max-width: 1180px) {
-  /* narrow windows and enlarged text (review UX-06): the roster becomes a drawer, the Mana pools
-     (the Burn drop target) keep a real column beside your hand, both ribbons stay aligned */
+@media (max-width: 1440px) {
+  /* narrower windows and enlarged text (review UX-06, R2-03): the roster becomes a drawer, the
+     Mana pools (and the Burn drop target) keep a real column beside your hand, both ribbons stay
+     aligned; the battlefield takes the roster's width */
   #app {
-    grid-template-columns: 150px minmax(0, 1fr) 300px;
-    grid-template-areas: 'bar bar bar' 'tog opp insp' 'world world insp' 'res own plan' 'ev ev ev';
+    grid-template-columns: 150px minmax(0, 1fr) 320px;
+    grid-template-areas: 'bar bar bar' 'tog opp side' 'world world side' 'res own side' 'ev ev ev';
   }
   .roster-toggle { display: block; margin: 0; border-radius: 4px; font-weight: 600; }
   #matchbar { gap: 8px; white-space: nowrap; }
@@ -120,13 +128,13 @@ kbd { font: 11px var(--sans); border: 1px solid #5a6380; border-bottom-width: 2p
 .response button { display: block; width: 100%; margin: 4px 0; text-align: left; }
 
 /* plan + resources */
-.plans { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.planbox { border: 1px solid var(--line); border-radius: 3px; padding: 4px; font-size: 12px; min-height: 40px; }
+.plans { display: flex; flex-direction: column; gap: 6px; }
+.planbox { border: 1px solid var(--line); border-radius: 3px; padding: 4px 6px; font-size: 13px; }
 .planbox.a { border-left: 3px solid var(--a); } .planbox.b { border-left: 3px solid var(--b); }
 .planbox ol { margin: 2px 0; padding-left: 18px; }
 .planbox li.bad { color: var(--bad); }
-.planbox .err { font-size: 11px; }
-.planbox .x { padding: 0 4px; margin-left: 4px; font-size: 11px; }
+.planbox .err { font-size: 12px; }
+.planbox .x { padding: 0 6px; margin-left: 6px; font-size: 12px; }
 .ready { width: 100%; margin-top: 6px; } .ready.done { background: #24402a; }
 .pool { margin-bottom: 4px; }
 
@@ -413,3 +421,28 @@ details.details { margin: 4px 0 6px; font-size: 12px; } details.details summary 
 .rrow:focus-visible, .fgrid .slot:focus-visible, .ev:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 details.movelist { margin: 4px 0; font-size: 12px; } details.movelist summary { cursor: pointer; color: var(--ink); }
 details.movelist button { padding: 2px 6px; }
+
+/* --- Public plans dock, response sheet, concession (2026-11-22 review 02, R2-02/R2-07) -------- */
+#plan .plan-head { display: flex; align-items: center; gap: 6px; flex: none; }
+#plan .plan-head h3 { flex: 1; margin: 0; }
+#plan .plan-toggle { font-size: 12px; padding: 1px 8px; }
+#plan .plan-banner { flex: none; margin: 6px 0; padding: 4px 8px; border-left: 3px solid var(--line); font-size: 13px; }
+#plan .plan-banner.stale { border-left-color: var(--warn); background: rgba(230,160,93,.12); color: var(--ink); }
+#plan .plans { margin-top: 4px; }
+.planbox .phead { font-size: 13px; }
+.planbox > summary { cursor: pointer; list-style: revert; }
+.planbox li { margin: 2px 0; overflow-wrap: anywhere; }
+.planbox li .otext { white-space: normal; }
+.planbox .restore { margin: 4px 0 0; font-size: 12px; }
+.response p, .response li { font-size: 13px; }
+.response ol.stack { margin: 2px 0 6px; padding-left: 18px; }
+.response .resp-opt { margin: 6px 0; }
+.response .resp-opt button { margin: 0 0 2px; }
+.concede-box { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+.concede-box h3 { color: var(--b); }
+.card-sheet.confirm { max-width: 520px; }
+.last-result { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--line); }
+.last-result ul { margin: 2px 0 0; padding-left: 16px; }
+button.linkish { background: none; border: none; padding: 1px 0; color: var(--ink); text-align: left; text-decoration: underline dotted; text-underline-offset: 3px; display: block; }
+button.linkish:hover:not(:disabled) { color: var(--gold); }
+#inspector .why { margin: 4px 0; font-size: 12.5px; }

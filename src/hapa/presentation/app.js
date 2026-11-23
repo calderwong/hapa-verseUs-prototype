@@ -79,7 +79,13 @@ export class VersusApp {
     const r = this.root;
     r.innerHTML = '';
     const area = (id, cls = '') => (this.el[id] = h('div', { id, class: `area ${cls}` }));
-    r.append(area('matchbar'), area('opphand', 'ribbon'), area('roster', 'panel'), area('world'), area('inspector', 'panel'), area('ownhand', 'ribbon'), area('resources', 'panel'), area('plan', 'panel'), area('events'));
+    // the right column is the current decision (review 02, R2-02): the inspector above, the public
+    // plans below with the one Ready / Acknowledge pinned at their foot; plans grow when reviewing
+    this.el.side = h('div', { id: 'side' });
+    r.append(area('matchbar'), area('opphand', 'ribbon'), area('roster', 'panel'), area('world'), this.el.side, area('ownhand', 'ribbon'), area('resources', 'panel'), area('events'));
+    this.el.side.append(area('inspector', 'panel'), area('plan', 'panel'));
+    this.el.plan.setAttribute('role', 'region'); this.el.plan.setAttribute('aria-label', 'Public plans');
+    this.el.inspector.setAttribute('role', 'region'); this.el.inspector.setAttribute('aria-label', 'Inspector');
     // narrow windows (or enlarged text): the roster becomes a drawer opened from this toggle (review UX-06)
     this.el.rosterToggle = h('button', { class: 'roster-toggle', 'aria-controls': 'roster', 'aria-expanded': 'false', onclick: () => this._toggleRoster() }, '☰ Parties');
     r.append(this.el.rosterToggle);
@@ -422,6 +428,8 @@ export class VersusApp {
       this.pendingChoice = { req, resolve };
       this.viewSeat = req.seat;
       this.selected = { kind: 'choice' };
+      // the decision takes the keyboard: its first available choice (a response, else Pass)
+      this._focusAfter = () => this.el.inspector.querySelector('.response button:not(:disabled)');
       this._renderAll();
     });
   }
@@ -776,6 +784,11 @@ export class VersusApp {
     const panel = prev && prev !== document.body ? prev.closest?.('.area') : null;
     const key = panel ? (prev.getAttribute('aria-label') || prev.textContent || '').trim() : null;
     this._renderAllInner();
+    if (this._focusAfter) {
+      const f = this._focusAfter; this._focusAfter = null;
+      const t = f();
+      if (t) { t.focus({ preventScroll: false }); return; }
+    }
     if (this._focusInspectorNext) {
       this._focusInspectorNext = false;
       const head = this.el.inspector.querySelector('h3');
@@ -949,7 +962,7 @@ export class VersusApp {
       tiles.push(h('div', {
         class: `tile owner-${seat.toLowerCase()}${card && own && this.cardDrag?.canLift(card) ? ' liftable' : ''}${card ? '' : ' empty'}${sel ? ' sel' : ''}${planned.has(id) ? ' planned' : ''} suit-${card?.suit ?? ''}`,
         tabindex: card ? '0' : '-1', role: card ? 'button' : null,
-        'aria-label': card ? `${card.rank} of ${SUIT_NAME[card.suit] ?? card.suit}, ${where}: Supply ${pts(card.supply)}, ${Object.keys(card.mana).length ? fmtMana(card.mana) : 'no Mana'}, ${def?.title ?? 'no ability'}${planned.has(id) ? ' (planned)' : ''}` : `Empty, ${where}`,
+        'aria-label': card ? `${card.rank} of ${SUIT_NAME[card.suit] ?? card.suit}, ${where}: Supply ${pts(card.supply)}, ${Object.keys(card.mana).length ? fmtMana(card.mana) : 'no Mana'}, ${def?.title ?? 'no ability'}${card.state !== 'available' ? `, ${card.state}` : ''}${planned.has(id) ? ` (planned: ${this._plannedUse(seat, id)})` : ''}` : `Empty, ${where}`,
         onclick: pick,
         onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); pick(); } },
         // a restrained tether to the physical bank slot and its column on the board
@@ -979,7 +992,9 @@ export class VersusApp {
   _toggleRoster(open = !document.body.classList.contains('roster-open')) {
     document.body.classList.toggle('roster-open', open);
     this.el.rosterToggle?.setAttribute('aria-expanded', String(open));
-    if (open) this.el.roster.querySelector('.rrow')?.setAttribute('tabindex', '-1');
+    // the keyboard follows the drawer: into its first party on open, back to the toggle on close
+    if (open) requestAnimationFrame(() => this.el.roster.querySelector('.rrow')?.focus());
+    else if (this.el.roster.contains(document.activeElement) && getComputedStyle(this.el.rosterToggle).display !== 'none') this.el.rosterToggle.focus();
   }
 
   _renderRoster() {
@@ -1014,35 +1029,88 @@ export class VersusApp {
     this.el.resources.replaceChildren(...[h('h3', {}, 'Mana pools'), pool('A'), pool('B'), h('div', { class: 'dim small' }, 'Burned Mana expires at the Tick boundary.'), sel ? h('div', {}, h('b', {}, 'Selected Supply '), pts(supplyOf(sel))) : null].filter(Boolean));
   }
 
+  /**
+   * The public plans dock (review 02, R2-02). Own plan first while planning; when the opponent
+   * revised after this seat's Ready, its plan comes first with every NEW / REMOVED order, and the
+   * banner says the own plan stays frozen. Orders wrap in full; each has a named Remove while the
+   * plan is editable, and the last removed order can be restored. Ready is pinned at the foot.
+   */
   _renderPlan() {
-    const s = this.state;
+    const s = this.state, me = this.viewSeat, opp = other(me), can = this._can(me);
+    const mine = this.ready[me];
+    const seenOf = (seat) => (seat !== me && mine && can.stale ? mine.seen?.[seat] ?? null : null);
+    const changes = (seat) => {
+      const seen = seenOf(seat), keys = this.plans[seat].map(cmdKey);
+      return { seen, keys, added: seen ? keys.filter((k) => !seen.includes(k)).length : 0, removed: seen ? seen.filter((k) => !keys.includes(k)) : [] };
+    };
     const box = (seat) => {
       const v = validatePlan(s, this.ctx, seat, this.plans[seat]);
       const bad = new Map(v.errors.map((e) => [e.index, e.error]));
       const rd = this.ready[seat];
-      const status = this._readyValid(seat) ? h('span', { class: 'ok', title: `Ready acknowledges the pair A r${rd.A} · B r${rd.B}; this plan is frozen for the phase` }, `Ready · acks A r${rd.A}·B r${rd.B}`)
-        : rd ? h('span', { class: 'warn', title: `Frozen. Its Ready named A r${rd.A} · B r${rd.B}; the pair has changed since, so it must acknowledge again` }, `Frozen · ack stale`) : h('span', { class: 'dim' }, 'editing');
-      // what changed in this plan since the viewing seat acknowledged it (Companion: highlight added / removed)
-      const mine = this.ready[this.viewSeat];
-      const seen = seat !== this.viewSeat && mine && !this._readyValid(this.viewSeat) ? mine.seen?.[seat] ?? null : null;
-      const keys = this.plans[seat].map(cmdKey);
-      const removed = seen ? seen.filter((k) => !keys.includes(k)) : [];
-      const editable = seat === this.viewSeat && this._can(seat).edit;
-      return h('div', { class: `planbox ${seat.toLowerCase()}${rd ? ' frozen' : ''}` },
-        h('div', { class: 'phead' }, h('b', {}, `${seat} plan r${this.rev[seat]}`), ' ', status),
-        h('ol', {}, ...this.plans[seat].map((c, i) => {
-          const added = seen && !seen.includes(keys[i]);
-          return h('li', { class: `${bad.has(i) ? 'bad' : ''}${added ? ' added' : ''}` }, added ? h('span', { class: 'chg' }, 'new') : null, describeCmd(s, c), bad.has(i) ? h('div', { class: 'err' }, bad.get(i)) : null,
-            editable ? h('button', { class: 'x', title: 'Remove this order (a new public revision)', onclick: () => this._setPlan(seat, this.plans[seat].filter((_, j) => j !== i)) }, '×') : null);
-        }),
-          ...removed.map((k) => h('li', { class: 'removed' }, h('span', { class: 'chg' }, 'removed'), describeCmd(s, JSON.parse(k))))),
-        this.plans[seat].length || removed.length ? null : h('div', { class: 'dim' }, 'empty plan (a legal pass)'));
+      const own = seat === me;
+      const who = own ? `Your plan (${seat})` : `${seat}'s plan`;
+      const status = this._readyValid(seat) ? h('span', { class: 'ok' }, 'Ready · frozen')
+        : rd ? h('span', { class: 'warn' }, 'Frozen · must acknowledge again') : h('span', { class: 'dim' }, own && can.edit ? 'editing' : 'planning');
+      const { seen, keys, removed } = changes(seat);
+      const editable = own && can.edit;
+      const n = this.plans[seat].length;
+      const items = this.plans[seat].map((c, i) => {
+        const added = seen && !seen.includes(keys[i]);
+        const text = describeCmd(s, c);
+        return h('li', { class: `${bad.has(i) ? 'bad' : ''}${added ? ' added' : ''}` },
+          added ? h('span', { class: 'chg' }, 'NEW') : null, h('span', { class: 'otext' }, text),
+          bad.has(i) ? h('div', { class: 'err' }, bad.get(i)) : null,
+          editable ? h('button', { class: 'x', 'aria-label': `Remove order ${i + 1}: ${text}`, title: 'Remove this order (a new public revision)', onclick: () => this._removeOrder(seat, i) }, 'Remove') : null);
+      });
+      const gone = removed.map((k) => h('li', { class: 'removed' }, h('span', { class: 'chg' }, 'REMOVED'), h('span', { class: 'otext' }, describeCmd(s, JSON.parse(k)))));
+      const restore = editable && this._lastRemoved?.[seat]?.tick === s.tick ? h('button', { class: 'restore', 'aria-label': `Restore removed order: ${describeCmd(s, this._lastRemoved[seat].cmd)}`, onclick: () => this._restoreOrder(seat) }, `↶ Restore “${describeCmd(s, this._lastRemoved[seat].cmd)}”`) : null;
+      const body = [h('ol', {}, ...items, ...gone), n || removed.length ? null : h('div', { class: 'dim' }, 'No orders: a legal pass (parties keep any destination they already have).'), restore];
+      const head = h('div', { class: 'phead', title: `revision r${this.rev[seat]}${rd ? ` · its Ready named A r${rd.A} · B r${rd.B}` : ''}` }, h('b', {}, who), ` · ${n} order${n === 1 ? '' : 's'} · `, status);
+      // during a stale review the frozen own plan folds away (one click / Enter reopens it in full)
+      if (own && can.stale) return h('details', { class: `planbox ${seat.toLowerCase()} frozen` }, h('summary', {}, head), ...body);
+      return h('div', { class: `planbox ${seat.toLowerCase()}${rd ? ' frozen' : ''}` }, head, ...body);
     };
-    const can = this._can(this.viewSeat);
-    // one primary Ready, the agreement action, at the foot of the plan panel (Companion layout; review UX-06)
+    const ch = changes(opp);
+    const review = !this.pendingChoice && (can.stale || !!this.planExpanded);
+    document.body.classList.toggle('plans-review', review);
+    document.body.classList.toggle('responding', !!this.pendingChoice);
+    const n = this.plans[me]?.length ?? 0;
+    const banner = this.playback || this.resolving ? null
+      : can.stale ? h('div', { class: 'plan-banner stale', role: 'status' }, h('b', {}, `${opp} changed its plan after your Ready`), ` — ${ch.added} new, ${ch.removed.length} removed (marked below). Your ${n} order${n === 1 ? '' : 's'} stay frozen; Acknowledge accepts the new pair without changing them.`)
+      : can.current ? h('div', { class: 'plan-banner', role: 'status' }, `You are Ready: your ${n} order${n === 1 ? '' : 's'} are frozen for Tick ${s.tick}. Waiting for ${opp}.`)
+      : can.edit ? h('div', { class: 'plan-banner dim' }, 'Your orders can change until you press Ready. Ready freezes them; there is no Unready.')
+      : null;
+    const toggle = h('button', { class: 'plan-toggle', 'aria-pressed': String(review), disabled: can.stale, title: can.stale ? 'Plans stay expanded while you review a change' : '', onclick: () => { this.planExpanded = !this.planExpanded; this._renderAll(); } }, review ? 'Show inspector' : 'Expand plans');
     this._renderReadyButton();
-    this.el.plan.replaceChildren(h('h3', {}, 'Public plans'), h('div', { class: 'plans' }, box('A'), box('B')), this.el.readyBig);
+    const order = can.stale ? [opp, me] : [me, opp];
+    this.el.plan.replaceChildren(...[
+      h('div', { class: 'plan-head' }, h('h3', {}, `Public plans · Tick ${s.tick}`), toggle),
+      banner,
+      h('div', { class: 'plans' }, ...order.map(box)),
+      this.el.readyBig].filter(Boolean));
     if (can.stale) this.el.plan.querySelector('.plans li.added, .plans li.removed')?.scrollIntoView({ block: 'nearest' });
+  }
+
+  /** Remove one order (a new public revision); remember it so it can be restored this Tick. */
+  _removeOrder(seat, i) {
+    const cmd = this.plans[seat][i];
+    if (!this._setPlan(seat, this.plans[seat].filter((_, j) => j !== i))) return;
+    (this._lastRemoved ??= {})[seat] = { cmd, tick: this.state.tick };
+    this._toast(`Removed: ${describeCmd(this.state, cmd)}`);
+    // keep the keyboard in the list: the next order's Remove, else Restore
+    this._focusAfter = () => this.el.plan.querySelectorAll(`.planbox.${seat.toLowerCase()} button.x`)[i] ?? this.el.plan.querySelector('button.restore');
+    this._renderAll();
+  }
+
+  _restoreOrder(seat) {
+    const r = this._lastRemoved?.[seat];
+    if (!r) return;
+    if (this._addCommand(seat, r.cmd)) {
+      this._lastRemoved[seat] = null;
+      this._toast(`Restored: ${describeCmd(this.state, r.cmd)}`);
+      this._focusAfter = () => [...this.el.plan.querySelectorAll(`.planbox.${seat.toLowerCase()} button.x`)].at(-1) ?? this.el.readyBig;
+      this._renderAll();
+    }
   }
 
   /** The words for the Ready action in its current state (shared by both Ready controls). */
@@ -1122,8 +1190,23 @@ export class VersusApp {
     return h('div', { class: 'now' },
       h('h3', {}, `Tick ${s.tick} · you are ${me}`),
       h('div', {}, h('b', {}, 'Active: '), `your columns ${cols} mint new cards and take new move orders.`),
-      h('div', {}, h('b', {}, 'You can: '), `spend ${cards} unplanned card${cards === 1 ? '' : 's'} (drag onto a formation for Supply, onto Mana pools to Burn, or use its ability), and order ${movable} mounted part${movable === 1 ? 'y' : 'ies'} in active columns.`),
-      h('div', {}, h('b', {}, 'If you press Ready: '), ready));
+      c.edit ? h('div', {}, h('b', {}, 'You can: '), `spend ${cards} unplanned card${cards === 1 ? '' : 's'} (select a card for Supply…, Burn or its ability, or drag it onto a formation), and order ${movable} mounted part${movable === 1 ? 'y' : 'ies'} in active columns (select one, then Move to…).`)
+        : h('div', {}, h('b', {}, 'You can: '), this._editRefusal(me) ?? 'watch this Tick resolve.'),
+      h('div', {}, h('b', {}, 'If you press Ready: '), ready),
+      this._lastResult());
+  }
+
+  /** The previous Tick's results as inspectable entries (review 02 opening journey, step 7). */
+  _lastResult() {
+    const s = this.state;
+    const KEEP = new Set(['supply_loaded', 'card_burned', 'destination_reached', 'parties_merged', 'elevation_changed', 'member_died', 'ability_resolved', 'card_damage', 'exchange', 'terrain_changed', 'conceded']);
+    const evs = this.playback ? [] : (this.lastEvents ?? []).filter((e) => KEEP.has(e.type) && eventLine(s, e));
+    if (!evs.length) return null;
+    const open = (e) => { this.inspectEvent = e.id; this.selected = { kind: 'event', id: e.id, event: e }; this._focusInspectorNext = true; this._renderAll(); };
+    return h('div', { class: 'last-result' },
+      h('b', {}, `Tick ${evs[0].tick ?? s.tick - 1} result:`),
+      h('ul', {}, ...evs.slice(0, 10).map((e) => h('li', {}, h('button', { class: 'linkish', onclick: () => open(e) }, eventLine(s, e))))),
+      evs.length > 10 ? h('div', { class: 'dim small' }, `…and ${evs.length - 10} more in the event strip below.`) : null);
   }
 
   _hoverHelp() {
@@ -1178,7 +1261,12 @@ export class VersusApp {
       h('h4', { title: 'The grid is the party\'s own frame: its front is at the top whatever way the camera looks.' }, `Formation · front (${FACING_NAME[p.facing]}) at top`), grid,
       own ? this._supplyLoader(p) : null,
       own ? h('div', { class: 'actions' },
-        h('div', { class: 'dim small' }, active ? (p.mount ? 'Right-click a highlighted territory: destination (one step costs 1 Supply).' : 'An unmounted Pawn stores Supply but cannot move.') : `C${p.region.column} is not active: only Supply can reach this party now.`),
+        // one reason per restriction (R2-06): a frozen plan, an inactive column and an unmounted Pawn differ
+        h('div', { class: 'dim small why' }, !this._can(p.owner).edit ? `${this._editRefusal(p.owner)}.`
+          : !p.mount ? 'An unmounted Pawn has no Mount, so it cannot move. Supply loads into it and is stored; it moves only after merging under a mounted party.'
+          : !active ? `Column C${local.column} is not active this Tick: it takes no new move, formation or work orders now, but Supply can still be loaded. It is next active on Tick ${nextActivation(this.ctx.profile, p.region.column, s.tick) ?? '—'}.`
+          : supplyOf(p) + this._plannedSupply(p) <= 0 ? 'No Supply yet: each step costs 1 Supply, so load a card first (Load Supply above), then Move to….'
+          : 'Choose Move to… below (or right-click a highlighted territory). Each step costs 1 Supply.'),
         p.mount && active && this._can(p.owner).edit ? this._moveList(p) : null,
         active && this._can(p.owner).edit ? this._workList(p) : null,
         h('div', { class: 'row' }, 'Face ', facing('N'), facing('E'), facing('S'), facing('W')),
@@ -1198,13 +1286,21 @@ export class VersusApp {
     const step = this.ctx.profile.movement.stepCost ?? 1;
     const cost = (d) => (d.cost != null ? `${d.cost} step${d.cost === 1 ? '' : 's'} · ${d.cost * step} Supply` : '');
     return h('details', { class: 'movelist' }, h('summary', {}, `Move to… (${dests.length} nearest legal territories; or right-click the board)`),
-      h('div', { class: 'row' }, ...dests.map((d) => h('button', { onclick: () => {
-        if (this._addCommand(p.owner, { type: 'set_destination', partyId: p.id, target: { column: d.column, row: d.row } })) {
-          const plan = planPartyRoute(s, this.ctx, p, routeOrigin(s, this.ctx, p), d);
-          if (plan.route) this.view.showRoute(p, plan.route.map((n) => { const c = this.ctx.geo.center(n.column, n.row); return [c.x, c.y]; }));
-          this._toast(`Destination: R${d.row}C${d.column} (planned)`);
-        }
-      } }, `R${d.row}C${d.column}`, h('small', { class: 'dim' }, ` ${cost(d)}`)))));
+      h('div', { class: 'row' }, ...dests.map((d) => {
+        // who is there already: one of your Pawns means the move merges them
+        const there = Object.values(s.parties).find((q) => q.alive && !q.retired && q.id !== p.id && q.region.column === d.column && q.region.row === d.row);
+        const note = there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '';
+        return h('button', { 'aria-label': `Move ${partyShort(s, p.id)} to R${d.row}C${d.column}: ${cost(d)}${note}`, onclick: () => {
+          if (this._addCommand(p.owner, { type: 'set_destination', partyId: p.id, target: { column: d.column, row: d.row } })) {
+            const plan = planPartyRoute(s, this.ctx, p, routeOrigin(s, this.ctx, p), d);
+            if (plan.route) this.view.showRoute(p, plan.route.map((n) => { const c = this.ctx.geo.center(n.column, n.row); return [c.x, c.y]; }));
+            this._toast(`Destination: R${d.row}C${d.column} (planned)`);
+            // the keyboard follows the decision into the plan: the new order, then Ready
+            this._focusAfter = () => [...this.el.plan.querySelectorAll(`.planbox.${p.owner.toLowerCase()} button.x`)].at(-1) ?? this.el.readyBig;
+            this._renderAll();
+          }
+        } }, `R${d.row}C${d.column}`, h('small', { class: 'dim' }, ` ${cost(d)}${note}`));
+      })));
   }
 
   /**
@@ -1248,10 +1344,10 @@ export class VersusApp {
     return h('div', { class: 'supply-loader' },
       h('h4', {}, 'Load Supply'),
       cards.length
-        ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { disabled: !this._can(seat).edit, title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._renderAll(); } } },
+        ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { disabled: !this._can(seat).edit, 'aria-label': `Load ${pts(c.supply)} Supply from ${cardShort(s, c.id)} into ${partyShort(s, p.id)}${Object.keys(c.mana ?? {}).length ? ` (gives up ${fmtMana(c.mana)} and its ability)` : ' (gives up its ability)'}`, title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._focusAfter = () => this.el.inspector.querySelector('details.movelist > summary') ?? this.el.inspector.querySelector('.supply-loader button'); this._renderAll(); } } },
           `+${pts(c.supply)} `, h('small', { class: 'dim' }, `C${c.localColumn} ${c.rank}${SUIT[c.suit] ?? ''}`))))
         : h('p', { class: 'dim small' }, 'No unplanned hand cards. New cards mint from the highlighted columns each Tick.'),
-      h('p', { class: 'dim small' }, 'Any card can become Supply for any of your parties, in any column, at any time. Moving one step costs 1 Supply.'));
+      h('p', { class: 'dim small' }, 'While your plan is editable (before you press Ready), any available card can become Supply for any of your parties, in any column — not only active ones. Moving one step costs 1 Supply.'));
   }
 
   /** Retreat preview: own touching members are lost; neighbours' helpers go home alive. */
@@ -1323,43 +1419,85 @@ export class VersusApp {
     const causes = [e.cardId ? `card ${cardShort(s, e.cardId)}` : null, e.partyId ? partyShort(s, e.partyId) : null, e.memberId ? memberName(s, e.memberId) : null, e.seat ? `player ${e.seat}` : null].filter(Boolean);
     return h('div', {}, h('h3', {}, cap(e.type.replace(/_/g, ' '))), h('p', {}, eventLine(s, e) ?? ''),
       causes.length ? h('p', { class: 'dim small' }, `Involves: ${causes.join(' · ')} · Tick ${e.tick ?? s.tick}`) : null,
+      // the Card behind a resolved result stays one step away (its instance, Supply and Mana)
+      e.cardId && s.cards[e.cardId] ? h('button', { class: 'linkish', onclick: () => { this.selected = { kind: 'card', id: e.cardId }; this._focusInspectorNext = true; this._renderAll(); } }, `Inspect the Card: ${cardShort(s, e.cardId)} (Supply ${pts(s.cards[e.cardId].supply)}, ${Object.keys(s.cards[e.cardId].mana ?? {}).length ? fmtMana(s.cards[e.cardId].mana) : 'no Mana'})`) : null,
+      e.partyId && s.parties[e.partyId] ? h('button', { class: 'linkish', onclick: () => { this.selected = { kind: 'party', id: e.partyId }; this._focusInspectorNext = true; this._focusSelection(); this._renderAll(); } }, `Inspect the party: ${partyShort(s, e.partyId)}`) : null,
       h('details', { class: 'details' }, h('summary', {}, 'Details (exact record)'), h('pre', { class: 'raw' }, JSON.stringify(e, null, 1).slice(0, 1600))));
   }
 
+  /**
+   * A required response (review 02, R2-02/R2-04): what is pending and what it does, every eligible
+   * response with its exact cost and the Cards it would burn to pay, and Pass with its consequence.
+   * Focus lands on the first choice when the window opens and returns to the inspector after.
+   */
   _responsePanel() {
     const { req, resolve } = this.pendingChoice;
     const s = this.state;
     const opts = responseOptions(s, this.ctx, req.seat);
     const top = req.stack[req.stack.length - 1];
-    const finish = (answer) => { this.pendingChoice = null; this.selected = null; resolve(answer); this._renderAll(); };
+    const target = req.stack.slice().reverse().find((e) => opts.targets.includes(e.id)) ?? null;
+    const finish = (answer) => { this.pendingChoice = null; this.selected = null; this._focusInspectorNext = true; resolve(answer); this._renderAll(); };
     const actor = Object.values(s.parties).find((p) => p.owner === req.seat && p.alive && !p.retired);
-    return h('div', { class: 'response' },
-      h('h3', {}, `Response window · ${req.seat}`),
-      h('p', {}, 'Pending (last resolves first):'),
-      h('ol', {}, ...req.stack.map((e) => h('li', {}, `${e.seat}: ${activeCatalog.cards[e.defId].title}${e.target?.memberId ? ` → ${memberName(s, e.target.memberId)}` : e.target?.stackId ? ` → ${e.target.stackId}` : ''}${e.countered ? ' (countered)' : ''}`))),
-      ...opts.cards.map((id) => {
-        const c = s.cards[id];
-        const def = activeCatalog.cards[c.abilityId];
-        const burns = this._autoBurnsNow(req.seat, def, id);
-        return h('button', { class: 'primary', onclick: () => finish({ cardId: id, actorPartyId: actor.id, target: { stackId: top.id }, burns }) }, `${def.title} with ${c.id} → counter ${top.id}${burns.length ? ` (burn ${burns.join(', ')})` : ''}`);
-      }),
-      h('button', { onclick: () => finish({ pass: true }) }, 'Pass'));
+    const effect = (e) => {
+      const def = activeCatalog.cards[e.defId];
+      const tgt = e.target?.memberId ? ` at ${memberName(s, e.target.memberId)}` : e.target?.stackId ? ` against ${req.stack.find((x) => x.id === e.target.stackId) ? activeCatalog.cards[req.stack.find((x) => x.id === e.target.stackId).defId]?.title : e.target.stackId}` : '';
+      return h('li', {}, h('b', {}, `${e.seat === req.seat ? 'Your' : `${e.seat}'s`} ${def?.title ?? e.defId}`), tgt, e.countered ? ' — countered' : '', def?.cost?.mana ? h('span', { class: 'dim' }, ` · paid ${fmtMana(def.cost.mana)}`) : null,
+        h('div', { class: 'dim small' }, def?.text ?? ''));
+    };
+    const pool = s.players[req.seat].pool;
+    const choices = opts.cards.map((id) => {
+      const c = s.cards[id];
+      const def = activeCatalog.cards[c.abilityId];
+      const cost = def?.cost?.mana ?? {};
+      const burns = this._autoBurnsNow(req.seat, def, id);
+      const after = { ...pool };
+      for (const b of burns) for (const [k, n] of Object.entries(s.cards[b].mana ?? {})) after[k] = (after[k] ?? 0) + n;
+      const affordable = Object.entries(cost).every(([k, n]) => (after[k] ?? 0) + (after.rainbow ?? 0) >= n);
+      const why = !target ? 'nothing pending can be countered' : !affordable ? `needs ${fmtMana(cost)}; your pool and unplanned Cards cannot pay it` : null;
+      return h('div', { class: 'resp-opt' },
+        h('button', { class: 'primary', disabled: !!why, 'aria-describedby': `resp-${id}`, onclick: () => finish({ cardId: id, actorPartyId: actor.id, target: { stackId: target.id }, burns }) },
+          `${def.title} (${cardShort(s, id)})`),
+        h('div', { class: 'small', id: `resp-${id}` },
+          def.text, h('br'), h('b', {}, 'Cost: '), Object.keys(cost).length ? fmtMana(cost) : 'none',
+          burns.length ? ` — burns ${burns.map((x) => `${cardShort(s, x)} (${fmtMana(s.cards[x].mana)})`).join(', ')} now` : Object.keys(cost).length ? ' — from your pool' : '',
+          def.cost?.consumeSourceInstance ? `; ${cardShort(s, id)} is consumed` : '', why ? h('div', { class: 'warn' }, `Unavailable: ${why}.`) : null));
+    });
+    return h('div', { class: 'response', role: 'group', 'aria-label': `Response window for ${req.seat}` },
+      h('h3', {}, `Response window · ${req.seat} to act`),
+      h('p', {}, `${top.seat === req.seat ? 'Your' : `${top.seat}'s`} ${activeCatalog.cards[top.defId]?.title ?? 'effect'} is waiting to resolve. Plans are locked; you may answer it with a response Card or Pass.`),
+      h('h4', {}, 'Pending (last resolves first)'),
+      h('ol', { class: 'stack' }, ...req.stack.map(effect)),
+      h('h4', {}, choices.length ? 'Your responses' : 'No response Cards'),
+      ...choices,
+      h('div', { class: 'resp-opt' },
+        h('button', { 'data-autofocus': choices.length ? null : true, onclick: () => finish({ pass: true }) }, 'Pass'),
+        h('div', { class: 'small dim' }, `Pass lets ${activeCatalog.cards[top.defId]?.title ?? 'the top effect'} resolve${req.stack.length > 1 ? ' (then the rest of the stack, last first)' : ''} once both players have passed in turn. No Mana or Card is spent.`)));
   }
 
+  /**
+   * Cards to burn now so a response can be paid: only Cards whose Mana covers a still-missing color
+   * (or Rainbow), the most useful first, never the source itself or a Card already planned. Burning
+   * an unrelated Card would waste its Supply for nothing.
+   */
   _autoBurnsNow(seat, def, sourceId) {
     const pool = { ...this.state.players[seat].pool };
-    const burns = [];
     const cost = def.cost?.mana ?? {};
-    const enough = () => Object.entries(cost).every(([c, n]) => (pool[c] ?? 0) + (pool.rainbow ?? 0) >= n);
-    for (const id of Object.values(this.state.players[seat].bank.minor).filter(Boolean)) {
-      if (enough()) break;
-      if (id === sourceId) continue;
-      const card = this.state.cards[id];
-      burns.push(id);
-      for (const [c, n] of Object.entries(card.mana)) pool[c] = (pool[c] ?? 0) + n;
+    const missing = () => { let rb = pool.rainbow ?? 0; const need = {}; for (const [c, n] of Object.entries(cost)) { const short = Math.max(0, n - (pool[c] ?? 0)); const cover = Math.min(short, rb); rb -= cover; if (short - cover > 0) need[c] = short - cover; } return need; };
+    const planned = this._plannedCardIds(seat);
+    const candidates = Object.values(this.state.players[seat].bank.minor).filter(Boolean).filter((id) => id !== sourceId && !planned.has(id) && this.state.cards[id]?.state === 'available');
+    const burns = [];
+    for (;;) {
+      const need = missing();
+      if (!Object.keys(need).length) break;
+      const useful = (id) => Object.entries(this.state.cards[id].mana ?? {}).reduce((n, [c, k]) => n + (c === 'rainbow' ? k : Math.min(k, need[c] ?? 0)), 0);
+      const best = candidates.filter((id) => !burns.includes(id)).map((id) => [id, useful(id)]).filter(([, u]) => u > 0).sort((x, y) => y[1] - x[1])[0];
+      if (!best) break;
+      burns.push(best[0]);
+      for (const [c, n] of Object.entries(this.state.cards[best[0]].mana)) pool[c] = (pool[c] ?? 0) + n;
     }
     return burns;
   }
+
 }
 
 function describeCmd(state, c) {
