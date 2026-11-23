@@ -825,8 +825,11 @@ export class VersusApp {
     const s = this.state, geo = this.ctx.geo;
     const planned = this._plannedCardIds(seat);
     const tiles = [];
+    // both ribbons follow the viewer's home columns, so position i is the same physical column in each
+    // (Design Companion: "The opponent ribbon uses those same physical columns"); review UX-05
     for (let lc = 1; lc <= 9; lc++) {
-      const col = geo.toGlobal(seat, lc, 1).column;
+      const col = geo.toGlobal(this.viewSeat, lc, 1).column;
+      const ownerLc = geo.toLocal(seat, col, 1).column;
       const id = s.players[seat].bank.minor[String(col)];
       const card = id ? s.cards[id] : null;
       const next = s.activeColumns.includes(col) && s.phase === 'planning' ? nextActivation(this.ctx.profile, col, s.tick) : nextActivation(this.ctx.profile, col, s.tick);
@@ -834,13 +837,22 @@ export class VersusApp {
       const forecast = fc ? `T${next}: ${fc.rank} · S${fc.rank}${Object.keys(fc.mana).length ? ` · ${fmtMana(fc.mana)}` : ''}${card ? ' (replaces)' : ''}` : `T${next}: no frontier`;
       const sel = this.selected?.kind === 'card' && this.selected.id === id;
       const def = card ? activeCatalog.cards[card.abilityId] : null;
+      const where = own ? `your C${lc}${col !== lc ? `, global C${col}` : ''}` : `${seat}'s C${ownerLc}, global C${col}`;
+      const pick = () => { if (card && !this.dragging) { this.selected = { kind: 'card', id }; this._renderAll(); } };
       tiles.push(h('div', {
         class: `tile owner-${seat.toLowerCase()}${card && own && this.cardDrag?.canLift(card) ? ' liftable' : ''}${card ? '' : ' empty'}${sel ? ' sel' : ''}${planned.has(id) ? ' planned' : ''} suit-${card?.suit ?? ''}`,
-        onclick: () => { if (card && !this.dragging) { this.selected = { kind: 'card', id }; this._renderAll(); } },
+        tabindex: card ? '0' : '-1', role: card ? 'button' : null,
+        'aria-label': card ? `${card.rank} of ${SUIT_NAME[card.suit] ?? card.suit}, ${where}: Supply ${pts(card.supply)}, ${Object.keys(card.mana).length ? fmtMana(card.mana) : 'no Mana'}, ${def?.title ?? 'no ability'}${planned.has(id) ? ' (planned)' : ''}` : `Empty, ${where}`,
+        onclick: pick,
+        onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); pick(); } },
+        // a restrained tether to the physical bank slot and its column on the board
+        onpointerenter: () => this.view?.tether(id, col), onpointerleave: () => this.view?.tether(null, null),
+        onfocus: () => this.view?.tether(id, col), onblur: () => this.view?.tether(null, null),
         onpointerdown: (e) => { if (card && own) { const r = e.currentTarget.getBoundingClientRect(); this.cardDrag?.press(e, card, { x: r.left + r.width / 2, y: r.top + r.height / 2 }); } },
         title: card ? `${card.id}\n${def?.title}: ${def?.text ?? ''}` : `Empty · next mint ${forecast}`,
       },
-      h('div', { class: 'tl' }, `C${lc}`, seat === 'B' ? h('small', {}, ` g${col}`) : null),
+      own ? h('div', { class: 'tl' }, `C${lc}`, col !== lc ? h('small', {}, ` · g${col}`) : null)
+        : h('div', { class: 'tl' }, `g${col}`, h('small', {}, ` · ${seat} C${ownerLc}`)),
       card && renditionFor(card) ? h('div', { class: 'art', style: `background-image:url("${renditionFor(card).url}")`, 'aria-hidden': 'true' }) : null,
       card ? [
         h('div', { class: 'rank' }, `${card.rank}`, h('span', { class: 'suit' }, SUIT[card.suit])),
@@ -851,7 +863,7 @@ export class VersusApp {
       ] : h('div', { class: 'dim' }, 'empty'),
       own ? h('div', { class: 'fc' }, forecast) : null));
     }
-    el.replaceChildren(h('div', { class: 'ribbon-label' }, own ? `Your hand · ${seat}` : `Opponent hand · ${seat}`), h('div', { class: 'tiles' }, ...tiles), ...(own && this.el.readyBig ? [this.el.readyBig] : []));
+    el.replaceChildren(h('div', { class: 'ribbon-label', title: own ? `Your hand (seat ${seat})` : `Opponent's public hand (seat ${seat})` }, own ? `Your hand · ${seat}` : `Opp. · ${seat}`), h('div', { class: 'tiles' }, ...tiles));
   }
 
   _renderRoster() {
@@ -907,18 +919,11 @@ export class VersusApp {
           ...removed.map((k) => h('li', { class: 'removed' }, h('span', { class: 'chg' }, 'removed'), describeCmd(s, JSON.parse(k))))),
         this.plans[seat].length || removed.length ? null : h('div', { class: 'dim' }, 'empty plan (a legal pass)'));
     };
-    const me = this.viewSeat;
-    const can = this._can(me);
-    // stale: one compact row (notice + the acknowledge action) instead of the pinned button, so the
-    // marked changes keep the room to be read
-    const action = can.stale && !can.busy
-      ? h('div', { class: 'frozen-notice', role: 'status' }, h('span', {}, h('b', {}, '🔒 Your plan is frozen.'), ` Review ${other(me)}'s changes (NEW / REMOVED).`),
-        h('button', { class: 'primary', onclick: () => this._pressReady() }, 'Acknowledge updated plan'))
-      : h('button', { class: `primary ready${can.current ? ' done' : ''}`, disabled: !can.ready, onclick: () => this._pressReady() }, this._readyLabel(me).pinned);
-    // the plans scroll; the Ready action stays pinned at the bottom of the panel
-    this.el.plan.replaceChildren(h('h3', {}, 'Public plans'), h('div', { class: 'plans' }, box('A'), box('B')), action);
-    if (can.stale) this.el.plan.querySelector('.plans li.added, .plans li.removed')?.scrollIntoView({ block: 'nearest' });
+    const can = this._can(this.viewSeat);
+    // one primary Ready, the agreement action, at the foot of the plan panel (Companion layout; review UX-06)
     this._renderReadyButton();
+    this.el.plan.replaceChildren(h('h3', {}, 'Public plans'), h('div', { class: 'plans' }, box('A'), box('B')), this.el.readyBig);
+    if (can.stale) this.el.plan.querySelector('.plans li.added, .plans li.removed')?.scrollIntoView({ block: 'nearest' });
   }
 
   /** The words for the Ready action in its current state (shared by both Ready controls). */
@@ -928,7 +933,7 @@ export class VersusApp {
     if (this.playback || this.resolving && !this.pendingChoice) return { state: 'resolving', main: 'Resolving…', sub: '', pinned: 'Resolving…' };
     if (this.pendingChoice) return { state: 'choice', main: 'Response window', sub: `${this.pendingChoice.req.seat} to respond or pass`, pinned: 'Response window open' };
     if (!c.human) return { state: 'watch', main: '', sub: '', pinned: `${me} is a bot` };
-    if (c.stale) return { state: 'ack', main: 'Acknowledge ▶', sub: `Updated plan from ${opp} · yours stays frozen · Ctrl/⌘+Enter`, pinned: `Acknowledge updated plan (${me})` };
+    if (c.stale) return { state: 'ack', main: 'Acknowledge updated plan ▶', sub: `Your plan is frozen · review ${opp}'s changes (NEW / REMOVED)`, pinned: `Acknowledge updated plan (${me})` };
     if (c.current) return { state: 'waiting', main: `Waiting for ${opp}…`, sub: `Your plan is frozen · ${opp} is planning`, pinned: `Ready ✓ · frozen (${me})` };
     return n
       ? { state: 'ready', main: 'Ready ▶', sub: `Freeze my plan (${n} order${n > 1 ? 's' : ''}) · Tick ${tick} · Ctrl/⌘+Enter`, pinned: `Ready and freeze my plan (${me})` }
@@ -938,7 +943,6 @@ export class VersusApp {
   /** The big Ready button at the end of your hand ribbon: ends your planning for this Tick. */
   _renderReadyButton() {
     if (!this.el.readyBig) this.el.readyBig = h('button', { class: 'ready-big', onclick: () => this._pressReady() });
-    if (this.el.readyBig.parentElement !== this.el.ownhand) this.el.ownhand.append(this.el.readyBig); // beside your hand, like "end turn"
     const me = this.viewSeat, b = this.el.readyBig;
     const L = this._readyLabel(me);
     b.hidden = L.state === 'watch' || L.state === 'over';

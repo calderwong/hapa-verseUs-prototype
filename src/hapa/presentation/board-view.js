@@ -543,6 +543,25 @@ export class BoardView {
     return hit ? hit.object.userData.cardId : null;
   }
 
+  /**
+   * A restrained tether from a HUD ribbon tile to its physical bank slot and generating column
+   * (Design Companion "World banks remain attached…"; review UX-05). Null clears it.
+   */
+  tether(cardId, column) {
+    if (!this.tetherBand) {
+      this.tetherBand = new THREE.Mesh(new THREE.PlaneGeometry(3.6 * S, this.h * S), new THREE.MeshBasicMaterial({ color: 0xf2d98c, transparent: true, opacity: 0.16, depthWrite: false, toneMapped: false }));
+      this.tetherBand.rotation.x = -Math.PI / 2;
+      this.tetherBand.renderOrder = 1;
+      this.tetherMark = cornerBrackets(1.45 * S, 0.5 * S, 0.1 * S, 0xf5f0e3, 1);
+      this.root.add(this.tetherBand, this.tetherMark);
+    }
+    this.tetherBand.visible = column != null;
+    if (column != null) this.tetherBand.position.set((4 * column - 2) * S, 0.022, -(this.h / 2) * S);
+    const tile = cardId ? [...this.cardTiles.values()].find((t) => t.userData.cardId === cardId) : null;
+    this.tetherMark.visible = !!tile;
+    if (tile) { this.tetherMark.position.set(tile.position.x, 0.08, tile.position.z); this.tetherMark.scale.set(tile.scale.x, 1, (3.2 / 2.4) * tile.scale.y); }
+  }
+
   /** Hide or show one bank tile (while its card is picked up). */
   setCardLifted(cardId, lifted) { for (const t of this.cardTiles.values()) if (t.userData.cardId === cardId) t.visible = !lifted; }
 

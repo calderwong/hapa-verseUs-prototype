@@ -12,7 +12,7 @@ html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink
   position: fixed; inset: 0; display: grid; gap: 6px; padding: 6px;
   grid-template-columns: 220px minmax(0, 1fr) 340px;
   grid-template-rows: 48px 86px minmax(0, 1fr) 150px 40px;
-  grid-template-areas: 'bar bar bar' 'opp opp opp' 'roster world insp' 'res own plan' 'ev ev ev';
+  grid-template-areas: 'bar bar bar' 'roster opp insp' 'roster world insp' 'res own plan' 'ev ev ev'; /* both ribbons span the battlefield (UX-05) */
 }
 .area { background: var(--slate2); border: 1px solid var(--line); border-radius: 4px; min-width: 0; min-height: 0; }
 #matchbar { grid-area: bar; display: flex; align-items: center; gap: 14px; padding: 0 10px; font-family: var(--sans); }
@@ -339,8 +339,6 @@ body.card-dragging .ready-big { pointer-events: none; }
 .planbox li.removed { color: var(--mist, #9AA8B2); text-decoration: line-through; opacity: 0.8; }
 .planbox .chg { display: inline-block; margin-right: 4px; padding: 0 4px; border-radius: 2px; font: 700 10px var(--sans); letter-spacing: .04em; text-transform: uppercase; text-decoration: none; background: #8FD3A0; color: #17212D; }
 .planbox li.removed .chg { background: #E8857A; }
-.frozen-notice { flex: none; margin-top: 6px; padding: 4px 6px; display: flex; align-items: center; gap: 6px; border: 1px solid #C9A65E; border-left-width: 4px; border-radius: 3px; background: rgba(201, 166, 94, 0.14); font-size: 11.5px; line-height: 1.3; }
-.frozen-notice button { flex: none; white-space: nowrap; padding: 4px 8px; }
 .ready-big.ack { background: linear-gradient(180deg, #9FD8B0, #5FA877); border-color: #C8F0D4; box-shadow: 0 6px 0 #2C5E3B, 0 12px 24px rgba(0,0,0,0.5); }
 .ready-big.ack .rb-main { font-size: 19px; }
 
@@ -352,3 +350,13 @@ body.card-dragging .ready-big { pointer-events: none; }
 .pick-list .pl-cancel { justify-content: center; opacity: 0.8; }
 .pick-list .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .pick-list .dot.a { background: var(--a); } .pick-list .dot.b { border: 2px solid var(--b); width: 7px; height: 7px; }
+
+/* --- One Ready in the plan panel; aligned ribbons (2026-11-22 review UX-05/06) ------------------- */
+#plan .ready-big { align-self: stretch; margin: 6px 0 0; min-width: 0; padding: 6px 10px 5px; border-radius: 8px; box-shadow: 0 4px 0 #6B4F1E, 0 8px 16px rgba(0,0,0,0.45); }
+#plan .ready-big .rb-main { font-size: 17px; }
+#plan .ready-big.ack .rb-main { font-size: 14px; }
+#plan .ready-big .rb-sub { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+#plan .ready-big.ack { box-shadow: 0 4px 0 #2C5E3B, 0 8px 16px rgba(0,0,0,0.45); }
+#plan .ready-big:disabled { box-shadow: 0 3px 0 #1A2430; }
+.tile .tl small { color: var(--dim); }
+.ribbon-label { flex: none; width: 16px; white-space: nowrap; overflow: hidden; } /* equal on both ribbons so the nine columns align */
