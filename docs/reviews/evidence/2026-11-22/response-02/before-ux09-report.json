@@ -1,0 +1,62 @@
+{
+  "label": "before",
+  "base": "http://127.0.0.1:5199",
+  "viewport": {
+    "width": 1600,
+    "height": 1000,
+    "dpr": 1
+  },
+  "chrome": "Chrome/157.0.8103.80",
+  "journeys": {
+    "ux09": {
+      "steps": [
+        {
+          "name": "about 0.45 s after the drop (planning cue)",
+          "tick": 1,
+          "planA": [
+            "load_supply:A.C1.T1.0->A.mount.C1"
+          ],
+          "tag": "planned",
+          "planLinks": null,
+          "fx": [
+            "supply"
+          ],
+          "supplyA1": 0,
+          "shot": "before-ux09-1-drop.jpg"
+        },
+        {
+          "name": "at rest, still planning",
+          "tick": 1,
+          "planA": [
+            "load_supply:A.C1.T1.0->A.mount.C1"
+          ],
+          "tag": "planned",
+          "planLinks": null,
+          "fx": [],
+          "supplyA1": 0,
+          "shot": "before-ux09-2-planned.jpg"
+        },
+        {
+          "name": "resolution: the Supply lands",
+          "tick": 1,
+          "planA": [
+            "load_supply:A.C1.T1.0->A.mount.C1"
+          ],
+          "tag": "planned",
+          "planLinks": null,
+          "fx": [
+            "supply",
+            "supply",
+            "supply"
+          ],
+          "supplyA1": 2,
+          "shot": "before-ux09-3-landing.jpg"
+        }
+      ],
+      "errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    }
+  }
+}
