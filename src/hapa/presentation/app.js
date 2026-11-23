@@ -1087,7 +1087,8 @@ export class VersusApp {
     }
     d.update(dt, amount, this.view.terrain.cutaway);
     this.view.setCloseFraming(p?.id ?? null, d.opacity);
-    if (!p && d.opacity === 0 && d.key) d.clear();
+    // kept (hidden) after fading out, so returning to the same territory does not rebuild it; a
+    // different territory or terrain change rebuilds through its key, New match clears it
   }
 
   /** Per frame: annotate the inspected party's real members (HF2-04/06/07). */

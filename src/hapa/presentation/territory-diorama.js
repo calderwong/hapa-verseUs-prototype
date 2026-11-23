@@ -162,6 +162,8 @@ export class TerritoryDiorama {
     this.sway = []; this.dust = [];
     this.key = null;
     this.mats = [];
+    this.queue = []; this.queueState = null;
+    this.matCache = new Map();
   }
 
   /**
@@ -177,11 +179,14 @@ export class TerritoryDiorama {
     if (!at) return;
     this.mats = [];
     const { geo } = this.ctx, cols = geo.columns, rows = geo.rows;
+    // the inspected territory now; its neighbours one per frame (no single-frame build hitch)
+    this._territory(state, at.column, at.row, true);
+    this.queue = [];
     for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) {
       const c = at.column + dc, r = at.row + dr;
-      if (c < 1 || r < 1 || c > cols || r > rows) continue;
-      this._territory(state, c, r, dc === 0 && dr === 0);
+      if ((dc || dr) && c >= 1 && r >= 1 && c <= cols && r <= rows) this.queue.push([c, r]);
     }
+    this.queueState = state;
     for (const t of o.runningWork ?? []) this._dust(t);
   }
 
@@ -202,7 +207,20 @@ export class TerritoryDiorama {
     return out.join(',');
   }
 
-  _mat(m) { m.transparent = true; m.opacity = this.opacity; m.userData.surface = this._surface ?? 1; this.mats.push(m); return m; }
+  /**
+   * A dressing material, shared by every object with the same look, opacity cap and surface height
+   * (one renderer setup per look instead of per tuft or stone: the first build of a territory had
+   * cost a dropped frame). Unshared only where an object animates its own opacity (dust).
+   */
+  _mat(m, max = 1, share = true) {
+    m.userData.max = max; m.userData.surface = this._surface ?? 1;
+    const key = share ? [m.type, m.map?.uuid, m.color?.getHex(), m.emissive?.getHex?.(), m.side, m.alphaTest, m.flatShading, m.depthWrite, max, m.userData.surface].join('|') : null;
+    if (key && this.matCache?.has(key)) { m.dispose(); return this.matCache.get(key); }
+    m.transparent = true; m.opacity = this.opacity;
+    this.mats.push(m);
+    if (key) (this.matCache ??= new Map()).set(key, m);
+    return m;
+  }
 
   _territory(state, column, row, main) {
     const S = this.S, U = this.ctx.U;
@@ -255,15 +273,14 @@ export class TerritoryDiorama {
 
   _stone(x, y, z, rng) {
     const r = 0.1 + rng() * 0.12;
-    const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), this._mat(new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.08, 0.08, 0.38 + rng() * 0.15), roughness: 1, flatShading: true })));
+    const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), this._mat(new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.08, 0.08, 0.38 + Math.floor(rng() * 3) * 0.07), roughness: 1, flatShading: true })));
     m.position.set(x, y + r * 0.55, z); m.rotation.set(rng() * 3, rng() * 3, 0); m.scale.y = 0.65;
     this.group.add(m);
     this._shadow(x, y, z, r * 1.6);
   }
 
   _shadow(x, y, z, r) {
-    const s = new THREE.Mesh(new THREE.CircleGeometry(r, 12), this._mat(new THREE.MeshBasicMaterial({ color: 0x000000, depthWrite: false })));
-    s.material.userData.max = 0.3;
+    const s = new THREE.Mesh(new THREE.CircleGeometry(r, 12), this._mat(new THREE.MeshBasicMaterial({ color: 0x000000, depthWrite: false }), 0.3));
     s.rotation.x = -Math.PI / 2; s.position.set(x, y + 0.014, z);
     this.group.add(s);
   }
@@ -344,8 +361,7 @@ export class TerritoryDiorama {
     this._surface = t.target.band;
     const w = this.toWorld(t.target.x * U, t.target.y * U);
     for (let i = 0; i < 7; i++) {
-      const sp = new THREE.Sprite(this._mat(new THREE.SpriteMaterial({ color: 0xd9c9a4, depthWrite: false })));
-      sp.material.userData.max = 0.55;
+      const sp = new THREE.Sprite(this._mat(new THREE.SpriteMaterial({ color: 0xd9c9a4, depthWrite: false }), 0.55, false));
       sp.scale.set(0.12, 0.12, 1);
       sp.position.set(w.x + (Math.random() - 0.5) * S * 0.7, this.bandY(t.target.band) + 0.3, w.z + (Math.random() - 0.5) * S * 0.7);
       sp.userData = { base: sp.position.clone(), phase: i * 0.7 };
@@ -360,6 +376,7 @@ export class TerritoryDiorama {
    */
   update(dt, amount, cutaway) {
     this.time += dt;
+    if (this.queue?.length && this.key) { const [c, r] = this.queue.shift(); this._territory(this.queueState, c, r, false); }
     const target = amount;
     this.opacity += (target - this.opacity) * Math.min(1, dt * 6);
     if (Math.abs(this.opacity - target) < 0.01) this.opacity = target;

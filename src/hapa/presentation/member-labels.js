@@ -202,6 +202,8 @@ export class MemberLabels {
     const W = this.host.clientWidth, H = this.host.clientHeight;
     const avoid = m.avoid ?? [];
     const seen = new Set(), labelRects = new Map(), bodyRects = [];
+    // pass 1, writes only: content for changed labels (measuring here would force one layout per label)
+    const shown = [];
     for (const mm of m.members) {
       const onScreen = mm.visible && mm.anchor && mm.anchor.x >= 0 && mm.anchor.x <= W && mm.anchor.y >= 0 && mm.anchor.y <= H;
       // the real body's screen extent (head anchor to feet), whether or not a label is shown
@@ -229,7 +231,11 @@ export class MemberLabels {
         ].filter(Boolean));
         el.style.maxWidth = maxW;
       }
-      const size = this._size(mm.id, el, key);
+      shown.push({ mm, el, key, expanded });
+    }
+    // pass 2, reads: sizes of changed labels in one layout; then positions (writes)
+    for (const x of shown) x.size = this._size(x.mm.id, x.el, x.key);
+    for (const { mm, el, size, expanded } of shown) {
       if (this.level === 'identity') this.labelH = Math.max(this.labelH ?? 0, size.h); // the real compact label height
       // stable side: above the head, centered on the body
       el.style.transform = `translate(${Math.round(mm.anchor.x)}px, ${Math.round(mm.anchor.y)}px) translate(-50%, -100%)`;
