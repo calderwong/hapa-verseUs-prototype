@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux08b,ux09,ux10,ux14rm,ux06,ux14kb').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux08b,ux09,ux10,ux14rm,ux06,ux14kb,hv41').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -440,6 +440,41 @@ if (want.has('ux14kb')) {
   await p2.close();
   j.errors = page.errors;
   report.journeys.ux14kb = j;
+  await page.close();
+}
+
+// --- HV-41: rules & experiments panel — edit a copy, create a revision, compare, run a bot batch ---
+if (want.has('hv41')) {
+  const page = await browser.newPage();
+  const errors = []; page.on('pageerror', (e) => errors.push(String(e?.message ?? e)));
+  await page.goto(`${base}/versus.html?debug=1`, { waitUntil: 'networkidle0' });
+  await page.evaluate(() => { try { localStorage.removeItem('hapa-versus.lab.v1'); } catch {} });
+  const clickText = (re) => page.evaluate((src) => { const b = [...document.querySelectorAll('button')].find((x) => new RegExp(src).test(x.innerText.trim())); b?.click(); return !!b; }, re.source);
+  const j = { steps: [] };
+  j.steps.push({ name: 'open from setup', opened: await clickText(/^Rules & experiments/) });
+  await sleep(500);
+  j.fields = await page.evaluate(() => document.querySelectorAll('.lab-fields tr').length - 1);
+  j.shots = [await shot(page, 'hv41-1-fields')];
+  // edit the first integer field (+1), create a revision
+  const edit = await page.evaluate(() => { const i = document.querySelector('.lab-fields input[type=number]'); const label = i.getAttribute('aria-label'); const from = Number(i.value); i.value = String(from + 1); i.dispatchEvent(new Event('change', { bubbles: true })); return { label, from, to: from + 1 }; });
+  await sleep(300);
+  await clickText(/^Create revision/); await sleep(400);
+  const saved = await page.evaluate(() => document.querySelector('.lab-result')?.innerText.replace(/\s+/g, ' ') ?? null);
+  j.steps.push({ name: 'edit one field, create revision', edit, saved });
+  // start from the new revision and compare it with its base
+  await page.evaluate(() => { const sel = document.querySelector('.lab > label select'); const opt = [...sel.options].find((o) => o.value.includes('~')); sel.value = opt.value; sel.dispatchEvent(new Event('change', { bubbles: true })); });
+  await sleep(300);
+  await page.evaluate(() => { const sel = document.querySelector('.lab-compare select'); sel.value = sel.options[0].value; sel.dispatchEvent(new Event('change', { bubbles: true })); });
+  await sleep(300);
+  j.steps.push({ name: 'compare the revision with the base', diff: await page.evaluate(() => [...document.querySelectorAll('.lab-compare table tr')].slice(1).map((r) => r.innerText.replace(/\s+/g, ' '))) });
+  // a small batch: seeds 1-2, 60 Ticks
+  await page.evaluate(() => { const ins = document.querySelectorAll('.lab-batch input[type=number]'); ins[0].value = '1'; ins[1].value = '2'; ins[2].value = '60'; for (const i of ins) i.dispatchEvent(new Event('change', { bubbles: true })); });
+  await clickText(/^Run bot batch/);
+  await page.waitForFunction(() => !document.querySelector('.lab-batch button.primary')?.disabled && document.querySelectorAll('.lab-batch table tr').length >= 3, { timeout: 85000 }).catch(() => {});
+  j.steps.push({ name: 'run a bot batch (seeds 1-2, 60 Ticks)', summary: await page.evaluate(() => document.querySelector('.lab-batch p:not(.dim)')?.innerText ?? null), rows: await page.evaluate(() => [...document.querySelectorAll('.lab-batch table tr')].slice(1).map((r) => r.innerText.replace(/\s+/g, ' '))) });
+  j.shots.push(await shot(page, 'hv41-2-revision-compare-batch'));
+  j.errors = errors;
+  report.journeys.hv41 = j;
   await page.close();
 }
 
