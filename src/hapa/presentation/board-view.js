@@ -20,6 +20,7 @@ import { FACINGS } from '../rules/geometry.js';
 import { bodyVisible } from './playback.js';
 import { ResourceSites } from './firepit.js';
 import { buildBoardFrame } from './boardframe.js';
+import { TerritoryDiorama } from './territory-diorama.js';
 import { pieceOf, standardSprite, pieceTexture, zoomLevel, STANDARD_PX, STANDARD_OPACITY } from './pieces.js';
 
 export const S = 1.5; // world units per member width
@@ -148,6 +149,7 @@ export class BoardView {
     this.fx = new HitFX(this.root);
     this.sites = new ResourceSites(this.root, (x, y) => new THREE.Vector3(x * S, 0, -y * S), { w: this.w, h: this.h, S });
     this.frame = buildBoardFrame(this.root, { w: this.w, h: this.h, S });
+    this.diorama = new TerritoryDiorama(this.root, ctx, (x, y) => this.toWorld(x, y), { S, bandY });
     this._time = 0;
   }
 

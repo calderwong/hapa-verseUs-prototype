@@ -268,6 +268,7 @@ export class VersusApp {
     this._returnPose = null;
     this.expandedMember = null;
     this.labels.clear();
+    this.view?.diorama.clear();
     this.inspect.reset();
     this.ordersOpen = false;
     this._staleKey = null;
@@ -967,11 +968,26 @@ export class VersusApp {
     return { role, health: hpText, healthPct: f.health.mode === 'member' ? hpPct : null, combat, detail, key: `${f.id}|${hpText}|${combat}|${f.alive}|${enemyId}` };
   }
 
+  /**
+   * The territory environment (HF2-08/09/10): built around the inspected party's territory, faded
+   * in with the measured member size, hidden under a lower cutaway, disposed once faded out.
+   */
+  _updateDiorama(dt, p, pxPerMember) {
+    const d = this.view.diorama;
+    const amount = p ? Math.max(0, Math.min(1, (pxPerMember - 34) / 40)) : 0;
+    if (p && amount > 0) {
+      const running = Object.values(this.state.tasks ?? {}).filter((t) => t.status === 'running' && t.target);
+      d.sync(this.state, p.region, { runningWork: running });
+    }
+    d.update(dt, amount, this.view.terrain.cutaway);
+    if (!p && d.opacity === 0 && d.key) d.clear();
+  }
+
   /** Per frame: annotate the inspected party's real members (HF2-04/06/07). */
-  _updateLabels() {
+  _updateLabels(dt = 0) {
     const sub = this.inspectParty;
     const p = sub ? this.state?.parties[sub.partyId] : null;
-    if (!p || p.retired || !p.alive) { if (sub) this.inspectParty = null; this.labels.update(null); return; }
+    if (!p || p.retired || !p.alive) { if (sub) this.inspectParty = null; this.labels.update(null); this._updateDiorama(dt, null, 0); return; }
     const cam = this.engine.camera, world = this.el.world.getBoundingClientRect(), canvas = this.engine.renderer.domElement.getBoundingClientRect();
     const toScreen = (v) => { const q = v.clone().project(cam); return q.z > 1 ? null : { x: canvas.left - world.left + ((q.x + 1) / 2) * canvas.width, y: canvas.top - world.top + ((1 - q.y) / 2) * canvas.height }; };
     const center = this.view.toWorld(p.x, p.y).setY(this.view.partyY(p) + 0.4);
@@ -985,7 +1001,8 @@ export class VersusApp {
     // release: zoomed well out, or the party has left the middle of the view
     const W = world.width, H = world.height;
     const away = !a0 || a0.x < W * 0.05 || a0.x > W * 0.95 || a0.y < H * 0.05 || a0.y > H * 0.95;
-    if ((pxPerMember < 36 || away) && performance.now() - (sub.since ?? 0) > 1200) { this.inspectParty = null; this.expandedMember = null; this.labels.update(null); this._renderCommandBar(); return; }
+    if ((pxPerMember < 36 || away) && performance.now() - (sub.since ?? 0) > 1200) { this.inspectParty = null; this.expandedMember = null; this.labels.update(null); this._updateDiorama(dt, null, 0); this._renderCommandBar(); return; }
+    this._updateDiorama(dt, p, pxPerMember);
     const facts = this._labelFacts(p.id);
     const roofed = standingOf(this.state, this.ctx, p).kind === 'tunnel' && this.view.terrain.cutaway === null;
     const enemy = Object.values(this.state.parties).filter((q) => q.owner !== p.owner && q.alive && !q.retired).sort((x, y) => Math.max(Math.abs(x.region.column - p.region.column), Math.abs(x.region.row - p.region.row)) - Math.max(Math.abs(y.region.column - p.region.column), Math.abs(y.region.row - p.region.row)))[0];
@@ -1023,7 +1040,7 @@ export class VersusApp {
     if (busy !== this._inspectBusy) { this._inspectBusy = busy; this.inspect.setSuspended(busy); }
     this.inspect.update();
     this._placeBasinCounters();
-    this._updateLabels();
+    this._updateLabels(dt);
     const emph = `${this.inspect.transientSubject?.id ?? ''}|${this.inspect.pinnedSubject?.id ?? ''}`;
     if (emph !== this._emphKey && this.session) { this._emphKey = emph; this._syncIntents(); }
     this.el.compass.textContent = `▲ ${Math.round(this.cam.bearing)}° · ${this.cam.tactical ? 'Tactical' : 'Angled'} · home ${this.viewSeat}`;
