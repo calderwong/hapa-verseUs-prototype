@@ -24,10 +24,17 @@ export const ROW_PX = { identity: 34, combat: 120 };
 const SETTLE_MS = 140;
 const GAP = 14, EDGE = 8;
 
-export function levelFor(prev, pxPerMember, rowPx = Infinity) {
+/**
+ * @param {number} [k] text scale (root font size / 16): larger text needs proportionally more room
+ *   per member, so at 200% text the labels wait for twice the projected space (R6-01)
+ */
+export function levelFor(prev, pxPerMember, rowPx = Infinity, k = 1, rowNeed = ROW_PX.identity * k) {
   const { identity, combat } = LEVELS;
-  // the vertical room between rows caps the level: a summary that would cover the next row waits
-  const cap = rowPx >= ROW_PX.combat ? 'combat' : rowPx >= ROW_PX.identity ? 'identity' : 'none';
+  // the vertical room between rows caps the level: a label must fit between rows (its measured
+  // height, with a little hysteresis), and a summary that would cover the next row waits
+  const idRow = prev === 'none' ? rowNeed : rowNeed * 0.92;
+  const cap = rowPx >= ROW_PX.combat * k ? 'combat' : rowPx >= idRow ? 'identity' : 'none';
+  pxPerMember /= k;
   const lv = levelFor0(prev, pxPerMember, identity, combat);
   const order = ['none', 'identity', 'combat'];
   return order[Math.min(order.indexOf(lv), order.indexOf(cap))];
@@ -70,6 +77,59 @@ export function placeBeside(w, h, around, avoid, W, H, { prefer = null, anchorY 
   return null;
 }
 
+/** Free spans of [lo, hi] once the given blocked intervals are removed, longest first. */
+function freeSpans(lo, hi, blocked) {
+  const out = [];
+  let at = lo;
+  for (const [a, b] of blocked.filter(([a, b]) => b > lo && a < hi).sort((x, y) => x[0] - y[0])) { if (a > at) out.push([at, a]); at = Math.max(at, b); }
+  if (at < hi) out.push([at, hi]);
+  return out.sort((x, y) => (y[1] - y[0]) - (x[1] - x[0]));
+}
+
+/**
+ * When the natural box fits on no side, the largest free region beside the formation (right, left,
+ * above or below it, minus the docked controls) that can hold at least `min`: the box is limited to
+ * that region and scrolls. Text is never shrunk and the formation is never covered (R6-01).
+ */
+export function fitBeside(natural, min, around, avoid, W, H, anchorY = null) {
+  const regions = [
+    { side: 'right', x0: around.x + around.w + GAP, x1: W - EDGE, y0: EDGE, y1: H - EDGE, vertical: true },
+    { side: 'left', x0: EDGE, x1: around.x - GAP, y0: EDGE, y1: H - EDGE, vertical: true },
+    { side: 'above', x0: EDGE, x1: W - EDGE, y0: EDGE, y1: around.y - GAP, vertical: false },
+    { side: 'below', x0: EDGE, x1: W - EDGE, y0: around.y + around.h + GAP, y1: H - EDGE, vertical: false },
+  ];
+  let best = null;
+  for (const g of regions) {
+    if (g.x1 - g.x0 < min.w || g.y1 - g.y0 < min.h) continue;
+    if (g.vertical) {
+      const w = Math.min(natural.w, g.x1 - g.x0);
+      const x = g.side === 'right' ? g.x0 : g.x1 - w;
+      const blocked = avoid.filter((a) => a.x < x + w && x < a.x + a.w).map((a) => [a.y - 4, a.y + a.h + 4]);
+      for (const [lo, hi] of freeSpans(g.y0, g.y1, blocked)) {
+        const h = Math.min(natural.h, hi - lo);
+        if (h < min.h) continue;
+        const cy = anchorY ?? around.y + around.h / 2;
+        const r = { x, y: Math.max(lo, Math.min(hi - h, cy - h / 2)), w, h };
+        if (!best || r.w * r.h > best.rect.w * best.rect.h) best = { rect: r, side: g.side };
+        break;
+      }
+    } else {
+      const h = Math.min(natural.h, g.y1 - g.y0);
+      const y = g.side === 'above' ? g.y1 - h : g.y0;
+      const blocked = avoid.filter((a) => a.y < y + h && y < a.y + a.h).map((a) => [a.x - 4, a.x + a.w + 4]);
+      for (const [lo, hi] of freeSpans(g.x0, g.x1, blocked)) {
+        const w = Math.min(natural.w, hi - lo);
+        if (w < min.w) continue;
+        const cx = around.x + around.w / 2;
+        const r = { x: Math.max(lo, Math.min(hi - w, cx - w / 2)), y, w, h };
+        if (!best || r.w * r.h > best.rect.w * best.rect.h) best = { rect: r, side: g.side };
+        break;
+      }
+    }
+  }
+  return best;
+}
+
 export class MemberLabels {
   /** @param {HTMLElement} host the world element */
   constructor(host) {
@@ -103,7 +163,7 @@ export class MemberLabels {
     this.leader.setAttribute('visibility', 'hidden');
     this.level = 'none'; this.pending = null;
     this.subject = null; this.partyKey = null; this.partySide = null;
-    this.layout = null;
+    this.layout = null; this.labelH = null;
   }
 
   _size(id, el, key) {
@@ -117,7 +177,7 @@ export class MemberLabels {
   /** Measured sizes depend on the text size: drop them when the root font size changes. */
   _checkTextScale() {
     const fs = getComputedStyle(document.documentElement).fontSize;
-    if (fs !== this.fontSize) { this.fontSize = fs; this.sizes.clear(); this.readingKey = null; this.partyKey = null; this.keys.clear(); }
+    if (fs !== this.fontSize) { this.fontSize = fs; this.sizes.clear(); this.readingKey = null; this.partyKey = null; this.keys.clear(); this.labelH = null; }
   }
 
   /**
@@ -133,7 +193,8 @@ export class MemberLabels {
     if (this.subject !== m.partyId) { this.clear(); this.subject = m.partyId; }
     if (!this._scaleCheckAt || now - this._scaleCheckAt > 500) { this._scaleCheckAt = now; this._checkTextScale(); }
     // detail level from measured space, with hysteresis and a short settling interval
-    const want = levelFor(this.level, m.pxPerMember, m.rowPx);
+    const k = (parseFloat(this.fontSize) || 16) / 16;
+    const want = levelFor(this.level, m.pxPerMember, m.rowPx, k, (this.labelH ?? 36 * k) + 2);
     if (want !== this.level) {
       if (!this.pending || this.pending.level !== want) this.pending = { level: want, since: now };
       else if (now - this.pending.since >= SETTLE_MS) { this.level = want; this.pending = null; }
@@ -151,7 +212,9 @@ export class MemberLabels {
       seen.add(mm.id);
       if (!el) { el = h('div', { class: 'mlabel' }); this.els.set(mm.id, el); this.root.append(el); }
       const expanded = m.expanded === mm.id;
-      const maxW = `${Math.max(100, Math.round(m.pxPerMember * 0.96))}px`;
+      // never wider than the space to the neighbouring member: labels sit side by side, and a long
+      // role is cut with an ellipsis (its full name is in the inspection bar and the explanation)
+      const maxW = `${Math.max(Math.round(58 * k), Math.round(m.pxPerMember - 4))}px`;
       const key = `${this.level}|${expanded}|${mm.occluded ? 1 : 0}|${mm.text.role}|${mm.text.health}|${mm.text.healthPct}|${mm.text.combat}|${maxW}`;
       el.hidden = false;
       if (this.keys.get(mm.id) !== key) {
@@ -167,6 +230,7 @@ export class MemberLabels {
         el.style.maxWidth = maxW;
       }
       const size = this._size(mm.id, el, key);
+      if (this.level === 'identity') this.labelH = Math.max(this.labelH ?? 0, size.h); // the real compact label height
       // stable side: above the head, centered on the body
       el.style.transform = `translate(${Math.round(mm.anchor.x)}px, ${Math.round(mm.anchor.y)}px) translate(-50%, -100%)`;
       el.style.zIndex = expanded ? 3 : 2;
@@ -185,12 +249,17 @@ export class MemberLabels {
         const d = typeof open.text.detail === 'function' ? open.text.detail() : open.text.detail;
         this.reading.replaceChildren(h('div', { class: 'mr-head' }, h('b', {}, open.text.role), h('span', {}, ` ${open.text.health}`), open.text.where ? h('span', { class: 'dim' }, ` · ${open.text.where}`) : null), d ?? h('div', { class: 'dim' }, 'No further facts'));
         this.reading.hidden = false;
+        this.reading.style.width = ''; this.reading.style.height = ''; this.reading.classList.remove('fitted');
         this.readingSize = { w: this.reading.offsetWidth, h: this.reading.offsetHeight };
       }
       this.reading.hidden = false;
       const { w, h: hh } = this.readingSize;
       const placed = placeBeside(w, hh, formation, avoid, W, H, { prefer: this.readingSide, anchorY: open.anchor.y });
-      if (placed) { readingRect = placed.rect; this.readingSide = placed.side; this.reading.classList.remove('docked'); }
+      const rem = parseFloat(this.fontSize) || 16;
+      const fitted = placed ? null : fitBeside({ w, h: hh }, { w: Math.min(w, 12 * rem), h: Math.min(hh, 5 * rem) }, formation, avoid, W, H, open.anchor.y);
+      const sized = (r) => { const fit = r.w < w - 0.5 || r.h < hh - 0.5; this.reading.classList.toggle('fitted', fit); this.reading.style.width = fit ? `${Math.floor(r.w)}px` : ''; this.reading.style.height = fit ? `${Math.floor(r.h)}px` : ''; };
+      if (placed) { readingRect = placed.rect; this.readingSide = placed.side; this.reading.classList.remove('docked'); sized(placed.rect); }
+      else if (fitted) { readingRect = fitted.rect; this.readingSide = null; this.reading.classList.remove('docked'); sized(fitted.rect); }
       else {
         // no free side: an intentional docked reading view at the screen edge farther from the
         // formation (the command selection and controls stay as they are)
@@ -198,6 +267,7 @@ export class MemberLabels {
         readingRect = clampRect({ x: left ? EDGE : W - EDGE - w, y: 56, w, h: hh }, W, H);
         this.readingSide = null;
         this.reading.classList.add('docked');
+        sized(readingRect);
       }
       this.reading.style.transform = `translate(${Math.round(readingRect.x)}px, ${Math.round(readingRect.y)}px)`;
       // the source cue: a leader from the highlighted label to the panel's nearest edge
@@ -219,17 +289,19 @@ export class MemberLabels {
       const pkey = `${m.party.key}|${this.level}`;
       if (this.partyKey !== pkey) {
         this.partyKey = pkey;
+        this.partyEl.classList.remove('crowded'); // measure it shown
         this.partyEl.replaceChildren(...[...m.party.lines.map((t, i) => h(i ? 'div' : 'b', {}, t)), m.party.note ? h('div', { class: 'warn' }, m.party.note) : null, this.level === 'none' ? h('div', { class: 'dim' }, 'Closer to read each member') : this.level === 'identity' ? h('div', { class: 'dim' }, 'Hover or tap a member for its facts') : null].filter(Boolean));
         this.partySize = { w: this.partyEl.offsetWidth, h: this.partyEl.offsetHeight };
       }
       const { w, h: hh } = this.partySize;
       const placed = placeBeside(w, hh, formation, [...avoid, readingRect].filter(Boolean), W, H, { prefer: this.partySide });
-      partyRect = placed ? placed.rect : clampRect({ x: formation.x + formation.w + GAP, y: formation.y + formation.h / 2 - hh / 2, w, h: hh }, W, H);
+      // with no free side it steps aside: the inspection bar carries the same collective facts
+      partyRect = placed ? placed.rect : null;
       this.partySide = placed?.side ?? null;
       this.partyEl.classList.toggle('crowded', !placed);
-      this.partyEl.style.transform = `translate(${Math.round(partyRect.x)}px, ${Math.round(partyRect.y)}px)`;
+      if (partyRect) this.partyEl.style.transform = `translate(${Math.round(partyRect.x)}px, ${Math.round(partyRect.y)}px)`;
     }
-    this.layout = { W, H, level: this.level, formation, bodies: bodyRects, labels: Object.fromEntries(labelRects), reading: readingRect, party: partyRect, avoid, readingDocked: !!readingRect && this.reading.classList.contains('docked'), partyCrowded: !!partyRect && this.partyEl.classList.contains('crowded') };
+    this.layout = { W, H, level: this.level, formation, bodies: bodyRects, labels: Object.fromEntries(labelRects), reading: readingRect, party: partyRect, avoid, readingDocked: !!readingRect && this.reading.classList.contains('docked'), partyCrowded: this.partyEl.classList.contains('crowded') };
     return this.level;
   }
 }

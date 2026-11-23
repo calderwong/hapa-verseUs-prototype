@@ -7,7 +7,9 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink); font: 0.90625rem/1.4 var(--sans); font-variant-numeric: tabular-nums; overflow: hidden; }
+html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink); overflow: hidden; }
+html { font-size: 100%; } /* the browser's text size is the rem base (16 px by default) */
+body { font: 0.90625rem/1.4 var(--sans); font-variant-numeric: tabular-nums; overflow: hidden; }
 #app {
   position: fixed; inset: 0; display: grid; gap: 4px; padding: 4px;
   /* the board is the interface (human-feedback addendum 01 §2): a compact decision strip, the
@@ -20,7 +22,7 @@ html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink
 #matchbar { grid-area: bar; display: flex; align-items: center; gap: 10px; padding: 0 8px; font-family: var(--sans); white-space: nowrap; }
 #matchbar > * { flex: none; }
 #matchbar .phase { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-#world { grid-area: world; position: relative; overflow: hidden; background: #0e1018; }
+#world { grid-area: world; position: relative; overflow: hidden; background: #0e1018; isolation: isolate; } /* its layers stack inside it, below a blocking sheet */
 #world > canvas { position: absolute !important; inset: 0; }
 #events { grid-area: ev; display: flex; gap: 6px; align-items: center; overflow-x: auto; overflow-y: hidden; padding: 0 8px; white-space: nowrap; font-size: 12.5px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
@@ -183,7 +185,7 @@ kbd { font: 11px var(--sans); border: 1px solid #5a6380; border-bottom-width: 2p
 .preview { margin: 6px 0; padding: 6px 8px; border: 1px dashed #8a7a5a; border-radius: 4px; }
 .fixture-tag { display: inline-block; margin-right: 8px; padding: 1px 6px; border: 1px dashed #f2c14e; color: #f2c14e; font-size: 11px; letter-spacing: 0.04em; }
 .row.fixture { align-items: center; gap: 8px; margin: 4px 0; }
-.layer-rail { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 3px; z-index: 4; }
+.layer-rail { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 3px; z-index: 23; }
 .layer-rail .band { min-width: 44px; padding: 3px 6px; font: 12px var(--sans); background: rgba(20,18,26,0.85); color: var(--fg, #e8dcc0); border: 1px solid #5a5040; cursor: pointer; }
 .layer-rail .band.on { border-color: #f2c14e; color: #f2c14e; outline: 2px solid #f2c14e; }
 .layer-rail .band small { color: var(--dim); }
@@ -316,7 +318,7 @@ button.danger { background: #4A2A2E; border-color: var(--bad); }
 .result-stats td:first-child { text-align: left; color: var(--dim); }
 .row.center { justify-content: center; }
 /* camera pad (bottom-left of the world view) and drag cursors */
-.cam-pad { position: absolute; left: 8px; top: 8px; z-index: 5; display: flex; gap: 4px; align-items: flex-end; opacity: 0.88; }
+.cam-pad { position: absolute; left: 8px; top: 8px; z-index: 23; /* above world-anchored counters and labels: a fixed control is never covered (review 06 journey) */ display: flex; gap: 4px; align-items: flex-end; opacity: 0.88; }
 .cam-pad:hover { opacity: 1; }
 .cam-grid { display: grid; grid-template-columns: repeat(3, 28px); gap: 3px; }
 .cam-col { display: flex; flex-direction: column; gap: 3px; }
@@ -509,7 +511,7 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .mlabels { position: absolute; inset: 0; z-index: 12; pointer-events: none; overflow: hidden; }
 .mlabel { position: absolute; left: 0; top: 0; padding: 2px 5px 3px; border-radius: 4px; background: rgba(16,24,32,0.86); border: 1px solid rgba(201,166,94,.55); color: var(--ivory); font: 600 0.875rem/1.2 var(--sans); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 2px 6px rgba(0,0,0,.45); }
 .mlabel[hidden] { display: none; }
-.mlabel b { display: block; font-weight: 700; }
+.mlabel b { display: block; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
 .mlabel .mhp { position: relative; display: block; min-width: 56px; margin-top: 1px; background: rgba(0,0,0,.45); border-radius: 2px; font-size: 0.875rem; line-height: 1.15; }
 .mlabel .mhp i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(143,211,160,.55); border-radius: 2px; }
 .mlabel .mhp span { position: relative; }
@@ -525,15 +527,18 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .mreading .mr-head { margin-bottom: 3px; font-size: 0.9375rem; }
 .mreading .ok { color: var(--ok); } .mreading .warn { color: var(--warn); } .mreading .dim { color: var(--dim); }
 .mreading.docked { border-style: solid; border-left-width: 4px; }
+.mreading.fitted { overflow: auto; }
+.mparty.crowded { display: none; }
 .mparty { position: absolute; left: 0; top: 0; padding: 3px 8px; border-radius: 5px; background: rgba(23,33,45,0.9); border: 1px solid var(--brass); color: var(--ivory); font: 0.8125rem/1.35 var(--sans); white-space: nowrap; pointer-events: none; }
 .mparty[hidden] { display: none; }
 .mparty .warn { color: var(--warn); } .mparty .dim { color: var(--dim); }
-.mparty.crowded { opacity: .9; }
 /* the inspection bar: keyboard and touch route to every member's facts, above the command bar */
 .inspect-bar { position: absolute; z-index: 21; left: 50%; bottom: calc(8px + var(--cmdbar-h, 0px)); transform: translateX(-50%); max-width: min(820px, calc(100% - 140px)); padding: 4px 8px 5px; background: rgba(16,24,32,0.94); border: 1px solid #6c7a8c; border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.45); font-size: 0.8125rem; }
 .inspect-bar[hidden] { display: none; }
 .inspect-bar .ib-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
-.inspect-bar .ib-member { padding: 2px 7px; }
+.inspect-bar .ib-member { padding: 2px 7px; font-size: 0.875rem; }
+.inspect-bar.compact .ib-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+.inspect-bar.compact .ib-member, .inspect-bar.compact .ib-row > button { flex: none; }
 .inspect-bar .ib-member.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
 .inspect-bar .ib-keep { color: #9cc0f5; }
 #roster .rpair { display: flex; gap: 2px; align-items: stretch; }

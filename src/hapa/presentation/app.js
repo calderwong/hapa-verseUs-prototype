@@ -943,14 +943,20 @@ export class VersusApp {
     const pts = Object.values(p.slots).filter(Boolean).map((id) => this.view.sprites.get(id)).filter((sp) => sp?.visible).map((sp) => sp.position);
     const c = this.view.toWorld(p.x, p.y).setY(this.view.partyY(p) + 0.8);
     if (pts.length) { c.x = pts.reduce((n, v) => n + v.x, 0) / pts.length; c.z = pts.reduce((n, v) => n + v.z, 0) / pts.length; }
-    const r = Math.max(2.2 * 1.5, ...pts.map((v) => Math.hypot(v.x - c.x, v.z - c.z))) + 2.4;
+    // a margin for the labels above the heads; tight enough that a full formation's compact labels
+    // fit side by side at 1280×720 (the reading panel and party facts are placed in measured space)
+    const r = Math.max(2.2 * 1.5, ...pts.map((v) => Math.hypot(v.x - c.x, v.z - c.z))) + 1.6;
     if (!this._returnPose) this._returnPose = this.cam.savePose();
-    this.cam.frame(c, r);
     if (this.inspectParty?.partyId !== partyId) this.expandedPin = null;
     this.inspectParty = { partyId, via: 'focus', since: performance.now() };
     this._cmdOpen = null;
     this._renderCommandBar();
     this._renderInspectBar();
+    // frame it in the space the docked bars leave free (they grow with the text size; R6-01)
+    const H = this.el.world.clientHeight || 1;
+    const docked = [this.el.cmdbar, this.el.inspectBar].filter((el) => el && !el.hidden).reduce((n, el) => n + el.offsetHeight + 8, 0);
+    const free = Math.max(0.4, 1 - Math.min(0.6, docked / H));
+    this.cam.frame(c, r, { lift: 1 - free });
   }
 
   /**
@@ -1131,7 +1137,7 @@ export class VersusApp {
       key: `${JSON.stringify(pf)}|${planned}|${roofed}|${facts.playing}`,
     };
     this.labels.update({ partyId: p.id, members, party, pxPerMember, rowPx, expanded, avoid: this._avoidRects() });
-    if (this._inspectBarKey !== `${p.id}|${party.key}|${members.map((m) => `${m.id}:${m.text.health}`).join(',')}|${expanded}`) this._renderInspectBar(facts, members, expanded);
+    this._renderInspectBar(facts, members, expanded); // rebuilds only when its content changes
   }
 
   /**
@@ -1186,33 +1192,41 @@ export class VersusApp {
         const bs = [...this.el.inspectBar.querySelectorAll('.ib-member')], i = bs.indexOf(document.activeElement);
         if (i < 0) return;
         ev.preventDefault(); ev.stopPropagation();
-        bs[(i + (ev.code === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length]?.focus();
+        const next = bs[(i + (ev.code === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length];
+        next?.focus(); next?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
       });
       this.el.inspectBar.addEventListener('pointerup', (ev) => ev.stopPropagation());
       this.el.world.append(this.el.inspectBar);
     }
     const bar = this.el.inspectBar;
     const p = sub ? this._displayState().parties[sub.partyId] : null;
-    if (!p) { bar.hidden = true; this._inspectBarKey = null; return; }
+    if (!p) { if (!bar.hidden) { bar.hidden = true; this._avoidCache = null; } this._inspectBarKey = null; return; }
     facts ??= this._labelFacts(p.id);
     const S = facts.state, pf = facts.party;
     const list = members ?? Object.values(facts.members).map((f) => ({ id: f.id, text: this._memberText(f, S) }));
     const open = expanded ?? this.expandedMember ?? this.expandedPin;
-    this._inspectBarKey = `${p.id}|${members ? '' : 'x'}${JSON.stringify(pf)}|${list.map((m) => `${m.id}:${m.text.health}`).join(',')}|${open}`;
+    const barKey = `${this.generation}|${p.id}|${JSON.stringify(pf)}|${list.map((m) => `${m.id}:${m.text.role}:${m.text.health}`).join(',')}|${open}|${this.expandedPin}|${!!this._returnPose}|${this.selected?.id ?? ''}|${this.viewSeat}|${this.view.terrain.cutaway}`;
+    if (barKey === this._inspectBarKey && !bar.hidden && !this._focusInspectBarNext) return;
+    this._inspectBarKey = barKey;
     const focused = document.activeElement?.closest?.('.inspect-bar') ? document.activeElement.dataset.member ?? document.activeElement.dataset.act : null;
     const sel = this.selected?.kind === 'party' && this.selected.id !== p.id ? this.state.parties[this.selected.id] : null;
     bar.replaceChildren(
       h('div', { class: 'ib-head' },
         h('b', {}, `Inspecting ${p.owner === this.viewSeat ? 'your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'} · R${p.region.row}C${p.region.column}`),
-        h('span', { class: 'dim' }, ` ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · Supply ${pts(pf.supply)} · band ${fmtBand(pf.band)}${pf.exposed ? '' : ' · not exposed'}`),
-        sel ? h('span', { class: 'ib-keep' }, ` · commanding your ${partyShort(this.state, sel.id)}`) : null),
+        h('span', { class: 'dim' }, ` ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]} · Supply ${pts(pf.supply)} · ${STATE_NAME[pf.state] ?? pf.state}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''} · band ${fmtBand(pf.band)} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`),
+        sel ? h('span', { class: 'ib-keep' }, ` · commanding your ${partyShort(this.state, sel.id)}`) : null,
+        standingOf(S, this.ctx, p).kind === 'tunnel' && this.view.terrain.cutaway === null ? h('div', { class: 'warn' }, 'Roofed tunnel: open its layer to read the members (cutaway)') : null),
       h('div', { class: 'ib-row' },
         ...list.map((m) => h('button', { class: `ib-member${open === m.id ? ' on' : ''}`, 'data-member': m.id, 'aria-pressed': String(this.expandedPin === m.id), 'aria-describedby': this.expandedPin === m.id ? 'member-reading' : null, 'aria-label': `${m.text.role}, ${m.text.health}${this.expandedPin === m.id ? ', explanation open' : ''}`,
           onclick: () => { this.expandedPin = this.expandedPin === m.id ? null : m.id; this._renderInspectBar(); } }, h('b', {}, m.text.role), ' ', h('span', { class: 'dim' }, m.text.health))),
         this._returnPose ? h('button', { 'data-act': 'return', onclick: () => this._returnCamera(), title: 'Back to the view before Inspect (R)' }, '↩ Return (R)') : null,
         h('button', { 'data-act': 'close', onclick: () => { this.inspectParty = null; this.expandedPin = null; this.expandedMember = null; this._renderInspectBar(); }, title: 'Stop inspecting; the camera stays (Esc)' }, 'Close (Esc)')));
     bar.hidden = false;
+    // compact: one scrolling row of members when the wrapped bar would take too much height
+    bar.classList.remove('compact');
+    if (bar.offsetHeight > 0.2 * (this.el.world.clientHeight || 1)) bar.classList.add('compact');
     if (focused) bar.querySelector(`[data-member="${focused}"], [data-act="${focused}"]`)?.focus({ preventScroll: true });
+    bar.querySelector('.ib-member.on')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     if (this._focusInspectBarNext) { this._focusInspectBarNext = false; bar.querySelector('.ib-member')?.focus({ preventScroll: true }); }
     this._avoidCache = null;
   }

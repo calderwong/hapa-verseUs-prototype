@@ -156,14 +156,23 @@ export class BoardCamera {
    * Frame a world sphere (center at its real height, radius in world units) keeping the current
    * yaw; the pitch is only raised enough to read a formation (never turns the party).
    */
-  frame(center, radius, { minPitch = 38 } = {}) {
+  frame(center, radius, { minPitch = 38, lift = 0 } = {}) {
     this.atHome = false;
     this.goal.focus.copy(center);
     this.goal.pitch = Math.max(this.goal.pitch, minPitch * DEG);
     const half = (this.camera.fov * DEG) / 2;
     const aspect = Math.max(0.5, (this.el.clientWidth || 1) / (this.el.clientHeight || 1));
-    const fitV = radius / Math.sin(half), fitH = radius / Math.sin(Math.atan(Math.tan(half) * aspect));
+    // the vertical fit uses the height left free above docked bars (`lift`), at most ~9% farther
+    // so members stay readable
+    const fitV = radius / (Math.sin(half) * Math.max(0.92, 1 - lift)), fitH = radius / Math.sin(Math.atan(Math.tan(half) * aspect));
     this.goal.distance = Math.min(this.board.size * 3.6, Math.max(this.board.size * 0.06, Math.max(fitV, fitH)));
+    // `lift`: the share of the view's height covered from below (docked bars); the subject is
+    // centred in the rest by moving the focus toward the camera along the ground
+    if (lift > 0) {
+      const viewH = 2 * this.goal.distance * Math.tan(half);
+      const fwd = new THREE.Vector3(-Math.sin(this.goal.yaw), 0, -Math.cos(this.goal.yaw));
+      this.goal.focus.addScaledVector(fwd, -(lift / 2) * viewH / Math.max(0.35, Math.sin(this.goal.pitch)));
+    }
   }
 
   /** Pan in screen directions (world units scaled by distance). */
