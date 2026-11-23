@@ -35,6 +35,29 @@ function tiledPlane(textures, name, w, d, { tint = null } = {}) {
 }
 
 /**
+ * A tiled ground frame: the rectangle (ox0..ox1, oz0..oz1) minus the hole (ix0..ix1, iz0..iz1), as
+ * four strips whose tiling continues across their seams. The hole keeps decorative ground out of
+ * the plinth's footprint, where the excavation bands (−2 at y −1.8, −3 at y −2.7) lie below the
+ * meadow and must stay visible through the cutaway (2026-11-22 review UX-04).
+ */
+function framePlanes(textures, name, o, i, y, opts) {
+  const g = new THREE.Group();
+  const [uw, uh] = textures.meta(name).units;
+  const strip = (x0, x1, z0, z1) => {
+    if (x1 - x0 <= 0 || z1 - z0 <= 0) return;
+    const m = tiledPlane(textures, name, x1 - x0, z1 - z0, opts);
+    for (const k of ['map', 'normalMap']) if (m.material[k]) m.material[k].offset.set((x0 - o.x0) / uw, (o.z1 - z1) / uh);
+    m.position.set((x0 + x1) / 2, y, (z0 + z1) / 2);
+    g.add(m);
+  };
+  strip(o.x0, o.x1, o.z0, i.z0); // far
+  strip(o.x0, o.x1, i.z1, o.z1); // near
+  strip(o.x0, i.x0, i.z0, i.z1); // left
+  strip(i.x1, o.x1, i.z0, i.z1); // right
+  return g;
+}
+
+/**
  * @param {THREE.Object3D} root
  * @param {{ x0: number, x1: number, z0: number, z1: number, fieldX0: number, fieldX1: number, fieldZ0: number, fieldZ1: number }} b
  *   world bounds of the painted ground plane (x0..x1, z0..z1) and of the playable field inside it
@@ -61,11 +84,11 @@ export async function buildScenery(root, b) {
     group.add(side);
   }
   // meadow and a worn path around the plinth
-  const meadow = tiledPlane(textures, 'grass', 320, 320, { tint: '#9FAE8A' }); // muted: the field, not the lawn, holds attention
-  meadow.position.set(cx, ground, cz);
+  // both stop at the plinth walls: nothing decorative lies under the field's excavation volume
+  const hole = { x0: b.x0, x1: b.x1, z0: b.z0, z1: b.z1 };
+  const meadow = framePlanes(textures, 'grass', { x0: cx - 160, x1: cx + 160, z0: cz - 160, z1: cz + 160 }, hole, ground, { tint: '#9FAE8A' }); // muted: the field, not the lawn, holds attention
   group.add(meadow);
-  const path = tiledPlane(textures, 'dirt_path', W + 7, D + 7, { tint: '#C9B9A0' });
-  path.position.set(cx, ground + 0.015, cz);
+  const path = framePlanes(textures, 'dirt_path', { x0: b.x0 - 3.5, x1: b.x1 + 3.5, z0: b.z0 - 3.5, z1: b.z1 + 3.5 }, hole, ground + 0.015, { tint: '#C9B9A0' });
   group.add(path);
 
   const add = (r) => { if (!r) return; group.add(r.object); if (r.update) updates.push(r.update); };

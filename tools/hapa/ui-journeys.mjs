@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -188,6 +188,48 @@ if (want.has('ux03')) {
   await page.evaluate(() => { const a = window.__versus; a.view.setLayer(null); a.view.sync(a.state); a._renderAll(); });
   j.errors = page.errors;
   report.journeys.ux03 = j;
+  await page.close();
+}
+
+// --- UX-04: decorative scenery must not hide the excavation volume ------------------------------
+if (want.has('ux04')) {
+  const page = await open('autostart=1&fixture=stacked&a=human&b=human');
+  await sleep(1500); // scenery loads asynchronously
+  const j = { cases: [] };
+  for (const [band, pid] of [[-2, 'B.tunnel'], [-3, 'B.deep']]) {
+    for (const scenery of [true, false]) {
+      const r = await page.evaluate(async (band, pid, scenery) => {
+        const a = window.__versus, THREE = a.view.root.parent.constructor; // not used; THREE comes from the page below
+        const { stateFingerprint } = await import('/src/hapa/rules/state.js');
+        const before = stateFingerprint(a.state);
+        a.view.setLayer(band); a.view.sync(a.state); a._renderAll();
+        const P = a.state.parties[pid];
+        a.cam.focusOn(a.view.toWorld(P.x, P.y).setY(a.view.partyY(P)));
+        if (a.scenery) a.scenery.group.visible = scenery;
+        await new Promise((res) => setTimeout(res, 1200));
+        // line of sight from the camera to points on each member's sprite, against the decorative meshes
+        const cam = a.engine.camera, ray = new (a.raycaster.constructor)();
+        const decor = []; a.scenery?.group.traverse((o) => { if (o.isMesh && o.visible && a.scenery.group.visible) decor.push(o); });
+        let pts = 0, hidden = 0;
+        for (const id of Object.values(P.slots).filter(Boolean)) {
+          const spr = a.view.sprites.get(id);
+          for (const lift of [0.1, 0.45, 0.8]) {
+            const target = spr.position.clone(); target.y += lift;
+            const dir = target.clone().sub(cam.position); const dist = dir.length(); dir.normalize();
+            ray.set(cam.position, dir); ray.far = dist - 0.01;
+            pts++; if (ray.intersectObjects(decor, false).length) hidden++;
+          }
+        }
+        const after = stateFingerprint(a.state);
+        return { band, party: pid, scenery, points: pts, hiddenBehindScenery: hidden, decorMeshes: decor.length, fingerprintUnchanged: before === after };
+      }, band, pid, scenery);
+      r.shot = await shot(page, `ux04-band${band}-scenery-${scenery ? 'on' : 'off'}`);
+      j.cases.push(r);
+    }
+  }
+  await page.evaluate(() => { const a = window.__versus; if (a.scenery) a.scenery.group.visible = true; a.view.setLayer(null); a.view.sync(a.state); });
+  j.errors = page.errors;
+  report.journeys.ux04 = j;
   await page.close();
 }
 

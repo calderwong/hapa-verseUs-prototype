@@ -115,21 +115,24 @@ UI_FIXTURES.response = {
  */
 UI_FIXTURES.stacked = {
   title: 'Stacked heights (picking check)',
-  description: 'R6C5: A\'s flyer (+3) directly above B\'s roofed tunnel party (−2). R5C3: A\'s Archers on a hill (+2). R6C3: B on open ground. Click each and read the selected band; step layers with [ and ].',
+  description: 'R6C5: A\'s flyer (+3) directly above B\'s roofed tunnel party (−2). R5C3: A\'s Archers on a hill (+2). R6C3: B on open ground. R7C7: B deep in a roofed gallery (−3). Click each and read the selected band; step layers with [ and ].',
   build() {
     const fx = scenario({ matchId: 'fixture-stacked', parties: [
       { id: 'A.fly', owner: 'A', mount: 'queen', column: 5, row: 6, slots: { 5: 'center', 2: 'swordsman' }, supply: 1 },
       { id: 'B.tunnel', owner: 'B', mount: 'castle', column: 5, row: 6, slots: { 5: 'center', 2: 'pikeman' } },
       { id: 'A.hill', owner: 'A', mount: 'castle', column: 3, row: 5, slots: { 5: 'center', 7: 'archer', 8: 'archer', 9: 'archer' }, supply: 1 },
       { id: 'B.walk', owner: 'B', mount: 'knight', column: 3, row: 6, slots: { 5: 'center', 1: 'swordsman', 3: 'swordsman' }, supply: 1 },
+      { id: 'B.deep', owner: 'B', mount: 'castle', column: 7, row: 7, slots: { 5: 'center', 2: 'swordsman', 8: 'archer' } },
     ] });
     const s = fx.state, ctx = fx.ctx;
     raiseTerritory(s, ctx, 3, 5, 1, [{ column: 3, row: 4 }]);
-    const T = s.parties['B.tunnel'];
-    T.band = -2;
-    for (const id of Object.values(T.slots)) if (id) {
-      const m = s.members[id]; m.band = -2;
-      s.terrain.cells[cellKey(Math.round(m.x / U), Math.round(m.y / U), -2)] = { solid: false, material: 'air' };
+    for (const [pid, band] of [['B.tunnel', -2], ['B.deep', -3]]) {
+      const T = s.parties[pid];
+      T.band = band;
+      for (const id of Object.values(T.slots)) if (id) {
+        const m = s.members[id]; m.band = band;
+        s.terrain.cells[cellKey(Math.round(m.x / U), Math.round(m.y / U), band)] = { solid: false, material: 'air' };
+      }
     }
     s.terrain.kind = 'volume';
     const F = s.parties['A.fly'];
