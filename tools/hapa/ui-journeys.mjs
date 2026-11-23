@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux10').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux09,ux10').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -283,6 +283,34 @@ if (want.has('ux08')) {
   j.shot = await shot(page, 'ux08-hand-and-inspector');
   j.errors = page.errors;
   report.journeys.ux08 = j;
+  await page.close();
+}
+
+// --- UX-09: planned Supply vs resolved Supply — drop, rest, landing --------------------------------
+if (want.has('ux09')) {
+  const page = await open('autostart=1&a=human&b=bot&seed=1');
+  const j = { steps: [] };
+  await page.evaluate(() => { const a = window.__versus, P = a.state.parties['A.mount.C1']; a.cam.focusOn(a.view.toWorld(P.x, P.y).add({ x: 0, y: 0, z: 3 })); a.cam.goal.distance = a.view.size * 0.5; });
+  await sleep(1500);
+  const target = await page.evaluate(() => { const a = window.__versus, mk = a.view.markers.get('A.mount.C1'); const p = mk.position.clone().project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); return { x: r.left + (p.x + 1) / 2 * r.width, y: r.top + (1 - p.y) / 2 * r.height }; });
+  const tile = await (await page.$('#ownhand .tile:not(.empty)')).boundingBox();
+  const from = { x: tile.x + tile.width / 2, y: tile.y + tile.height / 2 };
+  await page.mouse.move(from.x, from.y); await page.mouse.down();
+  for (let i = 1; i <= 20; i++) { await page.mouse.move(from.x + (target.x - from.x) * i / 20, from.y + (target.y - from.y) * i / 20); await sleep(20); }
+  await page.mouse.up();
+  await sleep(450);
+  const clip = await page.evaluate(() => { const r = document.getElementById('world').getBoundingClientRect(); return { x: r.x + r.width * 0.15, y: r.y + r.height * 0.2, width: r.width * 0.7, height: r.height * 0.8 }; });
+  const cshot = async (name) => { const f = `${label}-${name}.png`; await page.screenshot({ path: path.join(out, f), clip }); return f; };
+  const state = () => page.evaluate(() => { const a = window.__versus; return { tick: a.state.tick, planA: a.plans.A.map((c) => `${c.type}:${c.cardId}->${c.partyId ?? ''}`), tag: document.querySelector('#ownhand .plannedtag')?.innerText ?? null, planLinks: a.view.planLinks?.children.length ?? null, fx: a.view.fx.items.map((i) => i.kind), supplyA1: a.state.parties['A.mount.C1'].supply.reduce((n, x) => n + x.units, 0) / 1e6 }; });
+  j.steps.push({ name: 'about 0.45 s after the drop (planning cue)', ...(await state()), shot: await cshot('ux09-1-drop') });
+  await sleep(1500);
+  j.steps.push({ name: 'at rest, still planning', ...(await state()), shot: await cshot('ux09-2-planned') });
+  await page.keyboard.down('Control'); await page.keyboard.press('Enter'); await page.keyboard.up('Control');
+  await page.waitForFunction(() => window.__versus.view.fx.items.some((i) => i.kind === 'supply'), { timeout: 8000 }).catch(() => {});
+  await sleep(250);
+  j.steps.push({ name: 'resolution: the Supply lands', ...(await state()), shot: await cshot('ux09-3-landing') });
+  j.errors = page.errors;
+  report.journeys.ux09 = j;
   await page.close();
 }
 

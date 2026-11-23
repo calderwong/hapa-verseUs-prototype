@@ -356,6 +356,7 @@ export class VersusApp {
     for (const m of Object.values(this.state.members)) { const a = startPos[m.id], b = [m.x, m.y]; if (a && (a[0] !== b[0] || a[1] !== b[1])) moving.add(m.id); }
     this.view.setWalking(moving);
     for (const t of this.view.supplyTokens?.values() ?? []) t.visible = false; // they return at their new places after playback
+    this.view.syncPlanLinks(this.state, []); // the planned relationship ends where the resolved landing begins
     return new Promise((resolve) => {
       this.playback = { t: 0, duration, all, events, resolve, shown: 0, paused: false };
       this._renderReadyButton();
