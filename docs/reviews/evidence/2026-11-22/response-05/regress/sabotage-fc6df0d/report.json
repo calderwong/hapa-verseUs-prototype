@@ -1,0 +1,248 @@
+{
+ "runId": "sabotage-fc6df0d",
+ "startedAt": "2026-11-23T08:13:38.766Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "fc6df0de7d66452caec8b35bfaa277220715a07e",
+  "dirty": false,
+  "diffSha256": null,
+  "untracked": [],
+  "untrackedSha256": null
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/157.0.8103.80",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": true,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio; the HUD uses px type, so it has no separate text-size setting. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "c1",
+   "title": "Ready freezes the own plan through an opponent revision (UX-01)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1",
+    "seat": "A then B (hotseat)",
+    "profile": "hapa_open_10x9_v3_02"
+   },
+   "assertions": [
+    {
+     "name": "control present: navigator row for your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply from the C1 card (party view)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "A entered one Supply order",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "control present: Ready (strip)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Ready hands the hotseat to B",
+     "pass": true,
+     "actual": "B",
+     "expected": "B"
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "view returns to A to acknowledge",
+     "pass": true,
+     "actual": "A",
+     "expected": "A"
+    },
+    {
+     "name": "A acknowledgment is stale",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "A plan unchanged after B revised and A tried to edit",
+     "pass": true,
+     "actual": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ],
+     "expected": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ]
+    },
+    {
+     "name": "A revision unchanged",
+     "pass": false,
+     "actual": 1,
+     "expected": 2,
+     "note": "SABOTAGE: deliberately wrong expectation (+1)"
+    },
+    {
+     "name": "Orders opened by itself for the stale review",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "no Remove controls on the frozen own plan",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "B's new order is marked NEW",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "banner says the own orders stay frozen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "B changed its plan after your Ready — 1 new, 0 removed (marked below). Your 1 order stay frozen; Acknowledge accepts the new pair without changing them."
+    },
+    {
+     "name": "primary action is Acknowledge",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Acknowledge updated plan ▶"
+    },
+    {
+     "name": "control present: Acknowledge updated plan",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the resolved Tick used exactly the frozen A plan",
+     "pass": true,
+     "actual": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ],
+     "expected": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c1-stale-review.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "title": "Selection follows the visible height (UX-03)",
+   "config": {
+    "query": "autostart=1&fixture=stacked&a=human&b=human",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: layer -2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer −2: clicking the tunnel party selects it",
+     "pass": false,
+     "actual": "B.tunnel",
+     "expected": "A.fly",
+     "note": "SABOTAGE: deliberately wrong expected target"
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: clicking the flyer selects it",
+     "pass": true,
+     "actual": "A.fly",
+     "expected": "A.fly"
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: the hidden tunnel party never wins a click",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "A.fly"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c3-layer-minus2-tunnel.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": []
+  }
+ ],
+ "finishedAt": "2026-11-23T08:13:52.690Z",
+ "summary": {
+  "checks": 2,
+  "assertions": 25,
+  "failed": 2
+ }
+}

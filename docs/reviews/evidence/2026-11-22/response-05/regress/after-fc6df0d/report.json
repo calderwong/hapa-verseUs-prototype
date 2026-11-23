@@ -1,0 +1,2515 @@
+{
+ "runId": "after-fc6df0d",
+ "startedAt": "2026-11-23T08:10:58.937Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "fc6df0de7d66452caec8b35bfaa277220715a07e",
+  "dirty": false,
+  "diffSha256": null,
+  "untracked": [],
+  "untrackedSha256": null
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/157.0.8103.80",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": false,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio; the HUD uses px type, so it has no separate text-size setting. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "c1",
+   "title": "Ready freezes the own plan through an opponent revision (UX-01)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1",
+    "seat": "A then B (hotseat)",
+    "profile": "hapa_open_10x9_v3_02"
+   },
+   "assertions": [
+    {
+     "name": "control present: navigator row for your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply from the C1 card (party view)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "A entered one Supply order",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "control present: Ready (strip)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Ready hands the hotseat to B",
+     "pass": true,
+     "actual": "B",
+     "expected": "B"
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "view returns to A to acknowledge",
+     "pass": true,
+     "actual": "A",
+     "expected": "A"
+    },
+    {
+     "name": "A acknowledgment is stale",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "A plan unchanged after B revised and A tried to edit",
+     "pass": true,
+     "actual": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ],
+     "expected": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ]
+    },
+    {
+     "name": "A revision unchanged",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "Orders opened by itself for the stale review",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "no Remove controls on the frozen own plan",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "B's new order is marked NEW",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "banner says the own orders stay frozen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "B changed its plan after your Ready — 1 new, 0 removed (marked below). Your 1 order stay frozen; Acknowledge accepts the new pair without changing them."
+    },
+    {
+     "name": "primary action is Acknowledge",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Acknowledge updated plan ▶"
+    },
+    {
+     "name": "control present: Acknowledge updated plan",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the resolved Tick used exactly the frozen A plan",
+     "pass": true,
+     "actual": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ],
+     "expected": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c1-stale-review.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "title": "One resolution during a response window; a paid counter through the browser (UX-02, R3-01)",
+   "config": {
+    "query": "autostart=1&fixture=response&a=human&b=human",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Blue Denial (paid response)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the required response is its own visible surface",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "it shows the pending effect, costs and Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "RESPONSE WINDOW · B TO ACT A's Ember Strike is waiting to resolve. Plans are locked; you may answer it with a response Card or Pass. Pending (last resolves first) A's Ember Strike at B's Swordsman (R5"
+    },
+    {
+     "name": "focus starts on a choice",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Blue Denial (2 (C7))",
+      "visible": false,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "exactly one replay entry added (with Ready spam)",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "exactly one plans_locked event for Tick 9",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "spam run and calm run end in the same state",
+     "pass": true,
+     "actual": "sha256:4c2df0026d25a9099074dacccb9617eb99ee34824d832b536bfbfd418caa5760",
+     "expected": "sha256:4c2df0026d25a9099074dacccb9617eb99ee34824d832b536bfbfd418caa5760"
+    },
+    {
+     "name": "paid counter: countered, no damage, nothing rejected",
+     "pass": true,
+     "actual": [
+      1,
+      0,
+      0
+     ],
+     "expected": [
+      1,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "paid counter: B burned exactly its 2-Blue Card to pay",
+     "pass": true,
+     "actual": [
+      "B.blue"
+     ],
+     "expected": [
+      "B.blue"
+     ]
+    },
+    {
+     "name": "paid counter: B's pool is empty afterwards (2 Blue spent)",
+     "pass": true,
+     "actual": {},
+     "expected": {}
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c2-after-spam.jpg",
+    "c2-after-counter.jpg"
+   ],
+   "setup": [
+    "A's Ember Strike order is added with the app's own _addCommand (ability targeting is not under test here)",
+    "A's Ember Strike order is added with the app's own _addCommand (ability targeting is not under test here)",
+    "A's Ember Strike order is added with the app's own _addCommand (ability targeting is not under test here)"
+   ],
+   "observed": {
+    "spam": {
+     "replayTicks": 1,
+     "locked": 1,
+     "damage": 1,
+     "countered": 0,
+     "rejected": 0,
+     "paymentBurns": [],
+     "poolB": {},
+     "fingerprint": "sha256:4c2df0026d25a9099074dacccb9617eb99ee34824d832b536bfbfd418caa5760",
+     "events": 19,
+     "before": 0,
+     "focusAtOpen": {
+      "name": "Blue Denial (2 (C7))",
+      "visible": false,
+      "tag": "BUTTON"
+     },
+     "panel": {
+      "shown": true,
+      "text": "RESPONSE WINDOW · B TO ACT A's Ember Strike is waiting to resolve. Plans are locked; you may answer it with a response Card or Pass. Pending (last resolves first) A's Ember Strike at B's Swordsman (R5C1 slot 2) · paid 2 Red Consume this card and pay 2 Red. A friendly party in an active column deals one 2-point Magic hit from the Front to one enemy member in any of the eight adjacent territories at the same height. Counterable. Your responses Blue Denial (2 (C7)) Response: consume this card and pay 2 Blue. Counter one pending counterable Spell. Any friendly party may act as the source, even outside active columns; no range limit. Cost: 2 Blue — burns 2 (C6) (2 Blue) now; 2 (C7) is consumed Pass Pass lets Ember Strike resolve once both players have passed in turn. No Mana or Card is spent."
+     }
+    },
+    "calm": {
+     "replayTicks": 1,
+     "locked": 1,
+     "damage": 1,
+     "countered": 0,
+     "rejected": 0,
+     "paymentBurns": [],
+     "poolB": {},
+     "fingerprint": "sha256:4c2df0026d25a9099074dacccb9617eb99ee34824d832b536bfbfd418caa5760",
+     "events": 19,
+     "before": 0,
+     "focusAtOpen": {
+      "name": "Blue Denial (2 (C7))",
+      "visible": false,
+      "tag": "BUTTON"
+     },
+     "panel": {
+      "shown": true,
+      "text": "RESPONSE WINDOW · B TO ACT A's Ember Strike is waiting to resolve. Plans are locked; you may answer it with a response Card or Pass. Pending (last resolves first) A's Ember Strike at B's Swordsman (R5C1 slot 2) · paid 2 Red Consume this card and pay 2 Red. A friendly party in an active column deals one 2-point Magic hit from the Front to one enemy member in any of the eight adjacent territories at the same height. Counterable. Your responses Blue Denial (2 (C7)) Response: consume this card and pay 2 Blue. Counter one pending counterable Spell. Any friendly party may act as the source, even outside active columns; no range limit. Cost: 2 Blue — burns 2 (C6) (2 Blue) now; 2 (C7) is consumed Pass Pass lets Ember Strike resolve once both players have passed in turn. No Mana or Card is spent."
+     }
+    },
+    "counter": {
+     "replayTicks": 1,
+     "locked": 1,
+     "damage": 0,
+     "countered": 1,
+     "rejected": 0,
+     "paymentBurns": [
+      "B.blue"
+     ],
+     "poolB": {},
+     "fingerprint": "sha256:51d8e221736b68026d2b226acc967834b05d471ef0515ee1036d75787ea97d05",
+     "events": 25,
+     "before": 0,
+     "focusAtOpen": {
+      "name": "Blue Denial (2 (C7))",
+      "visible": false,
+      "tag": "BUTTON"
+     },
+     "panel": {
+      "shown": true,
+      "text": "RESPONSE WINDOW · B TO ACT A's Ember Strike is waiting to resolve. Plans are locked; you may answer it with a response Card or Pass. Pending (last resolves first) A's Ember Strike at B's Swordsman (R5C1 slot 2) · paid 2 Red Consume this card and pay 2 Red. A friendly party in an active column deals one 2-point Magic hit from the Front to one enemy member in any of the eight adjacent territories at the same height. Counterable. Your responses Blue Denial (2 (C7)) Response: consume this card and pay 2 Blue. Counter one pending counterable Spell. Any friendly party may act as the source, even outside active columns; no range limit. Cost: 2 Blue — burns 2 (C6) (2 Blue) now; 2 (C7) is consumed Pass Pass lets Ember Strike resolve once both players have passed in turn. No Mana or Card is spent."
+     }
+    }
+   },
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "title": "Selection follows the visible height (UX-03)",
+   "config": {
+    "query": "autostart=1&fixture=stacked&a=human&b=human",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: layer -2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer −2: clicking the tunnel party selects it",
+     "pass": true,
+     "actual": "B.tunnel",
+     "expected": "B.tunnel"
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: clicking the flyer selects it",
+     "pass": true,
+     "actual": "A.fly",
+     "expected": "A.fly"
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: the hidden tunnel party never wins a click",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "A.fly"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c3-layer-minus2-tunnel.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": []
+  },
+  {
+   "id": "c4",
+   "title": "Off-layer bodies stay filtered during and after playback (R2-01)",
+   "config": {
+    "query": "autostart=1&fixture=stacked&a=human&b=human",
+    "layers": [
+     "−2",
+     "+3",
+     "All"
+    ]
+   },
+   "assertions": [
+    {
+     "name": "control present: layer -2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer −2: playback was sampled (43 frames)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 43
+    },
+    {
+     "name": "layer −2: every playback sample shows only the expected bodies",
+     "pass": true,
+     "actual": [
+      "[\"B.tunnel.s2\",\"B.tunnel.s5\"]"
+     ],
+     "expected": [
+      "[\"B.tunnel.s2\",\"B.tunnel.s5\"]"
+     ]
+    },
+    {
+     "name": "layer −2: after playback",
+     "pass": true,
+     "actual": [
+      "B.tunnel.s2",
+      "B.tunnel.s5"
+     ],
+     "expected": [
+      "B.tunnel.s2",
+      "B.tunnel.s5"
+     ]
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: playback was sampled (43 frames)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 43
+    },
+    {
+     "name": "layer +3: every playback sample shows only the expected bodies",
+     "pass": true,
+     "actual": [
+      "[\"A.fly.s2\",\"A.fly.s5\"]"
+     ],
+     "expected": [
+      "[\"A.fly.s2\",\"A.fly.s5\"]"
+     ]
+    },
+    {
+     "name": "layer +3: after playback",
+     "pass": true,
+     "actual": [
+      "A.fly.s2",
+      "A.fly.s5"
+     ],
+     "expected": [
+      "A.fly.s2",
+      "A.fly.s5"
+     ]
+    },
+    {
+     "name": "control present: layer All",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer All: playback was sampled (42 frames)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 42
+    },
+    {
+     "name": "layer All: every playback sample shows only the expected bodies",
+     "pass": true,
+     "actual": [
+      "[\"A.C5.m4\",\"A.C5.m5\",\"A.C5.m6\",\"A.C5.m8\",\"A.fly.s2\",\"A.fly.s5\",\"A.hill.s5\",\"A.hill.s7\",\"A.hill.s8\",\"A.hill.s9\",\"B.C5.m4\",\"B.C5.m5\",\"B.C5.m6\",\"B.C5.m8\",\"B.deep.s2\",\"B.deep.s5\",\"B.deep.s8\",\"B.tunnel.s2\",\"B.tunnel.s5\",\"B.walk.s1\",\"B.walk.s3\",\"B.walk.s5\"]"
+     ],
+     "expected": [
+      "[\"A.C5.m4\",\"A.C5.m5\",\"A.C5.m6\",\"A.C5.m8\",\"A.fly.s2\",\"A.fly.s5\",\"A.hill.s5\",\"A.hill.s7\",\"A.hill.s8\",\"A.hill.s9\",\"B.C5.m4\",\"B.C5.m5\",\"B.C5.m6\",\"B.C5.m8\",\"B.deep.s2\",\"B.deep.s5\",\"B.deep.s8\",\"B.tunnel.s2\",\"B.tunnel.s5\",\"B.walk.s1\",\"B.walk.s3\",\"B.walk.s5\"]"
+     ]
+    },
+    {
+     "name": "layer All: after playback",
+     "pass": true,
+     "actual": [
+      "A.C5.m4",
+      "A.C5.m5",
+      "A.C5.m6",
+      "A.C5.m8",
+      "A.fly.s2",
+      "A.fly.s5",
+      "A.hill.s5",
+      "A.hill.s7",
+      "A.hill.s8",
+      "A.hill.s9",
+      "B.C5.m4",
+      "B.C5.m5",
+      "B.C5.m6",
+      "B.C5.m8",
+      "B.deep.s2",
+      "B.deep.s5",
+      "B.deep.s8",
+      "B.tunnel.s2",
+      "B.tunnel.s5",
+      "B.walk.s1",
+      "B.walk.s3",
+      "B.walk.s5"
+     ],
+     "expected": [
+      "A.C5.m4",
+      "A.C5.m5",
+      "A.C5.m6",
+      "A.C5.m8",
+      "A.fly.s2",
+      "A.fly.s5",
+      "A.hill.s5",
+      "A.hill.s7",
+      "A.hill.s8",
+      "A.hill.s9",
+      "B.C5.m4",
+      "B.C5.m5",
+      "B.C5.m6",
+      "B.C5.m8",
+      "B.deep.s2",
+      "B.deep.s5",
+      "B.deep.s8",
+      "B.tunnel.s2",
+      "B.tunnel.s5",
+      "B.walk.s1",
+      "B.walk.s3",
+      "B.walk.s5"
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c5",
+   "title": "Quiet default: no ribbons/inspector/Mana panel; both banks, basins and the strip reachable (HF-01/02, R4-01)",
+   "config": {
+    "sizes": [
+     "1600x1000",
+     "1280x720"
+    ],
+    "seats": [
+     "A",
+     "B"
+    ]
+   },
+   "assertions": [
+    {
+     "name": "1600x1000 · seat A: no permanent ribbons, inspector, Mana panel or side column",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    },
+    {
+     "name": "1600x1000 · seat A: the navigator is closed by default",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "1600x1000 · seat A: every banked Card's tile is on screen in the home view",
+     "pass": true,
+     "actual": 4,
+     "expected": 4
+    },
+    {
+     "name": "1600x1000 · seat A: tiles of both owners on screen",
+     "pass": true,
+     "actual": [
+      "A",
+      "B"
+     ],
+     "expected": [
+      "A",
+      "B"
+     ]
+    },
+    {
+     "name": "1600x1000 · seat A: both Mana basins on screen",
+     "pass": true,
+     "actual": [
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true
+     ]
+    },
+    {
+     "name": "1600x1000 · seat A: Ready, Orders and the menu in the strip",
+     "pass": true,
+     "actual": [
+      true,
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true,
+      true
+     ]
+    },
+    {
+     "name": "1600x1000 · seat B: no permanent ribbons, inspector, Mana panel or side column",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    },
+    {
+     "name": "1600x1000 · seat B: the navigator is closed by default",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "1600x1000 · seat B: every banked Card's tile is on screen in the home view",
+     "pass": true,
+     "actual": 4,
+     "expected": 4
+    },
+    {
+     "name": "1600x1000 · seat B: tiles of both owners on screen",
+     "pass": true,
+     "actual": [
+      "A",
+      "B"
+     ],
+     "expected": [
+      "A",
+      "B"
+     ]
+    },
+    {
+     "name": "1600x1000 · seat B: both Mana basins on screen",
+     "pass": true,
+     "actual": [
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true
+     ]
+    },
+    {
+     "name": "1600x1000 · seat B: Ready, Orders and the menu in the strip",
+     "pass": true,
+     "actual": [
+      true,
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true,
+      true
+     ]
+    },
+    {
+     "name": "1280x720 · seat A: no permanent ribbons, inspector, Mana panel or side column",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    },
+    {
+     "name": "1280x720 · seat A: the navigator is closed by default",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "1280x720 · seat A: every banked Card's tile is on screen in the home view",
+     "pass": true,
+     "actual": 4,
+     "expected": 4
+    },
+    {
+     "name": "1280x720 · seat A: tiles of both owners on screen",
+     "pass": true,
+     "actual": [
+      "A",
+      "B"
+     ],
+     "expected": [
+      "A",
+      "B"
+     ]
+    },
+    {
+     "name": "1280x720 · seat A: both Mana basins on screen",
+     "pass": true,
+     "actual": [
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true
+     ]
+    },
+    {
+     "name": "1280x720 · seat A: Ready, Orders and the menu in the strip",
+     "pass": true,
+     "actual": [
+      true,
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true,
+      true
+     ]
+    },
+    {
+     "name": "1280x720 · seat B: no permanent ribbons, inspector, Mana panel or side column",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    },
+    {
+     "name": "1280x720 · seat B: the navigator is closed by default",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "1280x720 · seat B: every banked Card's tile is on screen in the home view",
+     "pass": true,
+     "actual": 4,
+     "expected": 4
+    },
+    {
+     "name": "1280x720 · seat B: tiles of both owners on screen",
+     "pass": true,
+     "actual": [
+      "A",
+      "B"
+     ],
+     "expected": [
+      "A",
+      "B"
+     ]
+    },
+    {
+     "name": "1280x720 · seat B: both Mana basins on screen",
+     "pass": true,
+     "actual": [
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true
+     ]
+    },
+    {
+     "name": "1280x720 · seat B: Ready, Orders and the menu in the strip",
+     "pass": true,
+     "actual": [
+      true,
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true,
+      true
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c5-quiet-1600x1000.jpg",
+    "c5-quiet-1280x720.jpg"
+   ],
+   "setup": [],
+   "observed": [
+    {
+     "size": "1600x1000",
+     "seat": "A",
+     "gone": [],
+     "rosterShown": false,
+     "canvas": {
+      "w": 1590,
+      "h": 908,
+      "x": 5,
+      "y": 53
+     },
+     "banked": 4,
+     "tilesOnScreen": 4,
+     "tilesBoth": [
+      "A",
+      "B"
+     ],
+     "basins": [
+      true,
+      true
+     ],
+     "strip": [
+      true,
+      true,
+      true
+     ]
+    },
+    {
+     "size": "1600x1000",
+     "seat": "B",
+     "gone": [],
+     "rosterShown": false,
+     "canvas": {
+      "w": 1590,
+      "h": 908,
+      "x": 5,
+      "y": 53
+     },
+     "banked": 4,
+     "tilesOnScreen": 4,
+     "tilesBoth": [
+      "A",
+      "B"
+     ],
+     "basins": [
+      true,
+      true
+     ],
+     "strip": [
+      true,
+      true,
+      true
+     ]
+    },
+    {
+     "size": "1280x720",
+     "seat": "A",
+     "gone": [],
+     "rosterShown": false,
+     "canvas": {
+      "w": 1272,
+      "h": 638,
+      "x": 4,
+      "y": 47
+     },
+     "banked": 4,
+     "tilesOnScreen": 4,
+     "tilesBoth": [
+      "A",
+      "B"
+     ],
+     "basins": [
+      true,
+      true
+     ],
+     "strip": [
+      true,
+      true,
+      true
+     ]
+    },
+    {
+     "size": "1280x720",
+     "seat": "B",
+     "gone": [],
+     "rosterShown": false,
+     "canvas": {
+      "w": 1272,
+      "h": 638,
+      "x": 4,
+      "y": 47
+     },
+     "banked": 4,
+     "tilesOnScreen": 4,
+     "tilesBoth": [
+      "A",
+      "B"
+     ],
+     "basins": [
+      true,
+      true
+     ],
+     "strip": [
+      true,
+      true,
+      true
+     ]
+    }
+   ],
+   "allowedErrors": []
+  },
+  {
+   "id": "c6",
+   "title": "Hover inspects without selecting; pin, compare, Escape; both owners; every Card type present (HF-01/02, §3)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "hovering the opponent's Card opens its view without a click",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "2 OF WANDS B's Minor Arcana 📌 2♣ of Wands B's C1 · Minor Arcana Available in its bank slot Supply 2 Mana 0 (none) Wheel"
+    },
+    {
+     "name": "the view names that instance (Details) and its exact Supply / Mana",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "2 of Wands"
+    },
+    {
+     "name": "hover did not select anything",
+     "pass": true,
+     "actual": null,
+     "expected": null
+    },
+    {
+     "name": "hover did not change plans",
+     "pass": true,
+     "actual": {
+      "A": [],
+      "B": []
+     },
+     "expected": {
+      "A": [],
+      "B": []
+     }
+    },
+    {
+     "name": "hover did not move the camera",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "hover did not take keyboard focus",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "leaving closes the transient view after the grace period",
+     "pass": true,
+     "actual": null,
+     "expected": null
+    },
+    {
+     "name": "own Card view offers the three uses",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "2 OF WANDS Your Minor Arcana 📌 2♣ of Wands Your C1 · Minor Arcana Available in its bank slot Supply 2 Mana 0 (none) Wheel Formation · Skill Consume this card. A friendly party in an active column cha"
+    },
+    {
+     "name": "a click pins the Card (selection)",
+     "pass": true,
+     "actual": "A.C1.T1.0",
+     "expected": "A.C1.T1.0"
+    },
+    {
+     "name": "hovering a party while a Card is pinned opens a comparison beside it",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "pinned": "2 of Wands",
+      "compare": "Bishop"
+     }
+    },
+    {
+     "name": "the party view shows the actual 3×3 composition",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "BISHOP Yours 📌 BISHOP yours waiting · faces North 4 members · capacity 9 · Supply 0 Details Stands surface ground (band +1, exposed) Supply 0 Speed 1/1 step pe"
+    },
+    {
+     "name": "Escape closes the comparison first",
+     "pass": true,
+     "actual": [
+      true,
+      false
+     ],
+     "expected": [
+      true,
+      false
+     ]
+    },
+    {
+     "name": "Escape again unpins (selection cleared, no order)",
+     "pass": true,
+     "actual": [
+      null,
+      {
+       "A": [],
+       "B": []
+      }
+     ],
+     "expected": [
+      null,
+      {
+       "A": [],
+       "B": []
+      }
+     ]
+    },
+    {
+     "name": "the opponent's Mana basin is inspectable",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "B's Fire Pit and Mana basin"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c6-pin-and-compare.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "hoverLatencyMs": 236
+   },
+   "allowedErrors": []
+  },
+  {
+   "id": "c7",
+   "title": "Opening by keyboard alone through the navigator and pinned views (HF-02, §3 keyboard)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "reach by Tab: Parties & Cards",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "☰ Parties & Cards",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 3
+     }
+    },
+    {
+     "name": "focus is visible on Parties & Cards",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "☰ Parties & Cards",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 3
+     }
+    },
+    {
+     "name": "reach by Tab: navigator: your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Your Castle at R1C1, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "focus is visible on navigator: your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Your Castle at R1C1, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "1 · the C1 Castle is pinned",
+     "pass": true,
+     "actual": "A.mount.C1",
+     "expected": "A.mount.C1"
+    },
+    {
+     "name": "1 · focus moved into its view",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "CASTLE",
+      "visible": true,
+      "tag": "H3"
+     }
+    },
+    {
+     "name": "reach by Tab: Load Supply from 2♣ (C1)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Load 2 Supply from 2♣ (C1) into Castle R1C1 (gives up its ability)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 12
+     }
+    },
+    {
+     "name": "focus is visible on Load Supply from 2♣ (C1)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Load 2 Supply from 2♣ (C1) into Castle R1C1 (gives up its ability)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 12
+     }
+    },
+    {
+     "name": "2 · focus moves on to Move to…",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Move to… (4 funded with 2 Supply · 13 need more)",
+      "visible": true,
+      "tag": "SUMMARY"
+     }
+    },
+    {
+     "name": "reach by Tab: Move Castle to R2C1 (funded, joins your Pawn)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "focus is visible on Move Castle to R2C1 (funded, joins your Pawn)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "3 · the plan holds Supply then the move",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "3 · focus lands on Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Ready ▶",
+      "visible": true,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "reach by Tab: result: Supply landed (in Orders)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "A loaded 2 Supply from A's 2♣ (C1) into A's Castle at R2C1 (now 2)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "focus is visible on result: Supply landed (in Orders)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "A loaded 2 Supply from A's 2♣ (C1) into A's Castle at R2C1 (now 2)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "4 · the supply_loaded event is pinned",
+     "pass": true,
+     "actual": "supply_loaded",
+     "expected": "supply_loaded"
+    },
+    {
+     "name": "reach by Tab: Inspect the Card",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Inspect the Card: 2♣ (C1) (Supply 2, no Mana)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "focus is visible on Inspect the Card",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Inspect the Card: 2♣ (C1) (Supply 2, no Mana)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "4 · its Card is pinned",
+     "pass": true,
+     "actual": "A.C1.T1.0",
+     "expected": "A.C1.T1.0"
+    },
+    {
+     "name": "result agrees with the rules: R2C1, Supply 1, nine members",
+     "pass": true,
+     "actual": {
+      "region": {
+       "column": 1,
+       "row": 2
+      },
+      "supply": 1,
+      "members": 9
+     },
+     "expected": {
+      "region": {
+       "column": 1,
+       "row": 2
+      },
+      "supply": 1,
+      "members": 9
+     }
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c7-keyboard-result.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "tabs": [
+     {
+      "name": "Parties & Cards",
+      "tabs": 3
+     },
+     {
+      "name": "navigator: your C1 Castle",
+      "tabs": 2
+     },
+     {
+      "name": "Load Supply from 2♣ (C1)",
+      "tabs": 12
+     },
+     {
+      "name": "Move Castle to R2C1 (funded, joins your Pawn)",
+      "tabs": 2
+     },
+     {
+      "name": "result: Supply landed (in Orders)",
+      "tabs": 2
+     },
+     {
+      "name": "Inspect the Card",
+      "tabs": 2
+     }
+    ]
+   },
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c8",
+   "title": "Funded destinations: range, refusal with shortfall, invalidated funding blocks Ready (HF-04)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1",
+    "profile": "hapa_open_10x9_v3_02"
+   },
+   "assertions": [
+    {
+     "name": "control present: navigator: C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "with 0 Supply nothing is funded yet",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move to… (0 funded with 0 Supply · 17 need more)"
+    },
+    {
+     "name": "control present: Load Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "2 Supply funds exactly the targets within two steps of R1C1",
+     "pass": true,
+     "actual": [
+      "R1C2",
+      "R1C3",
+      "R2C1",
+      "R3C1"
+     ],
+     "expected": [
+      "R1C2",
+      "R1C3",
+      "R2C1",
+      "R3C1"
+     ]
+    },
+    {
+     "name": "control present: close the navigator",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "an unfunded legal target is visible to right-click",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 800.0218867688657,
+      "y": 762.9545367981281,
+      "target": "R1C5",
+      "need": 4
+     }
+    },
+    {
+     "name": "an unfunded target (R1C5) is refused with its shortfall",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Not added: not enough Supply for the whole route: it needs 4, the party has 2 (counting earlier planned loads)"
+    },
+    {
+     "name": "…and no destination was added",
+     "pass": true,
+     "actual": [
+      "load_supply"
+     ],
+     "expected": [
+      "load_supply"
+     ]
+    },
+    {
+     "name": "control present: open Move to…",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Move to R3C1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the funded move is planned after its load",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "control present: Remove the funding load",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the dependent destination is kept, not shortened or dropped",
+     "pass": true,
+     "actual": [
+      "set_destination"
+     ],
+     "expected": [
+      "set_destination"
+     ]
+    },
+    {
+     "name": "it is explicitly invalid for lack of funding",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "not enough Supply for the whole route: it needs 2, the party has 0 (counting earlier planned loads)"
+     ]
+    },
+    {
+     "name": "Ready says to fix the order",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Fix 1 order"
+    },
+    {
+     "name": "control present: blocked Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "pressing it opens Orders to repair; nothing is frozen",
+     "pass": true,
+     "actual": [
+      true,
+      false
+     ],
+     "expected": [
+      true,
+      false
+     ]
+    },
+    {
+     "name": "control present: Restore the load",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "restoring the load re-funds the destination",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c8-unfunded-draft.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "moveLabels": [
+     "Move Castle R1C1 to R1C2: needs 1 Supply · your Knight R1C2 is there",
+     "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn",
+     "Move Castle R1C1 to R1C3: needs 2 Supply · your Bishop R1C3 is there",
+     "Move Castle R1C1 to R3C1: needs 2 Supply",
+     "Fill 2,3 · +1",
+     "Fill 2,2 · +2"
+    ],
+    "beforeMove": {
+     "sel": {
+      "kind": "party",
+      "id": "A.mount.C1"
+     },
+     "peek": "Castle",
+     "open": false,
+     "n": 6
+    }
+   },
+   "allowedErrors": []
+  },
+  {
+   "id": "c9",
+   "title": "Fire Pit: planned offering, projection, accepted burn with separate colors, zero Mana (HF-05)",
+   "config": {
+    "query": "autostart=1&fixture=cards&a=human&b=human",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: Burn for its Mana (Card view)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "planning changes nothing real",
+     "pass": true,
+     "actual": {},
+     "expected": {}
+    },
+    {
+     "name": "the projection shows exactly the Card's Mana",
+     "pass": true,
+     "actual": {
+      "red": 1,
+      "green": 1,
+      "blue": 1,
+      "black": 1,
+      "rainbow": 1
+     },
+     "expected": {
+      "red": 1,
+      "green": 1,
+      "blue": 1,
+      "black": 1,
+      "rainbow": 1
+     }
+    },
+    {
+     "name": "one ghost offering rests over A's pit",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "the counter labels the projection separately",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "A's Mana basin: empty; projected after its plan 1 Red + 1 Green + 1 Blue + 1 Black + 1 Rainbow"
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the accepted burn played its effect (1 dissolve + 5 color streams)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 7
+    },
+    {
+     "name": "the accepted burn put exactly the Card's colors in the pool",
+     "pass": true,
+     "actual": {
+      "red": 1,
+      "green": 1,
+      "blue": 1,
+      "black": 1,
+      "rainbow": 1
+     },
+     "expected": {
+      "red": 1,
+      "green": 1,
+      "blue": 1,
+      "black": 1,
+      "rainbow": 1
+     }
+    },
+    {
+     "name": "unspent, they expired at the Tick boundary (no carryover in this profile)",
+     "pass": true,
+     "actual": {
+      "red": 1,
+      "green": 1,
+      "blue": 1,
+      "black": 1,
+      "rainbow": 1
+     },
+     "expected": {
+      "red": 1,
+      "green": 1,
+      "blue": 1,
+      "black": 1,
+      "rainbow": 1
+     }
+    },
+    {
+     "name": "the offering left the pit",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "a zero-Mana Card says what burning it does",
+     "pass": true,
+     "actual": "Burn for 0 Mana — consumes this Card",
+     "expected": "Burn for 0 Mana — consumes this Card"
+    },
+    {
+     "name": "New match during an effect leaves no effect behind",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c9-planned-offering.jpg"
+   ],
+   "setup": [
+    "the A.five Card is pinned via selection, then its Burn button is clicked"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c10",
+   "title": "Endpoint intent: one marker per destination, drafts replace accepted, never occupants (HF-03)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "one endpoint per planned destination",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ]
+    },
+    {
+     "name": "endpoints are not rules occupants",
+     "pass": true,
+     "actual": [
+      0,
+      0
+     ],
+     "expected": [
+      0,
+      0
+     ]
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "accepted, still-travelling destinations keep their markers",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c10-intents.jpg"
+   ],
+   "setup": [
+    "two A loads and destinations are added with _addCommand (pointer routes are covered in c7/c8)"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c11",
+   "title": "New match detaches unfinished work; blocking sheets contain focus (R3-02, R3-03)",
+   "config": {
+    "query": "autostart=1&fixture=response&a=human&b=human",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Tab / Shift+Tab never leave the open sheet",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "everything behind the sheet is inert",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the Ready shortcut does nothing behind the sheet",
+     "pass": true,
+     "actual": {
+      "A": 1,
+      "B": 0
+     },
+     "expected": {
+      "A": 1,
+      "B": 0
+     }
+    },
+    {
+     "name": "control present: New match",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Start (setup sheet)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the new match has no old response attached and is editable",
+     "pass": true,
+     "actual": [
+      false,
+      true
+     ],
+     "expected": [
+      false,
+      true
+     ]
+    },
+    {
+     "name": "the new match starts with only its own (empty) history",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "after a normal Tick the new match replay verifies with only its own Ticks",
+     "pass": true,
+     "actual": {
+      "ok": true,
+      "ticks": [
+       1
+      ]
+     },
+     "expected": {
+      "ok": true,
+      "ticks": [
+       1
+      ]
+     }
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c12",
+   "title": "Full orbit and a height layer keep standards, endpoints and hover targets; reduced motion (HF-03)",
+   "config": {
+    "query": "autostart=1&fixture=stacked&a=human&b=human",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "every visible party keeps its chess standard through a full orbit",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7
+     ]
+    },
+    {
+     "name": "the hill party stays hoverable at every bearing",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "Castle",
+      "Castle",
+      "Castle",
+      "Castle",
+      "Castle",
+      "Castle",
+      "Castle",
+      "Castle"
+     ]
+    },
+    {
+     "name": "control present: layer −2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "at layer −2 only that band's standards (and flyers) show",
+     "pass": true,
+     "actual": [
+      "A.fly",
+      "B.tunnel"
+     ],
+     "expected": [
+      "A.fly",
+      "B.tunnel"
+     ]
+    },
+    {
+     "name": "reduced motion: a burn plays no travelling streams",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c12-orbit-end.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": []
+  },
+  {
+   "id": "c13",
+   "title": "Frame time and hover response measured on this machine (no approved target)",
+   "config": {
+    "viewport": "1600x1000@1 and 1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "measured",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      {
+       "viewport": "1600x1000",
+       "frameMs": {
+        "median": 16.7,
+        "p95": 16.7
+       },
+       "hoverOpenMs": [
+        187,
+        170,
+        169
+       ],
+       "note": "headless Chrome; hover includes the deliberate 150 ms entry delay"
+      },
+      {
+       "viewport": "1280x720",
+       "frameMs": {
+        "median": 16.7,
+        "p95": 16.8
+       },
+       "hoverOpenMs": [
+        187,
+        169,
+        170
+       ],
+       "note": "headless Chrome; hover includes the deliberate 150 ms entry delay"
+      }
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [],
+   "setup": [],
+   "observed": [
+    {
+     "viewport": "1600x1000",
+     "frameMs": {
+      "median": 16.7,
+      "p95": 16.7
+     },
+     "hoverOpenMs": [
+      187,
+      170,
+      169
+     ],
+     "note": "headless Chrome; hover includes the deliberate 150 ms entry delay"
+    },
+    {
+     "viewport": "1280x720",
+     "frameMs": {
+      "median": 16.7,
+      "p95": 16.8
+     },
+     "hoverOpenMs": [
+      187,
+      169,
+      170
+     ],
+     "note": "headless Chrome; hover includes the deliberate 150 ms entry delay"
+    }
+   ],
+   "allowedErrors": []
+  },
+  {
+   "id": "c14",
+   "title": "Concession: confirmation, cancel, truthful feedback by phase (R2-07)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1; fixture=response",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: Match menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "menu opens with focus inside it",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Resume",
+      "visible": false,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "control present: Concede as A…",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "confirmation opens on Cancel",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Cancel — keep playing",
+      "visible": false,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "Cancel changes nothing",
+     "pass": true,
+     "actual": {
+      "tick": 1,
+      "viewSeat": "A",
+      "rev": {
+       "A": 0,
+       "B": 0
+      },
+      "plans": {
+       "A": [],
+       "B": []
+      },
+      "stale": {
+       "A": false,
+       "B": false
+      },
+      "replayTicks": 0
+     },
+     "expected": {
+      "tick": 1,
+      "viewSeat": "A",
+      "rev": {
+       "A": 0,
+       "B": 0
+      },
+      "plans": {
+       "A": [],
+       "B": []
+      },
+      "stale": {
+       "A": false,
+       "B": false
+      },
+      "replayTicks": 0
+     }
+    },
+    {
+     "name": "focus returns to the Match menu button",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Match menu",
+      "visible": true,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Escape closes the menu and changes nothing",
+     "pass": true,
+     "actual": {
+      "tick": 1,
+      "viewSeat": "A",
+      "rev": {
+       "A": 0,
+       "B": 0
+      },
+      "plans": {
+       "A": [],
+       "B": []
+      },
+      "stale": {
+       "A": false,
+       "B": false
+      },
+      "replayTicks": 0
+     },
+     "expected": {
+      "tick": 1,
+      "viewSeat": "A",
+      "rev": {
+       "A": 0,
+       "B": 0
+      },
+      "plans": {
+       "A": [],
+       "B": []
+      },
+      "stale": {
+       "A": false,
+       "B": false
+      },
+      "replayTicks": 0
+     }
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Concede as A…",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Concede as A (confirm)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "confirmed concession is one order in A's plan",
+     "pass": true,
+     "actual": [
+      "concede"
+     ],
+     "expected": [
+      "concede"
+     ]
+    },
+    {
+     "name": "success is reported only after acceptance",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Concession added to A's plan: the match ends when Tick 1 resolves. Press Ready to commit it."
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "after Ready: the menu explains the concession is already in the frozen plan",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Your concession is in your frozen plan for Tick 1: the match ends when this Tick resolves."
+    },
+    {
+     "name": "after Ready: no Concede button",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the match ends by A's concession when the Tick resolves",
+     "pass": true,
+     "actual": {
+      "winner": "B",
+      "reasons": [
+       "A:conceded"
+      ]
+     },
+     "expected": {
+      "winner": "B",
+      "reasons": [
+       "A:conceded"
+      ]
+     }
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "frozen (no concession planned): explains it is unavailable and the plan is not reopened",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Concession is not available now: your plan is frozen after Ready. In this prototype a concession is an order in your editable plan, so you can concede in the next planning phase, before pressing Ready. Your plan has not been reopened."
+    },
+    {
+     "name": "frozen: no Concede button",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "response window: explains concession is unavailable",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Concession is not available now: a response window is open. In this prototype a concession is an order in your editable plan, so you can concede in the next planning phase, before pressing Ready. Your plan has not been reopened."
+    },
+    {
+     "name": "response window: no Concede button",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "no success toast for a refused concession",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c14-confirm.jpg",
+    "c14-result.jpg",
+    "c14-response-menu.jpg"
+   ],
+   "setup": [
+    "the hotseat view is switched back to A with viewSeat to inspect A's menu after Ready",
+    "response fixture: A's Ember Strike added with _addCommand"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-11-23T08:13:37.854Z",
+ "summary": {
+  "checks": 14,
+  "assertions": 219,
+  "failed": 0
+ }
+}
