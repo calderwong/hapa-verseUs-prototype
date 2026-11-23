@@ -114,7 +114,9 @@ export class VersusApp {
       reserved: () => {
         const w = this.el.world.getBoundingClientRect(), edge = (el) => (el && !el.hidden && getComputedStyle(el).display !== 'none' ? el.getBoundingClientRect() : null);
         const nav = edge(this.el.roster), right = edge(this.el.decision) ?? edge(this.el.orders);
-        return { left: nav ? nav.right - w.left + 6 : 0, right: right ? w.right - right.left + 6 : 0 };
+        // the height-layer rail and the camera pad stay usable: views never cover them
+        const rail = edge(this.el.layers), pad = edge(this.el.camPad);
+        return { left: Math.max(nav ? nav.right - w.left + 6 : 0, pad ? pad.right - w.left + 6 : 0), right: Math.max(right ? w.right - right.left + 6 : 0, rail ? w.right - rail.left + 6 : 0) };
       },
       generation: () => this.generation ?? 0,
       build: (sub) => (this.session ? this._contentFor(sub) : null),
