@@ -106,6 +106,7 @@ export function openLab(app) {
                 h('button', { onclick: () => app.startMatch({ profile: base, seats: { A: 'bot', B: 'bot' }, seed: r.seed, watch: true }) }, 'Watch'))))));
       })() : null);
 
+    app._overlayDismiss = false;
     app.el.overlay.replaceChildren(h('div', { class: 'card-sheet editor lab' },
       h('div', { class: 'row' }, h('h2', {}, 'Rules & experiments'), h('button', { onclick: () => app.showSetup() }, '← Back to setup'),
         h('button', { onclick: () => app.startMatch({ profile: base, seats: { A: 'human', B: 'bot' } }) }, `Play ${base.id} vs bot`)),

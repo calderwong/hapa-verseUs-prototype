@@ -122,6 +122,7 @@ export function openEditor(app) {
       store.received.length ? h('details', {}, h('summary', {}, `Received (${store.received.length})`), h('ul', {}, ...store.received.map((x) => h('li', {}, `${x.id}@${x.revision} · creator ${x.creator}`)))) : null);
 
     const tabs = ['cards', 'decks', 'exchange'];
+    app._overlayDismiss = false;
     app.el.overlay.replaceChildren(h('div', { class: 'card-sheet editor' },
       h('div', { class: 'row' }, h('h2', {}, 'Cards & decks'), h('button', { onclick: () => app.showSetup() }, '← Back to setup')),
       h('div', { class: 'tabs', role: 'tablist' }, ...tabs.map((t) => h('button', { role: 'tab', 'aria-selected': String(ui.tab === t), class: ui.tab === t ? 'on' : '', onclick: () => { ui.tab = t; render(); } }, { cards: 'Card editor', decks: 'Deck bindings', exchange: 'Exchange' }[t]))),

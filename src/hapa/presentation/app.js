@@ -144,6 +144,7 @@ export class VersusApp {
     const seatSel = (seat, dflt) => h('select', { id: `set-${seat}` }, h('option', { value: 'human', selected: dflt === 'human' }, 'Human'), h('option', { value: 'bot', selected: dflt === 'bot' }, 'Heuristic bot'));
     const seed = h('input', { id: 'set-seed', type: 'number', value: '1', min: '1' });
     const policySel = (seat) => h('select', { id: `set-pol-${seat}` }, ...ALLOCATION_POLICIES.map((p) => h('option', { value: p }, { slot_order: 'Slot order (fixture)', center_first: 'Center first (sacrifice the center)', protect_ranged: 'Protect ranged members' }[p])));
+    this._overlayDismiss = false;
     this.el.overlay.replaceChildren(h('div', { class: 'card-sheet setup' },
       h('div', { class: 'title-emblems', 'aria-hidden': 'true' }, ...['red', 'purple', 'blue', 'black', 'rainbow', 'white', 'orange', 'yellow', 'green'].map((c) => h('img', { src: emblemURL(c, 18), alt: '' }))),
       h('h1', {}, 'Hapa Versus'),
@@ -429,6 +430,8 @@ export class VersusApp {
   _bindKeys() {
     window.addEventListener('keydown', (e) => {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      // an open sheet (menu, confirmation, setup, result) owns the keyboard: no order or Ready behind it
+      if (!this.el.overlay.hidden) { if (e.code === 'Escape' && this._overlayDismiss) { e.preventDefault(); this._closeSheet(); } return; }
       this.keys.add(e.code);
       if (!this.session) return;
       const k = e.key.toLowerCase();
@@ -819,22 +822,78 @@ export class VersusApp {
       h('div', { class: 'speed' }, h('label', {}, 'Playback ', h('select', { onchange: (e) => (this.speed = Number(e.target.value)) }, ...[0.5, 1, 2, 4].map((v) => h('option', { value: v, selected: v === this.speed }, `${v}×`))))),
       h('div', { class: 'crest b', title: `Seat B · ${this.seats.B}` }, 'B', h('small', {}, this.seats.B === 'bot' ? 'bot' : this.viewSeat === 'B' ? 'you' : 'human')),
       this.sound ? h('button', { class: 'menu', title: this.sound.muted ? 'Sound off (click to turn on)' : 'Sound on (click to mute)', 'aria-pressed': String(!this.sound.muted), onclick: () => { this.sound.toggle(); this._renderMatchBar(); } }, this.sound.muted ? '🔇' : '🔊') : null,
-      h('button', { class: 'menu', onclick: () => this._menu() }, '☰'),
+      this.el.menuBtn = h('button', { class: 'menu', 'aria-label': 'Match menu', 'aria-haspopup': 'dialog', onclick: () => this._menu() }, '☰'),
     );
+  }
+
+  /**
+   * What concession means for a seat right now (Master Requirements v3 "Terminal conditions";
+   * Design Companion: "a separate menu action with an explicit match-ending confirmation").
+   * In this prototype a concession is an order in the seat's public plan, so it is accepted only
+   * while that plan is editable; it ends the match when the Tick resolves. Concession at any phase
+   * needs a separate accepted terminal record (see design response 04) and is not claimed here.
+   * @returns {{ show: boolean, can: boolean, planned: boolean, text: string }}
+   */
+  _concession(seat) {
+    const c = this._can(seat);
+    if (!c.human || this.state.outcome) return { show: false, can: false, planned: false, text: '' };
+    const planned = this.plans[seat].some((x) => x.type === 'concede');
+    if (planned) return { show: true, can: false, planned, text: c.frozen
+      ? `Your concession is in your frozen plan for Tick ${this.state.tick}: the match ends when this Tick resolves.`
+      : `Your concession is in your public plan for Tick ${this.state.tick}. It ends the match when this Tick resolves; remove it from your plan to withdraw it before Ready.` };
+    if (c.edit) return { show: true, can: true, planned, text: `Adds a concession to your public plan for Tick ${this.state.tick}. ${other(seat)} sees it; the match ends when this Tick resolves.` };
+    const why = this.pendingChoice ? 'a response window is open'
+      : (this.resolving || this.playback) ? 'the Tick is resolving'
+      : 'your plan is frozen after Ready';
+    return { show: true, can: false, planned, text: `Concession is not available now: ${why}. In this prototype a concession is an order in your editable plan, so you can concede in the next planning phase, before pressing Ready. Your plan has not been reopened.` };
+  }
+
+  /** Open an overlay sheet that Escape (or its Cancel) closes, returning focus to `back`. */
+  _sheet(content, back) {
+    this.el.overlay.replaceChildren(content);
+    this.el.overlay.hidden = false;
+    this._overlayBack = back ?? document.activeElement;
+    this._overlayDismiss = true;
+    (content.querySelector('[data-autofocus]') ?? content.querySelector('button'))?.focus();
+  }
+
+  _closeSheet() {
+    this.el.overlay.hidden = true;
+    this._overlayDismiss = false;
+    const back = this._overlayBack;
+    this._overlayBack = null;
+    if (back?.isConnected) back.focus(); else this.el.menuBtn?.focus();
   }
 
   _menu() {
     const seat = this.viewSeat;
-    this.el.overlay.replaceChildren(h('div', { class: 'card-sheet' },
+    const con = this._concession(seat);
+    this._sheet(h('div', { class: 'card-sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Match menu' },
       h('h2', {}, 'Match menu'),
       h('p', {}, `Profile ${this.ctx.profile.id} · match ${this.state.matchId}`),
       h('p', {}, h('code', {}, stateFingerprint(this.state).slice(0, 23) + '…'), ' state fingerprint'),
       h('div', { class: 'row' },
-        h('button', { onclick: () => { this.el.overlay.hidden = true; } }, 'Resume'),
+        h('button', { 'data-autofocus': true, onclick: () => this._closeSheet() }, 'Resume'),
         h('button', { onclick: () => this._downloadReplay() }, 'Download replay'),
-        this.seats[seat] === 'human' && !this.state.outcome ? h('button', { class: 'danger', onclick: () => { this.el.overlay.hidden = true; this._addCommand(seat, { type: 'concede' }); this._toast('Concession planned: it takes effect when the Tick resolves'); } }, `Concede as ${seat}`) : null,
-        h('button', { onclick: () => this.showSetup() }, 'New match'))));
-    this.el.overlay.hidden = false;
+        h('button', { onclick: () => this.showSetup() }, 'New match')),
+      con.show ? h('div', { class: 'concede-box' },
+        h('h3', {}, `Concede as ${seat}`),
+        h('p', { class: 'small', id: 'concede-note' }, con.text),
+        con.can ? h('button', { class: 'danger', 'aria-describedby': 'concede-note', onclick: () => this._confirmConcede(seat) }, `Concede as ${seat}…`) : null) : null), this.el.menuBtn);
+  }
+
+  /** The explicit match-ending confirmation; Cancel (or Escape) changes nothing. */
+  _confirmConcede(seat) {
+    const back = this._overlayBack;
+    this._sheet(h('div', { class: 'card-sheet confirm', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': 'concede-h', 'aria-describedby': 'concede-d' },
+      h('h2', { id: 'concede-h' }, `Concede the match as ${seat}?`),
+      h('p', { id: 'concede-d' }, `${seat} loses and ${other(seat)} wins by concession. The concession goes into your public plan for Tick ${this.state.tick}; the match ends when this Tick resolves, after both players are Ready. A lost connection or closing this window is never a concession.`),
+      h('div', { class: 'row' },
+        h('button', { 'data-autofocus': true, onclick: () => this._closeSheet() }, 'Cancel — keep playing'),
+        h('button', { class: 'danger', onclick: () => {
+          this._closeSheet();
+          if (this._addCommand(seat, { type: 'concede' })) this._toast(`Concession added to ${seat}'s plan: the match ends when Tick ${this.state.tick} resolves. Press Ready to commit it.`);
+        } }, `Concede as ${seat}`))), back);
   }
 
   _downloadReplay() {
@@ -851,6 +910,7 @@ export class VersusApp {
     const crest = (seat) => h('span', { class: `crest ${seat.toLowerCase()}` }, seat);
     const headline = o.result === 'draw' ? 'Draw' : o.result === 'win' ? 'Victory' : 'Unfinished';
     const stat = (label, a, b) => h('tr', {}, h('td', {}, label), h('td', {}, String(a)), h('td', {}, String(b)));
+    this._overlayDismiss = false;
     this.el.overlay.replaceChildren(h('div', { class: 'card-sheet result' },
       h('div', { class: 'title-emblems', 'aria-hidden': 'true' }, ...['red', 'purple', 'blue', 'black', 'rainbow', 'white', 'orange', 'yellow', 'green'].map((c) => h('img', { src: emblemURL(c, 16), alt: '' }))),
       h('h1', {}, headline),
@@ -999,7 +1059,7 @@ export class VersusApp {
       : { state: 'ready', main: 'Ready ▶', sub: `Continue with existing orders · Tick ${tick} · Ctrl/⌘+Enter`, pinned: `Ready: continue with existing orders (${me})` };
   }
 
-  /** The big Ready button at the end of your hand ribbon: ends your planning for this Tick. */
+  /** The one Ready / Acknowledge button in the Public plans panel: freezes your plan for this Tick. */
   _renderReadyButton() {
     if (!this.el.readyBig) this.el.readyBig = h('button', { class: 'ready-big', onclick: () => this._pressReady() });
     const me = this.viewSeat, b = this.el.readyBig;
@@ -1025,10 +1085,10 @@ export class VersusApp {
     if (this.pendingChoice) return el.replaceChildren(this._responsePanel());
     if (!sel) return el.replaceChildren(this._nowPanel(), h('h3', {}, 'How a Tick goes'),
       h('ol', { class: 'quickstart' },
-        h('li', {}, h('b', {}, 'Supply. '), h('b', {}, 'Drag'), ' a card from your hand (or its slot on the board) onto one of your formations and let go. Each step of movement costs 1 Supply. Drop a card on the Mana pool panel to burn it instead.'),
-        h('li', {}, h('b', {}, 'Move. '), 'With the party selected, ', h('b', {}, 'right-click'), ' a highlighted territory. New orders need the party\'s column to be active (striped edges).'),
+        h('li', {}, h('b', {}, 'Supply. '), 'Select one of your parties and press a card under ', h('b', {}, 'Load Supply'), ' — or drag a card from your hand onto the party. Each step of movement costs 1 Supply. To burn a card for Mana, select it and press ', h('b', {}, 'Burn'), ' (or drop it on the Mana pools).'),
+        h('li', {}, h('b', {}, 'Move. '), 'With the party selected, open ', h('b', {}, 'Move to…'), ' in this panel and choose a territory — or right-click a highlighted one. New orders need the party\'s column to be active (striped edges).'),
         h('li', {}, h('b', {}, 'Ready. '), 'Press the gold ', h('b', {}, 'Ready ▶'), ' button under the public plans (or Ctrl/⌘ + Enter). It freezes your plan; when both players are Ready the plans resolve together and play back.')),
-      h('p', { class: 'dim small' }, 'Opening: drag the C1 card onto your C1 Castle (R1), select the Castle and right-click the Pawn ahead of it (R2) — they merge into one nine-member party.'),
+      h('p', { class: 'dim small' }, 'Opening: select your C1 Castle (R1), load the C1 card as Supply, then Move to… the Pawn ahead of it (R2) — they merge into one nine-member party. Orders can change only until you press Ready.'),
       this._hoverHelp());
     if (sel.kind === 'party') return el.replaceChildren(this._partyPanel(s.parties[sel.id]));
     if (sel.kind === 'member') return el.replaceChildren(this._memberPanel(s.members[sel.id]));
