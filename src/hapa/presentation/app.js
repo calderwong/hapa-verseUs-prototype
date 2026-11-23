@@ -42,6 +42,7 @@ import { CardDrag } from './card-drag.js';
 import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } from './palette.js';
 import { openEditor } from './editor.js';
 import { InspectController } from './inspect.js';
+import { term, closeTerms } from './glossary.js';
 import { openLab, anyProfile, labProfiles } from './lab.js';
 import { localCatalog, localDecks } from './local-content.js';
 
@@ -926,6 +927,7 @@ export class VersusApp {
   }
 
   _renderAllInner() {
+    closeTerms();
     this._renderMatchBar();
     this._renderRoster();
     this._renderOrders();
@@ -962,8 +964,8 @@ export class VersusApp {
     this.el.navBtn = h('button', { class: 'strip-btn', 'aria-expanded': String(document.body.classList.contains('roster-open')), 'aria-controls': 'roster', title: 'Parties and Cards (N)', onclick: () => this._toggleRoster() }, '☰ Parties & Cards');
     this.el.matchbar.replaceChildren(...[
       h('div', { class: `crest ${me.toLowerCase()}`, title: `You are seat ${me}` }, me, h('small', {}, this.seats[me] === 'bot' ? 'bot' : 'you')),
-      h('div', { class: 'tick' }, this.session.fixture ? h('span', { class: 'fixture-tag', title: 'This state was prepared directly as a diagnostic fixture; it did not emerge from ordinary play.' }, 'FIXTURE') : null, h('b', {}, `Tick ${s.tick}`), ` · ${r.period === 'prologue' ? 'Prologue' : `Round ${r.round}`}`),
-      h('div', { class: 'active', title: 'Columns that mint Cards and take new unit orders this Tick' }, 'Active ', ...s.activeColumns.map((c) => h('span', { class: 'colchip' }, `C${this.ctx.geo.toLocal(me, c, 1).column}`))),
+      h('div', { class: 'tick' }, this.session.fixture ? h('span', { class: 'fixture-tag', title: 'This state was prepared directly as a diagnostic fixture; it did not emerge from ordinary play.' }, 'FIXTURE') : null, h('b', {}, term('tick', `Tick ${s.tick}`)), ' · ', r.period === 'prologue' ? 'Prologue' : term('round', `Round ${r.round}`)),
+      h('div', { class: 'active' }, term('active', 'Active'), ' ', ...s.activeColumns.map((c) => h('span', { class: 'colchip' }, `C${this.ctx.geo.toLocal(me, c, 1).column}`))),
       h('div', { class: 'phase' }, this.playback ? 'Resolving…' : this.pendingChoice ? `Response · ${this.pendingChoice.req.seat} to act` : s.outcome ? 'Match over' : can.stale ? 'Review the changed plan' : can.current ? 'Ready — waiting' : 'Planning'),
       h('div', { class: 'cmds', title: 'Commander health (the match ends if one falls)' }, ...['A', 'B'].map((seat) => { const c = cmd(seat); return h('span', { class: `cmdhp ${seat.toLowerCase()}` }, `${seat}★ ${c?.alive ? `${pts(c.hp)}/${pts(c.maxHp)}` : 'fallen'}`); })),
       this.el.navBtn, this.el.ordersBtn, this.el.readyBig,
@@ -1212,7 +1214,7 @@ export class VersusApp {
     const banner = this.playback || this.resolving ? null
       : can.stale ? h('div', { class: 'plan-banner stale', role: 'status' }, h('b', {}, `${opp} changed its plan after your Ready`), ` — ${ch.added} new, ${ch.removed.length} removed (marked below). Your ${n} order${n === 1 ? '' : 's'} stay frozen; Acknowledge accepts the new pair without changing them.`)
       : can.current ? h('div', { class: 'plan-banner', role: 'status' }, `You are Ready: your ${n} order${n === 1 ? '' : 's'} are frozen for Tick ${s.tick}. Waiting for ${opp}.`)
-      : can.edit ? h('div', { class: 'plan-banner dim' }, 'Your orders can change until you press Ready. Ready freezes them; there is no Unready.')
+      : can.edit ? h('div', { class: 'plan-banner dim' }, 'Your orders can change until you press ', term('ready'), '. Ready makes them ', term('frozen'), '; there is no Unready.')
       : null;
     this._renderReadyButton();
     const order = can.stale ? [opp, me] : [me, opp];
@@ -1393,11 +1395,11 @@ export class VersusApp {
     const row = (c) => h('tr', {}, h('td', {}, h('img', { src: emblemURL(c, 16), alt: '' }), ` ${COLOR_NAME[c]}`), h('td', {}, String(pool[c] ?? 0)), h('td', { class: (proj[c] ?? 0) !== (pool[c] ?? 0) ? 'ok' : 'dim' }, String(proj[c] ?? 0)));
     const shown = all.filter((c) => pool[c] || proj[c]);
     return h('div', { class: 'basin-view' },
-      h('table', { class: 'mana-table' }, h('tr', {}, h('th', {}, 'Mana'), h('th', {}, 'Now'), h('th', {}, 'After plan')), ...(shown.length ? shown.map(row) : [h('tr', {}, h('td', { colspan: 3, class: 'dim' }, 'Empty — burn a Card in this Fire Pit to fill it.'))])),
+      h('table', { class: 'mana-table' }, h('tr', {}, h('th', {}, term('mana')), h('th', {}, 'Now'), h('th', {}, 'After plan')), ...(shown.length ? shown.map(row) : [h('tr', {}, h('td', { colspan: 3, class: 'dim' }, 'Empty — burn a Card in this Fire Pit to fill it.'))])),
       h('p', { class: 'small' }, '“After plan” projects ', seat === this.viewSeat ? 'your' : `${seat}'s`, ' public plan in order (its burns and payments). The opponent\'s plan and responses can still change what is available.'),
       burns.length ? h('div', { class: 'small' }, h('b', {}, 'Planned burns: '), burns.map((c) => cardShort(s, c.cardId)).join(', ')) : null,
       h('p', { class: 'dim small' }, this.ctx.profile.resources.poolCarryover ? 'Unspent Mana carries over to the next Tick.' : 'Unspent Mana expires at the Tick boundary.'),
-      h('p', { class: 'dim small' }, 'A Card does one thing: Supply for a party, Burn in the Fire Pit for its Mana, or its ability. White has a dark rim, Black a light rim, Rainbow pays any color until it is assigned.'));
+      h('p', { class: 'dim small' }, 'A Card does one thing: ', term('supply'), ' for a party, ', term('burn'), ' in the ', term('firepit'), ' for its Mana, or its ', term('ability'), '. ', term('rainbow'), ' pays any one color until a payment assigns it.'));
   }
 
   /**
@@ -1479,11 +1481,11 @@ export class VersusApp {
           h('span', {}, 'State'), h('span', {}, p.state))),
       h('div', { class: 'kv' },
         ...(() => { const st = standingOf(s, this.ctx, p); return st.kind === 'ground'
-          ? [h('span', {}, 'Stands'), h('span', {}, 'surface ground (band +1, exposed)')]
-          : [h('span', {}, 'Stands'), h('span', {}, `${st.label} · ${st.exposed ? 'exposed (counts for income and blocking)' : 'not exposed (roofed)'}`, h('div', { class: 'dim small' }, st.note))]; })(),
-        h('span', {}, 'Supply'), h('span', {}, `${pts(supplyOf(p))}${p.supply.length ? ` (${p.supply.map((x) => `${pts(x.units)} from ${x.cardId}`).join(', ')})` : ''}`, this._plannedSupply(p) ? h('b', { class: 'planned-supply' }, ` +${pts(this._plannedSupply(p))} planned`) : null),
-        h('span', {}, 'Speed'), h('span', {}, p.mount ? `${this.ctx.profile.movement.speeds[p.mount].join('/')} step per Tick` : 'none (needs a Mount)'),
-        h('span', {}, 'Destination'), h('span', {}, p.destination ? `R${p.destination.row}C${p.destination.column}` : '—'),
+          ? [h('span', {}, term('exposure', 'Stands', { standing: 'surface ground, band +1, exposed' })), h('span', {}, 'surface ground (', term('band', 'band'), ' +1, exposed)')]
+          : [h('span', {}, term('exposure', 'Stands', { standing: `${st.label}, ${st.exposed ? 'exposed' : 'not exposed'}` })), h('span', {}, `${st.label} · ${st.exposed ? 'exposed (counts for income and blocking)' : 'not exposed (roofed)'}`, h('div', { class: 'dim small' }, st.note))]; })(),
+        h('span', {}, term('supply', 'Supply', { party: p, held: supplyOf(p), planned: this._plannedSupply(p), need: (() => { const d = this.plans[p.owner].find((c) => c.type === 'set_destination' && c.partyId === p.id); return d ? quoteRoute(this.state, this.ctx, p, d.target).required ?? null : null; })() })), h('span', {}, `${pts(supplyOf(p))}${p.supply.length ? ` (${p.supply.map((x) => `${pts(x.units)} from ${x.cardId}`).join(', ')})` : ''}`, this._plannedSupply(p) ? h('b', { class: 'planned-supply' }, ` +${pts(this._plannedSupply(p))} planned`) : null),
+        h('span', {}, term('speed', 'Speed', { speed: p.mount ? this.ctx.profile.movement.speeds[p.mount].join('/') + ' step' : null })), h('span', {}, p.mount ? `${this.ctx.profile.movement.speeds[p.mount].join('/')} step per Tick` : 'none (needs a Mount)'),
+        h('span', {}, term('route', 'Destination')), h('span', {}, (() => { const d = this.plans[p.owner].find((c) => c.type === 'set_destination' && c.partyId === p.id); return d ? `R${d.target.row}C${d.target.column} (planned)${p.destination ? `, replacing R${p.destination.row}C${p.destination.column}` : ''}` : p.destination ? `R${p.destination.row}C${p.destination.column} (${STATE_NAME[p.state] ?? p.state})` : '—'; })()),
         p.pool ? h('span', {}, 'Party pool') : null, p.pool ? h('span', {}, `${pts(p.pool.hp)}/${pts(p.pool.max)} (maintenance)`) : null),
       h('h4', { title: 'The grid is the party\'s own frame: its front is at the top whatever way the camera looks.' }, `Formation · front (${FACING_NAME[p.facing]}) at top`), grid,
       own ? this._supplyLoader(p) : null,
@@ -1707,12 +1709,12 @@ export class VersusApp {
       h('div', { class: 'cv-top' }, face,
         h('div', {},
           h('div', { class: 'cv-id' }, `${card.rank ?? ''}${SUIT[card.suit] ?? ''} ${SUIT_NAME[card.suit] ? `of ${SUIT_NAME[card.suit]}` : ''}`),
-          h('div', { class: 'small' }, `${seat === this.viewSeat ? 'Your' : `${seat}'s`} C${card.localColumn}${isMinor ? ' · Minor Arcana' : ''}`),
+          h('div', { class: 'small' }, `${seat === this.viewSeat ? 'Your' : `${seat}'s`} C${card.localColumn}`, isMinor ? [' · ', term('minor')] : null),
           h('div', { class: `cv-state ${card.state}` }, stateLine, plannedUse ? ` · planned: ${plannedUse}` : ''),
           replacedBy ? h('div', { class: 'small warn' }, `Its slot now holds ${cardShort(s, replacedBy)}.`) : null,
-          isMinor ? h('div', { class: 'cv-res' }, h('div', {}, h('b', {}, 'Supply '), pts(card.supply)),
-            h('div', {}, h('b', {}, 'Mana '), manaRows.length ? manaRows.map(([c, n]) => h('span', { class: `mchip c-${c}` }, h('img', { src: emblemURL(c, 14), alt: '' }), `${n} ${COLOR_NAME[c]}`)) : '0 (none)')) : null)),
-      h('h4', {}, def?.title ?? 'No attached ability'),
+          isMinor ? h('div', { class: 'cv-res' }, h('div', {}, h('b', {}, term('supply')), ' ', pts(card.supply)),
+            h('div', {}, h('b', {}, term('mana')), ' ', manaRows.length ? manaRows.map(([c, n]) => h('span', { class: `mchip c-${c}` }, h('img', { src: emblemURL(c, 14), alt: '' }), `${n} ${COLOR_NAME[c]}`)) : '0 (none)')) : null)),
+      h('h4', {}, def?.title ?? 'No attached ability', def ? h('span', { class: 'dim small' }, ' · ', term('ability', def.category === 'spell' ? 'Spell' : def.category === 'skill' ? 'Skill' : 'ability')) : null),
       def ? h('p', { class: 'small' }, def.text, def.cost?.mana && Object.keys(def.cost.mana).length ? h('span', { class: 'dim' }, ` Cost: ${fmtMana(def.cost.mana)}${def.cost.consumeSourceInstance ? ', consumes this Card' : ''}.`) : null) : null,
       actions,
       h('details', { class: 'details' }, h('summary', {}, 'Details'),
@@ -1779,7 +1781,7 @@ export class VersusApp {
           def.cost?.consumeSourceInstance ? `; ${cardShort(s, id)} is consumed` : '', why ? h('div', { class: 'warn' }, `Unavailable: ${why}.`) : null));
     });
     return h('div', { class: 'response', role: 'group', 'aria-label': `Response window for ${req.seat}` },
-      h('h3', {}, `Response window · ${req.seat} to act`),
+      h('h3', {}, term('response', 'Response window'), ` · ${req.seat} to act`),
       h('p', {}, `${top.seat === req.seat ? 'Your' : `${top.seat}'s`} ${activeCatalog.cards[top.defId]?.title ?? 'effect'} is waiting to resolve. Plans are locked; you may answer it with a response Card or Pass.`),
       h('h4', {}, 'Pending (last resolves first)'),
       h('ol', { class: 'stack' }, ...req.stack.map(effect)),

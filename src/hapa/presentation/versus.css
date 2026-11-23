@@ -478,3 +478,9 @@ button.linkish:hover:not(:disabled) { color: var(--gold); }
 .cardview .actions .col { display: grid; gap: 2px; margin-top: 2px; }
 .cardview .actions .col button { text-align: left; }
 .supplyto > summary { cursor: pointer; padding: 3px 8px; border: 1px solid #4a5573; border-radius: 3px; background: #262d3f; }
+/* contextual definitions (addendum §8): a quiet dotted underline; a non-interactive tooltip */
+dfn.term { font-style: normal; text-decoration: underline dotted rgba(217,184,106,.7); text-underline-offset: 3px; cursor: help; }
+dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.gloss-tip { position: fixed; z-index: 60; padding: 7px 9px; background: #101820; color: var(--ink); border: 1px solid var(--brass); border-radius: 5px; font: 13px/1.4 var(--sans); box-shadow: 0 8px 22px rgba(0,0,0,.6); }
+.gloss-tip .gloss-ex { margin-top: 4px; color: var(--ok); }
+.gloss-tip .gloss-src { margin-top: 4px; font-size: 11.5px; color: var(--dim); }
