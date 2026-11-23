@@ -33,7 +33,7 @@ let activeCatalog = CATALOG;
 const cmdKey = (c) => canonicalize(c);
 import { UI_FIXTURES } from '../../../fixtures/hapa/ui-fixtures.js';
 import { standingOf, fmtBand, bandY } from './terrain-view.js';
-import { snapshot, poseAt, timeline } from './playback.js';
+import { snapshot, poseAt, timeline, eventsBeforeMovement } from './playback.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
 import { VersusSound } from './sound.js';
@@ -262,6 +262,7 @@ export class VersusApp {
     if (this.state.outcome) return this._showResult();
     const minted = openTick(this.session);
     this.tickEvents = [...minted];
+    for (const e of minted) this._fireEffect(e);
     if (!this.watch && minted.some((e) => e.type === 'card_minted')) this.sound?.play('chime', { volume: 0.35 });
     this.plans = { A: [], B: [] };
     this.rev = { A: 0, B: 0 };
@@ -430,7 +431,7 @@ export class VersusApp {
   /** Play back a resolved Tick: members follow the traced trajectories; casualties fall at their event. */
   _play(before, frames, events) {
     const startPos = snapshot(before);
-    const all = timeline(startPos, frames, events.length);
+    const all = timeline(startPos, frames, events.length, eventsBeforeMovement(events));
     const duration = (this.watch ? 0.9 : 1.4) / this.speed;
     const moving = new Set();
     for (const m of Object.values(this.state.members)) { const a = startPos[m.id], b = [m.x, m.y]; if (a && (a[0] !== b[0] || a[1] !== b[1])) moving.add(m.id); }
@@ -440,7 +441,24 @@ export class VersusApp {
     return new Promise((resolve) => {
       this.playback = { t: 0, duration, all, events, resolve, shown: 0, paused: false };
       this._renderReadyButton();
+      this._renderBasins(); // offerings leave the pit; counters show the accepted pool at once
     });
+  }
+
+  /**
+   * Fire Pit / basin cosmetics for an accepted event (addendum 01 §7): once per event id and match;
+   * they never change a counter (counters render from state).
+   */
+  _fireEffect(e) {
+    if (!['card_burned', 'mana_paid', 'mana_expired'].includes(e.type)) return false;
+    const key = `${this.generation}:${e.id}`;
+    if (this._shownEvents?.has(key)) return true;
+    (this._shownEvents ??= new Set()).add(key);
+    const sites = this.view.sites;
+    if (e.type === 'card_burned') { const c = this.state.cards[e.cardId]; sites.burn(e.seat, c ? drawCardCanvas(c, this.state, 120, 160) : null, e.mana); }
+    else if (e.type === 'mana_paid') sites.pay(e.seat, e.assigned);
+    else sites.expire(e.seat);
+    return true;
   }
 
   /** Hit marks for newly reached exchange and Card-damage events (at most 48 per batch). */
@@ -449,6 +467,7 @@ export class VersusApp {
     const colorOfMember = (id) => activeCatalog.archetypes[this.state.members[id]?.archetype]?.color ?? null;
     let n = 0;
     for (const e of events) {
+      if (this._fireEffect(e)) continue;
       if (e.type === 'supply_loaded') { // the planned Supply actually lands
         const mk = this.view.markers.get(e.partyId);
         if (mk) this.view.fx.supply(mk.position.clone(), `+${pts(e.units)} landed · Supply ${pts(e.total)}`);
@@ -776,10 +795,16 @@ export class VersusApp {
     return s;
   }
 
+  /**
+   * The seat's Mana pool as its own public plan would leave it (addendum 01 §7): every valid
+   * command in declared order — burns, payment burns and exact assigned spends — on a scratch state
+   * (match.projectPlan). A projection of this plan only, not a promise about the opponent or
+   * responses. Cached per plan revision.
+   */
   _plannedPool(seat) {
-    const pool = { ...this.state.players[seat].pool };
-    for (const c of this.plans[seat]) if (c.type === 'burn') for (const [k, n] of Object.entries(this.state.cards[c.cardId]?.mana ?? {})) pool[k] = (pool[k] ?? 0) + n;
-    return pool;
+    const key = `${this.generation}:${this.state.tick}:${seat}:${this.rev?.[seat]}:${JSON.stringify(this.state.players[seat].pool)}`;
+    if (this._poolCache?.[seat]?.key !== key) (this._poolCache ??= {})[seat] = { key, pool: { ...projectPlan(this.state, this.ctx, seat, this.plans?.[seat] ?? []).state.players[seat].pool } };
+    return { ...this._poolCache[seat].pool };
   }
 
   _selectHandSlot(localCol) {
@@ -1335,7 +1360,8 @@ export class VersusApp {
     const s = this.state;
     for (const seat of ['A', 'B']) {
       const pool = s.players[seat].pool, el = this.el.basins[seat];
-      const proj = this._plannedPool(seat);
+      // while a Tick resolves the state already holds its accepted burns: never project them twice
+      const proj = this.resolving || this.playback || this.pendingChoice ? { ...pool } : this._plannedPool(seat);
       const entries = Object.entries(pool).filter(([, n]) => n > 0);
       const changed = JSON.stringify(Object.entries(proj).filter(([, n]) => n > 0).sort()) !== JSON.stringify(entries.slice().sort());
       el.replaceChildren(...[h('span', { class: 'bc-seat' }, seat),
@@ -1343,7 +1369,7 @@ export class VersusApp {
         changed ? h('span', { class: 'bc-proj', title: 'Projected after this plan' }, '→ plan') : null].filter(Boolean));
       el.setAttribute('aria-label', `${seat}'s Mana basin: ${entries.length ? fmtMana(pool) : 'empty'}${changed ? `; projected after its plan ${fmtMana(proj)}` : ''}`);
     }
-    const offerings = (seat) => this.plans[seat].filter((c) => c.type === 'burn').map((c) => drawCardCanvas(s.cards[c.cardId], s, 120, 160));
+    const offerings = (seat) => this.plans[seat].flatMap((c) => (c.type === 'burn' ? [c.cardId] : c.burns ?? [])).filter((id) => s.cards[id]).map((id) => drawCardCanvas(s.cards[id], s, 120, 160));
     for (const seat of ['A', 'B']) this.view.sites.setOfferings(seat, this.playback ? [] : offerings(seat));
   }
 
@@ -1361,7 +1387,7 @@ export class VersusApp {
   /** The basin view: actual pool by named color, the plan's projection, and the conversion rules. */
   _basinPanel(seat) {
     const s = this.state, pool = s.players[seat].pool;
-    const proj = this._plannedPool(seat);
+    const proj = this.resolving || this.playback || this.pendingChoice ? { ...pool } : this._plannedPool(seat);
     const burns = this.plans[seat].filter((c) => c.type === 'burn');
     const all = ['red', 'green', 'purple', 'yellow', 'blue', 'orange', 'black', 'white', 'rainbow'];
     const row = (c) => h('tr', {}, h('td', {}, h('img', { src: emblemURL(c, 16), alt: '' }), ` ${COLOR_NAME[c]}`), h('td', {}, String(pool[c] ?? 0)), h('td', { class: (proj[c] ?? 0) !== (pool[c] ?? 0) ? 'ok' : 'dim' }, String(proj[c] ?? 0)));

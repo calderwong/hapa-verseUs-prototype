@@ -29,12 +29,14 @@ export function snapshot(state) {
 
 /**
  * The playback timeline: the state before resolution at q 0, then the traced frames. A Tick in
- * which nothing moved records no frames, so the start is held to the end (q 1000).
- * @param {Record<string, FrameEntry>} start @param {Frame[]} frames @param {number} eventCount
+ * which nothing moved records no frames, so the start is held to the end (q 1000). `before` is the
+ * number of leading events that happened before movement began (orders, burns, Spells): they are
+ * shown from the first moment, in order, rather than at the end.
+ * @param {Record<string, FrameEntry>} start @param {Frame[]} frames @param {number} eventCount @param {number} [before]
  * @returns {Frame[]}
  */
-export function timeline(start, frames, eventCount) {
-  const all = [{ q: 0, pos: start, evLen: 0 }, ...frames];
+export function timeline(start, frames, eventCount, before = 0) {
+  const all = [{ q: 0, pos: start, evLen: Math.min(before, frames[0]?.evLen ?? eventCount) }, ...frames];
   if (all.length === 1) all.push({ q: 1000, pos: start, evLen: eventCount });
   return all;
 }
@@ -65,3 +67,9 @@ export function poseAt(frames, q, heightOf) {
 
 /** Whether a body is drawn: alive at this moment and in the shown layer (null = all layers). */
 export const bodyVisible = (alive, band, layer) => !!alive && (layer === null || band === layer);
+
+/** How many leading events happened before movement: those before the first with a quantum. */
+export function eventsBeforeMovement(events) {
+  const i = events.findIndex((e) => e.quantum != null);
+  return i < 0 ? events.length : i;
+}
