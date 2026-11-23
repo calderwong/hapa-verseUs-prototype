@@ -16,7 +16,7 @@ import { eventLine, explainHit, memberName, partyName, fmtMana } from './explain
 import { createSession, createFixtureSession, openTick } from '../rules/session.js';
 import { validatePlan, resolveTick, responseOptions } from '../rules/match.js';
 import { legalDestinations, planPartyRoute, routeOrigin, touchingPairs, contactTolerance } from '../rules/movement.js';
-import { mintForecast, nextActivation, roundOf, supplyOf } from '../rules/economy.js';
+import { mintForecast, nextActivation, roundOf, supplyOf, quotePayment } from '../rules/economy.js';
 import { stateFingerprint, other } from '../rules/state.js';
 import { summarize } from '../rules/stats.js';
 import { clone, canonicalize } from '../rules/encoding.js';
@@ -91,6 +91,7 @@ export class VersusApp {
     r.append(this.el.rosterToggle);
     this.el.overlay = h('div', { id: 'overlay' });
     r.append(this.el.overlay);
+    this._containModals();
     this.el.world.append(this.el.toast = h('div', { class: 'toast' }));
     this.el.world.append(this.el.compass = h('div', { class: 'compass' }));
     this.el.world.append(this.el.layers = h('div', { class: 'layer-rail', role: 'toolbar', 'aria-label': 'Height layers' }));
@@ -179,9 +180,14 @@ export class VersusApp {
   }
 
   async startMatch({ profileId = BASE_PROFILE.id, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null }) {
-    this.el.overlay.hidden = true;
+    // the new match owns everything from here: the previous match's pending response, playback and
+    // continuation are detached so a late answer cannot write into this session (review 03, R3-02)
+    const gen = this.generation = (this.generation ?? 0) + 1;
+    this._detachMatch();
+    this._closeSheet({ restore: false });
     await loadCharacterKit(); // crowns, helmets and the guard preset are kit parts
     await loadRenditions(); // optional local card faces; placeholders otherwise
+    if (gen !== this.generation) return; // a newer New match replaced this one while loading
     const fx = fixture ? UI_FIXTURES[fixture] : null;
     if (fx) {
       // a labeled diagnostic fixture: its state is prepared directly, not reached by ordinary play
@@ -240,7 +246,8 @@ export class VersusApp {
     this.view.sync(this.state);
     this.view.syncBanks(this.state, drawCardCanvas);
     this._renderAll();
-    if (this.watch) setTimeout(() => this._tryResolve(), 350 / this.speed);
+    const gen = this.generation;
+    if (this.watch) setTimeout(() => { if (gen === this.generation) this._tryResolve(); }, 350 / this.speed);
   }
 
   /**
@@ -326,14 +333,23 @@ export class VersusApp {
   async _tryResolve() {
     if (this.resolving) return;
     if (!(this._readyValid('A') && this._readyValid('B'))) return this._renderAll();
+    const gen = this.generation;
     this.resolving = true;
-    try { await this._resolveAgreed(); } finally { this.resolving = false; }
+    let done = false;
+    try { done = await this._resolveAgreed(); } finally { if (gen === this.generation) this.resolving = false; }
+    if (!done || gen !== this.generation) return; // detached by New match: the old Tick never continues
     if (this.state.outcome) this._showResult();
     else this._newTick();
   }
 
+  /**
+   * Resolve the agreed pair. Returns false when a New match detached this resolution: every await
+   * re-checks that the match that started it still owns the app, and the captured session is the
+   * only one written to.
+   */
   async _resolveAgreed() {
-    const { state, ctx } = this;
+    const { state, ctx, session } = this;
+    const owner = this.generation;
     const before = clone(state);
     const accepted = {};
     for (const s of ['A', 'B']) accepted[s] = validatePlan(state, ctx, s, this.plans[s]).accepted;
@@ -350,16 +366,28 @@ export class VersusApp {
       let answer;
       if (this.bots[req.seat]) answer = this.bots[req.seat].choose(req, state, ctx);
       else answer = await this._askResponse(req);
+      if (owner !== this.generation) return false;
       answers.push(answer ?? { pass: true });
       step = gen.next(answer ?? { pass: true });
     }
     ctx.trace = null;
     const events = step.value;
-    this.session.events.push(...events);
-    this.session.replay.ticks.push({ tick: state.tick, plans: clone(accepted), choices: answers, fingerprint: stateFingerprint(state) });
+    session.events.push(...events);
+    session.replay.ticks.push({ tick: state.tick, plans: clone(accepted), choices: answers, fingerprint: stateFingerprint(state) });
     this.tickEvents.push(...events);
     this.lastEvents = this.tickEvents;
     await this._play(before, frames, events);
+    return owner === this.generation;
+  }
+
+  /** Release the current match's unfinished work (pending choice, playback) without continuing it. */
+  _detachMatch() {
+    const pc = this.pendingChoice, pb = this.playback;
+    this.pendingChoice = null;
+    this.playback = null;
+    this.resolving = false;
+    pc?.resolve({ pass: true, detached: true });
+    pb?.resolve();
   }
 
   /** Play back a resolved Tick: members follow the traced trajectories; casualties fall at their event. */
@@ -633,22 +661,18 @@ export class VersusApp {
   _closePickList() { this.el.pickList?.remove(); this.el.pickList = null; }
 
   /** Burn the fewest other cards needed to pay a colored cost (a declared payment, never silent). */
-  _autoBurns(seat, def, sourceId) {
-    const cost = def.cost?.mana ?? {};
-    const pool = { ...this._plannedPool(seat) };
-    const burns = [];
-    const planned = this._plannedCardIds(seat);
-    const enough = () => Object.entries(cost).every(([c, n]) => (pool[c] ?? 0) + (pool.rainbow ?? 0) >= n);
-    for (const id of Object.values(this.state.players[seat].bank.minor).filter(Boolean)) {
-      if (enough()) break;
-      if (id === sourceId || planned.has(id)) continue;
-      const card = this.state.cards[id];
-      if (!Object.keys(cost).some((c) => card.mana[c] || card.mana.rainbow)) continue;
-      burns.push(id);
-      for (const [c, n] of Object.entries(card.mana)) pool[c] = (pool[c] ?? 0) + n;
-    }
-    return burns;
+  /** Cards this seat can still burn for a payment: available bank Cards not already used in its plan. */
+  _paymentCandidates(seat, sourceId, { planned = true } = {}) {
+    const used = planned ? this._plannedCardIds(seat) : new Set();
+    return Object.values(this.state.players[seat].bank.minor).filter(Boolean).map((id) => this.state.cards[id])
+      .filter((c) => c && c.id !== sourceId && c.state === 'available' && !used.has(c.id));
   }
+
+  /** Burns that pay an ordinary ability on top of the plan so far (the rules' own allocation). */
+  _autoBurns(seat, def, sourceId) {
+    return quotePayment(this._plannedPool(seat), def.cost?.mana ?? {}, this._paymentCandidates(seat, sourceId)).burns;
+  }
+
 
   /**
    * A card's face band: its local Tarot rendition, bounded and at full strength; without one, an
@@ -870,12 +894,37 @@ export class VersusApp {
     (content.querySelector('[data-autofocus]') ?? content.querySelector('button'))?.focus();
   }
 
-  _closeSheet() {
+  _closeSheet({ restore = true } = {}) {
     this.el.overlay.hidden = true;
     this._overlayDismiss = false;
     const back = this._overlayBack;
     this._overlayBack = null;
+    if (!restore) return;
     if (back?.isConnected) back.focus(); else this.el.menuBtn?.focus();
+  }
+
+  /**
+   * Every blocking sheet (menu, confirmation, setup, result, editor, lab) is modal (review 03, R3-03):
+   * while the overlay is shown the rest of the app is inert — no Tab stop, click or Enter reaches an
+   * obscured game control — and Tab / Shift+Tab cycle inside the sheet.
+   */
+  _containModals() {
+    const ov = this.el.overlay;
+    const apply = () => {
+      const open = !ov.hidden;
+      for (const el of this.root.children) if (el !== ov) el.inert = open;
+      document.body.classList.toggle('modal-open', open);
+    };
+    new MutationObserver(apply).observe(ov, { attributes: true, attributeFilter: ['hidden'] });
+    ov.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      const f = [...ov.querySelectorAll('button, [href], input, select, textarea, summary, [tabindex]:not([tabindex="-1"])')].filter((x) => !x.disabled && x.offsetParent !== null);
+      if (!f.length) { e.preventDefault(); return; }
+      const first = f[0], last = f.at(-1);
+      if (e.shiftKey && (document.activeElement === first || !ov.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (document.activeElement === last || !ov.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+    });
+    apply();
   }
 
   _menu() {
@@ -1449,10 +1498,10 @@ export class VersusApp {
       const c = s.cards[id];
       const def = activeCatalog.cards[c.abilityId];
       const cost = def?.cost?.mana ?? {};
-      const burns = this._autoBurnsNow(req.seat, def, id);
-      const after = { ...pool };
-      for (const b of burns) for (const [k, n] of Object.entries(s.cards[b].mana ?? {})) after[k] = (after[k] ?? 0) + n;
-      const affordable = Object.entries(cost).every(([k, n]) => (after[k] ?? 0) + (after.rainbow ?? 0) >= n);
+      // the same allocation the rules use: one Rainbow cannot cover two requirements
+      const quote = this._responseQuote(req.seat, def, id);
+      const burns = quote.burns;
+      const affordable = !!quote.payment;
       const why = !target ? 'nothing pending can be countered' : !affordable ? `needs ${fmtMana(cost)}; your pool and unplanned Cards cannot pay it` : null;
       return h('div', { class: 'resp-opt' },
         h('button', { class: 'primary', disabled: !!why, 'aria-describedby': `resp-${id}`, onclick: () => finish({ cardId: id, actorPartyId: actor.id, target: { stackId: target.id }, burns }) },
@@ -1474,28 +1523,9 @@ export class VersusApp {
         h('div', { class: 'small dim' }, `Pass lets ${activeCatalog.cards[top.defId]?.title ?? 'the top effect'} resolve${req.stack.length > 1 ? ' (then the rest of the stack, last first)' : ''} once both players have passed in turn. No Mana or Card is spent.`)));
   }
 
-  /**
-   * Cards to burn now so a response can be paid: only Cards whose Mana covers a still-missing color
-   * (or Rainbow), the most useful first, never the source itself or a Card already planned. Burning
-   * an unrelated Card would waste its Supply for nothing.
-   */
-  _autoBurnsNow(seat, def, sourceId) {
-    const pool = { ...this.state.players[seat].pool };
-    const cost = def.cost?.mana ?? {};
-    const missing = () => { let rb = pool.rainbow ?? 0; const need = {}; for (const [c, n] of Object.entries(cost)) { const short = Math.max(0, n - (pool[c] ?? 0)); const cover = Math.min(short, rb); rb -= cover; if (short - cover > 0) need[c] = short - cover; } return need; };
-    const planned = this._plannedCardIds(seat);
-    const candidates = Object.values(this.state.players[seat].bank.minor).filter(Boolean).filter((id) => id !== sourceId && !planned.has(id) && this.state.cards[id]?.state === 'available');
-    const burns = [];
-    for (;;) {
-      const need = missing();
-      if (!Object.keys(need).length) break;
-      const useful = (id) => Object.entries(this.state.cards[id].mana ?? {}).reduce((n, [c, k]) => n + (c === 'rainbow' ? k : Math.min(k, need[c] ?? 0)), 0);
-      const best = candidates.filter((id) => !burns.includes(id)).map((id) => [id, useful(id)]).filter(([, u]) => u > 0).sort((x, y) => y[1] - x[1])[0];
-      if (!best) break;
-      burns.push(best[0]);
-      for (const [c, n] of Object.entries(this.state.cards[best[0]].mana)) pool[c] = (pool[c] ?? 0) + n;
-    }
-    return burns;
+  /** A response's payment from the actual pool at this choice (review 03, R3-01): the rules' quote. */
+  _responseQuote(seat, def, sourceId) {
+    return quotePayment({ ...this.state.players[seat].pool }, def.cost?.mana ?? {}, this._paymentCandidates(seat, sourceId, { planned: false }));
   }
 
 }

@@ -179,6 +179,50 @@ export function planPayment(pool, cost) {
   return { assigned, remaining: left };
 }
 
+/**
+ * Mana a pool still lacks for a cost under planPayment's allocation (Rainbow-only first, exact
+ * colors, then Rainbow substitution): every Rainbow unit is counted once.
+ */
+export function manaShortfall(pool, cost) {
+  let need = 0;
+  for (const [c, n] of Object.entries(cost)) {
+    if (n <= 0) continue;
+    need += c === 'rainbow_only' ? n : Math.max(0, n - (pool[c] ?? 0));
+  }
+  const rainbowOnly = Math.max(0, (cost.rainbow_only ?? 0) - (pool.rainbow ?? 0));
+  return Math.max(rainbowOnly, need - (pool.rainbow ?? 0), 0);
+}
+
+/**
+ * Quote a payment the rules can actually make (review 03, R3-01): from `pool` plus burning some of
+ * `candidates` (each { id, mana }, in preference order), choose only Cards that reduce the exact
+ * shortfall, most useful first, then check the final pool with planPayment itself. The caller
+ * excludes the source Card and any Card already used. Pure; it never mutates its inputs.
+ * @returns {{ burns: string[], pool: Record<string, number>, payment: { assigned: any[], remaining: Record<string, number> } | null, shortfall: number }}
+ */
+export function quotePayment(pool, cost, candidates) {
+  const p = { ...pool };
+  const burns = [];
+  const left = [...candidates];
+  for (;;) {
+    const miss = manaShortfall(p, cost);
+    if (!miss) break;
+    let best = null;
+    for (const c of left) {
+      const after = { ...p };
+      for (const [k, n] of Object.entries(c.mana ?? {})) after[k] = (after[k] ?? 0) + n;
+      const gain = miss - manaShortfall(after, cost);
+      if (gain > 0 && (!best || gain > best.gain)) best = { c, gain };
+    }
+    if (!best) break;
+    burns.push(best.c.id);
+    left.splice(left.indexOf(best.c), 1);
+    for (const [k, n] of Object.entries(best.c.mana ?? {})) p[k] = (p[k] ?? 0) + n;
+  }
+  const payment = planPayment(p, cost);
+  return { burns, pool: p, payment, shortfall: payment ? 0 : manaShortfall(p, cost) };
+}
+
 /** Supply units a party holds. */
 export const supplyOf = (party) => party.supply.reduce((a, p) => a + p.units, 0);
 
