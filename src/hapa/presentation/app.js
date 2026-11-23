@@ -77,6 +77,9 @@ export class VersusApp {
     r.innerHTML = '';
     const area = (id, cls = '') => (this.el[id] = h('div', { id, class: `area ${cls}` }));
     r.append(area('matchbar'), area('opphand', 'ribbon'), area('roster', 'panel'), area('world'), area('inspector', 'panel'), area('ownhand', 'ribbon'), area('resources', 'panel'), area('plan', 'panel'), area('events'));
+    // narrow windows (or enlarged text): the roster becomes a drawer opened from this toggle (review UX-06)
+    this.el.rosterToggle = h('button', { class: 'roster-toggle', 'aria-controls': 'roster', 'aria-expanded': 'false', onclick: () => this._toggleRoster() }, '☰ Parties');
+    r.append(this.el.rosterToggle);
     this.el.overlay = h('div', { id: 'overlay' });
     r.append(this.el.overlay);
     this.el.world.append(this.el.toast = h('div', { class: 'toast' }));
@@ -451,6 +454,7 @@ export class VersusApp {
       const k = e.key.toLowerCase();
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (!e.repeat) this._pressReady(); return; }
       if (e.code === 'Escape' && this.el.pickList) { this._closePickList(); return; }
+      if (e.code === 'Escape' && document.body.classList.contains('roster-open')) { this._toggleRoster(false); return; }
       if (e.code === 'Escape') { if (this.tool) { this.tool = null; this._renderAll(); } else { this.selected = null; this.view?.select(this.state, null); this._renderAll(); } return; }
       if (k === 'q') this.cam.rotate(45);
       else if (k === 'e') this.cam.rotate(-45);
@@ -909,6 +913,13 @@ export class VersusApp {
     el.replaceChildren(h('div', { class: 'ribbon-label', title: own ? `Your hand (seat ${seat})` : `Opponent's public hand (seat ${seat})` }, own ? `Your hand · ${seat}` : `Opp. · ${seat}`), h('div', { class: 'tiles' }, ...tiles));
   }
 
+  /** Open or close the roster drawer (narrow layouts only; at wide layouts the roster is a column). */
+  _toggleRoster(open = !document.body.classList.contains('roster-open')) {
+    document.body.classList.toggle('roster-open', open);
+    this.el.rosterToggle?.setAttribute('aria-expanded', String(open));
+    if (open) this.el.roster.querySelector('.rrow')?.setAttribute('tabindex', '-1');
+  }
+
   _renderRoster() {
     const s = this.state;
     const list = (seat) => Object.values(s.parties).filter((p) => p.owner === seat && p.alive && !p.retired).sort((a, b) => a.localColumn - b.localColumn || (a.kind < b.kind ? -1 : 1));
@@ -921,7 +932,7 @@ export class VersusApp {
           if (this._addCommand(this.viewSeat, { type: 'load_supply', cardId: this.tool.cardId, partyId: p.id })) this._toast(`Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`);
           this.tool = null; this._renderAll(); return;
         }
-        this.selected = { kind: 'party', id: p.id }; this._autoLayer(p); this._focusSelection(); this._renderAll();
+        this.selected = { kind: 'party', id: p.id }; this._autoLayer(p); this._focusSelection(); this._toggleRoster(false); this._renderAll();
       } },
         h('span', { class: `dot ${p.owner.toLowerCase()}` }), h('b', {}, p.mount ? p.mount[0].toUpperCase() + p.mount.slice(1) : 'Pawn'), p.commander ? ' ★' : '',
         h('span', { class: 'dim' }, ` R${p.region.row}C${p.region.column}`), ` ${living}/9`,

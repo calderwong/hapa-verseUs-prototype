@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux09,ux10,ux14rm').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux09,ux10,ux14rm,ux06').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -351,6 +351,38 @@ if (want.has('ux14rm')) {
     await page.close();
   }
   report.journeys.ux14rm = j;
+}
+
+// --- UX-06: critical controls stay usable across window sizes and enlarged text --------------------
+// Enlarged text is browser zoom: a 1600x1000 window at 150% is a 1067x667 CSS viewport at DPR 1.5.
+if (want.has('ux06')) {
+  const j = { cases: [] };
+  for (const [vw, vh, dpr, name] of [[1600, 1000, 1, '1600x1000'], [1280, 720, 1, '1280x720'], [1100, 900, 1, '1100x900'], [1067, 667, 1.5, '1600x1000 at 150% text']]) {
+    const page = await open('autostart=1&a=human&b=bot&seed=1');
+    await page.setViewport({ width: vw, height: vh, deviceScaleFactor: dpr });
+    await sleep(1500);
+    const m = await page.evaluate(() => {
+      const box = (sel) => { const e = document.querySelector(sel); if (!e) return null; const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), shown: cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 40 && r.height > 20 }; };
+      const tiles = [...document.querySelectorAll('#ownhand .tile')].map((t) => t.getBoundingClientRect());
+      const inWin = (r) => r.left >= 0 && r.right <= innerWidth + 1 && r.top >= 0 && r.bottom <= innerHeight + 1;
+      const rb = document.querySelector('.ready-big')?.getBoundingClientRect();
+      return { world: box('#world'), roster: box('#roster'), rosterDrawerToggle: !!document.querySelector('.roster-toggle') && getComputedStyle(document.querySelector('.roster-toggle')).display !== 'none', resources: box('#resources'), plan: box('#plan'), ownTilesVisible: tiles.filter((r) => inWin(r) && r.width >= 40).length, ownTileMinWidth: Math.round(Math.min(...tiles.map((r) => r.width))), readyVisible: !!rb && inWin(rb) && rb.height >= 28, inspector: box('#inspector') };
+    });
+    m.window = name;
+    m.shot = await shot(page, `ux06-${name.replace(/[^0-9a-z]+/gi, '-')}`);
+    if (m.rosterDrawerToggle) { // the drawer: open, choose a party, closes; reopen and Escape closes
+      await page.click('.roster-toggle'); await sleep(300);
+      m.drawerOpened = await page.evaluate(() => getComputedStyle(document.getElementById('roster')).display !== 'none');
+      m.drawerShot = await shot(page, `ux06-${name.replace(/[^0-9a-z]+/gi, '-')}-drawer`);
+      await page.click('#roster .rrow'); await sleep(500);
+      m.drawerAfterPick = await page.evaluate(() => ({ open: document.body.classList.contains('roster-open'), selected: window.__versus.selected?.id ?? null }));
+      await page.click('.roster-toggle'); await sleep(200); await page.keyboard.press('Escape'); await sleep(200);
+      m.drawerAfterEscape = await page.evaluate(() => document.body.classList.contains('roster-open'));
+    }
+    j.cases.push(m);
+    await page.close();
+  }
+  report.journeys.ux06 = j;
 }
 
 await browser.close();

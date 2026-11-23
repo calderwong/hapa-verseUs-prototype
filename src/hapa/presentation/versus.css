@@ -25,9 +25,28 @@ html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink
 #resources { grid-area: res; overflow: auto; padding: 8px; }
 #plan { grid-area: plan; overflow: auto; padding: 8px; }
 #events { grid-area: ev; display: flex; gap: 6px; align-items: center; overflow-x: auto; overflow-y: hidden; padding: 0 8px; white-space: nowrap; font-size: 12.5px; }
+.roster-toggle { display: none; grid-area: tog; }
 @media (max-width: 1180px) {
-  #app { grid-template-columns: 0 minmax(0, 1fr) 300px; }
-  #roster { display: none; }
+  /* narrow windows and enlarged text (review UX-06): the roster becomes a drawer, the Mana pools
+     (the Burn drop target) keep a real column beside your hand, both ribbons stay aligned */
+  #app {
+    grid-template-columns: 150px minmax(0, 1fr) 300px;
+    grid-template-areas: 'bar bar bar' 'tog opp insp' 'world world insp' 'res own plan' 'ev ev ev';
+  }
+  .roster-toggle { display: block; margin: 0; border-radius: 4px; font-weight: 600; }
+  #matchbar { gap: 8px; white-space: nowrap; }
+  #matchbar > * { flex: none; } #matchbar .phase { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  #matchbar .active small, #matchbar .cmdhp { display: none; }
+  #roster { grid-area: auto; position: fixed; z-index: 40; top: 60px; bottom: 52px; left: 6px; width: 260px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+  body.roster-open #roster { display: block; }
+}
+@media (max-height: 760px) {
+  /* short windows: give the battlefield the height the bars do not need */
+  #app { grid-template-rows: 40px 70px minmax(0, 1fr) 128px 32px; gap: 4px; padding: 4px; }
+  #opphand .tile .abil, #opphand .tile .plannedtag { display: none; }
+  .tile .face { display: none; } /* short tiles keep the ability; the face stays in the inspector */
+  .tile .fc { display: none; } /* the forecast stays in the tile's title and the inspector */
+  #plan .ready-big { padding: 4px 8px; } #plan .ready-big .rb-sub { display: none; }
 }
 h3 { margin: 0 0 6px; font: 600 12px/1.2 var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 h4 { margin: 10px 0 4px; font: 600 11px var(--display); letter-spacing: .08em; color: #cdb98a; }
