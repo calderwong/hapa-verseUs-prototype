@@ -42,6 +42,8 @@ import { CardDrag } from './card-drag.js';
 import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } from './palette.js';
 import { openEditor } from './editor.js';
 import { InspectController } from './inspect.js';
+import { MemberLabels } from './member-labels.js';
+import { memberFacts, partyFacts, rangedPreview, healthAt } from '../rules/inspection.js';
 import { term, closeTerms } from './glossary.js';
 import { openLab, anyProfile, labProfiles } from './lab.js';
 import { localCatalog, localDecks } from './local-content.js';
@@ -105,8 +107,9 @@ export class VersusApp {
       b.addEventListener('pointerleave', () => this.inspect?.hover(null));
       b.addEventListener('focus', () => this.inspect?.focusSubject(subject));
       b.addEventListener('blur', () => this.inspect?.blurSubject());
-      b.addEventListener('click', () => { this.selected = { kind: 'basin', id: seat }; this._renderAll(); });
+      b.addEventListener('click', () => { this.pinned = { kind: 'basin', id: seat }; this._renderAll(); });
     }
+    this.labels = new MemberLabels(this.el.world);
     // one contextual inspection system for Cards, parties, members, basins and events (§3)
     this.inspect = new InspectController({
       host: this.el.world,
@@ -121,7 +124,7 @@ export class VersusApp {
       generation: () => this.generation ?? 0,
       build: (sub) => (this.session ? this._contentFor(sub) : null),
       project: (sub) => this._screenAnchor(sub),
-      onPin: (sub) => { if (!sub && this.selected) { this.selected = null; this.view?.select(this.state, null); this._renderAll(); } },
+      onPin: (sub) => { if (!sub && this.pinned) { this.pinned = null; this._renderAll(); } },
     });
   }
 
@@ -250,9 +253,21 @@ export class VersusApp {
     this.cam?.dispose();
     this.cam = new BoardCamera(this.engine.camera, this.el.world, { center: this.view.center, size: this.view.size, subject: this.view.subject });
     this.cam.groundAt = (cx, cy) => this._groundAt(cx, cy);
+    // a deliberate zoom-in over a party makes it the close-inspection subject (HF2-03); an explicit
+    // Focus keeps priority, and command selection never changes
+    this.cam.onWheelZoom = (f, cx, cy) => {
+      if (f >= 1 || this.tool || this.inspectParty?.via === 'focus') return;
+      const p = this._partyAtClient(cx, cy);
+      if (p) this.inspectParty = { partyId: p.id, via: 'zoom', since: performance.now() };
+    };
     this.cam.setHome(this.viewSeat);
     this._renderCamPad();
     this.selected = null;
+    this.pinned = null;
+    this.inspectParty = null;
+    this._returnPose = null;
+    this.expandedMember = null;
+    this.labels.clear();
     this.inspect.reset();
     this.ordersOpen = false;
     this._staleKey = null;
@@ -450,7 +465,7 @@ export class VersusApp {
     for (const t of this.view.supplyTokens?.values() ?? []) t.visible = false; // they return at their new places after playback
     this.view.syncPlanLinks(this.state, []); // the planned relationship ends where the resolved landing begins
     return new Promise((resolve) => {
-      this.playback = { t: 0, duration, all, events, resolve, shown: 0, paused: false };
+      this.playback = { t: 0, duration, all, events, resolve, shown: 0, paused: false, before };
       this._renderReadyButton();
       this._renderBasins(); // offerings leave the pit; counters show the accepted pool at once
     });
@@ -543,14 +558,17 @@ export class VersusApp {
       if (e.code === 'Escape' && document.body.classList.contains('roster-open')) { this._toggleRoster(false); return; }
       if (e.code === 'Escape' && this.inspect.dismissTop()) return; // the top contextual view first
       if (e.code === 'Escape' && this.ordersOpen && !this._can(this.viewSeat).stale) { this._toggleOrders(false); return; }
+      if (e.code === 'Escape' && this.tool) { this.tool = null; this._renderAll(); return; } // tool cancel, orders kept
+      if (e.code === 'Escape' && this.inspectParty) { this.inspectParty = null; this.expandedMember = null; return; } // labels off, camera stays
       if (e.code === 'Escape') { if (this.tool) { this.tool = null; this._renderAll(); } else { this.selected = null; this.view?.select(this.state, null); this._renderAll(); } return; }
       if (k === 'q') this.cam.rotate(45);
       else if (k === 'e') this.cam.rotate(-45);
       else if (k === 'z') this.cam.tilt(15);
       else if (k === 'x') this.cam.tilt(-15);
       else if (k === 'v') this.cam.toggleTactical();
-      else if (e.code === 'Home') this.cam.home();
-      else if (k === 'f') this._focusSelection();
+      else if (e.code === 'Home') { this.cam.home(); this.inspectParty = null; this._returnPose = null; this._renderCommandBar(); }
+      else if (k === 'f') { if (this.selected?.kind === 'party') this._focusInspect(this.selected.id); else this._focusSelection(); }
+      else if (k === 'r') this._returnCamera();
       else if (e.code === 'Space' && document.activeElement?.tagName !== 'BUTTON') { e.preventDefault(); if (this.playback) this.playback.paused = !this.playback.paused; }
       else if (/^[1-9]$/.test(e.key)) this._selectHandSlot(Number(e.key));
       else if (k === 'u') this._cardTool('supply');
@@ -573,7 +591,16 @@ export class VersusApp {
   }
 
   /** The ground point (y = 0) under a screen position, for zooming toward the cursor. */
+  /** The single party under a client point (stacked candidates are not guessed), or null. */
+  _partyAtClient(cx, cy) {
+    const pick = this._rayFrom({ clientX: cx, clientY: cy });
+    return pick?.candidates?.length === 1 ? pick.candidates[0].party : pick?.party ?? null;
+  }
+
   _groundAt(cx, cy) {
+    // over a party, zoom toward its real center (at any height), not the ground plane under it
+    const p = this._partyAtClient(cx, cy);
+    if (p) return this.view.toWorld(p.x, p.y).setY(this.view.partyY(p));
     const rect = this.engine.renderer.domElement.getBoundingClientRect();
     const ndc = new THREE.Vector2(((cx - rect.left) / rect.width) * 2 - 1, -((cy - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.engine.camera);
@@ -615,11 +642,15 @@ export class VersusApp {
     this.view.hover(p?.territory ?? null);
     this.hoverInfo = p;
     if (this.cardDrag?.active || this.cam?.dragging) return;
+    this.expandedMember = this.inspectParty && p?.member && p.member.party === this.inspectParty.partyId ? p.member.id : null;
     // hover inspects; it never selects, orders, moves the camera or takes focus (addendum §3)
     const card = this._cardTileAt(e);
     const site = card ? null : this._siteAt(e);
     const party = p?.candidates?.length === 1 ? p.candidates[0].party : p?.party ?? null;
-    this.inspect.hover(card ? { kind: 'card', id: card } : site ? { kind: 'basin', id: site.seat } : party ? { kind: 'party', id: party.id } : null);
+    // a party at ordinary distance gets a one-line hint, never the full document (HF2-02); the
+    // party under close inspection is already annotated on its own members
+    const partyHint = party && party.id !== this.inspectParty?.partyId ? { kind: 'hint', id: party.id } : null;
+    this.inspect.hover(card ? { kind: 'card', id: card } : site ? { kind: 'basin', id: site.seat } : partyHint);
   }
 
   /** The Fire Pit or Mana basin under a pointer event, or null. */
@@ -660,9 +691,9 @@ export class VersusApp {
     this._closePickList();
     if (e.button === 0) {
       const id = this._cardTileAt(e);
-      if (id) { this.selected = { kind: 'card', id }; this._renderAll(); return; }
+      if (id) { this.pinned = { kind: 'card', id }; this._renderAll(); return; }
       const site = this._siteAt(e);
-      if (site) { this.selected = { kind: 'basin', id: site.seat }; this._renderAll(); return; }
+      if (site) { this.pinned = { kind: 'basin', id: site.seat }; this._renderAll(); return; }
     }
     const pick = this._rayFrom(e);
     if (!pick) return;
@@ -823,13 +854,13 @@ export class VersusApp {
     const col = this.ctx.geo.toGlobal(seat, localCol, 1).column;
     const id = this.state.players[seat].bank.minor[String(col)];
     if (!id) return this._toast(`Your C${localCol} slot is empty`);
-    this.selected = { kind: 'card', id };
+    this.pinned = { kind: 'card', id };
     this._renderAll();
   }
 
   _cardTool(kind) {
-    if (this.selected?.kind !== 'card') return this._toast('Select one of your hand cards first (1–9)');
-    const card = this.state.cards[this.selected.id];
+    if (this.pinned?.kind !== 'card') return this._toast('Inspect one of your Cards first (hover it, or 1–9)');
+    const card = this.state.cards[this.pinned.id];
     if (card.owner !== this.viewSeat) return this._toast('That card belongs to the opponent');
     const refusal = this._editRefusal(card.owner);
     if (refusal) return this._toast(refusal, true);
@@ -865,6 +896,115 @@ export class VersusApp {
     if (this.view.terrain.cutaway !== want && (want !== null || this.view.terrain.cutaway < 1)) { this.view.setLayer(want); this.view.sync(this.state); }
   }
 
+  /**
+   * Frame a party for close inspection (HF2-03): its living members' real bounds at their real
+   * height, current yaw kept, enough room for labels; the prior pose is saved for one-step Return.
+   * Never changes selection, facing, orders or time.
+   */
+  _focusInspect(partyId) {
+    const p = this.state.parties[partyId];
+    if (!p || p.retired) return;
+    const pts = Object.values(p.slots).filter(Boolean).map((id) => this.view.sprites.get(id)).filter((sp) => sp?.visible).map((sp) => sp.position);
+    const c = this.view.toWorld(p.x, p.y).setY(this.view.partyY(p) + 0.8);
+    if (pts.length) { c.x = pts.reduce((n, v) => n + v.x, 0) / pts.length; c.z = pts.reduce((n, v) => n + v.z, 0) / pts.length; }
+    const r = Math.max(2.2 * 1.5, ...pts.map((v) => Math.hypot(v.x - c.x, v.z - c.z))) + 2.4;
+    if (!this._returnPose) this._returnPose = this.cam.savePose();
+    this.cam.frame(c, r);
+    this.inspectParty = { partyId, via: 'focus', since: performance.now() };
+    this._cmdOpen = null;
+    this._renderCommandBar();
+  }
+
+  /** One-step return to the pose before Inspect (HF2-03); releases close inspection. */
+  _returnCamera() {
+    if (!this._returnPose) return;
+    this.cam.restorePose(this._returnPose);
+    this._returnPose = null;
+    this.inspectParty = null;
+    this.expandedMember = null;
+    this._renderCommandBar();
+  }
+
+  /** Facts for the inspected party at the displayed moment, cached until that moment changes. */
+  _labelFacts(partyId) {
+    const pb = this.playback;
+    const key = `${this.generation}:${partyId}:${this.state.tick}:${this.session.events.length}:${pb ? pb.shown : 'final'}:${this.rev?.A}:${this.rev?.B}`;
+    if (this._factsCache?.key === key) return this._factsCache.facts;
+    const at = pb?.before ? healthAt(pb.before, pb.events, pb.shown) : null;
+    const party = partyFacts(this.state, this.ctx, partyId);
+    const members = {};
+    for (const id of Object.values(this.state.parties[partyId]?.slots ?? {})) if (id) members[id] = memberFacts(this.state, this.ctx, id, at);
+    // helpers of other parties standing in this formation's strip keep their own identity
+    const facts = { party, members, playing: !!pb };
+    this._factsCache = { key, facts };
+    return facts;
+  }
+
+  /** Text for one member's label from the shared read model (HF2-05). */
+  _memberText(f, enemyId) {
+    const U = this.ctx.U, ch = { physical: 'Phys', magic: 'Mag' }, CH = { physical: 'Physical', magic: 'Magic' };
+    const role = f.role === 'center' ? `${f.mount ? cap(f.mount) : 'Center'}${f.conditions.includes('commander') ? ' ★' : ''}` : cap(f.role);
+    const hpText = f.health.mode === 'party_pool' ? `pool ${pts(f.health.hp)}/${pts(f.health.max)}` : `${pts(f.health.hp)}/${pts(f.health.max)} HP`;
+    const hpPct = f.health.max ? Math.max(0, Math.min(1, f.health.hp / f.health.max)) : null;
+    const atk = f.attacks.map((a) => `${a.hits > 1 ? `${a.hits}×` : ''}${a.power} ${ch[a.channel]}${a.range ? ` r${a.range}` : ''}`).join(', ');
+    // protection grouped by channel and the faces it really covers; "+applied" marks a value that
+    // another source (a Card effect, a party ward) raises above the member's own
+    const def = [];
+    for (const c of ['physical', 'magic']) {
+      const byVal = new Map();
+      for (const [face, v] of Object.entries(f.protection[c])) { const k = `${v.total}|${v.total !== v.base}`; if (!byVal.has(k)) byVal.set(k, []); byVal.get(k).push(face); }
+      for (const [k, faces] of byVal) { const [total, applied] = k.split('|'); def.push(`${ch[c]} ${total} ${faces.length >= 5 ? 'all sides' : faces.join('/')}${applied === 'true' ? ' (+applied)' : ''}`); }
+    }
+    const combat = `Atk ${atk || '—'} · Def ${def.length ? def.join(' · ') : 'none'}${f.alive ? '' : ' · fallen'}`;
+    // the expanded breakdown: attacks in words, protection by face with base + applied sources
+    const detail = h('div', {},
+      ...f.attacks.map((a) => h('div', {}, `${cap(a.id)}: ${a.hits} × ${a.power} ${CH[a.channel]}${a.kind === 'ranged' ? `, base range ${a.range}${a.elevationAware ? ' (elevation changes it)' : ''}` : ', melee'}${a.charge ? ', charges' : ''}`)),
+      ...(() => { const out = []; for (const c of ['physical', 'magic']) for (const [face, v] of Object.entries(f.protection[c])) out.push(h('div', {}, `${cap(face)} ${CH[c]} ${v.total}${v.sources.length > 1 || v.total !== v.base ? ` = ${v.sources.map((x) => `${x.amount} ${String(x.kind).replace(/@\d+$/, '').replace(/^fixture\./, '').replace(/_/g, ' ')}`).join(' + ')}` : ''}`)); return out.length ? out : [h('div', { class: 'dim' }, 'No protection on any face')]; })(),
+      f.protectionMode === 'line' ? h('div', { class: 'dim' }, 'Line defense: a hit uses the shared value of the members it reaches.') : null,
+      f.health.mode === 'party_pool' ? h('div', { class: 'dim' }, 'Health is the party\'s shared pool.') : null,
+      (() => { const a = f.attacks.find((x) => x.kind === 'ranged'); const pv = a && enemyId ? rangedPreview(this.state, this.ctx, f.id, a.id, enemyId) : null; return pv ? h('div', { class: 'ok' }, `Preview vs ${partyShort(this.state, enemyId)}: power ${pv.power}, range ${pv.range}${pv.elevation !== 'level' ? ` (${pv.elevation.replace('_', ' ')})` : ''}${pv.blocked ? ', blocked (needs open sky)' : ''} — not a result`) : null; })(),
+      f.conditions.filter((c) => !['center'].includes(c)).length ? h('div', { class: 'warn' }, f.conditions.filter((c) => c !== 'center').join(', ').replace(/_/g, ' ')) : null);
+    return { role, health: hpText, healthPct: f.health.mode === 'member' ? hpPct : null, combat, detail, key: `${f.id}|${hpText}|${combat}|${f.alive}|${enemyId}` };
+  }
+
+  /** Per frame: annotate the inspected party's real members (HF2-04/06/07). */
+  _updateLabels() {
+    const sub = this.inspectParty;
+    const p = sub ? this.state?.parties[sub.partyId] : null;
+    if (!p || p.retired || !p.alive) { if (sub) this.inspectParty = null; this.labels.update(null); return; }
+    const cam = this.engine.camera, world = this.el.world.getBoundingClientRect(), canvas = this.engine.renderer.domElement.getBoundingClientRect();
+    const toScreen = (v) => { const q = v.clone().project(cam); return q.z > 1 ? null : { x: canvas.left - world.left + ((q.x + 1) / 2) * canvas.width, y: canvas.top - world.top + ((1 - q.y) / 2) * canvas.height }; };
+    const center = this.view.toWorld(p.x, p.y).setY(this.view.partyY(p) + 0.4);
+    const right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0).setY(0).normalize();
+    const a0 = toScreen(center), a1 = toScreen(center.clone().addScaledVector(right, 1.5));
+    const pxPerMember = a0 && a1 ? Math.hypot(a1.x - a0.x, a1.y - a0.y) : 0;
+    // vertical room between formation rows on screen (foreshortened by pitch): one row = 1.5 units
+    const fwd = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 2).setY(0).normalize();
+    const a2 = toScreen(center.clone().addScaledVector(fwd, 1.5));
+    const rowPx = a0 && a2 ? Math.abs(a2.y - a0.y) : 0;
+    // release: zoomed well out, or the party has left the middle of the view
+    const W = world.width, H = world.height;
+    const away = !a0 || a0.x < W * 0.05 || a0.x > W * 0.95 || a0.y < H * 0.05 || a0.y > H * 0.95;
+    if ((pxPerMember < 36 || away) && performance.now() - (sub.since ?? 0) > 1200) { this.inspectParty = null; this.expandedMember = null; this.labels.update(null); this._renderCommandBar(); return; }
+    const facts = this._labelFacts(p.id);
+    const roofed = standingOf(this.state, this.ctx, p).kind === 'tunnel' && this.view.terrain.cutaway === null;
+    const enemy = Object.values(this.state.parties).filter((q) => q.owner !== p.owner && q.alive && !q.retired).sort((x, y) => Math.max(Math.abs(x.region.column - p.region.column), Math.abs(x.region.row - p.region.row)) - Math.max(Math.abs(y.region.column - p.region.column), Math.abs(y.region.row - p.region.row)))[0];
+    const members = Object.values(facts.members).map((f) => {
+      const sp = this.view.sprites.get(f.id);
+      return { id: f.id, visible: !!sp?.visible && !roofed, anchor: sp ? toScreen(sp.position.clone().setY(sp.position.y + 1.35)) : null, text: this._memberText(f, enemy?.id ?? null) };
+    });
+    const pf = facts.party, planned = this._plannedSupply(p);
+    const party = {
+      anchor: a0 ? { x: a0.x + pxPerMember * 1.95, y: a0.y } : null,
+      lines: [`${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'}${pf.commander ? ' ★ Commander' : ''} · ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]}`,
+        `Supply ${pts(pf.supply)}${planned ? ` (+${pts(planned)} planned)` : ''} · ${STATE_NAME[pf.state] ?? pf.state}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''}`,
+        `Band ${fmtBand(pf.band)} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`],
+      note: roofed ? 'Roofed tunnel: open its layer to read the members (cutaway)' : facts.playing ? 'Playing back: health as of the moment shown' : null,
+      key: `${JSON.stringify(pf)}|${planned}|${roofed}|${facts.playing}`,
+    };
+    this.labels.update({ partyId: p.id, members, party, pxPerMember, rowPx, expanded: this.expandedMember });
+  }
+
   _focusSelection() {
     const s = this.selected;
     if (s?.kind === 'party') { const p = this.state.parties[s.id]; this.cam.focusOn(this.view.toWorld(p.x, p.y).setY(this.view.partyY(p))); }
@@ -879,10 +1019,11 @@ export class VersusApp {
     this.scenery?.update(dt);
     this.view.update(dt, this.engine.camera);
     this.view.viewportH = this.engine.renderer.domElement.clientHeight;
-    const busy = !!(this.cardDrag?.active || this.cam?.dragging);
+    const busy = !!(this.cardDrag?.active || this.cam?.dragging || this.tool);
     if (busy !== this._inspectBusy) { this._inspectBusy = busy; this.inspect.setSuspended(busy); }
     this.inspect.update();
     this._placeBasinCounters();
+    this._updateLabels();
     const emph = `${this.inspect.transientSubject?.id ?? ''}|${this.inspect.pinnedSubject?.id ?? ''}`;
     if (emph !== this._emphKey && this.session) { this._emphKey = emph; this._syncIntents(); }
     this.el.compass.textContent = `▲ ${Math.round(this.cam.bearing)}° · ${this.cam.tactical ? 'Tactical' : 'Angled'} · home ${this.viewSeat}`;
@@ -942,6 +1083,7 @@ export class VersusApp {
     this._renderRoster();
     this._renderOrders();
     this._renderDecision();
+    this._renderCommandBar();
     this._renderBasins();
     this._syncInspection();
     this._renderEvents();
@@ -1148,8 +1290,13 @@ export class VersusApp {
   _renderRoster() {
     const s = this.state;
     const subjectRow = (subject, label, text, cls = '') => {
-      const pin = () => { this.selected = subject.kind === 'party' ? { kind: 'party', id: subject.id } : { kind: subject.kind, id: subject.id }; if (subject.kind === 'party') { this._autoLayer(s.parties[subject.id]); this._focusSelection(); } this._focusInspectorNext = true; this._renderAll(); };
-      return h('button', { class: `rrow ${cls}${this.selected?.id === subject.id ? ' sel' : ''}`, 'aria-label': label, onclick: pin, onfocus: () => this.inspect.focusSubject(subject), onblur: () => this.inspect.blurSubject() }, ...text);
+      const pick = () => {
+        if (subject.kind === 'party') { this.selected = { kind: 'party', id: subject.id }; this._autoLayer(s.parties[subject.id]); this._focusSelection(); }
+        else this.pinned = { kind: subject.kind, id: subject.id };
+        this._focusInspectorNext = true; this._renderAll();
+      };
+      const peekAs = subject.kind === 'party' ? { kind: 'hint', id: subject.id } : subject;
+      return h('button', { class: `rrow ${cls}${this.selected?.id === subject.id || this.pinned?.id === subject.id ? ' sel' : ''}`, 'aria-label': label, onclick: pick, onfocus: () => this.inspect.focusSubject(peekAs), onblur: () => this.inspect.blurSubject() }, ...text);
     };
     const parties = (seat) => Object.values(s.parties).filter((p) => p.owner === seat && p.alive && !p.retired).sort((a, b) => a.localColumn - b.localColumn || (a.kind < b.kind ? -1 : 1)).map((p) => {
       const living = Object.values(p.slots).filter((id) => id && s.members[id].alive).length;
@@ -1297,15 +1444,18 @@ export class VersusApp {
     const minted = this.tickEvents?.filter((e) => e.type === 'card_minted' || e.type === 'tick_started' || e.type === 'mana_expired') ?? [];
     const all = [...(this.playback ? [] : []), ...evs];
     const shown = (all.length ? all : minted).slice(-60);
-    this.el.events.replaceChildren(...shown.map((e) => { const open = () => { this.inspectEvent = e.id; this.selected = { kind: 'event', id: e.id, event: e }; this._renderAll(); }; return h('span', { class: `ev ev-${e.type}${this.inspectEvent === e.id ? ' sel' : ''}`, onclick: open, ...kbd(open) }, eventLine(s, e)); }));
+    this.el.events.replaceChildren(...shown.map((e) => { const open = () => { this.inspectEvent = e.id; this.pinned = { kind: 'event', id: e.id, event: e }; this._renderAll(); }; return h('span', { class: `ev ev-${e.type}${this.inspectEvent === e.id ? ' sel' : ''}`, onclick: open, ...kbd(open) }, eventLine(s, e)); }));
     this.el.events.scrollLeft = this.el.events.scrollWidth;
   }
 
-  /** The pinned view follows the selection; hover views are the InspectController's own. */
+  /**
+   * The pinned view shows only an explicit reference (a Card, basin, event, territory, or a party
+   * the player asked to see in full). Command selection never opens it (addendum 02, HF2-01).
+   */
   _syncInspection() {
-    const sel = this.selected;
-    const subj = sel && ['card', 'party', 'member', 'event', 'basin', 'territory'].includes(sel.kind)
-      ? { kind: sel.kind, id: sel.kind === 'territory' ? `${sel.column},${sel.row}` : sel.id, event: sel.event } : null;
+    const ref = this.pinned;
+    const subj = ref && ['card', 'party', 'member', 'event', 'basin', 'territory'].includes(ref.kind)
+      ? { kind: ref.kind, id: ref.kind === 'territory' ? `${ref.column},${ref.row}` : ref.id, event: ref.event } : null;
     const cur = this.inspect.pinnedSubject;
     if (subj && this.inspect.key(subj) !== this.inspect.key(cur)) this.inspect.pin(subj, { opener: document.activeElement });
     else if (!subj && cur) this.inspect.unpin({ restoreFocus: false });
@@ -1313,7 +1463,7 @@ export class VersusApp {
   }
 
   /** Where keyboard routing lands: the required decision, else the pinned view. */
-  _inspectorEl() { return this.pendingChoice || !this.inspect.shown.pinned ? this.el.decision : this.inspect.shown.pinned.el; }
+  _inspectorEl() { return this.pendingChoice ? this.el.decision : this.inspect.shown.pinned?.el ?? (this.el.cmdbar?.hidden === false ? this.el.cmdbar : this.el.decision); }
 
   /**
    * Content for an inspected subject, by stable id (addendum §3 "Lifecycle"): a consumed or
@@ -1333,6 +1483,14 @@ export class VersusApp {
       if (!p) return null;
       if (p.retired) return { title: `${partyShort(s, p.id)} (merged)`, tag: 'history', node: h('div', {}, h('p', {}, `This party merged into ${partyShort(s, p.mergedInto)}.`), h('button', { class: 'linkish', onclick: () => { this.selected = { kind: 'party', id: p.mergedInto }; this._renderAll(); } }, `Inspect ${partyShort(s, p.mergedInto)}`)) };
       return { title: `${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★ Commander' : ''}`, tag: p.owner === this.viewSeat ? 'Yours' : `${p.owner}'s`, node: this._partyPanel(p) };
+    }
+    if (sub.kind === 'hint') {
+      const p = s.parties[sub.id];
+      if (!p || p.retired) return null;
+      const living = Object.values(p.slots).filter((id) => id && s.members[id]?.alive).length, planned = this._plannedSupply(p);
+      const why = p.owner === this.viewSeat ? this._moveReason(p) : null;
+      return { title: `${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★' : ''} · R${p.region.row}C${p.region.column}`, tag: 'party', compact: true,
+        node: h('div', { class: 'hint-line' }, `${living}/9 · Supply ${pts(supplyOf(p))}${planned ? ` (+${pts(planned)} planned)` : ''} · ${STATE_NAME[p.state] ?? p.state}${p.destination ? ` → R${p.destination.row}C${p.destination.column}` : ''}`, why ? h('div', { class: 'warn' }, why) : null, h('div', { class: 'dim' }, p.owner === this.viewSeat ? 'Click to command · F or zoom in to inspect its members' : 'Zoom in to inspect its members')) };
     }
     if (sub.kind === 'member') { const m = s.members[sub.id]; return m ? { title: memberName(s, m.id), tag: 'Member', node: this._memberPanel(m) } : null; }
     if (sub.kind === 'event') return sub.event ? { title: cap(sub.event.type.replace(/_/g, ' ')), tag: `Tick ${sub.event.tick ?? s.tick}`, node: this._eventPanel(sub.event) } : null;
@@ -1450,7 +1608,7 @@ export class VersusApp {
     const KEEP = new Set(['supply_loaded', 'card_burned', 'destination_reached', 'parties_merged', 'elevation_changed', 'member_died', 'ability_resolved', 'card_damage', 'exchange', 'terrain_changed', 'conceded']);
     const evs = this.playback ? [] : (this.lastEvents ?? []).filter((e) => KEEP.has(e.type) && eventLine(s, e));
     if (!evs.length) return null;
-    const open = (e) => { this.inspectEvent = e.id; this.selected = { kind: 'event', id: e.id, event: e }; this._focusInspectorNext = true; this._renderAll(); };
+    const open = (e) => { this.inspectEvent = e.id; this.pinned = { kind: 'event', id: e.id, event: e }; this._focusInspectorNext = true; this._renderAll(); };
     return h('div', { class: 'last-result' },
       h('b', {}, `Tick ${evs[0].tick ?? s.tick - 1} result:`),
       h('ul', {}, ...evs.slice(0, 10).map((e) => h('li', {}, h('button', { class: 'linkish', onclick: () => open(e) }, eventLine(s, e))))),
@@ -1467,6 +1625,63 @@ export class VersusApp {
       h('div', {}, 'Ivory corner brackets: your selection. A small dashed square in a formation: an empty Pawn center.'),
       h('div', {}, 'Gold square under a member: a corner helper in the contact strip (still in its own party). Red triangle: it advanced into an enemy casualty\'s gap.'),
       h('div', {}, 'Terrain labels: ▲ HILLTOP, ▽ OPEN PIT (exposed), ▭ TUNNEL (roofed, not exposed), ✈ FLYING (a line drops to the floor). [ and ] step the height layers.'));
+  }
+
+  /**
+   * Why a party cannot take a new move order now, in a few words (HF2-01), or null when it can.
+   * Short forms of the same distinctions the full party view explains.
+   */
+  _moveReason(p) {
+    const s = this.state;
+    if (!this._can(p.owner).edit) return this._can(p.owner).frozen ? 'Plan frozen after Ready' : this._editRefusal(p.owner);
+    if (!p.mount) return 'Needs a Mount: a Pawn cannot move on its own';
+    if (p.mountLost) return 'Mount lost: cannot travel';
+    if (!s.activeColumns.includes(p.region.column)) return `C${this.ctx.geo.toLocal(p.owner, p.region.column, 1).column} inactive: next active Tick ${nextActivation(this.ctx.profile, p.region.column, s.tick) ?? '—'}`;
+    if (!this._fundedTargets(p).some((d) => d.funded)) return 'No Supply for any route: load a Card first';
+    return null;
+  }
+
+  /**
+   * The contextual command group for the command-selected party (addendum 02, HF2-01): docked at
+   * the bottom of the field, small, never the party document. Supply, Move, Face and terrain work
+   * reuse the same validated controls; Inspect frames the real formation; Details pins the full
+   * party reference only when asked.
+   */
+  _renderCommandBar() {
+    if (!this.el.cmdbar) { this.el.cmdbar = h('section', { class: 'cmdbar', role: 'region', 'aria-label': 'Selected party commands' }); this.el.world.append(this.el.cmdbar); }
+    const bar = this.el.cmdbar, s = this.state;
+    const p = this.selected?.kind === 'party' ? s.parties[this.selected.id] : null;
+    if (!p || p.retired || !p.alive || this.playback) { bar.hidden = true; bar.replaceChildren(); return; }
+    bar.hidden = false;
+    const own = p.owner === this.viewSeat && this.seats[p.owner] === 'human';
+    const open = this._cmdOpen;
+    // one open menu at a time; its state lives here (re-rendering never races a toggle event)
+    const menu = (key, label, body, disabled = false) => h('details', { class: 'cmd-menu', open: open === key && !disabled ? true : null },
+      h('summary', { 'aria-disabled': disabled ? 'true' : null, 'aria-expanded': String(open === key), class: disabled ? 'off' : '', onclick: (e) => { e.preventDefault(); if (disabled) return; this._cmdOpen = this._cmdOpen === key ? null : key; this._renderCommandBar(); bar.querySelector(`details.cmd-menu[open] .cmd-pop button, details.cmd-menu[open] .cmd-pop summary`)?.focus(); } }, label),
+      disabled ? null : h('div', { class: 'cmd-pop' }, body));
+    const reason = own ? this._moveReason(p) : null;
+    const planned = this._plannedSupply(p);
+    const active = s.activeColumns.includes(p.region.column);
+    const facing = own && p.mount && active && this._can(p.owner).edit && !p.formationChange
+      ? h('div', { class: 'row' }, ...['N', 'E', 'S', 'W'].map((f) => h('button', { disabled: f === p.facing, onclick: () => { if (this._addCommand(p.owner, { type: 'change_formation', partyId: p.id, facing: f })) this._toast(`Formation change to face ${f} planned (one Tick)`); } }, f))) : null;
+    const work = own && active && this._can(p.owner).edit ? this._workList(p) : null;
+    const move = own && p.mount ? this._moveList(p) : null;
+    bar.replaceChildren(...[
+      h('div', { class: 'cmd-id' },
+        h('b', {}, `${own ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★' : ''}`), ` R${p.region.row}C${p.region.column} · `, term('supply', `Supply ${pts(supplyOf(p))}`, { party: p, held: supplyOf(p), planned }), planned ? h('span', { class: 'planned-supply' }, ` +${pts(planned)}`) : null,
+        reason ? h('span', { class: 'cmd-why', role: 'status' }, reason) : null),
+      own ? h('div', { class: 'cmd-row' },
+        menu('supply', 'Supply ▾', this._supplyLoader(p) ?? h('p', { class: 'dim small' }, 'No unplanned Cards.'), !this._can(p.owner).edit),
+        p.mount ? menu('move', 'Move to ▾', move ?? h('p', { class: 'dim small' }, reason ?? 'No legal destination.'), !move) : null,
+        p.mount ? menu('face', 'Face ▾', facing ?? h('p', { class: 'dim small' }, 'Not now'), !facing) : null,
+        work ? menu('work', 'Work ▾', work) : null,
+        h('button', { onclick: () => this._focusInspect(p.id), title: 'Frame this formation and read its members (F)' }, 'Inspect (F)'),
+        this._returnPose ? h('button', { onclick: () => this._returnCamera(), title: 'Back to the view before Inspect (R)' }, '↩ Return (R)') : null,
+        h('button', { class: 'linkish', onclick: () => { this.pinned = { kind: 'party', id: p.id }; this._renderAll(); } }, 'Details')) :
+        h('div', { class: 'cmd-row' }, h('button', { onclick: () => this._focusInspect(p.id) }, 'Inspect (F)'), this._returnPose ? h('button', { onclick: () => this._returnCamera() }, '↩ Return (R)') : null, h('button', { class: 'linkish', onclick: () => { this.pinned = { kind: 'party', id: p.id }; this._renderAll(); } }, 'Details')),
+    ].filter(Boolean));
+    // the Move list inside the bar is open by default in its popover (no nested disclosure)
+    const ml = bar.querySelector('details.movelist'); if (ml) ml.open = true;
   }
 
   _partyPanel(p) {
@@ -1596,6 +1811,7 @@ export class VersusApp {
             const plan = planPartyRoute(s, this.ctx, p, routeOrigin(s, this.ctx, p), d);
             if (plan.route) this.view.showRoute(p, plan.route.map((n) => { const c = this.ctx.geo.center(n.column, n.row); return [c.x, c.y]; }));
             this._toast(`Destination: R${d.row}C${d.column} (planned, needs ${need(d)})`);
+            this._cmdOpen = null; // the choice is made: the menu closes, the endpoint shows on the board
             // the keyboard follows the decision: the new order when Orders is open, else Ready
             this._focusAfter = () => (this.ordersOpen ? [...this.el.plan.querySelectorAll(`.planbox.${p.owner.toLowerCase()} button.x`)].at(-1) : null) ?? this.el.readyBig;
             this._renderAll();
@@ -1646,7 +1862,7 @@ export class VersusApp {
     return h('div', { class: 'supply-loader' },
       h('h4', {}, 'Load Supply'),
       cards.length
-        ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { disabled: !this._can(seat).edit, 'aria-label': `Load ${pts(c.supply)} Supply from ${cardShort(s, c.id)} into ${partyShort(s, p.id)}${Object.keys(c.mana ?? {}).length ? ` (gives up ${fmtMana(c.mana)} and its ability)` : ' (gives up its ability)'}`, title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._focusAfter = () => this._inspectorEl().querySelector('details.movelist > summary') ?? this._inspectorEl().querySelector('.supply-loader button'); this._renderAll(); } } },
+        ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { disabled: !this._can(seat).edit, 'aria-label': `Load ${pts(c.supply)} Supply from ${cardShort(s, c.id)} into ${partyShort(s, p.id)}${Object.keys(c.mana ?? {}).length ? ` (gives up ${fmtMana(c.mana)} and its ability)` : ' (gives up its ability)'}`, title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._cmdOpen = 'move'; this._focusAfter = () => this._inspectorEl().querySelector('details.cmd-menu[open] .movelist button') ?? this._inspectorEl().querySelector('details.movelist > summary') ?? this._inspectorEl().querySelector('.supply-loader button'); this._renderAll(); } } },
           `+${pts(c.supply)} `, h('small', { class: 'dim' }, `C${c.localColumn} ${c.rank}${SUIT[c.suit] ?? ''}`), (() => { const k = this._rangeIfLoaded(p, c.id); return k ? h('small', { class: 'ok' }, ` if loaded: +${k} destination${k > 1 ? 's' : ''}`) : null; })())))
         : h('p', { class: 'dim small' }, 'No unplanned hand cards. New cards mint from the highlighted columns each Tick.'),
       h('p', { class: 'dim small' }, 'While your plan is editable (before you press Ready), any available card can become Supply for any of your parties, in any column — not only active ones. Moving one step costs 1 Supply.'));
@@ -1720,7 +1936,7 @@ export class VersusApp {
             `${partyShort(s, p.id)}`, h('small', { class: 'dim' }, ` Supply ${pts(supplyOf(p) + this._plannedSupply(p))} → ${pts(supplyOf(p) + this._plannedSupply(p) + card.supply)}`))))),
         h('button', { class: 'burn', 'aria-label': manaN ? `Burn ${cardShort(s, card.id)} for ${fmtMana(card.mana)}` : `Burn ${cardShort(s, card.id)} for 0 Mana; consumes this Card`, onclick: () => { if (this._addCommand(seat, { type: 'burn', cardId: card.id })) this._toast(manaN ? `Burn planned: +${fmtMana(card.mana)} when the Tick resolves` : 'Burn planned for 0 Mana: the Card is consumed when the Tick resolves'); } },
           manaN ? `Burn for ${fmtMana(card.mana)}` : 'Burn for 0 Mana — consumes this Card'),
-        def && def.category !== 'resource' ? h('button', { disabled: def.timing === 'response', title: def.timing === 'response' ? 'A response: offered when the opponent announces a Spell' : '', onclick: () => { this.selected = { kind: 'card', id: card.id }; this._cardTool('ability'); } }, def.timing === 'response' ? `${def.title} (response only)` : `Use ${def.title}…`) : null,
+        def && def.category !== 'resource' ? h('button', { disabled: def.timing === 'response', title: def.timing === 'response' ? 'A response: offered when the opponent announces a Spell' : '', onclick: () => { this.pinned = { kind: 'card', id: card.id }; this._cardTool('ability'); } }, def.timing === 'response' ? `${def.title} (response only)` : `Use ${def.title}…`) : null,
         this.tool?.cardId === card.id && this.tool.step === 'facing' ? h('div', { class: 'row' }, 'Facing ', ...['N', 'E', 'S', 'W'].map((f) => h('button', { onclick: () => { this._addCommand(seat, { type: 'play_ability', cardId: card.id, actorPartyId: this.tool.actorPartyId, target: { facing: f } }); this.tool = null; this._renderAll(); } }, f))) : null);
     }
     const art = renditionFor(card);
@@ -1757,7 +1973,7 @@ export class VersusApp {
     return h('div', {}, h('h3', {}, cap(e.type.replace(/_/g, ' '))), h('p', {}, eventLine(s, e) ?? ''),
       causes.length ? h('p', { class: 'dim small' }, `Involves: ${causes.join(' · ')} · Tick ${e.tick ?? s.tick}`) : null,
       // the Card behind a resolved result stays one step away (its instance, Supply and Mana)
-      e.cardId && s.cards[e.cardId] ? h('button', { class: 'linkish', onclick: () => { this.selected = { kind: 'card', id: e.cardId }; this._focusInspectorNext = true; this._renderAll(); } }, `Inspect the Card: ${cardShort(s, e.cardId)} (Supply ${pts(s.cards[e.cardId].supply)}, ${Object.keys(s.cards[e.cardId].mana ?? {}).length ? fmtMana(s.cards[e.cardId].mana) : 'no Mana'})`) : null,
+      e.cardId && s.cards[e.cardId] ? h('button', { class: 'linkish', onclick: () => { this.pinned = { kind: 'card', id: e.cardId }; this._focusInspectorNext = true; this._renderAll(); } }, `Inspect the Card: ${cardShort(s, e.cardId)} (Supply ${pts(s.cards[e.cardId].supply)}, ${Object.keys(s.cards[e.cardId].mana ?? {}).length ? fmtMana(s.cards[e.cardId].mana) : 'no Mana'})`) : null,
       e.partyId && s.parties[e.partyId] ? h('button', { class: 'linkish', onclick: () => { this.selected = { kind: 'party', id: e.partyId }; this._focusInspectorNext = true; this._focusSelection(); this._renderAll(); } }, `Inspect the party: ${partyShort(s, e.partyId)}`) : null,
       h('details', { class: 'details' }, h('summary', {}, 'Details (exact record)'), h('pre', { class: 'raw' }, JSON.stringify(e, null, 1).slice(0, 1600))));
   }

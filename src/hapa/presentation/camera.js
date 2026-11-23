@@ -122,7 +122,7 @@ export class BoardCamera {
   zoom(factor, toward = null) {
     this.atHome = false;
     const before = this.goal.distance;
-    this.goal.distance = Math.min(this.board.size * 3.6, Math.max(this.board.size * 0.1, before * factor));
+    this.goal.distance = Math.min(this.board.size * 3.6, Math.max(this.board.size * 0.06, before * factor));
     const k = this.goal.distance / before;
     if (toward && k !== 1) {
       this.goal.focus.x = toward.x + (this.goal.focus.x - toward.x) * k;
@@ -141,6 +141,24 @@ export class BoardCamera {
   wasDrag() { return this._moved > 5; }
   /** Focus a world point at its own height (a flyer, a hilltop or a tunnel floor), closing in if far. */
   focusOn(v) { this.atHome = false; this.goal.focus.set(v.x, v.y ?? 0, v.z); this.goal.distance = Math.min(this.goal.distance, this.board.size * 0.55); }
+
+  /** The current goal pose, to return to later (addendum 02, HF2-03). */
+  savePose() { return { yaw: this.goal.yaw, pitch: this.goal.pitch, distance: this.goal.distance, focus: this.goal.focus.clone(), atHome: this.atHome }; }
+  restorePose(p) { if (!p) return; this.goal.yaw = p.yaw; this.goal.pitch = p.pitch; this.goal.distance = p.distance; this.goal.focus.copy(p.focus); this.atHome = p.atHome; }
+
+  /**
+   * Frame a world sphere (center at its real height, radius in world units) keeping the current
+   * yaw; the pitch is only raised enough to read a formation (never turns the party).
+   */
+  frame(center, radius, { minPitch = 38 } = {}) {
+    this.atHome = false;
+    this.goal.focus.copy(center);
+    this.goal.pitch = Math.max(this.goal.pitch, minPitch * DEG);
+    const half = (this.camera.fov * DEG) / 2;
+    const aspect = Math.max(0.5, (this.el.clientWidth || 1) / (this.el.clientHeight || 1));
+    const fitV = radius / Math.sin(half), fitH = radius / Math.sin(Math.atan(Math.tan(half) * aspect));
+    this.goal.distance = Math.min(this.board.size * 3.6, Math.max(this.board.size * 0.06, Math.max(fitV, fitH)));
+  }
 
   /** Pan in screen directions (world units scaled by distance). */
   pan(dx, dy) {
@@ -219,6 +237,7 @@ export class BoardCamera {
       if (e.shiftKey) { this.tilt(-Math.sign(e.deltaY) * 5); return; }
       // pinch (ctrl+wheel on trackpads) is finer; zoom toward the ground under the cursor
       const f = Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0015));
+      this.onWheelZoom?.(f, e.clientX, e.clientY); // the app may choose an inspection subject (HF2-03)
       this.zoom(f, this.groundAt?.(e.clientX, e.clientY) ?? null);
     }, { passive: false, signal });
   }
