@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux09,ux10,ux14rm,ux06,ux14kb').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux08b,ux09,ux10,ux14rm,ux06,ux14kb').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -26,7 +26,7 @@ const puppeteer = (await import(pcPath ? pathToFileURL(path.join(pcPath, 'lib/pu
 const executablePath = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 fs.mkdirSync(out, { recursive: true });
 
-const browser = await puppeteer.launch({ executablePath, headless: 'new', args: [`--window-size=${W},${H}`, '--ignore-gpu-blocklist', '--enable-webgl', '--use-angle=metal', '--no-first-run', '--mute-audio'], defaultViewport: { width: W, height: H, deviceScaleFactor: 1 } });
+const browser = await puppeteer.launch({ executablePath, headless: 'new', protocolTimeout: 90000, args: [`--window-size=${W},${H}`, '--ignore-gpu-blocklist', '--enable-webgl', '--use-angle=metal', '--no-first-run', '--mute-audio'], defaultViewport: { width: W, height: H, deviceScaleFactor: 1 } });
 const report = { label, base, viewport: { width: W, height: H, dpr: 1 }, chrome: await browser.version(), journeys: {} };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -312,6 +312,17 @@ if (want.has('ux09')) {
   j.errors = page.errors;
   report.journeys.ux09 = j;
   await page.close();
+}
+
+// --- UX-08b: compact Mana never hides an overflow (labeled cards fixture) ----------------------
+if (want.has('ux08b')) {
+  const j = {};
+  // Mana overflow: the labeled cards fixture holds 0-, 1-, 3- and 5-color cards
+  const pc = await open('autostart=1&fixture=cards&a=human&b=human');
+  j.overflow = await pc.evaluate(() => [...document.querySelectorAll('#ownhand .tile:not(.empty), #opphand .tile:not(.empty)')].map((t) => ({ ribbon: t.closest('#ownhand') ? 'own' : 'opp', label: t.querySelector('.tl')?.innerText.replace(/\s+/g, ' '), chips: t.querySelectorAll('.mchip').length, more: t.querySelector('.more')?.innerText ?? null, moreTitle: t.querySelector('.more')?.title ?? null, none: !!t.querySelector('.nomana') })));
+  j.overflowShot = await shot(pc, 'ux08-mana-overflow');
+  await pc.close();
+  report.journeys.ux08b = j;
 }
 
 // --- UX-10: ownership quiet, selection strongest — a selected Castle among its neighbours ---------

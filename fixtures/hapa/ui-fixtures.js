@@ -142,3 +142,28 @@ UI_FIXTURES.stacked = {
     return fx;
   },
 };
+
+/**
+ * Card anatomy check (review UX-08): A's hand holds cards with no Mana, one color, three colors
+ * and five colors, so the compact faces must show an explicit overflow ("+n") rather than an
+ * apparent zero. Fixture cards; their Mana payloads do not claim to come from ordinary minting.
+ */
+UI_FIXTURES.cards = {
+  title: 'Card anatomy (Mana overflow)',
+  description: 'A\'s hand: C2 no Mana, C3 one Red, C4 Red/Green/Blue, C5 five colors with Rainbow; B\'s hand mirrors C4 and C5. Read the tiles, then inspect each card.',
+  build() {
+    const fx = scenario({ matchId: 'fixture-cards', parties: [
+      { id: 'A.c', owner: 'A', mount: 'castle', column: 3, row: 3, slots: { 5: 'center', 2: 'swordsman' } },
+      { id: 'B.c', owner: 'B', mount: 'castle', column: 3, row: 8, slots: { 5: 'center', 2: 'swordsman' } },
+    ] });
+    const s = fx.state;
+    s.tick = 8; s.phase = 'resolved';
+    fixtureCard(s, 'A.none', 'A', 2, 'fixture.ember_strike', 3, {});
+    fixtureCard(s, 'A.one', 'A', 3, 'fixture.blue_denial', 4, { red: 1 });
+    fixtureCard(s, 'A.three', 'A', 4, 'fixture.wheel_formation', 5, { red: 1, green: 1, blue: 1 });
+    fixtureCard(s, 'A.five', 'A', 5, 'fixture.ember_strike', 6, { red: 1, green: 1, blue: 1, black: 1, rainbow: 1 });
+    fixtureCard(s, 'B.three', 'B', 4, 'fixture.wheel_formation', 5, { purple: 1, yellow: 1, white: 1 });
+    fixtureCard(s, 'B.five', 'B', 5, 'fixture.blue_denial', 6, { orange: 1, purple: 1, yellow: 1, white: 1, rainbow: 1 });
+    return fx;
+  },
+};

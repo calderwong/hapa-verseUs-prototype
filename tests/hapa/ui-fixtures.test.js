@@ -26,3 +26,13 @@ test('stacked fixture: a flyer above a roofed tunnel party in one territory, rep
   openTick(sess); closeTick(sess, { A: [], B: [] }, () => ({ pass: true }));
   assert.equal(verifyReplay(sess.replay).ok, true);
 });
+
+test('cards fixture: multi-color cards are ordinary bank instances and the match replays', () => {
+  const sess = createFixtureSession(UI_FIXTURES.cards.build(), { id: 'cards', title: 'Card anatomy' });
+  openTick(sess);
+  const five = sess.state.cards['A.five'];
+  assert.equal(Object.keys(five.mana).length, 5);
+  assert.equal(sess.state.players.A.bank.minor['5'], 'A.five');
+  closeTick(sess, { A: [{ type: 'burn', cardId: 'A.five' }], B: [] }, () => ({ pass: true }));
+  assert.equal(verifyReplay(sess.replay).ok, true);
+});
