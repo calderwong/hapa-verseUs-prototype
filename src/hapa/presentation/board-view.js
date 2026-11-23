@@ -398,7 +398,9 @@ export class BoardView {
       }
       mk.userData.standard.visible = mk.visible && (layer === null || (p.band ?? 1) === layer || p.movementMode === 'air');
       // decisive terrain facts in words: hilltop, open pit, roofed tunnel or flying
-      const st = standingOf(state, this.ctx, p);
+      const st0 = standingOf(state, this.ctx, p);
+      // a hilltop party needs no second sign: the hill's own label carries the height (R6-06)
+      const st = st0.kind === 'hilltop' ? { ...st0, label: null } : st0;
       if (mk.userData.standing !== st.label) {
         if (mk.userData.standingLabel) mk.remove(mk.userData.standingLabel);
         mk.userData.standingLabel = null;
@@ -446,8 +448,9 @@ export class BoardView {
     // ownership is a quiet persistent baseline (review UX-10): same shapes, lower weight, so the
     // selection outline stays the strongest mark on the field
     // (the shapes must still read in grayscale: checked with a color-reduced capture, UX-10/UX-14)
-    g.add(cornerBrackets(1.72 * S, 0.42 * S, 0.07 * S, color, 0.6));
-    if (p.owner === 'B') g.add(cornerBrackets(1.92 * S, 0.36 * S, 0.06 * S, color, 0.6));
+    const own = [cornerBrackets(1.72 * S, 0.42 * S, 0.07 * S, color, 0.6)];
+    if (p.owner === 'B') own.push(cornerBrackets(1.92 * S, 0.36 * S, 0.06 * S, color, 0.6));
+    for (const b of own) { b.userData.framing = 'owner'; g.add(b); }
     const arrowShape = new THREE.Shape();
     arrowShape.moveTo(-0.45 * S, 0); arrowShape.lineTo(0.45 * S, 0); arrowShape.lineTo(0, 0.5 * S); arrowShape.closePath();
     const arrow = new THREE.Mesh(new THREE.ShapeGeometry(arrowShape), new THREE.MeshBasicMaterial({ color, depthWrite: false, side: THREE.DoubleSide }));
@@ -455,6 +458,7 @@ export class BoardView {
     arrow.position.set(0, 0.01, -1.95 * S);
     const arrowEdge = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.45 * S, 0, 0), new THREE.Vector3(0.45 * S, 0, 0), new THREE.Vector3(0, 0.5 * S, 0)]), new THREE.LineBasicMaterial({ color: 0x0d131b }));
     arrow.add(arrowEdge);
+    arrow.userData.framing = 'facing';
     // an empty center (Pawn) reads as a dashed square, never as a missing member
     const empty = new THREE.Mesh(new THREE.RingGeometry(0.3 * S, 0.42 * S, 4, 1, Math.PI / 4), new THREE.MeshBasicMaterial({ color: 0xe8dcc0, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide }));
     empty.rotation.x = -Math.PI / 2;
@@ -503,6 +507,28 @@ export class BoardView {
   }
 
   setWalking(ids) { for (const [id, spr] of this.sprites) spr.userData.walking = ids.has(id); }
+
+  /**
+   * Quieter framing at close range (review 06, R6-06): as the inspected territory becomes a place
+   * (`k` 0…1, the environment's fade), the selection apron disappears, the selection brackets and
+   * the inspected party's ownership brackets recede to one clear legal rim, and facing arrows shrink
+   * to a small cue (others' arrows dim). Display only; nothing here is picked or read by rules.
+   */
+  setCloseFraming(partyId, k) {
+    const key = `${partyId}|${k.toFixed(2)}`;
+    if (key === this._framingKey) return;
+    this._framingKey = key;
+    const fade = (obj, f) => obj.traverse((o) => { for (const m of [o.material].flat().filter(Boolean)) { m.userData.baseOpacity ??= m.opacity; m.transparent = true; m.opacity = m.userData.baseOpacity * f; } });
+    const [keyline, ivory, foot] = this.selectRing.children;
+    fade(keyline, 1 - 0.85 * k); fade(ivory, 1 - 0.7 * k); fade(foot, 1 - k);
+    for (const [id, mk] of this.markers) {
+      const mine = id === partyId;
+      for (const c of mk.children) {
+        if (c.userData.framing === 'owner') fade(c, mine ? 1 - 0.75 * k : 1);
+        if (c.userData.framing === 'facing') { fade(c, mine ? 1 - 0.35 * k : 1 - 0.55 * k); const sc = mine ? 1 - 0.45 * k : 1; c.scale.set(sc, sc, sc); }
+      }
+    }
+  }
 
   /** Highlight a selected party, its legal destinations and current route. */
   select(state, party, dests = []) {

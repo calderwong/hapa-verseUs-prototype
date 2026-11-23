@@ -1080,6 +1080,7 @@ export class VersusApp {
       d.sync(this.state, p.region, { runningWork: running });
     }
     d.update(dt, amount, this.view.terrain.cutaway);
+    this.view.setCloseFraming(p?.id ?? null, d.opacity);
     if (!p && d.opacity === 0 && d.key) d.clear();
   }
 
@@ -1125,7 +1126,7 @@ export class VersusApp {
       anchor: a0 ? { x: Math.max(a0.x + pxPerMember * 1.2, ...members.filter((m) => m.anchor && m.visible).map((m) => m.anchor.x + pxPerMember * 0.75)), y: a0.y } : null,
       lines: [`${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'}${pf.commander ? ' ★ Commander' : ''} · ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]}`,
         `Supply ${pts(pf.supply)}${planned ? ` (+${pts(planned)} planned)` : ''} · ${STATE_NAME[pf.state] ?? pf.state}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''}`,
-        `Band ${fmtBand(pf.band)} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`],
+        `Band ${fmtBand(pf.band)}${standingOf(S, this.ctx, p).kind === 'hilltop' ? ' · hilltop' : ''} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`],
       note: roofed ? 'Roofed tunnel: open its layer to read the members (cutaway)' : facts.playing ? 'Playing back: health as of the moment shown' : null,
       key: `${JSON.stringify(pf)}|${planned}|${roofed}|${facts.playing}`,
     };

@@ -36,6 +36,18 @@ function strataTexture(kind = 'earth') {
 }
 const strataMat = (kind, w, h, side = THREE.FrontSide) => { const t = strataTexture(kind).clone(); t.needsUpdate = true; t.repeat.set(Math.max(1, Math.round(w)), Math.max(1, h)); return new THREE.MeshLambertMaterial({ map: t, side, transparent: true, opacity: 1 }); };
 
+let chevTex = null;
+/** Uphill chevrons for a ramp plank (pixel, nearest-filtered). */
+function chevronTexture() {
+  if (chevTex) return chevTex;
+  const cv = document.createElement('canvas'); cv.width = 16; cv.height = 32;
+  const g = cv.getContext('2d');
+  g.fillStyle = 'rgba(60,40,22,0.85)';
+  for (const y0 of [6, 16, 26]) for (let i = 0; i < 6; i++) { g.fillRect(2 + i, y0 - i, 2, 2); g.fillRect(12 - i, y0 - i, 2, 2); }
+  chevTex = new THREE.CanvasTexture(cv); chevTex.magFilter = THREE.NearestFilter; chevTex.colorSpace = THREE.SRGBColorSpace;
+  return chevTex;
+}
+
 /** A camera-facing text label (canvas sprite). */
 export function textLabel(text, { color = '#f3ead2', bg = 'rgba(20,18,24,0.82)', size = 0.55 } = {}) {
   const cv = document.createElement('canvas');
@@ -107,8 +119,11 @@ export class TerrainView {
       box.add(edges);
       this.group.add(box);
       this.hillMeshes.push(box);
-      const lab = textLabel(`▲ HILL ${fmtBand(1 + height)}`, { color: '#f0d49a' });
-      lab.position.set(w.x, height * BAND_H + 0.25, w.z + 1.7 * S);
+      // the one primary height label, on the hill's front face (clear of the ground-contact space
+      // on its top, where the members stand; review 06, R6-06)
+      const lab = textLabel(`▲ HILL ${fmtBand(1 + height)}`, { color: '#f0d49a', size: 0.42 });
+      lab.position.set(w.x - 0.95 * S, Math.max(0.3, height * BAND_H * 0.5), w.z + 1.5 * S + 0.06); // off-center: clear of a ramp's top
+      lab.userData.hillLabel = `${column},${row}`;
       this.group.add(lab);
     }
     // ramps: a sloped plank across the contact strip between linked territories
@@ -119,13 +134,17 @@ export class TerrainView {
       const mid = this.toWorld((ca.x + cb.x) / 2, (ca.y + cb.y) / 2);
       const len = Math.hypot((cb.x - ca.x) / U, (cb.y - ca.y) / U) * S * 0.45;
       const rise = (hb - ha) * BAND_H;
-      const plank = new THREE.Mesh(new THREE.BoxGeometry(1.4 * S, 0.08, Math.hypot(len, rise)), new THREE.MeshLambertMaterial({ color: 0xc9a86a }));
+      const plank = new THREE.Mesh(new THREE.BoxGeometry(1.4 * S, 0.08, Math.hypot(len, rise)), new THREE.MeshLambertMaterial({ color: 0x8c6a44 })); // timber, quieter than the old pale board
       plank.position.set(mid.x, (ha + hb) * BAND_H / 2, mid.z);
       plank.lookAt(this.toWorld(cb.x, cb.y).setY(hb * BAND_H));
       plank.rotateX(0); // lookAt aligns the long axis with the climb
+      // the ramp cue is local to the access: uphill chevrons on the plank and a small word on it
+      const chev = new THREE.Mesh(new THREE.PlaneGeometry(0.42 * S, Math.min(1.2 * S, Math.hypot(len, rise) * 0.5)), new THREE.MeshBasicMaterial({ map: chevronTexture(), transparent: true, depthWrite: false }));
+      chev.rotation.x = -Math.PI / 2; chev.rotation.z = Math.PI; chev.position.y = 0.045;
+      plank.add(chev);
       this.group.add(plank);
-      const lab = textLabel('RAMP', { color: '#c9a86a', size: 0.4 });
-      lab.position.set(mid.x, Math.max(ha, hb) * BAND_H + 0.3, mid.z);
+      const lab = textLabel('ramp', { color: '#c9a86a', size: 0.24 });
+      lab.position.set(mid.x, (ha + hb) * BAND_H / 2 + 0.22, mid.z);
       this.group.add(lab);
     }
     // excavations: each dug column of cubes is an open pit (sky above) or a roofed tunnel

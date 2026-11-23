@@ -5,9 +5,12 @@
  *   - a brushed-pixel ground decal at the true surface height (the hill top on raised ground),
  *     painted from the territory's alignment, with the member grid quietened but a thin legal
  *     rim kept; squares open to the sky (a real pit) are left transparent, so excavation shows;
- *   - world-fixed crossed-quad grass (it has sides when orbited, it does not turn to the camera),
- *     stones with contact shadows, and on the territory's corner crossing an asymmetric landmark —
- *     a broken pillar with a fallen drum and a torn banner — at another depth, for real parallax;
+ *   - world-fixed crossed-quad grass and flowers (they have sides when orbited, they do not turn
+ *     to the camera), stones with contact shadows, and on the territory's corner crossing the
+ *     benchmark landmark (review 06, R6-06): a weathered wayside shrine on a flagstone pad — stone
+ *     plinth, timber posts, a shingled gable roof, a closed plank back wall, an offering stone with
+ *     a bowl, a torn banner on one side and a lantern post on the other — so its front, sides and
+ *     back read differently as the camera turns, at another depth for real parallax;
  *   - on raised ground, a rock outcrop on the slope; around running work, rising dust.
  * Everything here is decoration: never pickable, no collision, cover, resource or visibility
  * rule. Each territory's dressing follows the terrain view's cutaway policy by its own surface
@@ -61,6 +64,65 @@ function grassTexture() {
   grassTex = new THREE.CanvasTexture(cv); grassTex.magFilter = THREE.NearestFilter; grassTex.colorSpace = THREE.SRGBColorSpace;
   return grassTex;
 }
+
+/** A small pixel texture painted once (nearest filtering, like the brushed-pixel sprites). */
+const painted = new Map();
+function pixelTexture(name, w, h, paint) {
+  if (painted.has(name)) return painted.get(name);
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  paint(cv.getContext('2d'), brushRng(name.length * 977 + w * 31 + h));
+  const t = new THREE.CanvasTexture(cv); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  painted.set(name, t);
+  return t;
+}
+/** Dressed stone: offset courses, mortar, chipped highlights and moss at the foot. */
+const stoneTex = () => pixelTexture('stone', 32, 32, (g, rng) => {
+  g.fillStyle = '#6f675a'; g.fillRect(0, 0, 32, 32);
+  for (let row = 0; row < 4; row++) for (let col = -1; col < 3; col++) {
+    const x = col * 14 + (row % 2) * 7, y = row * 8, shade = 0.8 + rng() * 0.4;
+    g.fillStyle = `rgb(${Math.round(140 * shade)},${Math.round(131 * shade)},${Math.round(114 * shade)})`; g.fillRect(x + 1, y + 1, 12, 6);
+    g.fillStyle = 'rgba(255,245,220,0.18)'; g.fillRect(x + 1, y + 1, 12, 1);
+    g.fillStyle = 'rgba(0,0,0,0.22)'; g.fillRect(x + 1, y + 6, 12, 1);
+  }
+  for (let i = 0; i < 14; i++) { g.fillStyle = rng() < 0.5 ? '#4f6b34' : '#5f7d3c'; g.fillRect(Math.floor(rng() * 32), 26 + Math.floor(rng() * 6), 2, 1); }
+});
+/** Weathered timber: vertical planks with grain and dark seams. */
+const woodTex = () => pixelTexture('wood', 16, 32, (g, rng) => {
+  for (let x = 0; x < 16; x += 4) {
+    g.fillStyle = rng() < 0.5 ? '#6b4a2f' : '#5d3f27'; g.fillRect(x, 0, 4, 32);
+    g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(x, 0, 1, 32);
+    for (let i = 0; i < 5; i++) { g.fillStyle = 'rgba(255,220,170,0.12)'; g.fillRect(x + 1 + Math.floor(rng() * 3), Math.floor(rng() * 32), 1, 3); }
+  }
+});
+/** Shingles: staggered rows, a darker lower edge on each. */
+const roofTex = () => pixelTexture('roof', 32, 16, (g, rng) => {
+  g.fillStyle = '#5a2d24'; g.fillRect(0, 0, 32, 16);
+  for (let row = 0; row < 4; row++) for (let col = 0; col < 5; col++) {
+    const x = col * 7 + (row % 2) * 3, y = row * 4;
+    g.fillStyle = rng() < 0.5 ? '#7d3e2f' : '#8a4733'; g.fillRect(x, y, 6, 3);
+    g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(x, y + 3, 6, 1);
+  }
+});
+/** Worn flagstones with grass in the joints (the courtyard pad under the shrine). */
+const flagTex = () => pixelTexture('flags', 32, 32, (g, rng) => {
+  g.fillStyle = '#4c5a34'; g.fillRect(0, 0, 32, 32);
+  const stones = [[1, 1, 13, 9], [15, 1, 16, 7], [1, 11, 9, 10], [11, 9, 11, 12], [23, 9, 8, 11], [1, 22, 15, 9], [17, 22, 14, 9]];
+  for (const [x, y, w, h] of stones) {
+    const k = 0.85 + rng() * 0.3;
+    g.fillStyle = `rgb(${Math.round(138 * k)},${Math.round(129 * k)},${Math.round(112 * k)})`; g.fillRect(x, y, w, h);
+    g.fillStyle = 'rgba(255,240,210,0.14)'; g.fillRect(x, y, w, 1);
+    g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(x, y + h - 1, w, 1);
+    if (rng() < 0.6) { g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(x + 2 + Math.floor(rng() * (w - 4)), y + 2 + Math.floor(rng() * (h - 4)), 2, 1); }
+  }
+});
+/** A few wild flowers on stems (crossed quads, like the grass). */
+const flowerTex = () => pixelTexture('flowers', 16, 16, (g) => {
+  for (const [x, top, c] of [[3, 6, '#e8d36a'], [7, 3, '#f2efe4'], [11, 7, '#c98ab8'], [13, 4, '#e8d36a']]) {
+    g.fillStyle = '#4f7a30'; g.fillRect(x, top + 2, 1, 16 - top - 2);
+    g.fillStyle = c; g.fillRect(x - 1, top, 3, 2); g.fillRect(x, top - 1, 1, 1);
+  }
+});
 
 let clothTex = null;
 function clothTexture() {
@@ -169,7 +231,9 @@ export class TerritoryDiorama {
       spots.push([w.x + dx, w.z + dz]);
     }
     for (const [x, z] of spots) {
-      if (rng() < 0.65) this._grass(x, top, z, rng);
+      const r = rng();
+      if (r < 0.55) this._grass(x, top, z, rng);
+      else if (r < 0.7 && main) this._grass(x, top, z, rng, flowerTex());
       else this._stone(x, top, z, rng);
     }
     if (!main) return;
@@ -178,10 +242,10 @@ export class TerritoryDiorama {
     if (band > 1) this._outcrop(w.x - 2.05 * S, top, w.z + 0.4 * S, band - 1);
   }
 
-  _grass(x, y, z, rng) {
+  _grass(x, y, z, rng, map = grassTexture()) {
     const S = this.S, h = 0.32 + rng() * 0.22;
     const g = new THREE.Group();
-    const mat = this._mat(new THREE.MeshLambertMaterial({ map: grassTexture(), alphaTest: 0.4, side: THREE.DoubleSide }));
+    const mat = this._mat(new THREE.MeshLambertMaterial({ map, alphaTest: 0.4, side: THREE.DoubleSide }));
     for (let i = 0; i < 2; i++) { const q = new THREE.Mesh(new THREE.PlaneGeometry(0.42 * S * 0.6, h), mat); q.position.y = h / 2; q.rotation.y = i * Math.PI / 2 + rng(); g.add(q); }
     g.position.set(x, y + 0.01, z);
     g.userData.phase = rng() * 6;
@@ -204,31 +268,69 @@ export class TerritoryDiorama {
     this.group.add(s);
   }
 
-  /** An asymmetric ruin: tall broken pillar, a fallen drum to one side, a torn banner on a pole. */
+  /**
+   * The benchmark landmark (R6-06): a weathered wayside shrine on a flagstone pad, fitted to the
+   * one-member-wide corner crossing so it never stands on a member square. Front: open between
+   * two posts, an offering stone and bowl; back: a closed plank wall; one side carries a torn
+   * banner, the other a lantern post — distinct from every bearing. Painted pixel materials only.
+   */
   _landmark(x, y, z) {
     const S = this.S, g = new THREE.Group();
-    const stone = this._mat(new THREE.MeshStandardMaterial({ color: 0x8c8473, roughness: 0.95, flatShading: true }));
-    const dark = this._mat(new THREE.MeshStandardMaterial({ color: 0x5b5448, roughness: 1, flatShading: true }));
-    const base = new THREE.Mesh(new THREE.BoxGeometry(0.7 * S, 0.18, 0.7 * S), dark); base.position.y = 0.09;
-    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * S, 0.24 * S, 1.9, 7), stone); shaft.position.y = 0.18 + 0.95;
-    // the broken top leans one way: the pillar has a clear front, side and back
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * S, 0.2 * S, 0.4, 7), stone); cap.position.set(0.06, 2.25, -0.04); cap.rotation.z = -0.35;
-    const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * S, 0.2 * S, 0.5, 7), stone); drum.rotation.z = Math.PI / 2; drum.position.set(-0.55, 0.2, 0.35);
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.7, 5), dark); pole.position.set(0.5, 0.85, 0.45);
-    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.62), this._mat(new THREE.MeshLambertMaterial({ map: clothTexture(), side: THREE.DoubleSide, alphaTest: 0.3 })));
-    cloth.position.set(0.72, 1.36, 0.45);
-    cloth.userData.phase = 1.3;
-    this.sway.push(cloth);
-    g.add(base, shaft, cap, drum, pole, cloth);
+    const lam = (map, extra = {}) => this._mat(new THREE.MeshLambertMaterial({ map, ...extra }));
+    const stone = lam(stoneTex()), wood = lam(woodTex()), roof = lam(roofTex(), { side: THREE.DoubleSide });
+    const dark = this._mat(new THREE.MeshLambertMaterial({ color: 0x3b2a1d }));
+    const half = 0.44 * S; // inside the crossing strip
+    // flagstone pad and a two-step plinth
+    const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.98 * S, 0.98 * S), lam(flagTex(), { depthWrite: true }));
+    pad.rotation.x = -Math.PI / 2; pad.position.y = 0.018; pad.renderOrder = 1;
+    const step = new THREE.Mesh(new THREE.BoxGeometry(2 * half, 0.1, 2 * half), stone); step.position.y = 0.05;
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(1.6 * half, 0.12, 1.6 * half), stone); plinth.position.y = 0.16;
+    g.add(pad, step, plinth);
+    // four timber posts (the front pair stands open, the back pair carries the wall)
+    const postH = 1.15, px = 0.62 * half, pz = 0.62 * half;
+    for (const [sx, sz] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, postH, 0.08), wood);
+      post.position.set(sx * px, 0.22 + postH / 2, sz * pz);
+      g.add(post);
+    }
+    const back = new THREE.Mesh(new THREE.BoxGeometry(2 * px, postH * 0.85, 0.05), wood);
+    back.position.set(0, 0.22 + postH * 0.45, -pz); g.add(back);
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(2 * px + 0.12, 0.08, 0.08), dark);
+    lintel.position.set(0, 0.22 + postH, pz); g.add(lintel);
+    // a shingled gable roof, ridge front-to-back, eaves overhanging the posts a little
+    const roofY = 0.22 + postH, slope = 0.5, w = px + 0.2, len = 2 * pz + 0.3;
+    for (const sx of [-1, 1]) {
+      const r = new THREE.Mesh(new THREE.BoxGeometry(Math.hypot(w, w * slope), 0.05, len), roof);
+      r.position.set(sx * w / 2, roofY + (w * slope) / 2, 0);
+      r.rotation.z = -sx * Math.atan(slope);
+      g.add(r);
+    }
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, len + 0.04), dark);
+    ridge.position.set(0, roofY + w * slope + 0.02, 0); g.add(ridge);
+    // inside, at the front: an offering stone with a bowl
+    const altar = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.26, 0.22), stone); altar.position.set(0, 0.22 + 0.13, 0.02);
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.05, 8), this._mat(new THREE.MeshLambertMaterial({ color: 0xb08d4a })));
+    bowl.position.set(0, 0.22 + 0.285, 0.02);
+    g.add(altar, bowl);
+    // one side: a torn banner on its pole; the other: a lantern post
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.55, 5), dark); pole.position.set(half + 0.04, 0.78, 0.18);
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.52), this._mat(new THREE.MeshLambertMaterial({ map: clothTexture(), side: THREE.DoubleSide, alphaTest: 0.3 })));
+    cloth.position.set(half + 0.04, 1.22, 0.36); cloth.rotation.y = Math.PI / 2;
+    cloth.userData.phase = 1.3; this.sway.push(cloth);
+    const lpost = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.62, 0.05), wood); lpost.position.set(-half - 0.02, 0.31, 0.22);
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.15, 0.13), this._mat(new THREE.MeshLambertMaterial({ color: 0xf2c879, emissive: 0x6b4a12 })));
+    lamp.position.set(-half - 0.02, 0.69, 0.22);
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.08, 4), dark); cap.position.set(-half - 0.02, 0.8, 0.22); cap.rotation.y = Math.PI / 4;
+    g.add(pole, cloth, lpost, lamp, cap);
     g.position.set(x, y, z);
     this.group.add(g);
-    this._shadow(x + 0.15, y, z + 0.1, 0.75 * S);
+    this._shadow(x + 0.06, y, z + 0.08, 0.62 * S);
   }
 
   /** A rock face on the slope of raised ground (its real height comes from the terrain). */
   _outcrop(x, y, z, height) {
     const S = this.S;
-    const rock = this._mat(new THREE.MeshStandardMaterial({ color: 0x6e6455, roughness: 1, flatShading: true }));
+    const rock = this._mat(new THREE.MeshLambertMaterial({ map: stoneTex(), color: 0xb8ad98, flatShading: true })); // the shrine's pixel stone, one material family
     for (let i = 0; i < 3; i++) {
       const m = new THREE.Mesh(new THREE.DodecahedronGeometry(0.28 * S - i * 0.06, 0), rock);
       m.position.set(x + i * 0.18, y - 0.35 * height * 0.9 - i * 0.12, z - i * 0.5); m.scale.set(1, 0.8, 1.2);
