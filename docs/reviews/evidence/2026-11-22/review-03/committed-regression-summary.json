@@ -1,0 +1,181 @@
+{
+  "after-8a2ed9f": {
+    "summary": {
+      "checks": 8,
+      "assertions": 282,
+      "failed": 0
+    },
+    "source": {
+      "commit": "8a2ed9fd593015632400367c571eda10b10735e7",
+      "dirty": false,
+      "diffSha256": null,
+      "untracked": [],
+      "untrackedSha256": null
+    },
+    "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "groups": [
+      {
+        "id": "c1",
+        "assertions": 18,
+        "failed": 0
+      },
+      {
+        "id": "c2",
+        "assertions": 15,
+        "failed": 0
+      },
+      {
+        "id": "c3",
+        "assertions": 7,
+        "failed": 0
+      },
+      {
+        "id": "c4",
+        "assertions": 19,
+        "failed": 0
+      },
+      {
+        "id": "c5",
+        "assertions": 31,
+        "failed": 0
+      },
+      {
+        "id": "c6",
+        "assertions": 153,
+        "failed": 0
+      },
+      {
+        "id": "c7",
+        "assertions": 29,
+        "failed": 0
+      },
+      {
+        "id": "c8",
+        "assertions": 10,
+        "failed": 0
+      }
+    ],
+    "keyboard_steps": {
+      "tabs": [
+        {
+          "name": "your C1 hand tile",
+          "tabs": 29
+        },
+        {
+          "name": "Parties drawer toggle",
+          "tabs": 7
+        },
+        {
+          "name": "roster row: your C1 Castle",
+          "tabs": 0
+        },
+        {
+          "name": "Load Supply from 2\u2663 (C1)",
+          "tabs": 6
+        },
+        {
+          "name": "Move Castle to R2C1 (joins your Pawn)",
+          "tabs": 2
+        },
+        {
+          "name": "Ready",
+          "tabs": 1
+        },
+        {
+          "name": "result: Supply landed",
+          "tabs": 12
+        },
+        {
+          "name": "Inspect the Card",
+          "tabs": 36
+        }
+      ]
+    }
+  },
+  "before-00c0f2e": {
+    "summary": {
+      "checks": 8,
+      "assertions": 256,
+      "failed": 34
+    },
+    "source": {
+      "commit": "00c0f2eec285b592a90a0ec7ea3218d53ef07298",
+      "dirty": true,
+      "diffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "untracked": [
+        "node_modules"
+      ],
+      "untrackedSha256": "dba27c31aad935787bb275c3e5e4e957708f15386de599eff1db476022cd7e4c"
+    },
+    "engine": "00c0f2eec285b592a90a0ec7ea3218d53ef07298",
+    "groups": [
+      {
+        "id": "c1",
+        "assertions": 18,
+        "failed": 4
+      },
+      {
+        "id": "c2",
+        "assertions": 15,
+        "failed": 1
+      },
+      {
+        "id": "c3",
+        "assertions": 7,
+        "failed": 0
+      },
+      {
+        "id": "c4",
+        "assertions": 19,
+        "failed": 2
+      },
+      {
+        "id": "c5",
+        "assertions": 26,
+        "failed": 12
+      },
+      {
+        "id": "c6",
+        "assertions": 141,
+        "failed": 0
+      },
+      {
+        "id": "c7",
+        "assertions": 20,
+        "failed": 14
+      },
+      {
+        "id": "c8",
+        "assertions": 10,
+        "failed": 1
+      }
+    ]
+  },
+  "sabotage-8a2ed9f": {
+    "summary": {
+      "checks": 2,
+      "assertions": 25,
+      "failed": 2
+    },
+    "source": {
+      "commit": "8a2ed9fd593015632400367c571eda10b10735e7",
+      "dirty": false,
+      "diffSha256": null,
+      "untracked": [],
+      "untrackedSha256": null
+    },
+    "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "groups": [
+      {
+        "id": "c1",
+        "assertions": 18,
+        "failed": 1
+      },
+      {
+        "id": "c3",
+        "assertions": 7,
+        "failed": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "pin": "164b8dfe46d2b6b8ec0975cc8f53ea5428770230",
+  "appBlob": "a95383d275d7133e16022767c97227174241355a",
+  "scope": "Actual extracted app methods and real rules/session. Scene, camera, asset and render adapters stubbed; no browser rendering.",
+  "afterStart": {
+    "oldMatchId": "fixture-response",
+    "newMatchId": "fixture-terrain",
+    "newTick": 5,
+    "newPhase": "planning",
+    "oldResponseStillPending": true,
+    "newMatchCanEdit": false,
+    "newReplayTicks": 0
+  },
+  "afterOldResolution": {
+    "newMatchTick": 5,
+    "replayTickNumbers": [
+      9
+    ],
+    "oldSpellEventsInNewSession": [
+      {
+        "type": "card_damage",
+        "tick": 9,
+        "cardId": "A.ember"
+      },
+      {
+        "type": "ability_resolved",
+        "tick": 9,
+        "cardId": "A.ember"
+      }
+    ],
+    "replayVerification": {
+      "ok": false,
+      "tick": 9,
+      "reason": "tick numbering differs (5)"
+    }
+  }
+}

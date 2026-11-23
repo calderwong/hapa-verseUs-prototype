@@ -1,0 +1,136 @@
+{
+  "review": "2026-11-22 / review-03",
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "prototypeCommit": "164b8dfe46d2b6b8ec0975cc8f53ea5428770230",
+  "engineGitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "sourceAcquisition": {
+    "method": "GitHub API file retrieval and Git blob hash comparison to pinned recursive tree",
+    "nonImageBlobsVerified": 107,
+    "missingOrMismatched": 0,
+    "worktree": "Reconstructed review snapshot; not CJ local checkout. Minimal Git metadata initialized only for existing git-ignore boundary test."
+  },
+  "independentExistingTests": {
+    "passed": 82,
+    "failed": 0,
+    "files": 13,
+    "commandRecord": "test-command.json",
+    "log": "rules-and-playback-tests.log",
+    "excluded": [
+      "tests/hapa/protocol.test.js"
+    ],
+    "exclusionReason": "External dependency packages and full vendored engine were unavailable in the reconstructed snapshot. The four protocol tests and full npm run check were not rerun."
+  },
+  "independentControllerReproductions": [
+    {
+      "finding": "R3-01",
+      "script": "response-payment-probe.mjs",
+      "result": "response-payment-result.json",
+      "status": "documented defect reproduced with two passing controls",
+      "browser": false
+    },
+    {
+      "finding": "R3-02",
+      "script": "new-match-lifecycle-probe.mjs",
+      "result": "new-match-lifecycle-result.json",
+      "status": "old pending choice blocks new match; old events/replay contaminate new session; actual verifyReplay fails",
+      "browser": false
+    }
+  ],
+  "sourceOnlyFinding": {
+    "finding": "R3-03",
+    "status": "modal background/focus containment missing in source; native browser reproduction required"
+  },
+  "inspectedImages": [
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-04/regress/after-8a2ed9f/c6-1280x720.jpg",
+      "sha256": "3d25920b4dd979037c4cf5f22ba2451f5481f1a7cd848f1f9f3169c97484c3ff",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-04/regress/after-8a2ed9f/c6-1600x1000.jpg",
+      "sha256": "901d447605d04f9955b117180c4fd4cf441734e5e566679f44f30338d0c9f872",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-04/regress/after-8a2ed9f/c1-stale-review.jpg",
+      "sha256": "8514b42ac814eada07daceb6f6763281d0c8131d4f942ea21c32157e00809277",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-04/regress/after-8a2ed9f/c5-planned.jpg",
+      "sha256": "8c0ee8e0a8599f18fbdf8282bda07cda2944a1635fcb01ff81c5c6a7e3ddeb53",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-04/regress/after-8a2ed9f/c2-after-spam.jpg",
+      "sha256": "bd1a2497f2ecda2306c5ccc616ab81958b16f2df57a528f47d4f229905eaa74a",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-04/regress/after-8a2ed9f/c6-800x500-observe.jpg",
+      "sha256": "d232c65cee7f48f50fbefd9611916bc002b7843b3bed22be6f53b79d1c1b22b0",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-03/after-ux11-1-hill-pit.jpg",
+      "sha256": "ed9d981e6b7b681a5dab91e15e68cb06487c2a83ec1c1d393d535fc8ab2d40b0",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-03/after-ux11-2-cutaway-floor.jpg",
+      "sha256": "b56253c9f68a61730c739bbd8f6bbd6d4682695ecf05f94c306ff5e9531ead80",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-03/after-ux11-3-planned-dig.jpg",
+      "sha256": "d38b6d975e1c620d450672791df77edf62c7cbfc0e3857bc16ebaa2d537ba9a0",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-03/after-ux11-4-dug.jpg",
+      "sha256": "879fea3d4449c00908c13ec67eb25d375bf8dcc8a694d4caf75599955f4fed1d",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-03/after-ux12-orbit-0.jpg",
+      "sha256": "ae91683831ebe9e0f56bb330aa2d8962a55add7e73f0d4e85475e66b5a5359c6",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-03/after-ux12-orbit-90.jpg",
+      "sha256": "c2dbcd8374b8ad16a4455e124f1d06400f7023e177fdd1a24ae97735ec15c91f",
+      "review": "visual inspection of committed capture, not a new browser run"
+    },
+    {
+      "repositoryPath": "docs/reviews/evidence/2026-11-22/response-03/after-ux12-orbit-180.jpg",
+      "sha256": "dd9aaac0cda7f08affff5f5674bc38e02be579e3d0bcd4bdef6c85dad896f149",
+      "review": "visual inspection of committed capture, not a new browser run"
+    }
+  ],
+  "committedAuthorEvidence": {
+    "fullCheckTestsPassed": 86,
+    "browserAfterAssertions": 282,
+    "browserAfterFailures": 0,
+    "browserJourneyGroups": 8,
+    "browserSabotageAssertions": 25,
+    "browserSabotageFailures": 2,
+    "browserBeforeAssertions": 256,
+    "browserBeforeFailures": 34,
+    "summary": "committed-regression-summary.json",
+    "independentlyRerun": false,
+    "engineBaselineCaveat": "Before report engine field repeats the outer prototype commit; runtime copied-engine identity is unverified. Keep parent gitlink separate."
+  },
+  "notVerified": [
+    "fresh browser/WebGL run",
+    "full npm run check in reviewer environment",
+    "GPU performance",
+    "CJ running build or playtest",
+    "screen reader",
+    "independent text scaling",
+    "200 percent reflow acceptance",
+    "current Overwatch state"
+  ],
+  "acceptanceByCJ": "not recorded",
+  "changesInThisPublication": "review documents, index and review evidence only; no game implementation or engine edit",
+  "reviewDateTimezone": "America/Los_Angeles"
+}

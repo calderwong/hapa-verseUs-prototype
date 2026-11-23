@@ -1,0 +1,76 @@
+{
+  "pin": "164b8dfe46d2b6b8ec0975cc8f53ea5428770230",
+  "appBlob": "a95383d275d7133e16022767c97227174241355a",
+  "scope": "Actual extracted controller methods + actual rules; minimal DOM-tree stub; no browser rendering",
+  "cases": [
+    {
+      "label": "Mixed cost, one Rainbow (defect)",
+      "cost": {
+        "red": 1,
+        "blue": 1
+      },
+      "pool": {
+        "rainbow": 1
+      },
+      "contentValidation": "accepted",
+      "responseButtonEnabled": true,
+      "rulesCanPay": false,
+      "suggestedBurns": [],
+      "matchingEvents": [
+        {
+          "type": "command_rejected",
+          "reason": "cannot pay 1 red + 1 blue from the Mana pool"
+        },
+        {
+          "type": "passed",
+          "reason": null
+        }
+      ],
+      "damageResolved": true,
+      "counterApplied": false
+    },
+    {
+      "label": "Mixed cost, two Rainbow (control)",
+      "cost": {
+        "red": 1,
+        "blue": 1
+      },
+      "pool": {
+        "rainbow": 2
+      },
+      "contentValidation": "accepted",
+      "responseButtonEnabled": true,
+      "rulesCanPay": true,
+      "suggestedBurns": [],
+      "matchingEvents": [
+        {
+          "type": "response_announced",
+          "reason": null
+        }
+      ],
+      "damageResolved": false,
+      "counterApplied": true
+    },
+    {
+      "label": "Original single-color cost (control)",
+      "cost": {
+        "blue": 2
+      },
+      "pool": {
+        "blue": 2
+      },
+      "contentValidation": "accepted",
+      "responseButtonEnabled": true,
+      "rulesCanPay": true,
+      "suggestedBurns": [],
+      "matchingEvents": [
+        {
+          "type": "response_announced",
+          "reason": null
+        }
+      ],
+      "damageResolved": false,
+      "counterApplied": true
+    }
+  ]
+}
