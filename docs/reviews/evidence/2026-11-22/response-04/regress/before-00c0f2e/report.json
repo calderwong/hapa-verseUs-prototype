@@ -1,0 +1,3826 @@
+{
+ "runId": "before-00c0f2e",
+ "startedAt": "2026-11-23T04:28:04.928Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5198",
+ "source": {
+  "commit": "00c0f2eec285b592a90a0ec7ea3218d53ef07298",
+  "dirty": true,
+  "diffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "untracked": [
+   "node_modules"
+  ],
+  "untrackedSha256": "dba27c31aad935787bb275c3e5e4e957708f15386de599eff1db476022cd7e4c"
+ },
+ "engine": "00c0f2eec285b592a90a0ec7ea3218d53ef07298",
+ "browser": "Chrome/157.0.8103.80",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": false,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio; the HUD uses px type, so it has no separate text-size setting. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "c1",
+   "title": "Ready freezes the own plan through an opponent revision (UX-01, journey 5/6)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1",
+    "seat": "A then B (hotseat)",
+    "layer": "All"
+   },
+   "assertions": [
+    {
+     "name": "control present: roster row for your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply from the C1 card",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "A entered one Supply order",
+     "pass": false,
+     "actual": 0,
+     "expected": 1
+    },
+    {
+     "name": "control present: Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Ready hands the hotseat to B",
+     "pass": true,
+     "actual": "B",
+     "expected": "B"
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "view returns to A to acknowledge",
+     "pass": true,
+     "actual": "A",
+     "expected": "A"
+    },
+    {
+     "name": "A acknowledgment is stale",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "A plan unchanged after B revised and A tried to edit",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    },
+    {
+     "name": "A revision unchanged",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "no Remove controls on the frozen own plan",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "B's new order is marked NEW",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "banner says the own orders stay frozen",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "opponent plan is shown first while reviewing",
+     "pass": false,
+     "actual": false,
+     "expected": true,
+     "note": "planbox a frozen"
+    },
+    {
+     "name": "primary action is Acknowledge",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Acknowledge updated plan ▶ Your plan is frozen · review B's changes (NEW / REMOVED)"
+    },
+    {
+     "name": "control present: Acknowledge updated plan",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the resolved Tick used exactly the frozen A plan",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c1-stale-review.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5198/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5198/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "title": "One resolution during a response window despite repeated Ready (UX-02)",
+   "config": {
+    "query": "autostart=1&fixture=response&a=human&b=human",
+    "viewport": "1600x1000@1",
+    "seat": "A plans; B responds",
+    "layer": "All"
+   },
+   "assertions": [
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the response window opens with focus on a choice",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "exactly one replay entry added (with Ready spam)",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "exactly one plans_locked event for Tick 9",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "the Spell resolved once",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "spam run and calm run end in the same state",
+     "pass": true,
+     "actual": "sha256:4c2df0026d25a9099074dacccb9617eb99ee34824d832b536bfbfd418caa5760",
+     "expected": "sha256:4c2df0026d25a9099074dacccb9617eb99ee34824d832b536bfbfd418caa5760"
+    },
+    {
+     "name": "spam run and calm run record the same number of events",
+     "pass": true,
+     "actual": 19,
+     "expected": 19
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c2-after-spam.jpg"
+   ],
+   "setup": [
+    "A's Ember Strike order is added with the app's own _addCommand (ability targeting is not under test here)",
+    "A's Ember Strike order is added with the app's own _addCommand (ability targeting is not under test here)"
+   ],
+   "observed": {
+    "spam": {
+     "replayTicks": 1,
+     "locked": 1,
+     "damage": 1,
+     "fingerprint": "sha256:4c2df0026d25a9099074dacccb9617eb99ee34824d832b536bfbfd418caa5760",
+     "events": 19,
+     "before": 0,
+     "focusAtOpen": null,
+     "spammed": 15,
+     "passes": 2
+    },
+    "calm": {
+     "replayTicks": 1,
+     "locked": 1,
+     "damage": 1,
+     "fingerprint": "sha256:4c2df0026d25a9099074dacccb9617eb99ee34824d832b536bfbfd418caa5760",
+     "events": 19,
+     "before": 0,
+     "focusAtOpen": null,
+     "spammed": 0,
+     "passes": 2
+    }
+   },
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5198/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5198/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "title": "Selection follows the visible height (UX-03)",
+   "config": {
+    "query": "autostart=1&fixture=stacked&a=human&b=human",
+    "viewport": "1600x1000@1",
+    "seat": "A",
+    "camera": "fitted Home"
+   },
+   "assertions": [
+    {
+     "name": "control present: layer -2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer −2: clicking the tunnel party selects it",
+     "pass": true,
+     "actual": "B.tunnel",
+     "expected": "B.tunnel"
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: clicking the flyer selects it",
+     "pass": true,
+     "actual": "A.fly",
+     "expected": "A.fly"
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: the hidden tunnel party never wins a click",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "A.fly"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c3-layer-minus2-tunnel.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": []
+  },
+  {
+   "id": "c4",
+   "title": "Off-layer bodies stay filtered during and after playback (R2-01)",
+   "config": {
+    "query": "autostart=1&fixture=stacked&a=human&b=human",
+    "viewport": "1600x1000@1",
+    "layers": [
+     "−2",
+     "+3",
+     "All"
+    ]
+   },
+   "assertions": [
+    {
+     "name": "control present: layer -2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer −2: playback was sampled (43 frames)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 43
+    },
+    {
+     "name": "layer −2: every playback sample shows only the expected bodies",
+     "pass": false,
+     "actual": [
+      "[\"A.C5.m4\",\"A.C5.m5\",\"A.C5.m6\",\"A.C5.m8\",\"A.fly.s2\",\"A.fly.s5\",\"A.hill.s5\",\"A.hill.s7\",\"A.hill.s8\",\"A.hill.s9\",\"B.C5.m4\",\"B.C5.m5\",\"B.C5.m6\",\"B.C5.m8\",\"B.deep.s2\",\"B.deep.s5\",\"B.deep.s8\",\"B.tunnel.s2\",\"B.tunnel.s5\",\"B.walk.s1\",\"B.walk.s3\",\"B.walk.s5\"]"
+     ],
+     "expected": [
+      "[\"B.tunnel.s2\",\"B.tunnel.s5\"]"
+     ]
+    },
+    {
+     "name": "layer −2: after playback",
+     "pass": true,
+     "actual": [
+      "B.tunnel.s2",
+      "B.tunnel.s5"
+     ],
+     "expected": [
+      "B.tunnel.s2",
+      "B.tunnel.s5"
+     ]
+    },
+    {
+     "name": "control present: layer 3",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer +3: playback was sampled (43 frames)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 43
+    },
+    {
+     "name": "layer +3: every playback sample shows only the expected bodies",
+     "pass": false,
+     "actual": [
+      "[\"A.C5.m4\",\"A.C5.m5\",\"A.C5.m6\",\"A.C5.m8\",\"A.fly.s2\",\"A.fly.s5\",\"A.hill.s5\",\"A.hill.s7\",\"A.hill.s8\",\"A.hill.s9\",\"B.C5.m4\",\"B.C5.m5\",\"B.C5.m6\",\"B.C5.m8\",\"B.deep.s2\",\"B.deep.s5\",\"B.deep.s8\",\"B.tunnel.s2\",\"B.tunnel.s5\",\"B.walk.s1\",\"B.walk.s3\",\"B.walk.s5\"]"
+     ],
+     "expected": [
+      "[\"A.fly.s2\",\"A.fly.s5\"]"
+     ]
+    },
+    {
+     "name": "layer +3: after playback",
+     "pass": true,
+     "actual": [
+      "A.fly.s2",
+      "A.fly.s5"
+     ],
+     "expected": [
+      "A.fly.s2",
+      "A.fly.s5"
+     ]
+    },
+    {
+     "name": "control present: layer All",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "layer All: playback was sampled (42 frames)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 42
+    },
+    {
+     "name": "layer All: every playback sample shows only the expected bodies",
+     "pass": true,
+     "actual": [
+      "[\"A.C5.m4\",\"A.C5.m5\",\"A.C5.m6\",\"A.C5.m8\",\"A.fly.s2\",\"A.fly.s5\",\"A.hill.s5\",\"A.hill.s7\",\"A.hill.s8\",\"A.hill.s9\",\"B.C5.m4\",\"B.C5.m5\",\"B.C5.m6\",\"B.C5.m8\",\"B.deep.s2\",\"B.deep.s5\",\"B.deep.s8\",\"B.tunnel.s2\",\"B.tunnel.s5\",\"B.walk.s1\",\"B.walk.s3\",\"B.walk.s5\"]"
+     ],
+     "expected": [
+      "[\"A.C5.m4\",\"A.C5.m5\",\"A.C5.m6\",\"A.C5.m8\",\"A.fly.s2\",\"A.fly.s5\",\"A.hill.s5\",\"A.hill.s7\",\"A.hill.s8\",\"A.hill.s9\",\"B.C5.m4\",\"B.C5.m5\",\"B.C5.m6\",\"B.C5.m8\",\"B.deep.s2\",\"B.deep.s5\",\"B.deep.s8\",\"B.tunnel.s2\",\"B.tunnel.s5\",\"B.walk.s1\",\"B.walk.s3\",\"B.walk.s5\"]"
+     ]
+    },
+    {
+     "name": "layer All: after playback",
+     "pass": true,
+     "actual": [
+      "A.C5.m4",
+      "A.C5.m5",
+      "A.C5.m6",
+      "A.C5.m8",
+      "A.fly.s2",
+      "A.fly.s5",
+      "A.hill.s5",
+      "A.hill.s7",
+      "A.hill.s8",
+      "A.hill.s9",
+      "B.C5.m4",
+      "B.C5.m5",
+      "B.C5.m6",
+      "B.C5.m8",
+      "B.deep.s2",
+      "B.deep.s5",
+      "B.deep.s8",
+      "B.tunnel.s2",
+      "B.tunnel.s5",
+      "B.walk.s1",
+      "B.walk.s3",
+      "B.walk.s5"
+     ],
+     "expected": [
+      "A.C5.m4",
+      "A.C5.m5",
+      "A.C5.m6",
+      "A.C5.m8",
+      "A.fly.s2",
+      "A.fly.s5",
+      "A.hill.s5",
+      "A.hill.s7",
+      "A.hill.s8",
+      "A.hill.s9",
+      "B.C5.m4",
+      "B.C5.m5",
+      "B.C5.m6",
+      "B.C5.m8",
+      "B.deep.s2",
+      "B.deep.s5",
+      "B.deep.s8",
+      "B.tunnel.s2",
+      "B.tunnel.s5",
+      "B.walk.s1",
+      "B.walk.s3",
+      "B.walk.s5"
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c4-after-playback-minus2.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5198/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5198/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5198/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c5",
+   "title": "Opening by keyboard alone, compact (R2-04; journey steps 1–7)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1",
+    "seat": "A",
+    "layer": "All",
+    "camera": "fitted Home"
+   },
+   "assertions": [
+    {
+     "name": "reach by Tab: your C1 hand tile",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "2 of Wands, your C1: Supply 2, no Mana, Wheel Formation",
+      "visible": true,
+      "tag": "DIV",
+      "tabs": 62
+     }
+    },
+    {
+     "name": "focus is visible on your C1 hand tile",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "2 of Wands, your C1: Supply 2, no Mana, Wheel Formation",
+      "visible": true,
+      "tag": "DIV",
+      "tabs": 62
+     }
+    },
+    {
+     "name": "Enter on a Card tile keeps focus on that tile",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "2 of Wands, your C1: Supply 2, no Mana, Wheel Formation",
+      "visible": true,
+      "tag": "DIV"
+     }
+    },
+    {
+     "name": "the Card is selected",
+     "pass": true,
+     "actual": "card",
+     "expected": "card"
+    },
+    {
+     "name": "reach by Tab: Parties drawer toggle",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "reach by Tab: roster row: your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Your Castle at R1C1, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "DIV",
+      "tabs": 36
+     }
+    },
+    {
+     "name": "focus is visible on roster row: your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Your Castle at R1C1, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "DIV",
+      "tabs": 36
+     }
+    },
+    {
+     "name": "1 · the C1 Castle is selected",
+     "pass": true,
+     "actual": "A.mount.C1",
+     "expected": "A.mount.C1"
+    },
+    {
+     "name": "1 · focus continues in the inspector",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "CASTLE yours",
+      "visible": true,
+      "tag": "H3"
+     }
+    },
+    {
+     "name": "reach by Tab: Load Supply from 2♣ (C1)",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "2 · focus moves on to Move to…",
+     "pass": false,
+     "actual": false,
+     "expected": true,
+     "note": {
+      "name": "B's Knight at R10C2, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "DIV"
+     }
+    },
+    {
+     "name": "reach by Tab: Move Castle to R2C1 (joins your Pawn)",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "3 · the plan holds Supply then the move",
+     "pass": false,
+     "actual": [],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "3 · focus lands on the new order",
+     "pass": false,
+     "actual": false,
+     "expected": true,
+     "note": {
+      "name": "B's Castle at R10C9, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "DIV"
+     }
+    },
+    {
+     "name": "4 · Remove takes the move out",
+     "pass": false,
+     "actual": [],
+     "expected": [
+      "load_supply"
+     ]
+    },
+    {
+     "name": "4 · focus lands on Restore",
+     "pass": false,
+     "actual": false,
+     "expected": true,
+     "note": {
+      "name": "CASTLE B's",
+      "visible": true,
+      "tag": "H3"
+     }
+    },
+    {
+     "name": "4 · Restore puts the same order back",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    },
+    {
+     "name": "reach by Tab: Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Ready ▶",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 10
+     }
+    },
+    {
+     "name": "focus is visible on Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Ready ▶",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 10
+     }
+    },
+    {
+     "name": "5 · Ready freezes the plan (A frozen)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "reach by Tab: result: Supply landed",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "7 · the supply_loaded event is inspected",
+     "pass": false,
+     "expected": "supply_loaded"
+    },
+    {
+     "name": "reach by Tab: Inspect the Card",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "7 · its Card is inspected",
+     "pass": true
+    },
+    {
+     "name": "7 · result agrees with the rules: R2C1, Supply 1, nine members",
+     "pass": false,
+     "actual": {
+      "region": {
+       "column": 1,
+       "row": 1
+      },
+      "supply": 0,
+      "members": 4
+     },
+     "expected": {
+      "region": {
+       "column": 1,
+       "row": 2
+      },
+      "supply": 1,
+      "members": 9
+     }
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c5-planned.jpg",
+    "c5-result-card.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "tabs": [
+     {
+      "name": "your C1 hand tile",
+      "tabs": 62
+     },
+     {
+      "name": "roster row: your C1 Castle",
+      "tabs": 36
+     },
+     {
+      "name": "Ready",
+      "tabs": 10
+     }
+    ]
+   },
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5198/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c6",
+   "title": "Roster, Mana/Burn, nine bank positions, plans and Ready reachable at every size (R2-03)",
+   "config": {
+    "sizes": [
+     "1600x1000",
+     "1441x900 (above drawer breakpoint)",
+     "1440x900 (drawer)",
+     "1280x720",
+     "1181x900",
+     "1180x900",
+     "1100x900",
+     "1600x1000 at 150% browser zoom"
+    ],
+    "seats": [
+     "A",
+     "B"
+    ]
+   },
+   "assertions": [
+    {
+     "name": "1600x1000 · seat A: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1600x1000 · seat A: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 104
+     }
+    },
+    {
+     "name": "1600x1000 · seat A: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1600x1000 · seat A: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 798,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1600x1000 · seat A: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 6,
+       "y": 60,
+       "w": 220,
+       "h": 732,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1600x1000 · seat A: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 1254,
+       "y": 798,
+       "w": 340,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 1263,
+       "y": 887,
+       "w": 322,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1600x1000 · seat A: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1600x1000 · seat A: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1600x1000 · seat B: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1600x1000 · seat B: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 104
+     }
+    },
+    {
+     "name": "1600x1000 · seat B: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1600x1000 · seat B: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 798,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1600x1000 · seat B: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 6,
+       "y": 60,
+       "w": 220,
+       "h": 732,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1600x1000 · seat B: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 1254,
+       "y": 798,
+       "w": 340,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 1263,
+       "y": 887,
+       "w": 322,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1600x1000 · seat B: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1600x1000 · seat B: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat A: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat A: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 86
+     }
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat A: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat A: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat A: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 6,
+       "y": 60,
+       "w": 220,
+       "h": 632,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat A: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 1095,
+       "y": 698,
+       "w": 340,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 1104,
+       "y": 787,
+       "w": 322,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1441x900 (above drawer breakpoint) · seat A: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat A: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat B: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat B: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 86
+     }
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat B: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat B: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat B: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 6,
+       "y": 60,
+       "w": 220,
+       "h": 632,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat B: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 1095,
+       "y": 698,
+       "w": 340,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 1104,
+       "y": 787,
+       "w": 322,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1441x900 (above drawer breakpoint) · seat B: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1441x900 (above drawer breakpoint) · seat B: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1440x900 (drawer) · seat A: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1440x900 (drawer) · seat A: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 86
+     }
+    },
+    {
+     "name": "1440x900 (drawer) · seat A: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1440x900 (drawer) · seat A: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1440x900 (drawer) · seat A: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 6,
+       "y": 60,
+       "w": 220,
+       "h": 632,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1440x900 (drawer) · seat A: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 1094,
+       "y": 698,
+       "w": 340,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 1103,
+       "y": 787,
+       "w": 322,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1440x900 (drawer) · seat A: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1440x900 (drawer) · seat A: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1440x900 (drawer) · seat B: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1440x900 (drawer) · seat B: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 86
+     }
+    },
+    {
+     "name": "1440x900 (drawer) · seat B: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1440x900 (drawer) · seat B: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1440x900 (drawer) · seat B: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 6,
+       "y": 60,
+       "w": 220,
+       "h": 632,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1440x900 (drawer) · seat B: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 1094,
+       "y": 698,
+       "w": 340,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 1103,
+       "y": 787,
+       "w": 322,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1440x900 (drawer) · seat B: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1440x900 (drawer) · seat B: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1280x720 · seat A: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1280x720 · seat A: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 69
+     }
+    },
+    {
+     "name": "1280x720 · seat A: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1280x720 · seat A: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 4,
+      "y": 552,
+      "w": 220,
+      "h": 128,
+      "shown": true
+     }
+    },
+    {
+     "name": "1280x720 · seat A: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 4,
+       "y": 48,
+       "w": 220,
+       "h": 500,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1280x720 · seat A: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 936,
+       "y": 552,
+       "w": 340,
+       "h": 128,
+       "shown": true
+      },
+      "ready": {
+       "x": 945,
+       "y": 633,
+       "w": 322,
+       "h": 38,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1280x720 · seat A: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1280x720 · seat A: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1280x720 · seat B: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1280x720 · seat B: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 69
+     }
+    },
+    {
+     "name": "1280x720 · seat B: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1280x720 · seat B: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 4,
+      "y": 552,
+      "w": 220,
+      "h": 128,
+      "shown": true
+     }
+    },
+    {
+     "name": "1280x720 · seat B: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 4,
+       "y": 48,
+       "w": 220,
+       "h": 500,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1280x720 · seat B: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 936,
+       "y": 552,
+       "w": 340,
+       "h": 128,
+       "shown": true
+      },
+      "ready": {
+       "x": 945,
+       "y": 633,
+       "w": 322,
+       "h": 38,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1280x720 · seat B: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1280x720 · seat B: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1181x900 · seat A: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1181x900 · seat A: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 57
+     }
+    },
+    {
+     "name": "1181x900 · seat A: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1181x900 · seat A: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1181x900 · seat A: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 6,
+       "y": 60,
+       "w": 220,
+       "h": 632,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1181x900 · seat A: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 835,
+       "y": 698,
+       "w": 340,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 844,
+       "y": 787,
+       "w": 322,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1181x900 · seat A: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1181x900 · seat A: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1181x900 · seat B: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1181x900 · seat B: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 57
+     }
+    },
+    {
+     "name": "1181x900 · seat B: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1181x900 · seat B: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1181x900 · seat B: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 6,
+       "y": 60,
+       "w": 220,
+       "h": 632,
+       "shown": true
+      },
+      "toggle": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      }
+     }
+    },
+    {
+     "name": "1181x900 · seat B: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 835,
+       "y": 698,
+       "w": 340,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 844,
+       "y": 787,
+       "w": 322,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1181x900 · seat B: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1181x900 · seat B: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1180x900 · seat A: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1180x900 · seat A: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 69
+     }
+    },
+    {
+     "name": "1180x900 · seat A: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1180x900 · seat A: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 150,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1180x900 · seat A: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      },
+      "toggle": {
+       "x": 6,
+       "y": 60,
+       "w": 150,
+       "h": 86,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "1180x900 · seat A: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 874,
+       "y": 698,
+       "w": 300,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 883,
+       "y": 787,
+       "w": 282,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1180x900 · seat A: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1180x900 · seat A: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1180x900 · seat A: the drawer opens with every party listed",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1180x900 · seat A: Escape closes the drawer",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1180x900 · seat B: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1180x900 · seat B: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 69
+     }
+    },
+    {
+     "name": "1180x900 · seat B: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1180x900 · seat B: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 150,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1180x900 · seat B: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      },
+      "toggle": {
+       "x": 6,
+       "y": 60,
+       "w": 150,
+       "h": 86,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "1180x900 · seat B: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 874,
+       "y": 698,
+       "w": 300,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 883,
+       "y": 787,
+       "w": 282,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1180x900 · seat B: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1180x900 · seat B: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1180x900 · seat B: the drawer opens with every party listed",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1180x900 · seat B: Escape closes the drawer",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1100x900 · seat A: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1100x900 · seat A: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 60
+     }
+    },
+    {
+     "name": "1100x900 · seat A: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1100x900 · seat A: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 150,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1100x900 · seat A: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      },
+      "toggle": {
+       "x": 6,
+       "y": 60,
+       "w": 150,
+       "h": 86,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "1100x900 · seat A: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 794,
+       "y": 698,
+       "w": 300,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 803,
+       "y": 787,
+       "w": 282,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1100x900 · seat A: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1100x900 · seat A: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1100x900 · seat A: the drawer opens with every party listed",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1100x900 · seat A: Escape closes the drawer",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1100x900 · seat B: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1100x900 · seat B: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 60
+     }
+    },
+    {
+     "name": "1100x900 · seat B: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1100x900 · seat B: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 6,
+      "y": 698,
+      "w": 150,
+      "h": 150,
+      "shown": true
+     }
+    },
+    {
+     "name": "1100x900 · seat B: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      },
+      "toggle": {
+       "x": 6,
+       "y": 60,
+       "w": 150,
+       "h": 86,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "1100x900 · seat B: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 794,
+       "y": 698,
+       "w": 300,
+       "h": 150,
+       "shown": true
+      },
+      "ready": {
+       "x": 803,
+       "y": 787,
+       "w": 282,
+       "h": 52,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1100x900 · seat B: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1100x900 · seat B: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1100x900 · seat B: the drawer opens with every party listed",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1100x900 · seat B: Escape closes the drawer",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat A: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat A: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 57
+     }
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat A: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat A: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 4,
+      "y": 499,
+      "w": 150,
+      "h": 128,
+      "shown": true
+     }
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat A: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      },
+      "toggle": {
+       "x": 4,
+       "y": 48,
+       "w": 150,
+       "h": 70,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat A: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 763,
+       "y": 499,
+       "w": 300,
+       "h": 128,
+       "shown": true
+      },
+      "ready": {
+       "x": 772,
+       "y": 580,
+       "w": 282,
+       "h": 38,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1600x1000 at 150% browser zoom · seat A: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat A: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat A: the drawer opens with every party listed",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat A: Escape closes the drawer",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat B: nine bank positions in each ribbon",
+     "pass": true,
+     "actual": [
+      9,
+      9
+     ],
+     "expected": [
+      9,
+      9
+     ]
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat B: every bank position on screen and ≥ 40 px wide",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "min": 57
+     }
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat B: own and opponent position i share a physical column (±2 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat B: both Mana pools on screen (≥ 120 px wide)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 4,
+      "y": 499,
+      "w": 150,
+      "h": 128,
+      "shown": true
+     }
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat B: roster column or drawer toggle on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "roster": {
+       "x": 0,
+       "y": 0,
+       "w": 0,
+       "h": 0,
+       "shown": false
+      },
+      "toggle": {
+       "x": 4,
+       "y": 48,
+       "w": 150,
+       "h": 70,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat B: plans get ≥ 110 px and Ready is on screen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "plan": {
+       "x": 763,
+       "y": 499,
+       "w": 300,
+       "h": 128,
+       "shown": true
+      },
+      "ready": {
+       "x": 772,
+       "y": 580,
+       "w": 282,
+       "h": 38,
+       "shown": true
+      }
+     }
+    },
+    {
+     "name": "control present: 1600x1000 at 150% browser zoom · seat B: a hand Card",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat B: labeled Burn control",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat B: the drawer opens with every party listed",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "1600x1000 at 150% browser zoom · seat B: Escape closes the drawer",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c6-1600x1000.jpg",
+    "c6-1280x720.jpg",
+    "c6-1100x900.jpg",
+    "c6-1067x667.jpg"
+   ],
+   "setup": [],
+   "observed": [
+    {
+     "size": "1600x1000",
+     "seat": "A",
+     "viewport": [
+      1600,
+      1000,
+      1
+     ],
+     "canvas": {
+      "x": 233,
+      "y": 153,
+      "w": 1014,
+      "h": 638,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 798,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 6,
+      "y": 60,
+      "w": 220,
+      "h": 732,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 104,
+     "columnSkew": 0,
+     "plan": {
+      "x": 1254,
+      "y": 798,
+      "w": 340,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 1263,
+      "y": 887,
+      "w": 322,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1600x1000",
+     "seat": "B",
+     "viewport": [
+      1600,
+      1000,
+      1
+     ],
+     "canvas": {
+      "x": 233,
+      "y": 153,
+      "w": 1014,
+      "h": 638,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 798,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 6,
+      "y": 60,
+      "w": 220,
+      "h": 732,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 104,
+     "columnSkew": 0,
+     "plan": {
+      "x": 1254,
+      "y": 798,
+      "w": 340,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 1263,
+      "y": 887,
+      "w": 322,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1441x900 (above drawer breakpoint)",
+     "seat": "A",
+     "viewport": [
+      1441,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 233,
+      "y": 153,
+      "w": 855,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 6,
+      "y": 60,
+      "w": 220,
+      "h": 632,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 86,
+     "columnSkew": 0,
+     "plan": {
+      "x": 1095,
+      "y": 698,
+      "w": 340,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 1104,
+      "y": 787,
+      "w": 322,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1441x900 (above drawer breakpoint)",
+     "seat": "B",
+     "viewport": [
+      1441,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 233,
+      "y": 153,
+      "w": 855,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 6,
+      "y": 60,
+      "w": 220,
+      "h": 632,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 86,
+     "columnSkew": 0,
+     "plan": {
+      "x": 1095,
+      "y": 698,
+      "w": 340,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 1104,
+      "y": 787,
+      "w": 322,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1440x900 (drawer)",
+     "seat": "A",
+     "viewport": [
+      1440,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 233,
+      "y": 153,
+      "w": 854,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 6,
+      "y": 60,
+      "w": 220,
+      "h": 632,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 86,
+     "columnSkew": 0,
+     "plan": {
+      "x": 1094,
+      "y": 698,
+      "w": 340,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 1103,
+      "y": 787,
+      "w": 322,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1440x900 (drawer)",
+     "seat": "B",
+     "viewport": [
+      1440,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 233,
+      "y": 153,
+      "w": 854,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 6,
+      "y": 60,
+      "w": 220,
+      "h": 632,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 86,
+     "columnSkew": 0,
+     "plan": {
+      "x": 1094,
+      "y": 698,
+      "w": 340,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 1103,
+      "y": 787,
+      "w": 322,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1280x720",
+     "seat": "A",
+     "viewport": [
+      1280,
+      720,
+      1
+     ],
+     "canvas": {
+      "x": 229,
+      "y": 123,
+      "w": 702,
+      "h": 424,
+      "shown": true
+     },
+     "resources": {
+      "x": 4,
+      "y": 552,
+      "w": 220,
+      "h": 128,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 4,
+      "y": 48,
+      "w": 220,
+      "h": 500,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 69,
+     "columnSkew": 0,
+     "plan": {
+      "x": 936,
+      "y": 552,
+      "w": 340,
+      "h": 128,
+      "shown": true
+     },
+     "ready": {
+      "x": 945,
+      "y": 633,
+      "w": 322,
+      "h": 38,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1280x720",
+     "seat": "B",
+     "viewport": [
+      1280,
+      720,
+      1
+     ],
+     "canvas": {
+      "x": 229,
+      "y": 123,
+      "w": 702,
+      "h": 424,
+      "shown": true
+     },
+     "resources": {
+      "x": 4,
+      "y": 552,
+      "w": 220,
+      "h": 128,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 4,
+      "y": 48,
+      "w": 220,
+      "h": 500,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 69,
+     "columnSkew": 0,
+     "plan": {
+      "x": 936,
+      "y": 552,
+      "w": 340,
+      "h": 128,
+      "shown": true
+     },
+     "ready": {
+      "x": 945,
+      "y": 633,
+      "w": 322,
+      "h": 38,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1181x900",
+     "seat": "A",
+     "viewport": [
+      1181,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 233,
+      "y": 153,
+      "w": 595,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 6,
+      "y": 60,
+      "w": 220,
+      "h": 632,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 57,
+     "columnSkew": 0,
+     "plan": {
+      "x": 835,
+      "y": 698,
+      "w": 340,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 844,
+      "y": 787,
+      "w": 322,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1181x900",
+     "seat": "B",
+     "viewport": [
+      1181,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 233,
+      "y": 153,
+      "w": 595,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 220,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 6,
+      "y": 60,
+      "w": 220,
+      "h": 632,
+      "shown": true
+     },
+     "rosterToggle": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 57,
+     "columnSkew": 0,
+     "plan": {
+      "x": 835,
+      "y": 698,
+      "w": 340,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 844,
+      "y": 787,
+      "w": 322,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1180x900",
+     "seat": "A",
+     "viewport": [
+      1180,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 7,
+      "y": 153,
+      "w": 860,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 150,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "rosterToggle": {
+      "x": 6,
+      "y": 60,
+      "w": 150,
+      "h": 86,
+      "shown": true
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 69,
+     "columnSkew": 0,
+     "plan": {
+      "x": 874,
+      "y": 698,
+      "w": 300,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 883,
+      "y": 787,
+      "w": 282,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1180x900",
+     "seat": "B",
+     "viewport": [
+      1180,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 7,
+      "y": 153,
+      "w": 860,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 150,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "rosterToggle": {
+      "x": 6,
+      "y": 60,
+      "w": 150,
+      "h": 86,
+      "shown": true
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 69,
+     "columnSkew": 0,
+     "plan": {
+      "x": 874,
+      "y": 698,
+      "w": 300,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 883,
+      "y": 787,
+      "w": 282,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1100x900",
+     "seat": "A",
+     "viewport": [
+      1100,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 7,
+      "y": 153,
+      "w": 780,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 150,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "rosterToggle": {
+      "x": 6,
+      "y": 60,
+      "w": 150,
+      "h": 86,
+      "shown": true
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 60,
+     "columnSkew": 0,
+     "plan": {
+      "x": 794,
+      "y": 698,
+      "w": 300,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 803,
+      "y": 787,
+      "w": 282,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1100x900",
+     "seat": "B",
+     "viewport": [
+      1100,
+      900,
+      1
+     ],
+     "canvas": {
+      "x": 7,
+      "y": 153,
+      "w": 780,
+      "h": 538,
+      "shown": true
+     },
+     "resources": {
+      "x": 6,
+      "y": 698,
+      "w": 150,
+      "h": 150,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "rosterToggle": {
+      "x": 6,
+      "y": 60,
+      "w": 150,
+      "h": 86,
+      "shown": true
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 60,
+     "columnSkew": 0,
+     "plan": {
+      "x": 794,
+      "y": 698,
+      "w": 300,
+      "h": 150,
+      "shown": true
+     },
+     "ready": {
+      "x": 803,
+      "y": 787,
+      "w": 282,
+      "h": 52,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1600x1000 at 150% browser zoom",
+     "seat": "A",
+     "viewport": [
+      1067,
+      667,
+      1.5
+     ],
+     "canvas": {
+      "x": 5,
+      "y": 123,
+      "w": 753,
+      "h": 371,
+      "shown": true
+     },
+     "resources": {
+      "x": 4,
+      "y": 499,
+      "w": 150,
+      "h": 128,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "rosterToggle": {
+      "x": 4,
+      "y": 48,
+      "w": 150,
+      "h": 70,
+      "shown": true
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 57,
+     "columnSkew": 0,
+     "plan": {
+      "x": 763,
+      "y": 499,
+      "w": 300,
+      "h": 128,
+      "shown": true
+     },
+     "ready": {
+      "x": 772,
+      "y": 580,
+      "w": 282,
+      "h": 38,
+      "shown": true
+     },
+     "readyInView": true
+    },
+    {
+     "size": "1600x1000 at 150% browser zoom",
+     "seat": "B",
+     "viewport": [
+      1067,
+      667,
+      1.5
+     ],
+     "canvas": {
+      "x": 5,
+      "y": 123,
+      "w": 753,
+      "h": 371,
+      "shown": true
+     },
+     "resources": {
+      "x": 4,
+      "y": 499,
+      "w": 150,
+      "h": 128,
+      "shown": true
+     },
+     "resourcesInView": true,
+     "pools": true,
+     "roster": {
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "shown": false
+     },
+     "rosterToggle": {
+      "x": 4,
+      "y": 48,
+      "w": 150,
+      "h": 70,
+      "shown": true
+     },
+     "ownTiles": 9,
+     "oppTiles": 9,
+     "tilesInView": true,
+     "minTileW": 57,
+     "columnSkew": 0,
+     "plan": {
+      "x": 763,
+      "y": 499,
+      "w": 300,
+      "h": 128,
+      "shown": true
+     },
+     "ready": {
+      "x": 772,
+      "y": 580,
+      "w": 282,
+      "h": 38,
+      "shown": true
+     },
+     "readyInView": true
+    }
+   ],
+   "allowedErrors": []
+  },
+  {
+   "id": "c7",
+   "title": "Concession: confirmation, cancel, truthful feedback by phase (R2-07)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1; fixture=response",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: Match menu",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "menu opens with focus inside it",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "control present: Concede as A…",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "confirmation opens on Cancel",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "Cancel changes nothing",
+     "pass": true,
+     "actual": {
+      "tick": 1,
+      "viewSeat": "A",
+      "rev": {
+       "A": 0,
+       "B": 0
+      },
+      "plans": {
+       "A": [],
+       "B": []
+      },
+      "stale": {
+       "A": false,
+       "B": false
+      },
+      "replayTicks": 0
+     },
+     "expected": {
+      "tick": 1,
+      "viewSeat": "A",
+      "rev": {
+       "A": 0,
+       "B": 0
+      },
+      "plans": {
+       "A": [],
+       "B": []
+      },
+      "stale": {
+       "A": false,
+       "B": false
+      },
+      "replayTicks": 0
+     }
+    },
+    {
+     "name": "focus returns to the Match menu button",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "Escape closes the menu and changes nothing",
+     "pass": true,
+     "actual": {
+      "tick": 1,
+      "viewSeat": "A",
+      "rev": {
+       "A": 0,
+       "B": 0
+      },
+      "plans": {
+       "A": [],
+       "B": []
+      },
+      "stale": {
+       "A": false,
+       "B": false
+      },
+      "replayTicks": 0
+     },
+     "expected": {
+      "tick": 1,
+      "viewSeat": "A",
+      "rev": {
+       "A": 0,
+       "B": 0
+      },
+      "plans": {
+       "A": [],
+       "B": []
+      },
+      "stale": {
+       "A": false,
+       "B": false
+      },
+      "replayTicks": 0
+     }
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "control present: Concede as A…",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "control present: Concede as A (confirm)",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "confirmed concession is one order in A's plan",
+     "pass": false,
+     "actual": [],
+     "expected": [
+      "concede"
+     ]
+    },
+    {
+     "name": "success is reported only after acceptance",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Match menu",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "after Ready: the menu explains the concession is already in the frozen plan",
+     "pass": false,
+     "actual": false,
+     "expected": true
+    },
+    {
+     "name": "after Ready: no Concede button",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "check ran to completion",
+     "pass": false,
+     "actual": "TimeoutError: Waiting failed: 20000ms exceeded\n    at new WaitTask (file:///Users/calderwong/Documents/Codex/2026-06-29/can/lumina/node_modules/puppeteer-core/lib/puppeteer/common/WaitTask.js:46:34)\n    at IsolatedWorld.waitForFunction (file:///Users/calderwong/Documents/Codex/2026-06-29/can/lumina/node_modules/puppeteer-core/lib/puppeteer/api/Realm.js:49:26)\n    at CdpFrame.waitForFunction (file:///Users/calderwong/Documents/Codex/2026-06-29/can/lumina/node_modules/puppeteer-core/lib/puppeteer/api/Frame.js:585:43)\n    at CdpFrame.<anonymous> (file:///Users/calderwong/Documents/Codex/2026-06-29/can/lumina/node_modules/puppeteer-core/lib/puppeteer/util/decorators.js:101:27)\n    at CdpPage.waitForFunction (file:///Users/calderwong/Documents/Codex/2026-06-29/can/lumina/node_modules/puppeteer-core/lib/puppeteer/api/Page.js:1537:37)\n    at file:///Users/calderwong/Desktop/hapa-verseUs-prototype/tools/hapa/ui-regress.mjs:386:14\n    at async check (file:///Users/calderwong/Desktop/hapa-verseUs-prototype/tools/hapa/ui-regress.mjs:90:9)\n    at async file:///Users/calderwong/Desktop/hapa-verseUs-prototype/tools/hapa/ui-regress.mjs:354:1",
+     "expected": "no exception"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c7-confirm.jpg"
+   ],
+   "setup": [
+    "the hotseat view is switched back to A with viewSeat to inspect A's menu after Ready"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5198/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c8",
+   "title": "Card labels carry exact Supply, Mana, ability and planned use (R2-05)",
+   "config": {
+    "query": "autostart=1&fixture=cards&a=human&b=human",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "tile for A.none names Supply 3 and no Mana",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "id": "A.none",
+      "seat": "A",
+      "supply": 3,
+      "mana": "no Mana"
+     }
+    },
+    {
+     "name": "tile for A.one names Supply 4 and 1 Red",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "id": "A.one",
+      "seat": "A",
+      "supply": 4,
+      "mana": "1 Red"
+     }
+    },
+    {
+     "name": "tile for A.three names Supply 5 and 1 Red + 1 Green + 1 Blue",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "id": "A.three",
+      "seat": "A",
+      "supply": 5,
+      "mana": "1 Red + 1 Green + 1 Blue"
+     }
+    },
+    {
+     "name": "tile for A.five names Supply 6 and 1 Red + 1 Green + 1 Blue + 1 Black + 1 Rainbow",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "id": "A.five",
+      "seat": "A",
+      "supply": 6,
+      "mana": "1 Red + 1 Green + 1 Blue + 1 Black + 1 Rainbow"
+     }
+    },
+    {
+     "name": "tile for B.three names Supply 5 and 1 Purple + 1 Yellow + 1 White",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "id": "B.three",
+      "seat": "B",
+      "supply": 5,
+      "mana": "1 Purple + 1 Yellow + 1 White"
+     }
+    },
+    {
+     "name": "tile for B.five names Supply 6 and 1 Orange + 1 Purple + 1 Yellow + 1 White + 1 Rainbow",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "id": "B.five",
+      "seat": "B",
+      "supply": 6,
+      "mana": "1 Orange + 1 Purple + 1 Yellow + 1 White + 1 Rainbow"
+     }
+    },
+    {
+     "name": "a multi-color Card shows a +n chip for the entries it cannot fit",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "the planned Card shows its use on the tile",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "label": "6 of fixture, your C5: Supply 6, 1 Red + 1 Green + 1 Blue + 1 Black + 1 Rainbow, Ember Strike (planned)",
+      "text": "6 C5 ◆ Supply 6 1 1 1 +2 Ember Strike Burn planned"
+     }
+    },
+    {
+     "name": "…and in its accessible name",
+     "pass": false,
+     "actual": false,
+     "expected": true,
+     "note": "6 of fixture, your C5: Supply 6, 1 Red + 1 Green + 1 Blue + 1 Black + 1 Rainbow, Ember Strike (planned)"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c8-planned-burn.jpg"
+   ],
+   "setup": [
+    "A plans a Burn of A.five via hand slot 5 and the B key"
+   ],
+   "allowedErrors": []
+  }
+ ],
+ "finishedAt": "2026-11-23T04:30:23.024Z",
+ "summary": {
+  "checks": 8,
+  "assertions": 256,
+  "failed": 34
+ }
+}
