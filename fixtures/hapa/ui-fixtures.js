@@ -7,7 +7,7 @@
  */
 import { scenario } from './scenarios.js';
 import { setDestination } from '../../src/hapa/rules/movement.js';
-import { raiseTerritory, cellKey } from '../../src/hapa/rules/terrain.js';
+import { raiseTerritory, cellKey, placeDeposit } from '../../src/hapa/rules/terrain.js';
 
 const U = 1_000_000;
 const sturdy = (state) => { for (const m of Object.values(state.members)) if (m.archetype !== 'center') { m.hp = 20 * U; m.maxHp = 20 * U; } };
@@ -164,6 +164,27 @@ UI_FIXTURES.cards = {
     fixtureCard(s, 'A.five', 'A', 5, 'fixture.ember_strike', 6, { red: 1, green: 1, blue: 1, black: 1, rainbow: 1 });
     fixtureCard(s, 'B.three', 'B', 4, 'fixture.wheel_formation', 5, { purple: 1, yellow: 1, white: 1 });
     fixtureCard(s, 'B.five', 'B', 5, 'fixture.blue_denial', 6, { orange: 1, purple: 1, yellow: 1, white: 1, rainbow: 1 });
+    return fx;
+  },
+};
+
+/**
+ * Terrain work stages (review UX-11): A's Castle worker stands in a cleared shaft at band −3
+ * (the terrain_work_v3_01 arrangement) beside an unextracted Metal deposit. Select it and open
+ * "Terrain work…" to plan a dig, fill or mine; the plan shows it, the Tick resolves it.
+ */
+UI_FIXTURES.dig = {
+  title: 'Terrain work (dig and mine)',
+  description: 'A\'s worker is in an open shaft at band −3 (R3C1). The inspector lists the legal digs, fills and the Metal deposit east of it; step the layer to −3 to watch.',
+  build() {
+    const fx = scenario({ matchId: 'fixture-dig', parties: [{ id: 'A.worker', owner: 'A', mount: 'castle', column: 1, row: 3, slots: { 5: 'center' } }] });
+    const s = fx.state;
+    const P = s.parties['A.worker'], m = s.members['A.worker.s5'];
+    P.band = -3; m.band = -3;
+    for (const b of [-3, -2, -1]) s.terrain.cells[cellKey(2, 10, b)] = { solid: false, material: 'air' };
+    s.terrain.kind = 'volume';
+    placeDeposit(s, 'deposit.A.C1.R3', 3, 10, -3);
+    s.tick = 8; s.phase = 'resolved';
     return fx;
   },
 };

@@ -821,6 +821,7 @@ export class VersusApp {
     this._renderToolHint();
     if (!this.playback) this.view.syncSupplyTokens(this.state, this._plannedSupplyMap());
     this.view.syncPlanLinks(this.state, this.playback ? [] : ['A', 'B'].flatMap((seat) => this.plans[seat].filter((c) => c.type === 'load_supply')));
+    this.view.terrain.syncWork(this.state, this.playback ? [] : ['A', 'B'].flatMap((seat) => this.plans[seat].filter((c) => c.type === 'begin_work')));
     const sel = this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null;
     if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? legalDestinations(this.state, this.ctx, sel) : []);
     else if (!sel) this.view.select(this.state, null);
@@ -1141,6 +1142,7 @@ export class VersusApp {
       own ? h('div', { class: 'actions' },
         h('div', { class: 'dim small' }, active ? (p.mount ? 'Right-click a highlighted territory: destination (one step costs 1 Supply).' : 'An unmounted Pawn stores Supply but cannot move.') : `C${p.region.column} is not active: only Supply can reach this party now.`),
         p.mount && active && this._can(p.owner).edit ? this._moveList(p) : null,
+        active && this._can(p.owner).edit ? this._workList(p) : null,
         h('div', { class: 'row' }, 'Face ', facing('N'), facing('E'), facing('S'), facing('W')),
         p.state === 'engaged' ? this._retreatPreview(p) : null,
         p.state === 'engaged' ? h('button', { disabled: !active || !this._can(p.owner).edit, onclick: () => { this.tool = { kind: 'retreat', partyId: p.id }; this._toast('Retreat: right-click a legal destination away from contact. Touching members die.'); } }, 'Retreat…') : null) : null);
@@ -1165,6 +1167,33 @@ export class VersusApp {
           this._toast(`Destination: R${d.row}C${d.column} (planned)`);
         }
       } }, `R${d.row}C${d.column}`, h('small', { class: 'dim' }, ` ${cost(d)}`)))));
+  }
+
+  /**
+   * Terrain work the rules allow this party now (review UX-11): each face-adjacent cube of its
+   * center, for dig, fill and mine, filtered by the rules' own work check. Empty for most parties
+   * (a surface center cannot dig the cube that supports it); shown only when something is legal.
+   */
+  _workList(p) {
+    const s = this.state, U = this.ctx.U;
+    const c = s.members[p.slots['5']];
+    if (!c?.alive) return null;
+    const here = { x: Math.round(c.x / U), y: Math.round(c.y / U), band: c.band ?? 1 };
+    const bands = [-3, -2, -1, 1, 2, 3], bi = bands.indexOf(here.band);
+    const near = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0]].map(([dx, dy]) => ({ x: here.x + dx, y: here.y + dy, band: here.band }));
+    if (bi > 0) near.push({ ...here, band: bands[bi - 1] });
+    if (bi < bands.length - 1) near.push({ ...here, band: bands[bi + 1] });
+    const WORD = { excavate: 'Dig', fill: 'Fill', extract: 'Mine' };
+    const opts = [];
+    for (const t of near) for (const work of ['excavate', 'fill', 'extract']) {
+      const cmd = { type: 'begin_work', partyId: p.id, work, target: t };
+      const v = validatePlan(s, this.ctx, p.owner, [...this.plans[p.owner], cmd]);
+      if (!v.errors.some((e) => e.index === this.plans[p.owner].length)) opts.push(cmd);
+    }
+    if (!opts.length) return null;
+    return h('details', { class: 'movelist' }, h('summary', {}, `Terrain work… (${opts.length} legal now; completes at the end of the Tick)`),
+      h('div', { class: 'row' }, ...opts.map((cmd) => h('button', { onclick: () => { if (this._addCommand(p.owner, cmd)) this._toast(`${WORD[cmd.work]} planned at (${cmd.target.x}, ${cmd.target.y}) band ${fmtBand(cmd.target.band)}`); } },
+        `${WORD[cmd.work]} `, h('small', { class: 'dim' }, `${cmd.target.x},${cmd.target.y} · ${fmtBand(cmd.target.band)}`)))));
   }
 
   /** Supply already planned for a party this Tick (it lands when the Tick resolves). */
@@ -1304,6 +1333,7 @@ function describeCmd(state, c) {
     case 'change_formation': return `Turn ${partyShort(state, c.partyId)} to face ${FACING_NAME[c.facing] ?? c.facing}`;
     case 'retreat': return `Retreat ${partyShort(state, c.partyId)} → R${c.target.row}C${c.target.column}`;
     case 'play_ability': { const d = activeCatalog.cards[state.cards[c.cardId]?.abilityId]; const t = c.target?.memberId ? ` at ${memberName(state, c.target.memberId)}` : c.target?.row ? ` on row ${c.target.row}` : ''; return `Cast ${d?.title ?? 'ability'} from ${cardShort(state, c.cardId)}${c.actorPartyId ? ` by ${partyShort(state, c.actorPartyId)}` : ''}${t}${c.burns?.length ? `, burning ${c.burns.map((b) => cardShort(state, b)).join(', ')}` : ''}`; }
+    case 'begin_work': return `${{ excavate: 'Dig', fill: 'Fill', extract: 'Mine', craft: 'Craft', equip: 'Equip' }[c.work] ?? c.work}${c.target ? ` at (${c.target.x}, ${c.target.y}) band ${fmtBand(c.target.band)}` : ''} by ${partyShort(state, c.partyId)}`;
     case 'concede': return 'Concede';
     default: return c.type;
   }

@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux08b,ux09,ux10,ux14rm,ux06,ux14kb,hv41,ux12').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux08b,ux09,ux10,ux14rm,ux06,ux14kb,hv41,ux12,ux11').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -515,6 +515,36 @@ if (want.has('ux12')) {
   j.errors = page.errors;
   report.journeys.ux12 = j;
   await page.close();
+}
+
+// --- UX-11: terrain materials and the three stages of digging ------------------------------------
+if (want.has('ux11')) {
+  const j = { steps: [] };
+  const close = async (page, pid, dist = 0.32) => { await page.evaluate((pid, dist) => { const a = window.__versus, P = a.state.parties[pid]; a.cam.focusOn(a.view.toWorld(P.x, P.y).setY(a.view.partyY(P))); a.cam.goal.distance = a.view.size * dist; a.cam.goal.pitch = 48 * Math.PI / 180; }, pid, dist); await sleep(1500); };
+  const wclip = (page) => page.evaluate(() => { const r = document.getElementById('world').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+  const cshot = async (page, name) => { const f = `${label}-${name}.png`; await page.mouse.move(4, 4); await sleep(500); await page.screenshot({ path: path.join(out, f), clip: await wclip(page) }); return f; };
+  // the terrain fixture: hill, open pit and tunnel
+  const t = await open('autostart=1&fixture=terrain&a=human&b=human');
+  await close(t, 'A.hill', 0.42);
+  j.steps.push({ name: 'terrain fixture: hill and pit', shot: await cshot(t, 'ux11-1-hill-pit') });
+  await t.evaluate(() => { const a = window.__versus; a.view.setLayer(-2); a.view.sync(a.state); a._renderAll(); });
+  await close(t, 'B.tunnel', 0.42);
+  j.steps.push({ name: 'layer -2: floor grid under the cutaway', floorVisible: await t.evaluate(() => !!window.__versus.view.terrain.floor?.visible), shot: await cshot(t, 'ux11-2-cutaway-floor') });
+  await t.close();
+  // the dig fixture: plan, then resolve
+  const d = await open('autostart=1&fixture=dig&a=human&b=human');
+  await d.evaluate(() => { const a = window.__versus; a.selected = { kind: 'party', id: 'A.worker' }; a.view.setLayer(-3); a.view.sync(a.state); a._renderAll(); });
+  await close(d, 'A.worker', 0.22);
+  const opts = await d.evaluate(() => [...document.querySelectorAll('#inspector details.movelist button')].map((b) => b.textContent.replace(/\s+/g, ' ').trim()).filter((x) => /^(Dig|Fill|Mine)/.test(x)));
+  await d.evaluate(() => { const det = [...document.querySelectorAll('#inspector details.movelist')].find((x) => /Terrain work/.test(x.textContent)); if (det) det.open = true; const b = [...(det?.querySelectorAll('button') ?? [])].find((x) => /^Dig/.test(x.textContent.trim())); b?.click(); });
+  await sleep(500);
+  j.steps.push({ name: 'dig fixture: legal work, plan a dig', options: opts, plan: await d.evaluate(() => window.__versus.plans.A.map((c) => `${c.type}:${c.work}@${c.target?.x},${c.target?.y},${c.target?.band}`)), workMarks: await d.evaluate(() => window.__versus.view.terrain.work?.children.length ?? 0), shot: await cshot(d, 'ux11-3-planned-dig') });
+  await d.evaluate(() => { const a = window.__versus; a._pressReady(); a._pressReady(); });
+  await sleep(3500);
+  j.steps.push({ name: 'both Ready: the dig resolves', tick: await d.evaluate(() => window.__versus.state.tick), events: await d.evaluate(() => window.__versus.session.events.filter((e) => /work|terrain_changed/.test(e.type)).map((e) => e.type)), workMarks: await d.evaluate(() => window.__versus.view.terrain.work?.children.length ?? 0), shot: await cshot(d, 'ux11-4-dug') });
+  j.errors = d.errors;
+  await d.close();
+  report.journeys.ux11 = j;
 }
 
 await browser.close();

@@ -36,3 +36,14 @@ test('cards fixture: multi-color cards are ordinary bank instances and the match
   closeTick(sess, { A: [{ type: 'burn', cardId: 'A.five' }], B: [] }, () => ({ pass: true }));
   assert.equal(verifyReplay(sess.replay).ok, true);
 });
+
+test('dig fixture: the inspector-planned dig is an ordinary begin_work that empties the cube and replays', async () => {
+  const { solidAt } = await import('../../src/hapa/rules/terrain.js');
+  const sess = createFixtureSession(UI_FIXTURES.dig.build(), { id: 'dig', title: 'Terrain work' });
+  openTick(sess);
+  assert.equal(solidAt(sess.state.terrain, 1, 10, -3), true);
+  const r = closeTick(sess, { A: [{ type: 'begin_work', partyId: 'A.worker', work: 'excavate', target: { x: 1, y: 10, band: -3 } }], B: [] }, () => ({ pass: true }));
+  assert.ok(r.events.some((e) => e.type === 'terrain_changed'));
+  assert.equal(solidAt(sess.state.terrain, 1, 10, -3), false);
+  assert.equal(verifyReplay(sess.replay).ok, true);
+});
