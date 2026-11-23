@@ -413,7 +413,7 @@ if (want.has('ux14kb')) {
   await page.keyboard.press('Enter'); await sleep(500);
   j.steps.push({ name: 'Tab to the roster row, Enter', tabs: k, selected: await page.evaluate(() => window.__versus.selected?.id), plan: await plan() });
   // 2. Supply: Tab to the first Load Supply button in the inspector, Enter
-  k = 0; while (k++ < 80 && !/^\+2 C1/.test(await where() ?? '')) await page.keyboard.press('Tab');
+  k = 0; while (k++ < 80 && !/^Load 2 Supply from 2♣ \(C1\)/.test(await where() ?? '')) await page.keyboard.press('Tab');
   await page.keyboard.press('Enter'); await sleep(400);
   j.steps.push({ name: 'Tab to Load Supply (+2), Enter', tabs: k, plan: await plan() });
   // 3. Move: Tab to the Move list, Enter opens it, Tab to the first destination, Enter
