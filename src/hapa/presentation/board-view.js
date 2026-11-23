@@ -19,6 +19,7 @@ import { attachGear, placeGear } from './gear.js';
 import { FACINGS } from '../rules/geometry.js';
 import { bodyVisible } from './playback.js';
 import { ResourceSites } from './firepit.js';
+import { pieceOf, standardSprite, pieceTexture, zoomLevel, STANDARD_PX, STANDARD_OPACITY } from './pieces.js';
 
 export const S = 1.5; // world units per member width
 export const COLOR_HEX = {
@@ -372,7 +373,19 @@ export class BoardView {
       const w = this.toWorld(pos[0], pos[1]);
       mk.position.set(w.x, (p.movementMode === 'air' ? 0 : pose ? pose[4] : bandY(p.band ?? 1)) + 0.04, w.z);
       mk.visible = p.alive && !p.retired;
-      if (mk.userData.crest) mk.userData.crest.visible = !p.mountLost;
+      // the chess standard replaces the small plaque (addendum 01 §5): one per party, at its
+      // logical center, owner by value/shape; a lost Mount says so instead of implying travel
+      if (mk.userData.crest) mk.userData.crest.visible = false;
+      const key = `${p.owner}:${pieceOf(p)}:${p.mountLost ? 'lost' : ''}`;
+      if (mk.userData.standardKey !== key) {
+        if (mk.userData.standard) { mk.remove(mk.userData.standard); mk.userData.standard.material.dispose(); }
+        const sp = standardSprite(p.owner, pieceOf(p), { status: p.mountLost ? 'MOUNT LOST' : null });
+        sp.position.set(0, 2.1 * S, 0);
+        sp.scale.set(0.001, 0.001, 1);
+        mk.add(sp);
+        mk.userData.standard = sp; mk.userData.standardKey = key;
+      }
+      mk.userData.standard.visible = mk.visible && (layer === null || (p.band ?? 1) === layer || p.movementMode === 'air');
       // decisive terrain facts in words: hilltop, open pit, roofed tunnel or flying
       const st = standingOf(state, this.ctx, p);
       if (mk.userData.standing !== st.label) {
@@ -416,6 +429,7 @@ export class BoardView {
 
   _partyMarker(p) {
     const g = new THREE.Group();
+    g.userData.partyId = p.id;
     const color = new THREE.Color(OWNER_HEX[p.owner]);
     // ownership: single brackets for A, double brackets for B (shape, not only hue)
     // ownership is a quiet persistent baseline (review UX-10): same shapes, lower weight, so the
@@ -452,6 +466,7 @@ export class BoardView {
     this.fx.update(dt);
     this._time += dt;
     this.sites.update(dt, this._time);
+    this._sizeStandards(camera);
     const still = reducedMotion();
     if (this.dropRing?.visible) {
       this.dropRing.userData.t += dt;
@@ -585,6 +600,66 @@ export class BoardView {
     candidates = candidates.map(({ party, member, band, covered }) => ({ party, member, band, covered }));
     const one = candidates.length === 1 ? candidates[0] : null;
     return { territory, member: one?.member ?? null, party: one?.party ?? null, point: b, candidates, layer };
+  }
+
+  /**
+   * Semantic zoom for the chess standards and endpoint ghosts: one level for the board from the
+   * projected territory size, with hysteresis; sizes stay constant on screen.
+   */
+  _sizeStandards(camera = this._camera) {
+    if (!camera) return;
+    this._camera = camera;
+    const H = this.viewportH ?? 720;
+    const P11 = camera.projectionMatrix.elements[5];
+    const dist = camera.position.distanceTo(this.center);
+    const territoryPx = (4 * S * P11 * H) / (2 * Math.max(1e-3, dist));
+    this.zoom = zoomLevel(this.zoom ?? 'overview', territoryPx);
+    const size = (px) => (px * 2) / (P11 * H);
+    for (const mk of this.markers.values()) {
+      const sp = mk.userData.standard;
+      if (!sp) continue;
+      const k = this.emphasis === mk.userData.partyId ? 1.15 : 1;
+      const h = size(STANDARD_PX[this.zoom] * (sp.userData.tall ? 1.17 : 1) * k);
+      sp.scale.set(h * sp.userData.aspect, h, 1);
+      sp.material.opacity = this.emphasis === mk.userData.partyId ? 1 : STANDARD_OPACITY[this.zoom];
+    }
+    for (const g of this.intents?.children ?? []) {
+      // endpoint markers grow with the territory so their status stays legible up close
+      const h = size(Math.max(40, Math.min(96, territoryPx * 0.6))) * (g.userData.emph ? 1.15 : 1);
+      g.scale.set(h * g.userData.aspect, h, 1);
+      g.material.opacity = g.userData.emph ? 0.95 : g.userData.quiet ? 0.5 : 0.75;
+    }
+  }
+
+  /**
+   * Public destination intent (addendum 01 §6): the party's chess glyph, hollow and dashed, at
+   * each endpoint, with its status. Several intents on one territory and band fan out with a count.
+   * Not pickable, not an occupant. `emphasis` brightens one party's pair.
+   * @param {Array<{ partyId: string, owner: 'A'|'B', piece: string, target: {column:number,row:number}, band: number, status: string, bad?: boolean }>} list
+   */
+  syncIntents(list, emphasis = null) {
+    this.intents ??= new THREE.Group();
+    if (!this.intents.parent) this.root.add(this.intents);
+    for (const c of this.intents.children) c.material.dispose();
+    this.intents.clear();
+    this.emphasis = emphasis;
+    const groups = new Map();
+    for (const it of list) { const k = `${it.target.column},${it.target.row},${it.band}`; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(it); }
+    for (const [, items] of groups) {
+      items.forEach((it, i) => {
+        const tex = pieceTexture(it.owner, it.piece, { ghost: true, status: it.status, bad: it.bad, count: i === 0 ? items.length : 1 });
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, sizeAttenuation: false, toneMapped: false }));
+        sp.center.set(0.5, 0);
+        sp.renderOrder = 8;
+        sp.userData = { aspect: tex.image.width / tex.image.height, partyId: it.partyId, emph: it.partyId === emphasis, quiet: !!emphasis && it.partyId !== emphasis };
+        const c = this.ctx.geo.center(it.target.column, it.target.row), w = this.toWorld(c.x, c.y);
+        const fan = (i - (items.length - 1) / 2) * 1.1 * S;
+        sp.position.set(w.x + fan, bandY(it.band) + 0.25, w.z);
+        sp.scale.set(0.001, 0.001, 1); // sized below, never drawn at the default world scale
+        this.intents.add(sp);
+      });
+    }
+    this._sizeStandards();
   }
 
   /** The bank card tile under the pointer, or null. */

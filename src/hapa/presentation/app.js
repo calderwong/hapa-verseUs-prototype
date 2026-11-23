@@ -14,8 +14,10 @@ import { BoardCamera } from './camera.js';
 import { BoardView, COLOR_HEX, OWNER_HEX } from './board-view.js';
 import { eventLine, explainHit, memberName, partyName, fmtMana } from './explain.js';
 import { createSession, createFixtureSession, openTick } from '../rules/session.js';
-import { validatePlan, resolveTick, responseOptions } from '../rules/match.js';
-import { legalDestinations, planPartyRoute, routeOrigin, touchingPairs, contactTolerance } from '../rules/movement.js';
+import { validatePlan, resolveTick, responseOptions, projectPlan } from '../rules/match.js';
+import { legalDestinations, planPartyRoute, routeOrigin, touchingPairs, contactTolerance, quotedDestinations, quoteRoute, destinationPolicy } from '../rules/movement.js';
+import { surfaceBand } from '../rules/terrain.js';
+import { pieceOf, PIECE_NAME } from './pieces.js';
 import { mintForecast, nextActivation, roundOf, supplyOf, quotePayment } from '../rules/economy.js';
 import { stateFingerprint, other } from '../rules/state.js';
 import { summarize } from '../rules/stats.js';
@@ -809,7 +811,7 @@ export class VersusApp {
 
   _showDestinations() {
     const party = this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null;
-    if (party) this.view.select(this.state, party, legalDestinations(this.state, this.ctx, party));
+    if (party) this.view.select(this.state, party, this._fundedTargets(party).filter((d) => d.funded));
   }
 
   /** The layer rail (Design Companion: six bands split at Ground 0; All is a view preset). */
@@ -840,10 +842,13 @@ export class VersusApp {
     this._stepPlayback(dt);
     this.scenery?.update(dt);
     this.view.update(dt, this.engine.camera);
+    this.view.viewportH = this.engine.renderer.domElement.clientHeight;
     const busy = !!(this.cardDrag?.active || this.cam?.dragging);
     if (busy !== this._inspectBusy) { this._inspectBusy = busy; this.inspect.setSuspended(busy); }
     this.inspect.update();
     this._placeBasinCounters();
+    const emph = `${this.inspect.transientSubject?.id ?? ''}|${this.inspect.pinnedSubject?.id ?? ''}`;
+    if (emph !== this._emphKey && this.session) { this._emphKey = emph; this._syncIntents(); }
     this.el.compass.textContent = `▲ ${Math.round(this.cam.bearing)}° · ${this.cam.tactical ? 'Tactical' : 'Angled'} · home ${this.viewSeat}`;
   }
 
@@ -909,8 +914,9 @@ export class VersusApp {
     this.view.syncPlanLinks(this.state, this.playback ? [] : ['A', 'B'].flatMap((seat) => this.plans[seat].filter((c) => c.type === 'load_supply')));
     this.view.terrain.syncWork(this.state, this.playback ? [] : ['A', 'B'].flatMap((seat) => this.plans[seat].filter((c) => c.type === 'begin_work')));
     const sel = this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null;
-    if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? legalDestinations(this.state, this.ctx, sel) : []);
+    if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? this._fundedTargets(sel).filter((d) => d.funded) : []);
     else if (!sel) this.view.select(this.state, null);
+    this._syncIntents();
   }
 
   /**
@@ -1470,32 +1476,86 @@ export class VersusApp {
   }
 
   /**
-   * Move without a right-click (review UX-13/UX-14): the party's legal destinations as buttons,
-   * nearest first, each with its Supply cost. The same validated set_destination command.
+   * Every legal destination of an own party with its exact funding quote (addendum 01 §6), from a
+   * projection of its seat's plan without this party's own unit orders — a new destination is
+   * appended after every planned load, so all of them precede it. Cached per plan revision.
+   */
+  _fundedTargets(p, extraLoads = []) {
+    const key = `${this.generation}:${this.state.tick}:${this.rev?.[p.owner]}:${p.id}:${extraLoads.join(',')}`;
+    if (!extraLoads.length && this._fundCache?.key === key) return this._fundCache.list;
+    const cmds = this.plans[p.owner].filter((c) => !(['set_destination', 'retreat'].includes(c.type) && c.partyId === p.id));
+    const proj = projectPlan(this.state, this.ctx, p.owner, [...cmds, ...extraLoads.map((cardId) => ({ type: 'load_supply', cardId, partyId: p.id }))]);
+    const q = proj.state.parties[p.id];
+    const list = q && q.mount && !q.mountLost ? quotedDestinations(proj.state, this.ctx, q).filter((d) => d.column !== p.region.column || d.row !== p.region.row) : [];
+    if (!extraLoads.length) this._fundCache = { key, list };
+    return list;
+  }
+
+  /** How many more destinations a Card would fund if loaded into this party ("if loaded" preview). */
+  _rangeIfLoaded(p, cardId) {
+    if (!p.mount || p.mountLost || destinationPolicy(this.ctx.profile) !== 'full_route_funded_v1') return null;
+    const now = this._fundedTargets(p).filter((d) => d.funded).length;
+    return this._fundedTargets(p, [cardId]).filter((d) => d.funded).length - now;
+  }
+
+  /**
+   * Public destination intent on the board (addendum 01 §6): every party's accepted destination
+   * with its actual status, and every draft destination in either public plan (a draft replaces the
+   * accepted one in the drawing — never two active endpoints). Invalid drafts say UNFUNDED.
+   */
+  _syncIntents() {
+    const s = this.state, list = [];
+    if (this.playback) { this.view.syncIntents([], null); return; }
+    const drafts = new Map();
+    for (const seat of ['A', 'B']) {
+      const bad = new Set(this._planErrors(seat).map((e) => e.index));
+      this.plans[seat].forEach((c, i) => { if (c.type === 'set_destination' || c.type === 'retreat') drafts.set(c.partyId, { target: c.target, bad: bad.has(i), retreat: c.type === 'retreat' }); });
+    }
+    const bandAt = (p, t) => (p.movementMode === 'air' ? p.band : surfaceBand(s.terrain, t.column, t.row));
+    for (const p of Object.values(s.parties)) {
+      if (!p.alive || p.retired || !p.mount) continue;
+      const d = drafts.get(p.id);
+      if (d) { list.push({ partyId: p.id, owner: p.owner, piece: pieceOf(p), target: d.target, band: bandAt(p, d.target), status: d.bad ? 'UNFUNDED' : d.retreat ? 'RETREAT' : 'PLANNED', bad: d.bad }); continue; }
+      if (!p.destination) continue;
+      const engaged = p.state === 'engaged';
+      const status = p.state === 'waiting_supply' ? 'PAUSED · SUPPLY' : engaged ? 'PAUSED · COMBAT' : (p.blockedTick ?? -9) >= s.tick - 1 ? 'BLOCKED' : 'TRAVELLING';
+      list.push({ partyId: p.id, owner: p.owner, piece: pieceOf(p), target: p.destination, band: bandAt(p, p.destination), status });
+    }
+    const hov = this.inspect.transientSubject, pin = this.inspect.pinnedSubject;
+    const emphasis = hov?.kind === 'party' ? hov.id : pin?.kind === 'party' ? pin.id : null;
+    this.view.syncIntents(list, emphasis);
+  }
+
+  /**
+   * Move without a right-click (addendum 01 §6): every destination the party's Supply funds for the
+   * whole route — held plus earlier planned loads — nearest first, no cap; the legal targets it
+   * cannot fund are summarised with their shortfall. The same validated command as the board.
    */
   _moveList(p) {
     const s = this.state;
-    const dests = legalDestinations(s, this.ctx, p).filter((d) => d.column !== p.region.column || d.row !== p.region.row)
-      .sort((a, b) => (a.cost ?? 0) - (b.cost ?? 0) || a.row - b.row || a.column - b.column).slice(0, 12);
-    if (!dests.length) return null;
-    const step = this.ctx.profile.movement.stepCost ?? 1;
-    const cost = (d) => (d.cost != null ? `${d.cost} step${d.cost === 1 ? '' : 's'} · ${d.cost * step} Supply` : '');
-    return h('details', { class: 'movelist' }, h('summary', {}, `Move to… (${dests.length} nearest legal territories; or right-click the board)`),
-      h('div', { class: 'row' }, ...dests.map((d) => {
+    const all = this._fundedTargets(p).sort((a, b) => (a.required ?? 0) - (b.required ?? 0) || a.row - b.row || a.column - b.column);
+    const funded = all.filter((d) => d.funded), unfunded = all.filter((d) => !d.funded);
+    if (!all.length) return null;
+    const need = (d) => `${pts(d.required)} Supply`;
+    const strict = destinationPolicy(this.ctx.profile) === 'full_route_funded_v1';
+    const held = all[0]?.held ?? supplyOf(p);
+    return h('details', { class: 'movelist' }, h('summary', {}, `Move to… (${funded.length} funded${strict ? ` with ${pts(held)} Supply` : ''}${unfunded.length ? ` · ${unfunded.length} need more` : ''})`),
+      funded.length ? h('div', { class: 'row scrolly' }, ...funded.map((d) => {
         // who is there already: one of your Pawns means the move merges them
         const there = Object.values(s.parties).find((q) => q.alive && !q.retired && q.id !== p.id && q.region.column === d.column && q.region.row === d.row);
         const note = there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '';
-        return h('button', { 'aria-label': `Move ${partyShort(s, p.id)} to R${d.row}C${d.column}: ${cost(d)}${note}`, onclick: () => {
+        return h('button', { 'aria-label': `Move ${partyShort(s, p.id)} to R${d.row}C${d.column}: needs ${need(d)}${note}`, onclick: () => {
           if (this._addCommand(p.owner, { type: 'set_destination', partyId: p.id, target: { column: d.column, row: d.row } })) {
             const plan = planPartyRoute(s, this.ctx, p, routeOrigin(s, this.ctx, p), d);
             if (plan.route) this.view.showRoute(p, plan.route.map((n) => { const c = this.ctx.geo.center(n.column, n.row); return [c.x, c.y]; }));
-            this._toast(`Destination: R${d.row}C${d.column} (planned)`);
-            // the keyboard follows the decision into the plan: the new order, then Ready
-            this._focusAfter = () => [...this.el.plan.querySelectorAll(`.planbox.${p.owner.toLowerCase()} button.x`)].at(-1) ?? this.el.readyBig;
+            this._toast(`Destination: R${d.row}C${d.column} (planned, needs ${need(d)})`);
+            // the keyboard follows the decision: the new order when Orders is open, else Ready
+            this._focusAfter = () => (this.ordersOpen ? [...this.el.plan.querySelectorAll(`.planbox.${p.owner.toLowerCase()} button.x`)].at(-1) : null) ?? this.el.readyBig;
             this._renderAll();
           }
-        } }, `R${d.row}C${d.column}`, h('small', { class: 'dim' }, ` ${cost(d)}${note}`));
-      })));
+        } }, `R${d.row}C${d.column}`, h('small', { class: 'dim' }, ` ${need(d)}${note}`));
+      })) : h('p', { class: 'dim small' }, 'No destination is funded yet: load Supply first (above).'),
+      unfunded.length ? h('p', { class: 'dim small' }, `${unfunded.length} more legal destination${unfunded.length > 1 ? 's' : ''} need more Supply for the whole route — e.g. R${unfunded[0].row}C${unfunded[0].column} needs ${need(unfunded[0])} (short ${pts(unfunded[0].shortfall)}).`) : null);
   }
 
   /**
@@ -1540,7 +1600,7 @@ export class VersusApp {
       h('h4', {}, 'Load Supply'),
       cards.length
         ? h('div', { class: 'row' }, ...cards.map((c) => h('button', { disabled: !this._can(seat).edit, 'aria-label': `Load ${pts(c.supply)} Supply from ${cardShort(s, c.id)} into ${partyShort(s, p.id)}${Object.keys(c.mana ?? {}).length ? ` (gives up ${fmtMana(c.mana)} and its ability)` : ' (gives up its ability)'}`, title: `Spend ${c.id} as ${pts(c.supply)} Supply for this party (the card's Mana and ability are given up)`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: c.id, partyId: p.id })) { this._toast(`+${pts(c.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this._focusAfter = () => this._inspectorEl().querySelector('details.movelist > summary') ?? this._inspectorEl().querySelector('.supply-loader button'); this._renderAll(); } } },
-          `+${pts(c.supply)} `, h('small', { class: 'dim' }, `C${c.localColumn} ${c.rank}${SUIT[c.suit] ?? ''}`))))
+          `+${pts(c.supply)} `, h('small', { class: 'dim' }, `C${c.localColumn} ${c.rank}${SUIT[c.suit] ?? ''}`), (() => { const k = this._rangeIfLoaded(p, c.id); return k ? h('small', { class: 'ok' }, ` if loaded: +${k} destination${k > 1 ? 's' : ''}`) : null; })())))
         : h('p', { class: 'dim small' }, 'No unplanned hand cards. New cards mint from the highlighted columns each Tick.'),
       h('p', { class: 'dim small' }, 'While your plan is editable (before you press Ready), any available card can become Supply for any of your parties, in any column — not only active ones. Moving one step costs 1 Supply.'));
   }

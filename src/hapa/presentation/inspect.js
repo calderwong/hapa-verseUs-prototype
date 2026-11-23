@@ -197,7 +197,11 @@ export class InspectController {
       x = pr.right - host.left + 8 + W <= host.width - margin ? pr.right - host.left + 8 : pr.left - host.left - 8 - W;
       y = pr.top - host.top;
     } else {
-      x = a.x + gap + W <= host.width - margin ? a.x + gap : a.x - gap - W;
+      // outward: on the side of the anchor away from the middle of the view, so the view lies over
+      // the frame and scenery rather than the field, with a short leader back to its source
+      const outLeft = a.x < host.width / 2;
+      if (outLeft) { x = Math.max(margin, a.x - gap - W); if (x + W > a.x - 6) x = a.x + gap; }
+      else { x = Math.min(host.width - W - margin, a.x + gap); if (x < a.x + 6) x = a.x - gap - W; }
       y = a.y - Math.min(H / 2, 120);
     }
     x = Math.max(margin, Math.min(x, host.width - W - margin));

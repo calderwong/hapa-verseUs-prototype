@@ -139,10 +139,11 @@ export class CardDrag {
     const have = supplyOf(p), plan = a._plannedSupply(p), add = card.supply;
     line('tip-head', `+${pts(add)} Supply → ${partyName(a.state, p.id)}`);
     line('tip-num', `Supply ${pts(have)}${plan ? ` (+${pts(plan)} planned)` : ''}  →  ${pts(have + plan + add)}`);
-    const steps = Math.floor((have + plan + add) / a.ctx.U);
+    const more = a._rangeIfLoaded?.(p, card.id);
     if (!p.mount) line('tip-dim', 'A Pawn stores Supply; it moves once a Mount joins it.');
     else if (p.mountLost) line('tip-dim', 'This party lost its mount and cannot travel.');
-    else line('tip-dim', `Enough for ${steps} step${steps === 1 ? '' : 's'} of travel${p.destination ? ` toward R${p.destination.row}C${p.destination.column}` : ''}.`);
+    else if (more != null) line('tip-dim', `If loaded: ${more ? `+${more} more destination${more === 1 ? '' : 's'} funded for the whole route` : 'no new destination is funded yet'}.`);
+    else line('tip-dim', `Enough for ${Math.floor((have + plan + add) / a.ctx.U)} steps of travel${p.destination ? ` toward R${p.destination.row}C${p.destination.column}` : ''}.`);
     if (!a.state.activeColumns.includes(p.region.column)) line('tip-dim', `C${p.region.column} is not active — Supply still arrives; new move orders wait for activation.`);
     const def = a.ctx.catalog.cards[card.abilityId];
     line('tip-dim', `Gives up: ${Object.keys(card.mana ?? {}).length ? this.h.fmtMana(card.mana) + ' and ' : ''}${def?.title ?? 'its ability'}.`);
