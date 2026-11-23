@@ -49,6 +49,8 @@ const ROLE_ABBR = { swordsman: 'Sw', pikeman: 'Pk', archer: 'Ar', mage: 'Mg', pr
 const ROLE_NAME = { swordsman: 'Sword', pikeman: 'Pike', archer: 'Archer', mage: 'Mage', priest: 'Priest' };
 const FACING_NAME = { N: 'North', E: 'East', S: 'South', W: 'West' };
 const STATE_NAME = { idle: 'waiting', moving: 'moving', engaged: 'in combat', turning: 'turning', working: 'working' };
+/** Attributes that make a click-driven element a keyboard button too (Enter / Space; review UX-14). */
+const kbd = (fn, label) => ({ tabindex: '0', role: 'button', ...(label ? { 'aria-label': label } : {}), onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); fn(e); } } });
 const cap = (x) => (x ? x[0].toUpperCase() + x.slice(1) : x);
 /** A party in plain words: "Castle R1C1" (Mount kind, or Pawn, and its global territory). */
 const partyShort = (state, id) => { const p = state.parties[id]; return p ? `${p.mount ? cap(p.mount) : 'Pawn'} R${p.region.row}C${p.region.column}` : id; };
@@ -786,6 +788,27 @@ export class VersusApp {
   // --- rendering the HUD -------------------------------------------------------------------------
   _renderAll() {
     if (!this.session) return;
+    // keyboard focus survives re-rendering (review UX-14): if the focused control is about to be
+    // rebuilt, focus returns to the same panel's control with the same accessible name, else to the
+    // inspector heading — never to the top of the page
+    const prev = document.activeElement;
+    const panel = prev && prev !== document.body ? prev.closest?.('.area') : null;
+    const key = panel ? (prev.getAttribute('aria-label') || prev.textContent || '').trim() : null;
+    this._renderAllInner();
+    if (this._focusInspectorNext) {
+      this._focusInspectorNext = false;
+      const head = this.el.inspector.querySelector('h3');
+      if (head) { head.setAttribute('tabindex', '-1'); head.focus({ preventScroll: true }); return; }
+    }
+    if (panel && !document.contains(prev)) {
+      const same = [...panel.querySelectorAll('button, [tabindex="0"], summary')].find((e) => (e.getAttribute('aria-label') || e.textContent || '').trim() === key);
+      const head = this.el.inspector.querySelector('h3');
+      const target = same ?? (head && (head.setAttribute('tabindex', '-1'), head));
+      target?.focus({ preventScroll: true });
+    }
+  }
+
+  _renderAllInner() {
     this._renderMatchBar();
     this._renderHand(this.el.ownhand, this.viewSeat, true);
     this._renderHand(this.el.opphand, this.viewSeat === 'A' ? 'B' : 'A', false);
@@ -927,13 +950,16 @@ export class VersusApp {
       const living = Object.values(p.slots).filter((id) => id && s.members[id].alive).length;
       const engaged = p.state === 'engaged';
       const planned = this._plannedSupply(p);
-      return h('div', { class: `rrow${this.selected?.id === p.id ? ' sel' : ''}${engaged ? ' engaged' : ''}${this.tool?.kind === 'supply' && p.owner === this.viewSeat ? ' target' : ''}`, onclick: () => {
+      const pickRow = (e) => {
+        if (e?.type === 'keydown') this._focusInspectorNext = true; // a keyboard pick continues in the inspector
         if (this.tool?.kind === 'supply' && p.owner === this.viewSeat) {
           if (this._addCommand(this.viewSeat, { type: 'load_supply', cardId: this.tool.cardId, partyId: p.id })) this._toast(`Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`);
           this.tool = null; this._renderAll(); return;
         }
         this.selected = { kind: 'party', id: p.id }; this._autoLayer(p); this._focusSelection(); this._toggleRoster(false); this._renderAll();
-      } },
+      };
+      return h('div', { class: `rrow${this.selected?.id === p.id ? ' sel' : ''}${engaged ? ' engaged' : ''}${this.tool?.kind === 'supply' && p.owner === this.viewSeat ? ' target' : ''}`, onclick: pickRow,
+        ...kbd(pickRow, `${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' Commander' : ''} at R${p.region.row}C${p.region.column}, ${living} of 9 members, Supply ${pts(supplyOf(p))}${engaged ? ', in combat' : ''}`) },
         h('span', { class: `dot ${p.owner.toLowerCase()}` }), h('b', {}, p.mount ? p.mount[0].toUpperCase() + p.mount.slice(1) : 'Pawn'), p.commander ? ' ★' : '',
         h('span', { class: 'dim' }, ` R${p.region.row}C${p.region.column}`), ` ${living}/9`,
         h('span', { class: 'dim' }, ` S${pts(supplyOf(p))}`), planned ? h('span', { class: 'planned-supply' }, `+${pts(planned)}`) : null, engaged ? h('span', { class: 'badge' }, '⚔') : p.state === 'moving' ? h('span', { class: 'badge' }, '→') : null);
@@ -1011,7 +1037,7 @@ export class VersusApp {
     const minted = this.tickEvents?.filter((e) => e.type === 'card_minted' || e.type === 'tick_started' || e.type === 'mana_expired') ?? [];
     const all = [...(this.playback ? [] : []), ...evs];
     const shown = (all.length ? all : minted).slice(-60);
-    this.el.events.replaceChildren(...shown.map((e) => h('span', { class: `ev ev-${e.type}${this.inspectEvent === e.id ? ' sel' : ''}`, onclick: () => { this.inspectEvent = e.id; this.selected = { kind: 'event', id: e.id, event: e }; this._renderAll(); } }, eventLine(s, e))));
+    this.el.events.replaceChildren(...shown.map((e) => { const open = () => { this.inspectEvent = e.id; this.selected = { kind: 'event', id: e.id, event: e }; this._renderAll(); }; return h('span', { class: `ev ev-${e.type}${this.inspectEvent === e.id ? ' sel' : ''}`, onclick: open, ...kbd(open) }, eventLine(s, e)); }));
     this.el.events.scrollLeft = this.el.events.scrollWidth;
   }
 
@@ -1080,7 +1106,8 @@ export class VersusApp {
     for (let slot = 1; slot <= 9; slot++) {
       const id = p.slots[String(slot)];
       const m = id ? s.members[id] : null;
-      grid.append(h('div', { class: `slot${m ? (m.alive ? '' : ' dead') : ' empty'}${slot === 5 ? ' center' : ''}${m ? ` role-${m.archetype}` : ''}`, onclick: () => { if (m) { this.selected = { kind: 'member', id: m.id }; this._renderAll(); } }, title: m ? memberName(s, m.id) : `slot ${slot} empty` },
+      const pickSlot = () => { if (m) { this.selected = { kind: 'member', id: m.id }; this._renderAll(); } };
+      grid.append(h('div', { class: `slot${m ? (m.alive ? '' : ' dead') : ' empty'}${slot === 5 ? ' center' : ''}${m ? ` role-${m.archetype}` : ''}`, onclick: pickSlot, ...(m ? kbd(pickSlot, `Slot ${slot}: ${memberName(s, m.id)}${m.alive ? '' : ', fallen'}`) : {}), title: m ? memberName(s, m.id) : `slot ${slot} empty` },
         h('span', { class: 'sn' }, slot), m?.alive && m.helperAway ? h('span', { class: 'away', title: m.helperAway.kind === 'corner' ? `helping ${partyName(s, m.helperAway.helps)} in the contact strip` : 'advanced into an enemy gap' }, m.helperAway.kind === 'corner' ? '◇' : '▲') : null, m ? [h('b', {}, m.isCenter ? cap(p.mount ?? 'center') : ROLE_NAME[m.archetype] ?? ROLE_ABBR[m.archetype]), m.alive && !p.pool ? h('div', { class: 'hp' }, h('i', { style: `width:${Math.max(0, m.hp / m.maxHp) * 100}%` })) : m.alive ? null : h('small', {}, '†')] : h('small', { class: 'dim' }, slot === 5 ? 'empty center' : '')));
     }
     const engagedWith = Object.values(s.engagements).filter((e) => e.active && (e.a === p.id || e.b === p.id)).map((e) => (e.a === p.id ? e.b : e.a));
@@ -1113,9 +1140,31 @@ export class VersusApp {
       own ? this._supplyLoader(p) : null,
       own ? h('div', { class: 'actions' },
         h('div', { class: 'dim small' }, active ? (p.mount ? 'Right-click a highlighted territory: destination (one step costs 1 Supply).' : 'An unmounted Pawn stores Supply but cannot move.') : `C${p.region.column} is not active: only Supply can reach this party now.`),
+        p.mount && active && this._can(p.owner).edit ? this._moveList(p) : null,
         h('div', { class: 'row' }, 'Face ', facing('N'), facing('E'), facing('S'), facing('W')),
         p.state === 'engaged' ? this._retreatPreview(p) : null,
         p.state === 'engaged' ? h('button', { disabled: !active || !this._can(p.owner).edit, onclick: () => { this.tool = { kind: 'retreat', partyId: p.id }; this._toast('Retreat: right-click a legal destination away from contact. Touching members die.'); } }, 'Retreat…') : null) : null);
+  }
+
+  /**
+   * Move without a right-click (review UX-13/UX-14): the party's legal destinations as buttons,
+   * nearest first, each with its Supply cost. The same validated set_destination command.
+   */
+  _moveList(p) {
+    const s = this.state;
+    const dests = legalDestinations(s, this.ctx, p).filter((d) => d.column !== p.region.column || d.row !== p.region.row)
+      .sort((a, b) => (a.cost ?? 0) - (b.cost ?? 0) || a.row - b.row || a.column - b.column).slice(0, 12);
+    if (!dests.length) return null;
+    const step = this.ctx.profile.movement.stepCost ?? 1;
+    const cost = (d) => (d.cost != null ? `${d.cost} step${d.cost === 1 ? '' : 's'} · ${d.cost * step} Supply` : '');
+    return h('details', { class: 'movelist' }, h('summary', {}, `Move to… (${dests.length} nearest legal territories; or right-click the board)`),
+      h('div', { class: 'row' }, ...dests.map((d) => h('button', { onclick: () => {
+        if (this._addCommand(p.owner, { type: 'set_destination', partyId: p.id, target: { column: d.column, row: d.row } })) {
+          const plan = planPartyRoute(s, this.ctx, p, routeOrigin(s, this.ctx, p), d);
+          if (plan.route) this.view.showRoute(p, plan.route.map((n) => { const c = this.ctx.geo.center(n.column, n.row); return [c.x, c.y]; }));
+          this._toast(`Destination: R${d.row}C${d.column} (planned)`);
+        }
+      } }, `R${d.row}C${d.column}`, h('small', { class: 'dim' }, ` ${cost(d)}`)))));
   }
 
   /** Supply already planned for a party this Tick (it lands when the Tick resolves). */

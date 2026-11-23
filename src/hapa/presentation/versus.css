@@ -408,3 +408,8 @@ body.card-dragging .ready-big { pointer-events: none; }
 details.details { margin: 4px 0 6px; font-size: 12px; } details.details summary { cursor: pointer; color: var(--dim); }
 .mono { font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
 .fgrid .slot b { font-size: 11px; }
+
+/* --- Keyboard routes (2026-11-22 review UX-14) ---------------------------------------------------- */
+.rrow:focus-visible, .fgrid .slot:focus-visible, .ev:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+details.movelist { margin: 4px 0; font-size: 12px; } details.movelist summary { cursor: pointer; color: var(--ink); }
+details.movelist button { padding: 2px 6px; }

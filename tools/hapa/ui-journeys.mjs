@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux09,ux10,ux14rm,ux06').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux09,ux10,ux14rm,ux06,ux14kb').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -383,6 +383,53 @@ if (want.has('ux06')) {
     await page.close();
   }
   report.journeys.ux06 = j;
+}
+
+// --- UX-14: the main journey by keyboard only, and a color-reduced view ---------------------------
+if (want.has('ux14kb')) {
+  const page = await open('autostart=1&a=human&b=bot&seed=1');
+  const j = { steps: [] };
+  const where = () => page.evaluate(() => { const e = document.activeElement; return e ? (e.getAttribute('aria-label') || e.innerText || e.tagName).replace(/\s+/g, ' ').trim().slice(0, 70) : null; });
+  const plan = () => page.evaluate(() => window.__versus.plans.A.map((c) => `${c.type}:${c.partyId ?? ''}${c.target ? `>R${c.target.row}C${c.target.column}` : ''}`));
+  // Tab order: which of the journey's controls are reachable with Tab alone
+  await page.evaluate(() => document.activeElement?.blur());
+  const seen = [];
+  for (let i = 0; i < 160; i++) { await page.keyboard.press('Tab'); seen.push(await where()); }
+  j.tabReach = { tabsPressed: 160, rosterRow: seen.findIndex((x) => /Your Castle at R1C1/.test(x ?? '')), handTile: seen.findIndex((x) => /your C1/.test(x ?? '')), ready: seen.findIndex((x) => /^Ready/.test(x ?? '')) };
+  // 1. choose your C1 Castle from the roster with Tab + Enter
+  let k = 0; await page.evaluate(() => document.activeElement?.blur());
+  while (k++ < 200 && !/Your Castle at R1C1/.test(await where() ?? '')) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter'); await sleep(500);
+  j.steps.push({ name: 'Tab to the roster row, Enter', tabs: k, selected: await page.evaluate(() => window.__versus.selected?.id), plan: await plan() });
+  // 2. Supply: Tab to the first Load Supply button in the inspector, Enter
+  k = 0; while (k++ < 80 && !/^\+2 C1/.test(await where() ?? '')) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter'); await sleep(400);
+  j.steps.push({ name: 'Tab to Load Supply (+2), Enter', tabs: k, plan: await plan() });
+  // 3. Move: Tab to the Move list, Enter opens it, Tab to the first destination, Enter
+  k = 0; while (k++ < 80 && !/^Move to/.test(await where() ?? '')) await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter'); await sleep(200); await page.keyboard.press('Tab'); const dest = await where(); await page.keyboard.press('Enter'); await sleep(400);
+  j.steps.push({ name: `Tab to 'Move to…', Enter, Tab to ${dest}, Enter`, tabs: k, plan: await plan() });
+  j.shot = await shot(page, 'ux14-keyboard-planned');
+  // 4. Ready by keyboard
+  await page.keyboard.down('Control'); await page.keyboard.press('Enter'); await page.keyboard.up('Control'); await sleep(3500);
+  j.steps.push({ name: 'Ctrl+Enter', tick: await page.evaluate(() => window.__versus.state.tick), events: await page.evaluate(() => window.__versus.session.events.filter((e) => (e.partyId === 'A.mount.C1') && ['supply_loaded', 'destination_set', 'region_entered', 'parties_merged', 'destination_reached'].includes(e.type)).map((e) => e.type)) });
+  // color-reduced view: the same screen in grayscale
+  await page.evaluate(() => { document.documentElement.style.filter = 'grayscale(1)'; window.__versus.selected = { kind: 'party', id: 'A.mount.C3' }; window.__versus._renderAll(); window.__versus._focusSelection(); });
+  await sleep(1500);
+  const clip = await page.evaluate(() => { const r = document.getElementById('world').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+  await page.mouse.move(4, 4); await sleep(500);
+  j.grayscaleShot = `${label}-ux14-grayscale.png`; await page.screenshot({ path: path.join(out, j.grayscaleShot), clip });
+  // both owners in contact, in grayscale: ownership must survive without hue (single vs double brackets, disc vs ring)
+  const p2 = await open('autostart=1&fixture=corner&a=human&b=human');
+  await p2.evaluate(() => { document.documentElement.style.filter = 'grayscale(1)'; const a = window.__versus, P = a.state.parties['B.queen']; a.cam.focusOn(a.view.toWorld(P.x, P.y)); a.cam.goal.distance = a.view.size * 0.45; });
+  await sleep(1800);
+  const clip2 = await p2.evaluate(() => { const r = document.getElementById('world').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+  await p2.mouse.move(4, 4); await sleep(400);
+  j.grayscaleContactShot = `${label}-ux14-grayscale-contact.png`; await p2.screenshot({ path: path.join(out, j.grayscaleContactShot), clip: clip2 });
+  await p2.close();
+  j.errors = page.errors;
+  report.journeys.ux14kb = j;
+  await page.close();
 }
 
 await browser.close();

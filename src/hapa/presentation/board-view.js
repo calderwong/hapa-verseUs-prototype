@@ -370,9 +370,12 @@ export class BoardView {
   }
 
   _ownerDisc(owner) {
-    // A: a solid disc; B: a ring — ownership by shape as well as hue
-    const geo = owner === 'A' ? new THREE.CircleGeometry(0.34 * S, 16) : new THREE.RingGeometry(0.2 * S, 0.36 * S, 16);
-    const disc = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: OWNER_HEX[owner], transparent: true, opacity: 0.75, depthWrite: false }));
+    // A: a solid disc; B: an open ring with a dark centre — ownership by shape and value as well as hue
+    const geo = owner === 'A' ? new THREE.CircleGeometry(0.34 * S, 20) : new THREE.RingGeometry(0.22 * S, 0.37 * S, 20);
+    const disc = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: OWNER_HEX[owner], transparent: true, opacity: 0.85, depthWrite: false }));
+    const edge = new THREE.Mesh(new THREE.RingGeometry(owner === 'A' ? 0.34 * S : 0.37 * S, owner === 'A' ? 0.39 * S : 0.42 * S, 20), new THREE.MeshBasicMaterial({ color: 0x17212d, transparent: true, opacity: 0.8, depthWrite: false }));
+    if (owner === 'B') { const hole = new THREE.Mesh(new THREE.CircleGeometry(0.22 * S, 20), new THREE.MeshBasicMaterial({ color: 0x17212d, transparent: true, opacity: 0.55, depthWrite: false })); disc.add(hole); }
+    disc.add(edge);
     disc.rotation.x = -Math.PI / 2;
     disc.position.y = 0.02;
     disc.renderOrder = 2;
@@ -394,8 +397,9 @@ export class BoardView {
     // ownership: single brackets for A, double brackets for B (shape, not only hue)
     // ownership is a quiet persistent baseline (review UX-10): same shapes, lower weight, so the
     // selection outline stays the strongest mark on the field
-    g.add(cornerBrackets(1.72 * S, 0.4 * S, 0.06 * S, color, 0.38));
-    if (p.owner === 'B') g.add(cornerBrackets(1.9 * S, 0.32 * S, 0.045 * S, color, 0.34));
+    // (the shapes must still read in grayscale: checked with a color-reduced capture, UX-10/UX-14)
+    g.add(cornerBrackets(1.72 * S, 0.42 * S, 0.07 * S, color, 0.6));
+    if (p.owner === 'B') g.add(cornerBrackets(1.92 * S, 0.36 * S, 0.06 * S, color, 0.6));
     const arrowShape = new THREE.Shape();
     arrowShape.moveTo(-0.45 * S, 0); arrowShape.lineTo(0.45 * S, 0); arrowShape.lineTo(0, 0.5 * S); arrowShape.closePath();
     const arrow = new THREE.Mesh(new THREE.ShapeGeometry(arrowShape), new THREE.MeshBasicMaterial({ color, depthWrite: false, side: THREE.DoubleSide }));
