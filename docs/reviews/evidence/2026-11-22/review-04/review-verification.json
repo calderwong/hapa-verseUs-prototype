@@ -1,0 +1,82 @@
+{
+  "review": "2026-11-22 / review-04",
+  "userFacingTimezone": "America/Los_Angeles",
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "checkedRemoteHead": "a388bcf9b56fb873eec5862d32fc5dbaaeb092d0",
+  "latestPushedImplementation": "164b8dfe46d2b6b8ec0975cc8f53ea5428770230",
+  "engineGitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "branchDiscovery": {
+    "branches": [
+      "main"
+    ],
+    "openPullRequests": 0,
+    "latestImplementationResponse": "2026-11-22-ui-design-response-04.md",
+    "response05Visible": false,
+    "unpublishedLocalWorkAccessed": false
+  },
+  "sourceIdentity": {
+    "baseImplementation": "164b8dfe46d2b6b8ec0975cc8f53ea5428770230",
+    "checkedHead": "a388bcf9b56fb873eec5862d32fc5dbaaeb092d0",
+    "outsideReviewChangedPaths": [],
+    "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72"
+  },
+  "basis": "CJ's five new human-feedback points plus source/specification review of the latest pushed implementation",
+  "selectedChanges": [
+    "board Cards and contextual inspection",
+    "contextual party composition",
+    "stronger chess identities and public destination markers",
+    "Supply-funded newly selected endpoints",
+    "Fire Pits and in-world Mana basins",
+    "contextual mechanical/stat definitions"
+  ],
+  "currentPolicyObservation": {
+    "script": "current-policy-probe.mjs",
+    "result": "current-policy-observation.json",
+    "cases": 3,
+    "exitCode": 0,
+    "meaning": "Existing implementation accepts endpoints beyond held Supply; this matches the older partial-route policy, and is not an old-spec defect.",
+    "scope": "Actual pinned scenario/route/economy/validation modules; no browser"
+  },
+  "previousEvidence": {
+    "path": "../review-03/README.md",
+    "testsPreviouslyPassed": 82,
+    "rerunThisTurn": false,
+    "implementationUnchanged": true
+  },
+  "browserRunThisTurn": false,
+  "overWatchReadOrUpdated": false,
+  "newLayoutSchematic": {
+    "path": "board-contextual-ui.svg",
+    "type": "original vector layout proposal",
+    "runtimeEvidence": false,
+    "visualQA": "Rendered to temporary PNG and inspected; schematic simplifies bank families and member bodies."
+  },
+  "notVerified": [
+    "unpublished local changes",
+    "new UI implementation",
+    "fresh live-browser behavior",
+    "GPU performance",
+    "human usability/acceptance"
+  ],
+  "acceptanceByCJ": "not recorded",
+  "publicationScope": "requirements addendum, review, implementation brief, index and review evidence only",
+  "researchReferences": [
+    "https://www.w3.org/WAI/WCAG22/Understanding/content-on-hover-or-focus.html",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Popover_API/Using"
+  ],
+  "artifactHashes": {
+    "board-contextual-ui.svg": {
+      "bytes": 61895,
+      "sha256": "516abf3296075a9efef73d2fa512b2d9d8d4ce5c390e466f50fd12d93900e888"
+    },
+    "current-policy-probe.mjs": {
+      "bytes": 4124,
+      "sha256": "fe17d38269cae1f55c3b80cc7476ca046e727a7b8e307fae03678d216d10975f"
+    },
+    "current-policy-observation.json": {
+      "bytes": 1089,
+      "sha256": "f0a211f2cd9b3fb374c7de392b8032c40f07754f16b4dabc5002c933b8fa4286"
+    }
+  }
+}

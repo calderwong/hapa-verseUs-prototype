@@ -1,0 +1,54 @@
+{
+  "implementationCommit": "164b8dfe46d2b6b8ec0975cc8f53ea5428770230",
+  "scope": "Read-only current-policy observation using real route/validation modules; no browser. Current implementation does not require a fully funded endpoint.",
+  "cases": [
+    {
+      "mount": "castle",
+      "from": {
+        "column": 1,
+        "row": 3
+      },
+      "supply": 0,
+      "target": {
+        "column": 1,
+        "row": 7
+      },
+      "routeCostSteps": 4,
+      "offered": true,
+      "accepted": true,
+      "errors": []
+    },
+    {
+      "mount": "castle",
+      "from": {
+        "column": 1,
+        "row": 3
+      },
+      "supply": 2,
+      "target": {
+        "column": 1,
+        "row": 7
+      },
+      "routeCostSteps": 4,
+      "offered": true,
+      "accepted": true,
+      "errors": []
+    },
+    {
+      "mount": "knight",
+      "from": {
+        "column": 2,
+        "row": 2
+      },
+      "supply": 2,
+      "target": {
+        "column": 3,
+        "row": 4
+      },
+      "routeCostSteps": 3,
+      "offered": true,
+      "accepted": true,
+      "errors": []
+    }
+  ]
+}
