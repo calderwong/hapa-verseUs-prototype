@@ -78,7 +78,7 @@ export function individualProtection(state, ctx, m, channel, face) {
 }
 
 /** Shared line protection: each eligible contribution on the attacked line once, plus party layers. */
-function lineProtection(state, ctx, party, lineMembers, channel, face) {
+export function lineProtection(state, ctx, party, lineMembers, channel, face) {
   const sources = [];
   let total = 0;
   for (const m of lineMembers) for (const p of memberProtections(state, ctx, m)) if (p.scope === 'line' && covers(p, channel, face)) { total += p.amount; sources.push({ source: m.id, kind: p.id, amount: p.amount, scope: 'line' }); }
