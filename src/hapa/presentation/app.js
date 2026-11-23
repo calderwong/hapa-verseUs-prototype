@@ -1012,7 +1012,8 @@ export class VersusApp {
     });
     const pf = facts.party, planned = this._plannedSupply(p);
     const party = {
-      anchor: a0 ? { x: a0.x + pxPerMember * 1.95, y: a0.y } : null,
+      // just beyond the rightmost visible member on screen, whatever the orbit (never over a body)
+      anchor: a0 ? { x: Math.max(a0.x + pxPerMember * 1.2, ...members.filter((m) => m.anchor && m.visible).map((m) => m.anchor.x + pxPerMember * 0.75)), y: a0.y } : null,
       lines: [`${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'}${pf.commander ? ' ★ Commander' : ''} · ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]}`,
         `Supply ${pts(pf.supply)}${planned ? ` (+${pts(planned)} planned)` : ''} · ${STATE_NAME[pf.state] ?? pf.state}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''}`,
         `Band ${fmtBand(pf.band)} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`],
@@ -1083,7 +1084,9 @@ export class VersusApp {
     }
     if (this._focusInspectorNext) {
       this._focusInspectorNext = false;
-      const head = this._inspectorEl().querySelector('h3');
+      const el = this._inspectorEl();
+      if (el === this.el.cmdbar) { const first = el.querySelector('summary:not(.off), button'); if (first) { first.focus({ preventScroll: true }); return; } }
+      const head = el.querySelector('h3');
       if (head) { head.setAttribute('tabindex', '-1'); head.focus({ preventScroll: true }); return; }
     }
     if (panel && !document.contains(prev)) {

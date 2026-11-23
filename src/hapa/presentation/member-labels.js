@@ -14,9 +14,9 @@
 import { h } from './dom.js';
 
 /** Projected px per member width that enter / leave each level (hysteresis), and the settle time. */
-export const LEVELS = { identity: { enter: 64, exit: 54 }, combat: { enter: 104, exit: 92 } };
+export const LEVELS = { identity: { enter: 64, exit: 54 }, combat: { enter: 150, exit: 135 } };
 /** Projected px between formation rows needed before a level's lines fit without covering a row. */
-export const ROW_PX = { identity: 34, combat: 84 };
+export const ROW_PX = { identity: 34, combat: 120 };
 const SETTLE_MS = 140;
 
 export function levelFor(prev, pxPerMember, rowPx = Infinity) {

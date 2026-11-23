@@ -7,7 +7,8 @@
  * required control is missing, or the page reports an error not on the explicit allow-list.
  *
  *   node tools/hapa/ui-regress.mjs [--base http://127.0.0.1:5199] [--only c1,c3] [--sabotage]
- *   (contract 2: the board-first interface of human-feedback addendum 01 / response 05)
+ *   (contract 2: the board-first interface of addendum 01 / response 05; contract 3: z-checks for
+ *    addendum 02 / response 06 — select to command, approach to inspect, one territory environment)
  *        [--out-root docs/reviews/evidence/2026-11-22/regress] [--run <id>] [--source-dir <checkout>]
  *
  * --source-dir names the checkout the server is serving when it is not this one (a baseline
@@ -158,7 +159,8 @@ const tileAt = (page, cardId) => app(page, (id) => { const a = window.__versus; 
 await check('c1', 'Ready freezes the own plan through an opponent revision (UX-01)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1', seat: 'A then B (hotseat)', profile: 'hapa_open_10x9_v3_02' }, async () => {
   const page = await open('autostart=1&a=human&b=human&seed=1');
   await pinVia(page, /^Your Castle at R1C1/, 'navigator row for your C1 Castle');
-  await clickNamed(page, '.peek.pinned button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply from the C1 card (party view)');
+  await clickNamed(page, '.cmdbar summary', /^Supply ▾/, 'Supply menu (command bar)');
+  await clickNamed(page, '.cmdbar button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply from the C1 card (command bar)');
   const before = await agreement(page);
   expect('A entered one Supply order', before.plans.A.length, 1);
   await clickNamed(page, READY, /^Ready/, 'Ready (strip)');
@@ -307,7 +309,7 @@ await check('c6', 'Hover inspects without selecting; pin, compare, Escape; both 
   const v1 = await peek(page, 'transient');
   ok('hovering the opponent\'s Card opens its view without a click', !!v1 && /B's Minor Arcana/.test(v1.text), v1?.text.slice(0, 120));
   ok('the view names that instance (Details) and its exact Supply / Mana', v1 && v1.text.includes(oppCard) === false ? /Supply/.test(v1.text) : true, v1?.title);
-  expect('hover did not select anything', await app(page, () => window.__versus.selected), null);
+  expect('hover did not select or pin anything', await app(page, () => [window.__versus.selected, window.__versus.pinned]), [null, null]);
   expect('hover did not change plans', (await agreement(page)).plans, st0.plans);
   expect('hover did not move the camera', await app(page, () => JSON.stringify(window.__versus.cam.goal)), cam0);
   ok('hover did not take keyboard focus', !(await app(page, () => !!document.activeElement?.closest('.peek'))), true);
@@ -317,17 +319,17 @@ await check('c6', 'Hover inspects without selecting; pin, compare, Escape; both 
   const v2 = await peek(page, 'transient');
   ok('own Card view offers the three uses', v2 && /Load Supply 2 into/.test(v2.text) && /Burn for 0 Mana — consumes this Card/.test(v2.text) && /Use /.test(v2.text), v2?.text.slice(0, 200));
   await clickAt(page, await tileAt(page, ownCard));
-  expect('a click pins the Card (selection)', await app(page, () => window.__versus.selected?.id), ownCard);
+  expect('a click pins the Card as a reference', await app(page, () => window.__versus.pinned?.id), ownCard);
   await hoverAt(page, await anchor(page, { kind: 'party', id: 'A.mount.C3' }));
   const cmp = await app(page, () => ({ pinned: document.querySelector('.peek.pinned .peek-title')?.textContent, compare: document.querySelector('.peek.transient .peek-title')?.textContent }));
-  ok('hovering a party while a Card is pinned opens a comparison beside it', !!cmp.pinned && /Bishop/.test(cmp.compare ?? ''), cmp);
+  ok('hovering a party shows only a short hint beside the pinned Card (HF2-02)', !!cmp.pinned && /Bishop/.test(cmp.compare ?? ''), cmp);
   const party = await peek(page, 'transient');
-  ok('the party view shows the actual 3×3 composition', party && /FRONT/.test(party.text.toUpperCase()) && /Pike/.test(party.text), party?.text.slice(0, 160));
+  ok('the party hint is one line, not the formation document', party && !/FRONT/.test(party.text.toUpperCase()) && /\/9/.test(party.text), party?.text.slice(0, 160));
   { const f = `${current.id}-pin-and-compare.png`; await page.screenshot({ path: path.join(dir, f) }); current.shots.push(f); } // pointer stays on the party
   await page.keyboard.press('Escape'); await sleep(200);
   expect('Escape closes the comparison first', await app(page, () => [!!document.querySelector('.peek.pinned'), !!document.querySelector('.peek.transient')]), [true, false]);
   await page.keyboard.press('Escape'); await sleep(200);
-  expect('Escape again unpins (selection cleared, no order)', [await app(page, () => window.__versus.selected), (await agreement(page)).plans], [null, st0.plans]);
+  expect('Escape again unpins (reference cleared, no order)', [await app(page, () => window.__versus.pinned), (await agreement(page)).plans], [null, st0.plans]);
   await hoverAt(page, await anchor(page, { kind: 'basin', id: 'B' }));
   const basin = await peek(page, 'transient');
   ok('the opponent\'s Mana basin is inspectable', basin && /B's Fire Pit and Mana basin/.test(basin.title ?? ''), basin?.title);
@@ -342,22 +344,22 @@ await check('c7', 'Opening by keyboard alone through the navigator and pinned vi
   const step = async (name, re, max) => { const f = await tabTo(page, re, max); ok(`reach by Tab: ${name}`, !!f, f); if (f) { ok(`focus is visible on ${name}`, f.visible, f); log.push({ name, tabs: f.tabs }); } return !!f; };
   if (await step('Parties & Cards', /^☰ Parties & Cards$/, 40)) { await page.keyboard.press('Enter'); await sleep(300); }
   if (await step('navigator: your C1 Castle', /^Your Castle at R1C1/, 40)) { await page.keyboard.press('Enter'); await sleep(500); }
-  expect('1 · the C1 Castle is pinned', await app(page, () => window.__versus.selected?.id), 'A.mount.C1');
-  ok('1 · focus moved into its view', await app(page, () => !!document.activeElement?.closest('.peek.pinned')), await focused(page));
-  if (await step('Load Supply from 2♣ (C1)', /^Load 2 Supply from 2♣ \(C1\)/, 60)) { await page.keyboard.press('Enter'); await sleep(500); }
-  ok('2 · focus moves on to Move to…', /^Move to/.test((await focused(page))?.name ?? ''), await focused(page));
-  await page.keyboard.press('Enter'); await sleep(200);
-  if (await step('Move Castle to R2C1 (funded, joins your Pawn)', /^Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn/, 60)) { await page.keyboard.press('Enter'); await sleep(500); }
+  expect('1 · the C1 Castle is selected for commands (no party document pinned)', await app(page, () => [window.__versus.selected?.id, !!document.querySelector('.peek.pinned')]), ['A.mount.C1', false]);
+  ok('1 · focus moved into the command bar', await app(page, () => !!document.activeElement?.closest('.cmdbar')), await focused(page));
+  if (await step('Supply menu', /^Supply ▾/, 20)) { await page.keyboard.press('Enter'); await sleep(300); }
+  if (await step('Load Supply from 2♣ (C1)', /^Load 2 Supply from 2♣ \(C1\)/, 20)) { await page.keyboard.press('Enter'); await sleep(500); }
+  ok('2 · focus moves into the opened Move menu', /^Move Castle R1C1 to/.test((await focused(page))?.name ?? ''), await focused(page));
+  if (await step('Move Castle to R2C1 (funded, joins your Pawn)', /^Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn/, 20)) { await page.keyboard.press('Enter'); await sleep(500); }
   expect('3 · the plan holds Supply then the move', (await agreement(page)).plans.A.map((c) => JSON.parse(c).type), ['load_supply', 'set_destination']);
   ok('3 · focus lands on Ready', /^Ready/.test((await focused(page))?.name ?? ''), await focused(page));
   await page.keyboard.press('Enter'); await sleep(200);
   await waitResolved(page, 2);
   await page.keyboard.press('p'); await sleep(400);
   if (await step('result: Supply landed (in Orders)', /loaded 2 Supply from A's 2♣ \(C1\)/, 80)) { await page.keyboard.press('Enter'); await sleep(500); }
-  const ev = await app(page, () => window.__versus.selected?.event ?? null);
+  const ev = await app(page, () => window.__versus.pinned?.event ?? null);
   expect('4 · the supply_loaded event is pinned', ev?.type, 'supply_loaded');
   if (await step('Inspect the Card', /^Inspect the Card/, 40)) { await page.keyboard.press('Enter'); await sleep(400); }
-  expect('4 · its Card is pinned', await app(page, () => window.__versus.selected?.id), ev?.cardId);
+  expect('4 · its Card is pinned', await app(page, () => window.__versus.pinned?.id), ev?.cardId);
   const P = await app(page, () => { const p = window.__versus.state.parties['A.mount.C1']; return { region: p.region, supply: p.supply.reduce((n, x) => n + x.units, 0) / 1e6, members: Object.values(p.slots).filter(Boolean).length }; });
   expect('result agrees with the rules: R2C1, Supply 1, nine members', P, { region: { column: 1, row: 2 }, supply: 1, members: 9 });
   await shot(page, 'keyboard-result');
@@ -369,10 +371,11 @@ await check('c7', 'Opening by keyboard alone through the navigator and pinned vi
 await check('c8', 'Funded destinations: range, refusal with shortfall, invalidated funding blocks Ready (HF-04)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1', profile: 'hapa_open_10x9_v3_02' }, async () => {
   const page = await open('autostart=1&a=human&b=human&seed=1');
   await pinVia(page, /^Your Castle at R1C1/, 'navigator: C1 Castle');
-  const list0 = await app(page, () => document.querySelector('.peek.pinned details.movelist > summary')?.textContent ?? '');
-  ok('with 0 Supply nothing is funded yet', /^Move to… \(0 funded/.test(list0), list0);
-  await clickNamed(page, '.peek.pinned button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply');
-  const labels = await app(page, () => [...document.querySelectorAll('.peek.pinned details.movelist button')].map((b) => b.getAttribute('aria-label') ?? b.textContent));
+  const list0 = await app(page, () => document.querySelector('.cmdbar .cmd-why')?.textContent ?? '');
+  ok('with 0 Supply the bar says no route is funded', /No Supply for any route/.test(list0), list0);
+  await clickNamed(page, '.cmdbar summary', /^Supply ▾/, 'Supply menu');
+  await clickNamed(page, '.cmdbar button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply');
+  const labels = await app(page, () => [...document.querySelectorAll('.cmdbar details.movelist button')].map((b) => b.getAttribute('aria-label') ?? b.textContent));
   current.observed = { moveLabels: labels };
   const targets = labels.map((l) => l.match(/to (R\d+C\d+): needs (\d+(?:\.\d+)?)/)?.slice(1)).filter(Boolean);
   const names = targets.map(([t]) => t).sort();
@@ -394,9 +397,8 @@ await check('c8', 'Funded destinations: range, refusal with shortfall, invalidat
   const toast = await app(page, () => document.querySelector('.toast')?.textContent ?? '');
   ok(`an unfunded target (${far?.target}) is refused with its shortfall`, new RegExp(`needs ${far?.need}, the party has 2`).test(toast), toast);
   expect('…and no destination was added', (await agreement(page)).plans.A.map((c) => JSON.parse(c).type), ['load_supply']);
-  current.observed = { ...(current.observed ?? {}), beforeMove: await app(page, () => ({ sel: window.__versus.selected, peek: document.querySelector('.peek.pinned .peek-title')?.textContent, open: document.querySelector('.peek.pinned details.movelist')?.open, n: document.querySelectorAll('.peek.pinned details.movelist button').length })) };
-  await clickNamed(page, '.peek.pinned details.movelist > summary', /^Move to…/, 'open Move to…');
-  await clickNamed(page, '.peek.pinned details.movelist button', /to R3C1: needs 2/, 'Move to R3C1');
+  if (!(await app(page, () => !!document.querySelector('.cmdbar details.cmd-menu[open] .movelist')))) await clickNamed(page, '.cmdbar summary', /^Move to ▾/, 'open Move to');
+  await clickNamed(page, '.cmdbar details.movelist button', /to R3C1: needs 2/, 'Move to R3C1');
   expect('the funded move is planned after its load', (await agreement(page)).plans.A.map((c) => JSON.parse(c).type), ['load_supply', 'set_destination']);
   // remove the funding load: the destination stays, is invalid, Ready is blocked and opens Orders
   await page.keyboard.press('p'); await sleep(300);
@@ -418,7 +420,7 @@ await check('c8', 'Funded destinations: range, refusal with shortfall, invalidat
 await check('c9', 'Fire Pit: planned offering, projection, accepted burn with separate colors, zero Mana (HF-05)', { query: 'autostart=1&fixture=cards&a=human&b=human', viewport: '1600x1000@1' }, async () => {
   const page = await open('autostart=1&fixture=cards&a=human&b=human');
   const mana = await app(page, () => window.__versus.state.cards['A.five'].mana);
-  await app(page, () => { window.__versus.selected = { kind: 'card', id: 'A.five' }; window.__versus._renderAll(); });
+  await app(page, () => { window.__versus.pinned = { kind: 'card', id: 'A.five' }; window.__versus._renderAll(); });
   setup('the A.five Card is pinned via selection, then its Burn button is clicked');
   await clickNamed(page, '.peek.pinned button.burn', /^Burn .+ for /, 'Burn for its Mana (Card view)');
   const planned = await app(page, () => { const a = window.__versus; return { pool: a.state.players.A.pool, projected: a._plannedPool('A'), offerings: a.view.sites.sites.A.offerings.children.length, counter: a.el.basins.A.getAttribute('aria-label') }; });
@@ -441,7 +443,7 @@ await check('c9', 'Fire Pit: planned offering, projection, accepted burn with se
   // zero Mana: plainly labelled, legal, no gain effect
   const p2 = await open('autostart=1&a=human&b=human&seed=1');
   const zero = await app(p2, () => window.__versus.state.players.A.bank.minor['1']);
-  await app(p2, (id) => { window.__versus.selected = { kind: 'card', id }; window.__versus._renderAll(); }, zero);
+  await app(p2, (id) => { window.__versus.pinned = { kind: 'card', id }; window.__versus._renderAll(); }, zero);
   const label = await app(p2, () => document.querySelector('.peek.pinned button.burn')?.textContent);
   expect('a zero-Mana Card says what burning it does', label, 'Burn for 0 Mana — consumes this Card');
   await p2.close();
@@ -541,6 +543,180 @@ await check('c12', 'Full orbit and a height layer keep standards, endpoints and 
   await app(rm, () => { const a = window.__versus; a.view.sites.burn('A', null, { red: 1, green: 1 }); });
   expect('reduced motion: a burn plays no travelling streams', await app(rm, () => window.__versus.view.sites.effects.length <= 1), true);
   await rm.close();
+});
+
+// ================================================================================================
+// Contract 3 (response 06, addendum 02 / assignment 06): select to command, approach to inspect.
+// ================================================================================================
+const partyAt = (page, id) => anchor(page, { kind: 'party', id });
+const labelsShown = (page) => app(page, () => [...document.querySelectorAll('.mlabel:not([hidden])')].map((e) => e.innerText.replace(/\s+/g, ' ').trim()));
+const settle = (ms = 1600) => sleep(ms);
+
+// --- Z01/Z02: ordinary command play without a party document ---------------------------------------
+await check('z01', 'Ordinary movement: select, funded Move from the command bar, no party document; reasons stay visible (Z01, Z02)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1280x720@1' }, async () => {
+  const page = await open('autostart=1&a=human&b=human&seed=1', { width: 1280, height: 720 });
+  const cam0 = await app(page, () => JSON.stringify(window.__versus.cam.goal));
+  await clickAt(page, await partyAt(page, 'A.mount.C1'));
+  const st = await app(page, () => ({ sel: window.__versus.selected?.id, pinned: !!document.querySelector('.peek.pinned'), bar: !document.querySelector('.cmdbar').hidden, why: document.querySelector('.cmdbar .cmd-why')?.textContent ?? null, cam: JSON.stringify(window.__versus.cam.goal) }));
+  expect('a click selects the party for commands', st.sel, 'A.mount.C1');
+  expect('no party document opens; the small command bar does', [st.pinned, st.bar], [false, true]);
+  expect('selecting does not move the camera', st.cam, cam0);
+  ok('the bar says why it cannot move yet', /No Supply for any route/.test(st.why ?? ''), st.why);
+  await clickNamed(page, '.cmdbar summary', /^Supply ▾/, 'Supply menu');
+  await clickNamed(page, '.cmdbar button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply');
+  // every funded target in the bar matches the rules' quote exactly
+  const q = await app(page, () => { const a = window.__versus; return { bar: [...document.querySelectorAll('.cmdbar .movelist button[aria-label^="Move "]')].map((b) => b.getAttribute('aria-label').match(/to (R\d+C\d+): needs ([\d.]+)/).slice(1).join(':')).sort(), rules: a._fundedTargets(a.state.parties['A.mount.C1']).filter((d) => d.funded).map((d) => `R${d.row}C${d.column}:${d.required / 1e6}`).sort() }; });
+  expect('the bar lists exactly the funded targets with the rules\' Supply quote', q.bar, q.rules);
+  await clickNamed(page, '.cmdbar .movelist button', /to R2C1: needs 1/, 'Move to R2C1');
+  expect('the move is planned after its load', (await agreement(page)).plans.A.map((c) => JSON.parse(c).type), ['load_supply', 'set_destination']);
+  // opening and closing a Card reference keeps the command selection and orders
+  await clickAt(page, await tileAt(page, await app(page, () => window.__versus.state.players.A.bank.minor['9'])));
+  await page.keyboard.press('Escape'); await sleep(200);
+  expect('closing a Card view keeps the selected party and its orders', [await app(page, () => window.__versus.selected?.id), (await agreement(page)).plans.A.length], ['A.mount.C1', 2]);
+  // Z02: an unmounted Pawn says why; after Ready, the plan is frozen
+  await clickAt(page, await partyAt(page, 'A.pawn.C3'));
+  ok('an unmounted Pawn shows "Needs a Mount"', /^Needs a Mount/.test(await app(page, () => document.querySelector('.cmdbar .cmd-why')?.textContent ?? '')), true);
+  await shot(page, 'pawn-reason');
+  await clickNamed(page, READY, /^Ready/, 'Ready (A)');
+  await app(page, () => { window.__versus.viewSeat = 'A'; window.__versus._renderAll(); });
+  ok('after Ready the bar says the plan is frozen', /Plan frozen/.test(await app(page, () => document.querySelector('.cmdbar .cmd-why')?.textContent ?? '')), true);
+  await page.close();
+});
+
+// --- Z03/Z04/Z05: the real formation carries its facts --------------------------------------------
+await check('z03', 'Approach to inspect: zoom over an enemy keeps the own selection; nine and five member labels; truthful stats (Z03, Z04, Z05)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1' }, async () => {
+  const page = await open('autostart=1&a=human&b=human&seed=1');
+  await clickAt(page, await partyAt(page, 'A.mount.C1'));
+  const plans0 = (await agreement(page)).plans;
+  // wheel zoom toward an enemy party
+  const e = await partyAt(page, 'B.mount.C5');
+  await page.mouse.move(e.x, e.y);
+  for (let i = 0; i < 6; i++) { await page.mouse.wheel({ deltaY: -260 }); await sleep(120); }
+  await settle();
+  const z = await app(page, () => ({ sel: window.__versus.selected?.id, sub: window.__versus.inspectParty?.partyId ?? null, level: window.__versus.labels.level }));
+  expect('zooming over an enemy inspects it; the own command selection stays', [z.sel, z.sub], ['A.mount.C1', 'B.mount.C5']);
+  expect('…without issuing an order', (await agreement(page)).plans, plans0);
+  ok('member labels appear at a readable size', ['identity', 'combat'].includes(z.level), z.level);
+  await shot(page, 'enemy-inspection');
+  // explicit Focus on a merged nine-member party (after the opening merge) and the five-member Pawn
+  await page.keyboard.press('Home'); await sleep(800);
+  await app(page, () => { const a = window.__versus; a.selected = { kind: 'party', id: 'A.pawn.C3' }; a._renderAll(); });
+  await page.keyboard.press('f'); await settle();
+  const pawn = await labelsShown(page);
+  expect('the five-member Pawn shows five labels — no center member invented', pawn.length, 5);
+  ok('its collective label says the center is empty', /empty center/.test(await app(page, () => document.querySelector('.mparty')?.innerText ?? '')), true);
+  await shot(page, 'pawn-five');
+  await page.keyboard.press('r'); await settle(900);
+  expect('Return restores the prior pose and releases inspection', await app(page, () => [window.__versus.inspectParty, window.__versus._returnPose]), [null, null]);
+  await page.close();
+  // nine members: play the opening merge, then inspect
+  const p2 = await open('autostart=1&a=human&b=human&seed=1');
+  await app(p2, async () => { const a = window.__versus, s = a.state; a._addCommand('A', { type: 'load_supply', cardId: s.players.A.bank.minor['1'], partyId: 'A.mount.C1' }); a._addCommand('A', { type: 'set_destination', partyId: 'A.mount.C1', target: { column: 1, row: 2 } }); a._pressReady(); await new Promise((r) => setTimeout(r, 200)); a._pressReady(); });
+  setup('opening merge played with _addCommand/_pressReady (the pointer route is c7/z01)');
+  await waitResolved(p2, 2);
+  await app(p2, () => { const a = window.__versus; a.viewSeat = 'A'; a.selected = { kind: 'party', id: 'A.mount.C1' }; a._renderAll(); a._focusInspect('A.mount.C1'); });
+  await settle(2000);
+  const nine = await labelsShown(p2);
+  expect('the merged party shows nine compact labels', nine.length, 9);
+  ok('compact labels are role + health, not stat sheets (a full formation)', nine.every((t) => t.split(' ').length <= 6), nine);
+  await shot(p2, 'nine-members');
+  // hover one body: its full breakdown expands (and only that one)
+  const archer = await app(p2, () => Object.values(window.__versus.state.parties['A.mount.C1'].slots).find((id) => id && window.__versus.state.members[id].archetype === 'archer'));
+  const sp = await app(p2, (id) => { const a = window.__versus, v = a.view.sprites.get(id).position.clone(); v.y += 0.5; const q = v.project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); return { x: r.left + (q.x + 1) / 2 * r.width, y: r.top + (1 - q.y) / 2 * r.height }; }, archer);
+  await hoverAt(p2, sp, 500);
+  const exp = await app(p2, () => [...document.querySelectorAll('.mlabel.expanded:not([hidden])')].map((e) => e.innerText.replace(/\s+/g, ' ')));
+  ok('one hovered member expands with its attack and a labelled preview', exp.length === 1 && /Bow: 2 × 1 Physical, base range 2/.test(exp[0]) && /not a result/.test(exp[0]), exp);
+  ok('…and the Mage ward shows as applied Magic protection with its source', /Magic 1 = 1 .*ward/i.test(exp[0] ?? ''), exp[0]);
+  await shot(p2, 'expanded-member');
+  // labels are passive: a wheel over a label still zooms the camera
+  const d0 = await app(p2, () => window.__versus.cam.goal.distance);
+  const lab = await app(p2, () => { const r = document.querySelector('.mlabel:not([hidden])').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  await p2.mouse.move(lab.x, lab.y); await p2.mouse.wheel({ deltaY: 200 }); await sleep(300);
+  ok('a wheel over a passive label still zooms (labels do not block)', (await app(p2, () => window.__versus.cam.goal.distance)) > d0, true);
+  await p2.close();
+});
+
+// --- Z06: playback labels follow the shown moment ------------------------------------------------
+await check('z06', 'Playback: labels use event-aligned health during a mid-movement exchange; New match removes stale labels (Z06)', { query: 'autostart=1&fixture=corner&a=human&b=human', viewport: '1600x1000@1' }, async () => {
+  const page = await open('autostart=1&fixture=corner&a=human&b=human');
+  await app(page, () => { const a = window.__versus; a.selected = { kind: 'party', id: 'A.mid' }; a._renderAll(); a._focusInspect('A.mid'); });
+  await settle();
+  const pre = await app(page, () => Object.values(window.__versus.state.parties['A.mid'].slots).filter(Boolean).reduce((n, id) => n + window.__versus.state.members[id].hp, 0));
+  await app(page, () => { window.__versus.speed = 0.25; });
+  await clickNamed(page, READY, /^Ready/, 'Ready (A)');
+  await clickNamed(page, READY, /^Ready/, 'Ready (B)');
+  const samples = [];
+  for (let i = 0; i < 160; i++) {
+    const s = await app(page, () => { const a = window.__versus, pb = a.playback; if (!pb) return null; const f = a._labelFacts('A.mid'); return { shown: pb.shown, sum: Object.values(f.members).reduce((n, m) => n + m.health.hp, 0), final: Object.values(a.state.parties['A.mid'].slots).filter(Boolean).reduce((n, id) => n + a.state.members[id].hp, 0), note: document.querySelector('.mparty')?.innerText ?? '' }; });
+    if (s) samples.push(s); else if (samples.length) break;
+    await sleep(30);
+  }
+  await waitResolved(page, 6);
+  const final = samples.at(-1)?.final;
+  ok('playback was sampled', samples.length >= 5, samples.length);
+  ok('the contact exchange damaged the inspected party this Tick (precondition)', final < pre, { pre, final });
+  ok('early in playback the labels show the pre-Tick health, not the accepted result', samples[0]?.sum === pre, samples.slice(0, 2));
+  ok('health shown only ever falls as events are shown, ending at the accepted value', samples.every((x, i) => i === 0 || x.sum <= samples[i - 1].sum) && (await app(page, () => Object.values(window.__versus._labelFacts('A.mid').members).reduce((n, m) => n + m.health.hp, 0))) === final, samples.map((x) => x.sum));
+  ok('the party label says health is as of the shown moment', samples.some((x) => /as of the moment shown/.test(x.note)), samples[0]?.note);
+  await app(page, () => window.__versus.startMatch({ seats: { A: 'human', B: 'bot' }, seed: 4 }));
+  await sleep(1500);
+  expect('New match leaves no labels, inspection subject, return pose or diorama', await app(page, () => [document.querySelectorAll('.mlabel:not([hidden])').length, window.__versus.inspectParty, window.__versus._returnPose, window.__versus.view.diorama.group.children.length]), [0, null, null, 0]);
+  await page.close();
+});
+
+// --- Z07/Z11/Z12: one territory environment through orbit and genuine terrain ----------------------
+await check('z07', 'Territory environment: world-stable through a full orbit, not pickable, honest terrain, roofs and cutaway (Z07, Z11, Z12)', { query: 'autostart=1&fixture=terrain&a=human&b=human', viewport: '1600x1000@1' }, async () => {
+  const page = await open('autostart=1&fixture=terrain&a=human&b=human');
+  await app(page, () => { const a = window.__versus; a.selected = { kind: 'party', id: 'A.hill' }; a._renderAll(); a._focusInspect('A.hill'); });
+  await settle(2200);
+  const d0 = await app(page, () => { const a = window.__versus, g = a.view.diorama.group; return { n: g.children.length, visible: g.visible, opacity: +a.view.diorama.opacity.toFixed(2), landmark: g.children.find((c) => c.children?.length >= 6)?.position.toArray().map((v) => +v.toFixed(3)) ?? null, hillTop: +(a.view.partyY(a.state.parties['A.hill'])).toFixed(3) }; });
+  ok('the environment is built and visible around the inspected territory', d0.n > 20 && d0.visible && d0.opacity > 0.9, d0);
+  ok('a world-placed landmark exists', !!d0.landmark, d0.landmark);
+  const facing0 = await app(page, () => window.__versus.state.parties['A.hill'].facing);
+  const frames = [];
+  for (let i = 0; i < 8; i++) {
+    await page.keyboard.press('q'); await sleep(750);
+    frames.push(await app(page, () => { const a = window.__versus, g = a.view.diorama.group, lm = g.children.find((c) => c.children?.length >= 6); return { bearing: Math.round(a.cam.bearing), landmark: lm?.position.toArray().map((v) => +v.toFixed(3)), quat: lm?.quaternion.toArray().map((v) => +v.toFixed(3)), labels: document.querySelectorAll('.mlabel:not([hidden])').length }; }));
+    if (i % 2 === 1) await shot(page, `orbit-${frames.at(-1).bearing}`);
+  }
+  expect('the landmark never moves or turns to face the camera through 360°', [...new Set(frames.map((f) => JSON.stringify([f.landmark, f.quat])))].length, 1);
+  expect('world facing is unchanged by the orbit', await app(page, () => window.__versus.state.parties['A.hill'].facing), facing0);
+  ok('member labels stay attached through the orbit', frames.every((f) => f.labels >= 4), frames.map((f) => f.labels));
+  // decoration is never pickable: the pick at the landmark position equals the pick with it hidden
+  const pickCmp = await app(page, () => { const a = window.__versus, g = a.view.diorama.group, lm = g.children.find((c) => c.children?.length >= 6); const v = lm.position.clone(); v.y += 1; const q = v.project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); const ev = { clientX: r.left + (q.x + 1) / 2 * r.width, clientY: r.top + (1 - q.y) / 2 * r.height }; const on = a._rayFrom(ev); g.visible = false; const off = a._rayFrom(ev); g.visible = true; const key = (p) => JSON.stringify([p?.territory, p?.party?.id ?? null, p?.candidates?.length ?? 0]); return [key(on), key(off)]; });
+  expect('the landmark does not intercept board picking', pickCmp[0], pickCmp[1]);
+  // a genuine pit keeps its opening; a roofed tunnel is not x-rayed; a cutaway hides the dressing
+  await app(page, () => { const a = window.__versus; a.selected = { kind: 'party', id: 'B.tunnel' }; a._renderAll(); a._focusInspect('B.tunnel'); });
+  await settle(2000);
+  const tunnel = await app(page, () => ({ labels: document.querySelectorAll('.mlabel:not([hidden])').length, note: document.querySelector('.mparty')?.innerText ?? '' }));
+  expect('a roofed tunnel party shows no member labels at ordinary close zoom', tunnel.labels, 0);
+  ok('…and says how to read it (open its layer)', /Roofed tunnel/.test(tunnel.note), tunnel.note);
+  await clickNamed(page, '.layer-rail button', layerButton(-2), 'layer −2');
+  await settle(1200);
+  const cut = await app(page, () => ({ labels: document.querySelectorAll('.mlabel:not([hidden])').length, dio: window.__versus.view.diorama.group.visible }));
+  ok('with its layer open the members are read; the surface dressing is hidden', cut.labels >= 2 && cut.dio === false, cut);
+  await shot(page, 'tunnel-cutaway');
+  await page.close();
+  // planned → running → completed work stays distinct (dig fixture)
+  const p2 = await open('autostart=1&fixture=dig&a=human&b=human');
+  await app(p2, () => { const a = window.__versus; const w = a._workList(a.state.parties['A.worker']); return !!w; });
+  const dig = await app(p2, async () => {
+    const a = window.__versus; const cmd = { type: 'begin_work', partyId: 'A.worker', work: 'excavate', target: { x: 1, y: 10, band: -3 } };
+    const out = {};
+    a._addCommand('A', cmd); a._renderAll();
+    out.planned = a.view.terrain.work?.children.length ?? 0;
+    const { solidAt } = await import('/src/hapa/rules/terrain.js');
+    out.solidPlanned = solidAt(a.state.terrain, 1, 10, -3);
+    a._pressReady(); await new Promise((r) => setTimeout(r, 200)); a._pressReady();
+    await new Promise((r) => { const t = setInterval(() => { if (!a.playback && !a.resolving) { clearInterval(t); r(); } }, 100); });
+    out.solidDone = solidAt(a.state.terrain, 1, 10, -3);
+    out.changed = a.session.events.some((e) => e.type === 'terrain_changed');
+    return out;
+  });
+  setup('dig fixture: the begin_work order is added with _addCommand (the Work menu is the same command)');
+  expect('a planned dig is drawn but the cube stays solid', [dig.planned > 0, dig.solidPlanned], [true, true]);
+  expect('the accepted dig empties the cube (terrain_changed)', [dig.solidDone, dig.changed], [false, true]);
+  await p2.close();
 });
 
 // --- C13: performance context (measured, not a pass/fail target) ----------------------------------
