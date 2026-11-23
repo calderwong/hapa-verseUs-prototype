@@ -89,7 +89,8 @@ function mountCrest(mount, ownerHex, commander) {
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
     crestCache.set(key, t);
   }
-  const m = new THREE.Mesh(new THREE.CircleGeometry(0.38 * S, 24), new THREE.MeshBasicMaterial({ map: crestCache.get(key), transparent: true, depthWrite: false, toneMapped: false }));
+  // 0.46 S: legible at overview distance (UX-10)
+  const m = new THREE.Mesh(new THREE.CircleGeometry(0.46 * S, 24), new THREE.MeshBasicMaterial({ map: crestCache.get(key), transparent: true, depthWrite: false, toneMapped: false }));
   m.rotation.x = -Math.PI / 2;
   m.renderOrder = 3;
   return m;
@@ -262,7 +263,15 @@ export class BoardView {
     this.routeLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xfff2b0 }));
     this.routeLine.renderOrder = 3;
     this.root.add(this.routeLine);
-    this.selectRing = cornerBrackets(2.15 * S, 0.7 * S, 0.12 * S, 0xf5f0e3, 1);
+    // the selection: the heaviest outline (ivory brackets over a slate keyline, plus a soft footprint)
+    this.selectRing = new THREE.Group();
+    const keyline = cornerBrackets(2.2 * S, 0.8 * S, 0.26 * S, 0x17212d, 0.9), ivory = cornerBrackets(2.2 * S, 0.8 * S, 0.15 * S, 0xf5f0e3, 0.999);
+    // both transparent, drawn keyline first, so the ivory always sits on top of its slate edge
+    keyline.traverse((o) => { o.renderOrder = 4; }); ivory.traverse((o) => { o.renderOrder = 5; }); ivory.position.y = 0.006;
+    this.selectRing.add(keyline, ivory);
+    const foot = new THREE.Mesh(new THREE.PlaneGeometry(4.2 * S, 4.2 * S), new THREE.MeshBasicMaterial({ color: 0xf5f0e3, transparent: true, opacity: 0.07, depthWrite: false, toneMapped: false }));
+    foot.rotation.x = -Math.PI / 2; foot.position.y = -0.01; foot.renderOrder = 2;
+    this.selectRing.add(foot);
     this.selectRing.visible = false;
     this.root.add(this.selectRing);
     this.hoverRing = cornerBrackets(1.62 * S, 0.45 * S, 0.07 * S, 0xc8d2da, 1);
@@ -381,8 +390,10 @@ export class BoardView {
     const g = new THREE.Group();
     const color = new THREE.Color(OWNER_HEX[p.owner]);
     // ownership: single brackets for A, double brackets for B (shape, not only hue)
-    g.add(cornerBrackets(1.72 * S, 0.55 * S, 0.09 * S, color, 0.95));
-    if (p.owner === 'B') g.add(cornerBrackets(1.9 * S, 0.45 * S, 0.07 * S, color, 0.85));
+    // ownership is a quiet persistent baseline (review UX-10): same shapes, lower weight, so the
+    // selection outline stays the strongest mark on the field
+    g.add(cornerBrackets(1.72 * S, 0.4 * S, 0.06 * S, color, 0.38));
+    if (p.owner === 'B') g.add(cornerBrackets(1.9 * S, 0.32 * S, 0.045 * S, color, 0.34));
     const arrowShape = new THREE.Shape();
     arrowShape.moveTo(-0.45 * S, 0); arrowShape.lineTo(0.45 * S, 0); arrowShape.lineTo(0, 0.5 * S); arrowShape.closePath();
     const arrow = new THREE.Mesh(new THREE.ShapeGeometry(arrowShape), new THREE.MeshBasicMaterial({ color, depthWrite: false, side: THREE.DoubleSide }));
@@ -398,7 +409,7 @@ export class BoardView {
     // (clear of the facing arrow, the rear row and the edge labels; Pawns carry none)
     if (p.mount) {
       const crest = mountCrest(p.mount, OWNER_HEX[p.owner], p.commander);
-      crest.position.set(-1.98 * S, 0.012, 0);
+      crest.position.set(-2.02 * S, 0.012, 0);
       g.add(crest);
       g.userData.crest = crest;
     }

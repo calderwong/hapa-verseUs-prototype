@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux10').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -283,6 +283,22 @@ if (want.has('ux08')) {
   j.shot = await shot(page, 'ux08-hand-and-inspector');
   j.errors = page.errors;
   report.journeys.ux08 = j;
+  await page.close();
+}
+
+// --- UX-10: ownership quiet, selection strongest — a selected Castle among its neighbours ---------
+if (want.has('ux10')) {
+  const page = await open('autostart=1&a=human&b=bot&seed=1');
+  const j = { shots: [] };
+  await page.evaluate(() => { const a = window.__versus; a.selected = { kind: 'party', id: 'A.mount.C3' }; a._renderAll(); a._focusSelection(); });
+  await sleep(1500);
+  const clip = await page.evaluate(() => { const r = document.getElementById('world').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+  const cshot = async (name) => { const f = `${label}-${name}.png`; await page.mouse.move(4, 4); await sleep(700); await page.screenshot({ path: path.join(out, f), clip }); return f; };
+  j.shots.push(await cshot('ux10-selected-castle-home'));
+  await page.keyboard.press('KeyQ'); await page.keyboard.press('KeyQ'); await sleep(1200);
+  j.shots.push(await cshot('ux10-selected-castle-rotated90'));
+  j.errors = page.errors;
+  report.journeys.ux10 = j;
   await page.close();
 }
 
