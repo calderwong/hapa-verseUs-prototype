@@ -110,6 +110,12 @@ export class VersusApp {
     // one contextual inspection system for Cards, parties, members, basins and events (§3)
     this.inspect = new InspectController({
       host: this.el.world,
+      // open drawers (navigator on the left, Orders / a decision on the right) are kept clear
+      reserved: () => {
+        const w = this.el.world.getBoundingClientRect(), edge = (el) => (el && !el.hidden && getComputedStyle(el).display !== 'none' ? el.getBoundingClientRect() : null);
+        const nav = edge(this.el.roster), right = edge(this.el.decision) ?? edge(this.el.orders);
+        return { left: nav ? nav.right - w.left + 6 : 0, right: right ? w.right - right.left + 6 : 0 };
+      },
       generation: () => this.generation ?? 0,
       build: (sub) => (this.session ? this._contentFor(sub) : null),
       project: (sub) => this._screenAnchor(sub),
@@ -156,7 +162,9 @@ export class VersusApp {
     });
     // a click acts on release, and only if the gesture was not a camera drag (pan / orbit) or a card drag
     this.el.world.addEventListener('pointerup', (e) => {
-      if (e.target.closest?.('button, .layer-rail, .cam-pad') || this.cam?.wasDrag() || this.cardDrag?.active || this.dragging) return;
+      // only the canvas acts on the board: a click inside a view, drawer or counter never reaches
+      // the territory behind it (addendum §3: "stop pointer events from issuing commands behind it")
+      if (e.target !== canvas || this.cam?.wasDrag() || this.cardDrag?.active || this.dragging) return;
       this._onPointer(e);
     });
     canvas.addEventListener('pointermove', (e) => { if (!this.cam?.dragging && !this.dragging) this._onHover(e); });
@@ -1024,6 +1032,7 @@ export class VersusApp {
 
   _closeSheet({ restore = true } = {}) {
     this.el.overlay.hidden = true;
+    this._applyModal?.(); // lift inert now, so the opener can take focus below
     this._overlayDismiss = false;
     const back = this._overlayBack;
     this._overlayBack = null;
@@ -1043,6 +1052,7 @@ export class VersusApp {
       for (const el of this.root.children) if (el !== ov) el.inert = open;
       document.body.classList.toggle('modal-open', open);
     };
+    this._applyModal = apply;
     new MutationObserver(apply).observe(ov, { attributes: true, attributeFilter: ['hidden'] });
     ov.addEventListener('keydown', (e) => {
       if (e.key !== 'Tab') return;
@@ -1122,6 +1132,7 @@ export class VersusApp {
   _toggleRoster(open = !document.body.classList.contains('roster-open')) {
     document.body.classList.toggle('roster-open', open);
     this.el.navBtn?.setAttribute('aria-expanded', String(open));
+    this.inspect.relayout();
     // the keyboard follows the drawer: into its first entry on open, back to the toggle on close
     if (open) requestAnimationFrame(() => this.el.roster.querySelector('.rrow, button')?.focus());
     else if (this.el.roster.contains(document.activeElement)) this.el.navBtn?.focus();
@@ -1229,20 +1240,25 @@ export class VersusApp {
   _removeOrder(seat, i) {
     const cmd = this.plans[seat][i];
     if (!this._setPlan(seat, this.plans[seat].filter((_, j) => j !== i))) return;
-    (this._lastRemoved ??= {})[seat] = { cmd, tick: this.state.tick };
+    (this._lastRemoved ??= {})[seat] = { cmd, index: i, tick: this.state.tick };
     this._toast(`Removed: ${describeCmd(this.state, cmd)}`);
     // keep the keyboard in the list: the next order's Remove, else Restore
     this._focusAfter = () => this.el.plan.querySelectorAll(`.planbox.${seat.toLowerCase()} button.x`)[i] ?? this.el.plan.querySelector('button.restore');
     this._renderAll();
   }
 
+  /** Put the last removed order back at its original place (order matters: loads fund later moves). */
   _restoreOrder(seat) {
     const r = this._lastRemoved?.[seat];
     if (!r) return;
-    if (this._addCommand(seat, r.cmd)) {
+    const plan = [...this.plans[seat]];
+    plan.splice(Math.min(r.index ?? plan.length, plan.length), 0, r.cmd);
+    const err = validatePlan(this.state, this.ctx, seat, plan).errors.find((e) => e.index === Math.min(r.index ?? plan.length - 1, plan.length - 1));
+    if (err) { this._toast(`Not restored: ${err.error}`, true); return; }
+    if (this._setPlan(seat, plan)) {
       this._lastRemoved[seat] = null;
       this._toast(`Restored: ${describeCmd(this.state, r.cmd)}`);
-      this._focusAfter = () => [...this.el.plan.querySelectorAll(`.planbox.${seat.toLowerCase()} button.x`)].at(-1) ?? this.el.readyBig;
+      this._focusAfter = () => this.el.plan.querySelectorAll(`.planbox.${seat.toLowerCase()} button.x`)[r.index] ?? this.el.readyBig;
       this._renderAll();
     }
   }
@@ -1353,6 +1369,7 @@ export class VersusApp {
   _toggleOrders(open = !this.ordersOpen) {
     this.ordersOpen = open;
     this._renderAll();
+    this.inspect.relayout();
     if (open) this.el.orders.querySelector('h3')?.setAttribute('tabindex', '-1'), this.el.orders.querySelector('h3')?.focus();
     else this.el.ordersBtn?.focus();
   }

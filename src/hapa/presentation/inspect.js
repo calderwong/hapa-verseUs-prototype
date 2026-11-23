@@ -29,8 +29,8 @@ export class InspectController {
    * @param {{ host: HTMLElement, generation: () => number, build: (s: Subject) => ({ title: string, tag?: string, node: Node } | null),
    *           project: (s: Subject) => ({ x: number, y: number } | null), onPin?: (s: Subject|null) => void }} o
    */
-  constructor({ host, generation, build, project, onPin }) {
-    Object.assign(this, { host, generation, build, project, onPin });
+  constructor({ host, generation, build, project, onPin, reserved = () => ({ left: 0, right: 0 }) }) {
+    Object.assign(this, { host, generation, build, project, onPin, reserved });
     this.shown = { transient: null, pinned: null }; // { subject, key, el, pos }
     this.pendingHover = null;
     this.timer = null;
@@ -143,6 +143,9 @@ export class InspectController {
     });
   }
 
+  /** Re-place the shown views (a drawer opened or closed, the viewport changed). */
+  relayout() { for (const slot of ['pinned', 'transient']) if (this.shown[slot]) this._place(this.shown[slot], slot); }
+
   get pinnedSubject() { return this.shown.pinned?.subject ?? null; }
   get transientSubject() { return this.shown.transient?.subject ?? null; }
 
@@ -190,6 +193,8 @@ export class InspectController {
     const a = this.project(v.subject) ?? { x: host.width - W / 2 - 12, y: host.height / 2 };
     const pin = this.shown.pinned;
     const margin = 10, gap = 34;
+    const res = this.reserved();
+    const lo = margin + res.left, hi = host.width - margin - res.right;
     let x, y;
     if (slot === 'transient' && pin && pin !== v) {
       // compare: beside the pinned view, on whichever side has room
@@ -200,11 +205,11 @@ export class InspectController {
       // outward: on the side of the anchor away from the middle of the view, so the view lies over
       // the frame and scenery rather than the field, with a short leader back to its source
       const outLeft = a.x < host.width / 2;
-      if (outLeft) { x = Math.max(margin, a.x - gap - W); if (x + W > a.x - 6) x = a.x + gap; }
-      else { x = Math.min(host.width - W - margin, a.x + gap); if (x < a.x + 6) x = a.x - gap - W; }
+      if (outLeft) { x = Math.max(lo, a.x - gap - W); if (x + W > a.x - 6) x = a.x + gap; }
+      else { x = Math.min(hi - W, a.x + gap); if (x < a.x + 6) x = a.x - gap - W; }
       y = a.y - Math.min(H / 2, 120);
     }
-    x = Math.max(margin, Math.min(x, host.width - W - margin));
+    x = Math.max(lo, Math.min(x, hi - W));
     y = Math.max(margin, Math.min(y, host.height - H - margin));
     v.el.style.left = `${Math.round(x)}px`;
     v.el.style.top = `${Math.round(y)}px`;

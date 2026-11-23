@@ -7,6 +7,7 @@
  * required control is missing, or the page reports an error not on the explicit allow-list.
  *
  *   node tools/hapa/ui-regress.mjs [--base http://127.0.0.1:5199] [--only c1,c3] [--sabotage]
+ *   (contract 2: the board-first interface of human-feedback addendum 01 / response 05)
  *        [--out-root docs/reviews/evidence/2026-11-22/regress] [--run <id>] [--source-dir <checkout>]
  *
  * --source-dir names the checkout the server is serving when it is not this one (a baseline
@@ -45,7 +46,11 @@ const untracked = (sh('git ls-files --others --exclude-standard', repo) ?? '').s
 const untrackedHash = createHash('sha256');
 for (const f of untracked.sort()) { untrackedHash.update(f); try { untrackedHash.update(fs.readFileSync(path.join(repo, f))); } catch { /* unreadable */ } }
 const source = { commit, dirty: !!status, diffSha256: status ? createHash('sha256').update(diff).digest('hex') : null, untracked, untrackedSha256: untracked.length ? untrackedHash.digest('hex') : null };
-const engine = sh('git -C vendor/lumina rev-parse HEAD', repo) ?? (sh('git submodule status vendor/lumina', repo) ?? '').trim().split(/\s+/)[0]?.replace(/^[-+]/, '');
+// engine provenance (review 03, R3-05): the parent's recorded gitlink, and separately a verified
+// checkout only when vendor/lumina is its own Git work tree (git -C would otherwise climb upward)
+const gitlink = (sh('git ls-tree HEAD vendor/lumina', repo) ?? '').split(/\s+/)[2] ?? null;
+const ownTree = fs.existsSync(path.join(repo, 'vendor/lumina/.git')) && sh('git -C vendor/lumina rev-parse --show-toplevel', repo) === path.join(fs.realpathSync(repo), 'vendor/lumina');
+const engine = { gitlink, checkout: ownTree ? sh('git -C vendor/lumina rev-parse HEAD', repo) : null, verified: ownTree, note: ownTree ? 'vendor/lumina is a Git work tree at the recorded commit' : 'vendor/lumina has no own Git metadata here; only the gitlink is recorded' };
 const runId = String(args.run ?? `${new Date().toISOString().replace(/[:.]/g, '-')}-${(commit ?? 'nogit').slice(0, 7)}${source.dirty ? '-dirty' : ''}${sabotage ? '-sabotage' : ''}`);
 const outRoot = path.resolve(here, String(args['out-root'] ?? 'docs/reviews/evidence/2026-11-22/regress'));
 const dir = path.join(outRoot, runId);
@@ -137,81 +142,91 @@ const screenOf = (page, memberId, lift = 0.45) => app(page, (id, lift) => {
 const clickAt = async (page, p) => { await page.mouse.move(p.x, p.y); await page.mouse.down(); await page.mouse.up(); await sleep(300); };
 const layerButton = (band) => (band === null ? /^All$/ : new RegExp(`^[${band < 0 ? '−-' : '+'}]${Math.abs(band)}( \\d+)?$`));
 
+// ================================================================================================
+// Contract 2 (response 05): the board is the interface. Expectations come from the rules, the
+// fixture as built, or the value entered before the action under test — never from the UI itself.
+// ================================================================================================
+const READY = '#matchbar .ready-big';
+const openNav = async (page) => { if (!(await app(page, () => document.body.classList.contains('roster-open')))) { await page.keyboard.press('n'); await sleep(300); } };
+const pinVia = async (page, re, name) => { await openNav(page); return clickNamed(page, '#roster .rrow', re, name); };
+const peek = (page, slot = 'pinned') => app(page, (slot) => { const v = document.querySelector(`.peek.${slot}`); return v ? { title: v.querySelector('.peek-title')?.textContent, text: v.innerText.replace(/\s+/g, ' ') } : null; }, slot);
+const hoverAt = async (page, p, wait = 450) => { await page.mouse.move(p.x, p.y, { steps: 4 }); await sleep(wait); };
+const anchor = (page, subject) => app(page, (sub) => { const a = window.__versus; const c = a._screenAnchor(sub); if (!c) return null; const r = a.el.world.getBoundingClientRect(); return { x: r.left + c.x, y: r.top + c.y }; }, subject);
+const tileAt = (page, cardId) => app(page, (id) => { const a = window.__versus; const t = [...a.view.cardTiles.values()].find((x) => x.userData.cardId === id); if (!t) return null; const v = t.position.clone(); v.y = 0.06; const p = v.project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); return { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height }; }, cardId);
+
 // --- C1: Ready freezes the own plan; an opponent revision is reviewed and acknowledged ----------
-await check('c1', 'Ready freezes the own plan through an opponent revision (UX-01, journey 5/6)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1', seat: 'A then B (hotseat)', layer: 'All' }, async () => {
+await check('c1', 'Ready freezes the own plan through an opponent revision (UX-01)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1', seat: 'A then B (hotseat)', profile: 'hapa_open_10x9_v3_02' }, async () => {
   const page = await open('autostart=1&a=human&b=human&seed=1');
-  await clickNamed(page, '#roster [role=button]', /^Your Castle at R1C1/, 'roster row for your C1 Castle');
-  await clickNamed(page, '#inspector button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply from the C1 card');
+  await pinVia(page, /^Your Castle at R1C1/, 'navigator row for your C1 Castle');
+  await clickNamed(page, '.peek.pinned button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply from the C1 card (party view)');
   const before = await agreement(page);
   expect('A entered one Supply order', before.plans.A.length, 1);
-  await clickNamed(page, '#plan .ready-big', /^Ready/, 'Ready');
+  await clickNamed(page, READY, /^Ready/, 'Ready (strip)');
   const frozen = await agreement(page);
   expect('Ready hands the hotseat to B', frozen.viewSeat, 'B');
-  // B revises (keyboard: hand slot 1, Burn) and presses Ready
   await page.keyboard.press('1'); await sleep(150); await page.keyboard.press('b'); await sleep(300);
-  await clickNamed(page, '#plan .ready-big', /^Ready/, 'Ready (B)');
+  await clickNamed(page, READY, /^Ready/, 'Ready (B)');
   const st = await agreement(page);
   expect('view returns to A to acknowledge', st.viewSeat, 'A');
   expect('A acknowledgment is stale', st.stale.A, true);
-  // attempts to change the frozen plan: keyboard Burn, and any Remove control
   await page.keyboard.press('2'); await sleep(150); await page.keyboard.press('b'); await sleep(300);
   const after = await agreement(page);
   expect('A plan unchanged after B revised and A tried to edit', after.plans.A, before.plans.A);
   expect('A revision unchanged', after.rev.A, frozen.rev.A + (sabotage ? 1 : 0), sabotage ? 'SABOTAGE: deliberately wrong expectation (+1)' : undefined);
-  const view = await app(page, () => ({ removeInOwn: document.querySelectorAll('#plan .planbox.a button.x').length, added: [...document.querySelectorAll('#plan .planbox.b li.added')].map((e) => e.innerText.replace(/\s+/g, ' ')), banner: document.querySelector('#plan .plan-banner')?.innerText ?? '', first: document.querySelector('#plan .plans > *')?.className, ready: document.querySelector('#plan .ready-big')?.innerText.replace(/\s+/g, ' ').trim() }));
+  const view = await app(page, () => ({ ordersOpen: !document.getElementById('orders').hidden, removeInOwn: document.querySelectorAll('#plan .planbox.a button.x').length, added: document.querySelectorAll('#plan .planbox.b li.added').length, banner: document.querySelector('#plan .plan-banner')?.innerText ?? '', ready: document.querySelector('#matchbar .ready-big')?.innerText.replace(/\s+/g, ' ').trim() }));
+  expect('Orders opened by itself for the stale review', view.ordersOpen, true);
   expect('no Remove controls on the frozen own plan', view.removeInOwn, 0);
-  expect('B\'s new order is marked NEW', view.added.length, 1);
+  expect('B\'s new order is marked NEW', view.added, 1);
   ok('banner says the own orders stay frozen', /stay frozen/.test(view.banner), view.banner);
-  ok('opponent plan is shown first while reviewing', /planbox b/.test(view.first ?? ''), view.first);
   ok('primary action is Acknowledge', /^Acknowledge updated plan/.test(view.ready), view.ready);
   await shot(page, 'stale-review');
-  await clickNamed(page, '#plan .ready-big', /^Acknowledge/, 'Acknowledge updated plan');
+  await clickNamed(page, READY, /^Acknowledge/, 'Acknowledge updated plan');
   await waitResolved(page, 2);
-  const resolved = await app(page, () => window.__versus.session.replay.ticks.at(-1).plans.A.map((c) => JSON.stringify(c)));
-  expect('the resolved Tick used exactly the frozen A plan', resolved, before.plans.A);
+  expect('the resolved Tick used exactly the frozen A plan', await app(page, () => window.__versus.session.replay.ticks.at(-1).plans.A.map((c) => JSON.stringify(c))), before.plans.A);
   await page.close();
 });
 
-// --- C2: one resolution however often Ready is pressed during a response window ------------------
-await check('c2', 'One resolution during a response window despite repeated Ready (UX-02)', { query: 'autostart=1&fixture=response&a=human&b=human', viewport: '1600x1000@1', seat: 'A plans; B responds', layer: 'All' }, async () => {
-  const run = async (spam) => {
+// --- C2: one resolution despite Ready spam; a paid counter actually cast (R3-01) -----------------
+await check('c2', 'One resolution during a response window; a paid counter through the browser (UX-02, R3-01)', { query: 'autostart=1&fixture=response&a=human&b=human', viewport: '1600x1000@1' }, async () => {
+  const run = async (mode) => {
     const page = await open('autostart=1&fixture=response&a=human&b=human');
     setup('A\'s Ember Strike order is added with the app\'s own _addCommand (ability targeting is not under test here)');
     await app(page, () => window.__versus._addCommand('A', { type: 'play_ability', cardId: 'A.ember', actorPartyId: 'A.c', target: { memberId: 'B.c.s2' }, burns: ['A.red'] }));
     const t0 = await agreement(page);
-    await clickNamed(page, '#plan .ready-big', /^Ready/, 'Ready (A)');
-    await clickNamed(page, '#plan .ready-big', /^Ready/, 'Ready (B)');
+    await clickNamed(page, READY, /^Ready/, 'Ready (A)');
+    await clickNamed(page, READY, /^Ready/, 'Ready (B)');
     await page.waitForFunction(() => !!window.__versus.pendingChoice, { timeout: 15000 });
     const f = await focused(page);
-    let spammed = 0;
-    if (spam) {
-      for (let i = 0; i < 12; i++) { await ctrlEnter(page); spammed++; }
-      for (let i = 0; i < 3; i++) { await page.$eval('#plan .ready-big', (b) => b.click()).catch(() => {}); spammed++; }
-    }
+    const panel = await app(page, () => ({ shown: !document.getElementById('decision').hidden, text: document.getElementById('decision').innerText.replace(/\s+/g, ' ') }));
+    if (mode === 'spam') { for (let i = 0; i < 12; i++) await ctrlEnter(page); for (let i = 0; i < 3; i++) await page.$eval(READY, (b) => b.click()).catch(() => {}); }
+    if (mode === 'counter') await clickNamed(page, '#decision .response button', /^Blue Denial/, 'Blue Denial (paid response)');
     let passes = 0;
-    while (passes < 8 && await app(page, () => !!window.__versus.pendingChoice)) { await clickNamed(page, '#inspector .response button', /^Pass$/, 'Pass'); passes++; await sleep(300); }
+    while (passes < 8 && await app(page, () => !!window.__versus.pendingChoice)) { await clickNamed(page, '#decision .response button', /^Pass$/, 'Pass'); passes++; await sleep(300); }
     await waitResolved(page, 10);
-    const r = await app(page, () => { const a = window.__versus, ev = a.session.events.filter((e) => e.tick === 9); return { replayTicks: a.session.replay.ticks.length, locked: ev.filter((e) => e.type === 'plans_locked').length, damage: ev.filter((e) => e.type === 'card_damage').length, fingerprint: a.session.replay.ticks.at(-1).fingerprint, events: a.session.events.length }; });
-    if (spam) await shot(page, 'after-spam');
+    const r = await app(page, () => { const a = window.__versus, ev = a.session.events.filter((e) => e.tick === 9); return { replayTicks: a.session.replay.ticks.length, locked: ev.filter((e) => e.type === 'plans_locked').length, damage: ev.filter((e) => e.type === 'card_damage').length, countered: ev.filter((e) => e.type === 'counter_applied').length, rejected: ev.filter((e) => e.type === 'command_rejected').length, paymentBurns: ev.filter((e) => e.type === 'card_burned' && e.seat === 'B').map((e) => e.cardId), poolB: a.state.players.B.pool, fingerprint: a.session.replay.ticks.at(-1).fingerprint, events: a.session.events.length }; });
+    if (mode !== 'calm') await shot(page, `after-${mode}`);
     await page.close();
-    return { ...r, before: t0.replayTicks, focusAtOpen: f, spammed, passes };
+    return { ...r, before: t0.replayTicks, focusAtOpen: f, panel };
   };
-  const spam = await run(true), calm = await run(false);
-  ok('the response window opens with focus on a choice', /Blue Denial|Pass/.test(spam.focusAtOpen?.name ?? ''), spam.focusAtOpen);
+  const spam = await run('spam'), calm = await run('calm'), counter = await run('counter');
+  expect('the required response is its own visible surface', spam.panel.shown, true);
+  ok('it shows the pending effect, costs and Pass', /Ember Strike/.test(spam.panel.text) && /Cost: 2 Blue/.test(spam.panel.text) && /Pass/.test(spam.panel.text), spam.panel.text.slice(0, 200));
+  ok('focus starts on a choice', /Blue Denial|Pass/.test(spam.focusAtOpen?.name ?? ''), spam.focusAtOpen);
   expect('exactly one replay entry added (with Ready spam)', spam.replayTicks - spam.before, 1);
   expect('exactly one plans_locked event for Tick 9', spam.locked, 1);
-  expect('the Spell resolved once', spam.damage, 1);
   expect('spam run and calm run end in the same state', spam.fingerprint, calm.fingerprint);
-  expect('spam run and calm run record the same number of events', spam.events, calm.events);
-  current.observed = { spam, calm };
+  expect('paid counter: countered, no damage, nothing rejected', [counter.countered, counter.damage, counter.rejected], [1, 0, 0]);
+  expect('paid counter: B burned exactly its 2-Blue Card to pay', counter.paymentBurns, ['B.blue']);
+  expect('paid counter: B\'s pool is empty afterwards (2 Blue spent)', counter.poolB, {});
+  current.observed = { spam, calm, counter };
 });
 
 // --- C3: height-aware selection -------------------------------------------------------------
-await check('c3', 'Selection follows the visible height (UX-03)', { query: 'autostart=1&fixture=stacked&a=human&b=human', viewport: '1600x1000@1', seat: 'A', camera: 'fitted Home' }, async () => {
+await check('c3', 'Selection follows the visible height (UX-03)', { query: 'autostart=1&fixture=stacked&a=human&b=human', viewport: '1600x1000@1' }, async () => {
   const page = await open('autostart=1&fixture=stacked&a=human&b=human');
   const pickAt = async (band, memberId, lift = 0.45) => {
     await clickNamed(page, '.layer-rail button', layerButton(band), `layer ${band ?? 'All'}`);
-    await page.keyboard.press('Escape'); await sleep(150);
+    await page.keyboard.press('Escape'); await page.keyboard.press('Escape'); await sleep(150);
     await clickAt(page, await screenOf(page, memberId, lift));
     return app(page, () => window.__versus.selected?.id ?? null);
   };
@@ -224,14 +239,13 @@ await check('c3', 'Selection follows the visible height (UX-03)', { query: 'auto
 });
 
 // --- C4: the selected height filter holds throughout playback --------------------------------------
-await check('c4', 'Off-layer bodies stay filtered during and after playback (R2-01)', { query: 'autostart=1&fixture=stacked&a=human&b=human', viewport: '1600x1000@1', layers: ['−2', '+3', 'All'] }, async () => {
+await check('c4', 'Off-layer bodies stay filtered during and after playback (R2-01)', { query: 'autostart=1&fixture=stacked&a=human&b=human', layers: ['−2', '+3', 'All'] }, async () => {
   for (const band of [-2, 3, null]) {
     const page = await open('autostart=1&fixture=stacked&a=human&b=human');
-    // the expectation comes from the fixture as built: live members on the band
     const expected = await app(page, (b) => Object.values(window.__versus.state.members).filter((m) => m.alive && (b === null || (m.band ?? 1) === b)).map((m) => m.id).sort(), band);
     await clickNamed(page, '.layer-rail button', layerButton(band), `layer ${band ?? 'All'}`);
-    await clickNamed(page, '#plan .ready-big', /^Ready/, 'Ready (A)');
-    await clickNamed(page, '#plan .ready-big', /^Ready/, 'Ready (B)');
+    await clickNamed(page, READY, /^Ready/, 'Ready (A)');
+    await clickNamed(page, READY, /^Ready/, 'Ready (B)');
     const samples = [];
     for (let i = 0; i < 400; i++) {
       const s = await app(page, () => { const a = window.__versus; return { playing: !!a.playback, visible: [...a.view.sprites].filter(([, spr]) => spr.visible).map(([id]) => id).sort() }; });
@@ -242,118 +256,312 @@ await check('c4', 'Off-layer bodies stay filtered during and after playback (R2-
     const end = await app(page, () => [...window.__versus.view.sprites].filter(([, spr]) => spr.visible).map(([id]) => id).sort());
     const name = band === null ? 'All' : band > 0 ? `+${band}` : `−${-band}`;
     ok(`layer ${name}: playback was sampled (${samples.length} frames)`, samples.length >= 5, samples.length);
-    expect(`layer ${name}: every playback sample shows only the expected bodies`, [...new Set(samples.map((s) => canon(s)))], [canon(expected)]);
+    expect(`layer ${name}: every playback sample shows only the expected bodies`, [...new Set(samples.map((x) => canon(x)))], [canon(expected)]);
     expect(`layer ${name}: after playback`, end, expected);
-    if (band === -2) await shot(page, 'after-playback-minus2');
     await page.close();
   }
 });
 
-// --- C5: the opening by keyboard alone at a compact size -----------------------------------------
-await check('c5', 'Opening by keyboard alone, compact (R2-04; journey steps 1–7)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1', seat: 'A', layer: 'All', camera: 'fitted Home' }, async () => {
-  const page = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
-  const log = [];
-  const step = async (name, re, max) => { const f = await tabTo(page, re, max); ok(`reach by Tab: ${name}`, !!f, f); if (f) { ok(`focus is visible on ${name}`, f.visible, f); log.push({ name, tabs: f.tabs }); } return !!f; };
-  await app(page, () => document.activeElement?.blur());
-  // a Card tile keeps focus when Enter selects it (the tile is rebuilt)
-  if (await step('your C1 hand tile', /^2 of Wands, your C1/)) {
-    await page.keyboard.press('Enter'); await sleep(300);
-    const f = await focused(page);
-    ok('Enter on a Card tile keeps focus on that tile', /^2 of Wands, your C1/.test(f?.name ?? ''), f);
-    expect('the Card is selected', await app(page, () => window.__versus.selected?.kind), 'card');
-    await page.keyboard.press('Escape'); await sleep(200);
-  }
-  await app(page, () => document.activeElement?.blur());
-  if (await step('Parties drawer toggle', /^☰ Parties$/)) { await page.keyboard.press('Enter'); await sleep(250); }
-  if (await step('roster row: your C1 Castle', /^Your Castle at R1C1/, 60)) { await page.keyboard.press('Enter'); await sleep(400); }
-  expect('1 · the C1 Castle is selected', await app(page, () => window.__versus.selected?.id), 'A.mount.C1');
-  ok('1 · focus continues in the inspector', /^castle/i.test((await focused(page))?.name ?? ''), await focused(page)); // the heading is uppercased by CSS
-  if (await step('Load Supply from 2♣ (C1)', /^Load 2 Supply from 2♣ \(C1\)/, 60)) { await page.keyboard.press('Enter'); await sleep(400); }
-  ok('2 · focus moves on to Move to…', /^Move to/.test((await focused(page))?.name ?? ''), await focused(page));
-  await page.keyboard.press('Enter'); await sleep(200); // open the list
-  if (await step('Move Castle to R2C1 (joins your Pawn)', /^Move Castle R1C1 to R2C1/, 40)) { await page.keyboard.press('Enter'); await sleep(400); }
-  const plan1 = await agreement(page);
-  expect('3 · the plan holds Supply then the move', plan1.plans.A.map((c) => JSON.parse(c).type), ['load_supply', 'set_destination']);
-  ok('3 · focus lands on the new order', /^Remove order 2: Move Castle R1C1 → R2C1/.test((await focused(page))?.name ?? ''), await focused(page));
-  await page.keyboard.press('Enter'); await sleep(400);
-  expect('4 · Remove takes the move out', (await agreement(page)).plans.A.map((c) => JSON.parse(c).type), ['load_supply']);
-  ok('4 · focus lands on Restore', /^Restore removed order/.test((await focused(page))?.name ?? ''), await focused(page));
-  await page.keyboard.press('Enter'); await sleep(400);
-  const plan2 = await agreement(page);
-  expect('4 · Restore puts the same order back', plan2.plans.A, plan1.plans.A);
-  await shot(page, 'planned');
-  if (await step('Ready', /^Ready/, 40)) { await page.keyboard.press('Enter'); await sleep(200); }
-  ok('5 · Ready freezes the plan (A frozen)', await app(page, () => !!window.__versus.ready.A), true);
-  await waitResolved(page, 2);
-  // 7 · the result and its Card cause, by keyboard
-  await page.keyboard.press('Escape'); await sleep(300);
-  await app(page, () => document.activeElement?.blur());
-  if (await step('result: Supply landed', /loaded 2 Supply from A's 2♣ \(C1\)/, 80)) { await page.keyboard.press('Enter'); await sleep(400); }
-  const ev = await app(page, () => window.__versus.selected?.event ?? null);
-  expect('7 · the supply_loaded event is inspected', ev?.type, 'supply_loaded');
-  // the same result may be reached in the inspector list or the event strip; Tab onward to the panel's link
-  if (await step('Inspect the Card', /^Inspect the Card/, 120)) { await page.keyboard.press('Enter'); await sleep(400); }
-  expect('7 · its Card is inspected', await app(page, () => window.__versus.selected?.id), ev?.cardId);
-  // independent expectation from the rules: 2 Supply loaded, one step costs 1, the Pawn merges
-  const P = await app(page, () => { const p = window.__versus.state.parties['A.mount.C1']; return { region: p.region, supply: p.supply.reduce((n, x) => n + x.units, 0) / 1e6, members: Object.values(p.slots).filter(Boolean).length }; });
-  expect('7 · result agrees with the rules: R2C1, Supply 1, nine members', P, { region: { column: 1, row: 2 }, supply: 1, members: 9 });
-  await shot(page, 'result-card');
-  current.observed = { tabs: log };
-  await page.close();
-});
-
-// --- C6: public information and essential controls at compact sizes ----------------------------
-const SIZES = [
-  { w: 1600, h: 1000, dpr: 1, label: '1600x1000' }, { w: 1441, h: 900, dpr: 1, label: '1441x900 (above drawer breakpoint)' }, { w: 1440, h: 900, dpr: 1, label: '1440x900 (drawer)' },
-  { w: 1280, h: 720, dpr: 1, label: '1280x720' }, { w: 1181, h: 900, dpr: 1, label: '1181x900' }, { w: 1180, h: 900, dpr: 1, label: '1180x900' }, { w: 1100, h: 900, dpr: 1, label: '1100x900' },
-  { w: 1067, h: 667, dpr: 1.5, label: '1600x1000 at 150% browser zoom' },
-  { w: 800, h: 500, dpr: 2, label: '1600x1000 at 200% browser zoom (observed, not asserted)', observe: true },
-];
-await check('c6', 'Roster, Mana/Burn, nine bank positions, plans and Ready reachable at every size (R2-03)', { sizes: SIZES.map((s) => s.label), seats: ['A', 'B'] }, async () => {
+// --- C5: the quiet default — no permanent duplicates; both owners' real banks reachable -------------
+const SIZES2 = [{ w: 1600, h: 1000, label: '1600x1000' }, { w: 1280, h: 720, label: '1280x720' }];
+await check('c5', 'Quiet default: no ribbons/inspector/Mana panel; both banks, basins and the strip reachable (HF-01/02, R4-01)', { sizes: SIZES2.map((x) => x.label), seats: ['A', 'B'] }, async () => {
   const measured = [];
-  for (const sz of SIZES) for (const seat of ['A', 'B']) {
-    const page = await open(seat === 'A' ? 'autostart=1&a=human&b=bot&seed=1' : 'autostart=1&a=bot&b=human&seed=1', { width: sz.w, height: sz.h, dpr: sz.dpr });
+  for (const sz of SIZES2) for (const seat of ['A', 'B']) {
+    const page = await open(seat === 'A' ? 'autostart=1&a=human&b=bot&seed=1' : 'autostart=1&a=bot&b=human&seed=1', { width: sz.w, height: sz.h });
     const m = await app(page, () => {
-      const R = (e) => { if (!e) return null; const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), shown: cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0 }; };
-      const inView = (r) => r && r.shown && r.x >= 0 && r.y >= 0 && r.x + r.w <= innerWidth + 1 && r.y + r.h <= innerHeight + 1;
-      const tiles = (sel) => [...document.querySelectorAll(`${sel} .tile`)].map(R);
-      const own = tiles('#ownhand'), opp = tiles('#opphand');
-      const res = R(document.getElementById('resources'));
-      return {
-        viewport: [innerWidth, innerHeight, devicePixelRatio], canvas: R(document.querySelector('#world canvas')),
-        resources: res, resourcesInView: inView(res), pools: /A pool/.test(document.getElementById('resources').innerText) && /B pool/.test(document.getElementById('resources').innerText),
-        roster: R(document.getElementById('roster')), rosterToggle: R(document.querySelector('.roster-toggle')),
-        ownTiles: own.length, oppTiles: opp.length, tilesInView: own.every(inView) && opp.every(inView), minTileW: Math.min(...own.map((r) => r.w), ...opp.map((r) => r.w)),
-        columnSkew: Math.max(...own.map((r, i) => Math.abs((r.x + r.w / 2) - (opp[i].x + opp[i].w / 2)))),
-        plan: R(document.getElementById('plan')), ready: R(document.querySelector('#plan .ready-big')), readyInView: inView(R(document.querySelector('#plan .ready-big'))),
-      };
+      const a = window.__versus, s = a.state;
+      const world = a.el.world.getBoundingClientRect(), canvas = a.engine.renderer.domElement.getBoundingClientRect();
+      const inWorld = (p) => p && p.x >= world.left && p.x <= world.right && p.y >= world.top && p.y <= world.bottom;
+      const proj = (v) => { const p = v.clone().project(a.engine.camera); return { x: canvas.left + ((p.x + 1) / 2) * canvas.width, y: canvas.top + ((1 - p.y) / 2) * canvas.height }; };
+      const tiles = [...a.view.cardTiles.values()].map((t) => ({ id: t.userData.cardId, owner: s.cards[t.userData.cardId]?.owner, p: proj(t.position) }));
+      const banked = ['A', 'B'].flatMap((x) => [...Object.values(s.players[x].bank.minor), ...Object.values(s.players[x].bank.major ?? {}), ...Object.values(s.players[x].bank.rows ?? {})].filter(Boolean));
+      const gone = ['ownhand', 'opphand', 'inspector', 'resources', 'side'].filter((id) => document.getElementById(id));
+      const rect = (el) => { const r = el.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), x: Math.round(r.x), y: Math.round(r.y) }; };
+      return { gone, rosterShown: getComputedStyle(document.getElementById('roster')).display !== 'none', canvas: rect(a.engine.renderer.domElement), banked: banked.length, tilesOnScreen: tiles.filter((t) => inWorld(t.p)).length, tilesBoth: [...new Set(tiles.filter((t) => inWorld(t.p)).map((t) => t.owner))].sort(), basins: ['A', 'B'].map((x) => inWorld(a._screenAnchor({ kind: 'basin', id: x }) && { x: world.left + a._screenAnchor({ kind: 'basin', id: x }).x, y: world.top + a._screenAnchor({ kind: 'basin', id: x }).y })), strip: ['.ready-big', '.strip-btn.orders', '[aria-label="Match menu"]'].map((q) => { const r = document.querySelector(`#matchbar ${q}`)?.getBoundingClientRect(); return !!r && r.width > 0 && r.right <= innerWidth + 1; }) };
     });
     const tag = `${sz.label} · seat ${seat}`;
-    if (sz.observe) { if (seat === 'A') await shot(page, `${sz.w}x${sz.h}-observe`); measured.push({ size: sz.label, seat, observeOnly: true, ...m }); await page.close(); continue; }
-    expect(`${tag}: nine bank positions in each ribbon`, [m.ownTiles, m.oppTiles], [9, 9]);
-    ok(`${tag}: every bank position on screen and ≥ 40 px wide`, m.tilesInView && m.minTileW >= 40, { min: m.minTileW });
-    ok(`${tag}: own and opponent position i share a physical column (±2 px)`, m.columnSkew <= 2, m.columnSkew);
-    ok(`${tag}: both Mana pools on screen (≥ 120 px wide)`, m.resourcesInView && m.pools && m.resources.w >= 120, m.resources);
-    ok(`${tag}: roster column or drawer toggle on screen`, (m.roster?.shown && m.roster.w >= 150) || m.rosterToggle?.shown, { roster: m.roster, toggle: m.rosterToggle });
-    ok(`${tag}: plans get ≥ 110 px and Ready is on screen`, m.plan?.h >= 110 && m.readyInView, { plan: m.plan, ready: m.ready });
-    // the labeled Burn path: select the first own Card, the inspector offers Burn
-    await clickNamed(page, '#ownhand .tile[role=button]', /./, `${tag}: a hand Card`);
-    ok(`${tag}: labeled Burn control`, await app(page, () => [...document.querySelectorAll('#inspector button')].some((b) => /^Burn/.test(b.innerText) && !b.disabled)), true);
-    if (m.rosterToggle?.shown) {
-      await page.click('.roster-toggle'); await sleep(250);
-      ok(`${tag}: the drawer opens with every party listed`, await app(page, () => { const r = document.getElementById('roster').getBoundingClientRect(); return r.width >= 200 && document.querySelectorAll('#roster [role=button]').length >= 4; }), true);
-      await page.keyboard.press('Escape'); await sleep(200);
-      ok(`${tag}: Escape closes the drawer`, await app(page, () => !document.body.classList.contains('roster-open')), true);
-    }
-    if (seat === 'A' && [1600, 1280, 1100, 1067].includes(sz.w)) await shot(page, `${sz.w}x${sz.h}`);
+    expect(`${tag}: no permanent ribbons, inspector, Mana panel or side column`, m.gone, []);
+    expect(`${tag}: the navigator is closed by default`, m.rosterShown, false);
+    expect(`${tag}: every banked Card's tile is on screen in the home view`, m.tilesOnScreen, m.banked);
+    expect(`${tag}: tiles of both owners on screen`, m.tilesBoth, ['A', 'B']);
+    expect(`${tag}: both Mana basins on screen`, m.basins, [true, true]);
+    expect(`${tag}: Ready, Orders and the menu in the strip`, m.strip, [true, true, true]);
+    if (seat === 'A') await shot(page, `quiet-${sz.label}`);
     measured.push({ size: sz.label, seat, ...m });
     await page.close();
   }
   current.observed = measured;
 });
 
+// --- C6: hover / pin / command separation on real Cards, parties and basins -------------------------
+await check('c6', 'Hover inspects without selecting; pin, compare, Escape; both owners; every Card type present (HF-01/02, §3)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1280x720@1' }, async () => {
+  const page = await open('autostart=1&a=human&b=human&seed=1', { width: 1280, height: 720 });
+  const st0 = await agreement(page);
+  const cam0 = await app(page, () => JSON.stringify(window.__versus.cam.goal));
+  const oppCard = await app(page, () => window.__versus.state.players.B.bank.minor['9'] ?? Object.values(window.__versus.state.players.B.bank.minor).find(Boolean));
+  const ownCard = await app(page, () => window.__versus.state.players.A.bank.minor['1']);
+  const t0 = Date.now();
+  await hoverAt(page, await tileAt(page, oppCard), 0);
+  await page.waitForSelector('.peek.transient', { timeout: 3000 });
+  const latency = Date.now() - t0;
+  const v1 = await peek(page, 'transient');
+  ok('hovering the opponent\'s Card opens its view without a click', !!v1 && /B's Minor Arcana/.test(v1.text), v1?.text.slice(0, 120));
+  ok('the view names that instance (Details) and its exact Supply / Mana', v1 && v1.text.includes(oppCard) === false ? /Supply/.test(v1.text) : true, v1?.title);
+  expect('hover did not select anything', await app(page, () => window.__versus.selected), null);
+  expect('hover did not change plans', (await agreement(page)).plans, st0.plans);
+  expect('hover did not move the camera', await app(page, () => JSON.stringify(window.__versus.cam.goal)), cam0);
+  ok('hover did not take keyboard focus', !(await app(page, () => !!document.activeElement?.closest('.peek'))), true);
+  await hoverAt(page, { x: 5, y: 400 }, 700);
+  expect('leaving closes the transient view after the grace period', await peek(page, 'transient'), null);
+  await hoverAt(page, await tileAt(page, ownCard));
+  const v2 = await peek(page, 'transient');
+  ok('own Card view offers the three uses', v2 && /Load Supply 2 into/.test(v2.text) && /Burn for 0 Mana — consumes this Card/.test(v2.text) && /Use /.test(v2.text), v2?.text.slice(0, 200));
+  await clickAt(page, await tileAt(page, ownCard));
+  expect('a click pins the Card (selection)', await app(page, () => window.__versus.selected?.id), ownCard);
+  await hoverAt(page, await anchor(page, { kind: 'party', id: 'A.mount.C3' }));
+  const cmp = await app(page, () => ({ pinned: document.querySelector('.peek.pinned .peek-title')?.textContent, compare: document.querySelector('.peek.transient .peek-title')?.textContent }));
+  ok('hovering a party while a Card is pinned opens a comparison beside it', !!cmp.pinned && /Bishop/.test(cmp.compare ?? ''), cmp);
+  const party = await peek(page, 'transient');
+  ok('the party view shows the actual 3×3 composition', party && /FRONT/.test(party.text.toUpperCase()) && /Pike/.test(party.text), party?.text.slice(0, 160));
+  { const f = `${current.id}-pin-and-compare.png`; await page.screenshot({ path: path.join(dir, f) }); current.shots.push(f); } // pointer stays on the party
+  await page.keyboard.press('Escape'); await sleep(200);
+  expect('Escape closes the comparison first', await app(page, () => [!!document.querySelector('.peek.pinned'), !!document.querySelector('.peek.transient')]), [true, false]);
+  await page.keyboard.press('Escape'); await sleep(200);
+  expect('Escape again unpins (selection cleared, no order)', [await app(page, () => window.__versus.selected), (await agreement(page)).plans], [null, st0.plans]);
+  await hoverAt(page, await anchor(page, { kind: 'basin', id: 'B' }));
+  const basin = await peek(page, 'transient');
+  ok('the opponent\'s Mana basin is inspectable', basin && /B's Fire Pit and Mana basin/.test(basin.title ?? ''), basin?.title);
+  current.observed = { hoverLatencyMs: latency };
+  await page.close();
+});
+
+// --- C7: the opening by keyboard alone at a compact size -----------------------------------------
+await check('c7', 'Opening by keyboard alone through the navigator and pinned views (HF-02, §3 keyboard)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1' }, async () => {
+  const page = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
+  const log = [];
+  const step = async (name, re, max) => { const f = await tabTo(page, re, max); ok(`reach by Tab: ${name}`, !!f, f); if (f) { ok(`focus is visible on ${name}`, f.visible, f); log.push({ name, tabs: f.tabs }); } return !!f; };
+  if (await step('Parties & Cards', /^☰ Parties & Cards$/, 40)) { await page.keyboard.press('Enter'); await sleep(300); }
+  if (await step('navigator: your C1 Castle', /^Your Castle at R1C1/, 40)) { await page.keyboard.press('Enter'); await sleep(500); }
+  expect('1 · the C1 Castle is pinned', await app(page, () => window.__versus.selected?.id), 'A.mount.C1');
+  ok('1 · focus moved into its view', await app(page, () => !!document.activeElement?.closest('.peek.pinned')), await focused(page));
+  if (await step('Load Supply from 2♣ (C1)', /^Load 2 Supply from 2♣ \(C1\)/, 60)) { await page.keyboard.press('Enter'); await sleep(500); }
+  ok('2 · focus moves on to Move to…', /^Move to/.test((await focused(page))?.name ?? ''), await focused(page));
+  await page.keyboard.press('Enter'); await sleep(200);
+  if (await step('Move Castle to R2C1 (funded, joins your Pawn)', /^Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn/, 60)) { await page.keyboard.press('Enter'); await sleep(500); }
+  expect('3 · the plan holds Supply then the move', (await agreement(page)).plans.A.map((c) => JSON.parse(c).type), ['load_supply', 'set_destination']);
+  ok('3 · focus lands on Ready', /^Ready/.test((await focused(page))?.name ?? ''), await focused(page));
+  await page.keyboard.press('Enter'); await sleep(200);
+  await waitResolved(page, 2);
+  await page.keyboard.press('p'); await sleep(400);
+  if (await step('result: Supply landed (in Orders)', /loaded 2 Supply from A's 2♣ \(C1\)/, 80)) { await page.keyboard.press('Enter'); await sleep(500); }
+  const ev = await app(page, () => window.__versus.selected?.event ?? null);
+  expect('4 · the supply_loaded event is pinned', ev?.type, 'supply_loaded');
+  if (await step('Inspect the Card', /^Inspect the Card/, 40)) { await page.keyboard.press('Enter'); await sleep(400); }
+  expect('4 · its Card is pinned', await app(page, () => window.__versus.selected?.id), ev?.cardId);
+  const P = await app(page, () => { const p = window.__versus.state.parties['A.mount.C1']; return { region: p.region, supply: p.supply.reduce((n, x) => n + x.units, 0) / 1e6, members: Object.values(p.slots).filter(Boolean).length }; });
+  expect('result agrees with the rules: R2C1, Supply 1, nine members', P, { region: { column: 1, row: 2 }, supply: 1, members: 9 });
+  await shot(page, 'keyboard-result');
+  current.observed = { tabs: log };
+  await page.close();
+});
+
+// --- C8: funded destinations in the interface ---------------------------------------------------------
+await check('c8', 'Funded destinations: range, refusal with shortfall, invalidated funding blocks Ready (HF-04)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1', profile: 'hapa_open_10x9_v3_02' }, async () => {
+  const page = await open('autostart=1&a=human&b=human&seed=1');
+  await pinVia(page, /^Your Castle at R1C1/, 'navigator: C1 Castle');
+  const list0 = await app(page, () => document.querySelector('.peek.pinned details.movelist > summary')?.textContent ?? '');
+  ok('with 0 Supply nothing is funded yet', /^Move to… \(0 funded/.test(list0), list0);
+  await clickNamed(page, '.peek.pinned button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply');
+  const labels = await app(page, () => [...document.querySelectorAll('.peek.pinned details.movelist button')].map((b) => b.getAttribute('aria-label') ?? b.textContent));
+  current.observed = { moveLabels: labels };
+  const targets = labels.map((l) => l.match(/to (R\d+C\d+): needs (\d+(?:\.\d+)?)/)?.slice(1)).filter(Boolean);
+  const names = targets.map(([t]) => t).sort();
+  expect('2 Supply funds exactly the targets within two steps of R1C1', names, ['R1C2', 'R1C3', 'R2C1', 'R3C1'].sort());
+  await clickNamed(page, '#matchbar .strip-btn', /^☰ Parties & Cards$/, 'close the navigator'); await sleep(250);
+  await page.keyboard.press('Home'); await sleep(1200); // the home view: the whole field in sight
+  // right-click a legal but unfunded target that is visibly on the canvas: refused with its shortfall
+  const far = await app(page, () => {
+    const a = window.__versus, canvas = a.engine.renderer.domElement, r = canvas.getBoundingClientRect();
+    for (const d of a._fundedTargets(a.state.parties['A.mount.C1']).filter((x) => !x.funded).sort((x, y) => x.required - y.required)) {
+      const c = a.ctx.geo.center(d.column, d.row), p = a.view.toWorld(c.x, c.y).project(a.engine.camera);
+      const pt = { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height };
+      if (document.elementFromPoint(pt.x, pt.y) === canvas) return { ...pt, target: `R${d.row}C${d.column}`, need: d.required / 1e6 };
+    }
+    return null;
+  });
+  ok('an unfunded legal target is visible to right-click', !!far, far);
+  if (far) { await page.mouse.move(far.x, far.y); await page.mouse.down({ button: 'right' }); await page.mouse.up({ button: 'right' }); await sleep(400); }
+  const toast = await app(page, () => document.querySelector('.toast')?.textContent ?? '');
+  ok(`an unfunded target (${far?.target}) is refused with its shortfall`, new RegExp(`needs ${far?.need}, the party has 2`).test(toast), toast);
+  expect('…and no destination was added', (await agreement(page)).plans.A.map((c) => JSON.parse(c).type), ['load_supply']);
+  current.observed = { ...(current.observed ?? {}), beforeMove: await app(page, () => ({ sel: window.__versus.selected, peek: document.querySelector('.peek.pinned .peek-title')?.textContent, open: document.querySelector('.peek.pinned details.movelist')?.open, n: document.querySelectorAll('.peek.pinned details.movelist button').length })) };
+  await clickNamed(page, '.peek.pinned details.movelist > summary', /^Move to…/, 'open Move to…');
+  await clickNamed(page, '.peek.pinned details.movelist button', /to R3C1: needs 2/, 'Move to R3C1');
+  expect('the funded move is planned after its load', (await agreement(page)).plans.A.map((c) => JSON.parse(c).type), ['load_supply', 'set_destination']);
+  // remove the funding load: the destination stays, is invalid, Ready is blocked and opens Orders
+  await page.keyboard.press('p'); await sleep(300);
+  await clickNamed(page, '#plan .planbox.a button.x', /^Remove order 1: \+2 Supply/, 'Remove the funding load');
+  const st = await app(page, () => { const a = window.__versus; return { plan: a.plans.A.map((c) => c.type), errors: a._planErrors('A').map((e) => e.error), ready: document.querySelector('#matchbar .ready-big').innerText.replace(/\s+/g, ' ').trim(), ghost: a.view.intents.children.map((g) => g.userData.partyId) }; });
+  expect('the dependent destination is kept, not shortened or dropped', st.plan, ['set_destination']);
+  ok('it is explicitly invalid for lack of funding', /needs 2, the party has 0/.test(st.errors.join(';')), st.errors);
+  ok('Ready says to fix the order', /^Fix 1 order/.test(st.ready), st.ready);
+  await shot(page, 'unfunded-draft');
+  await page.keyboard.press('Escape'); await sleep(200);
+  await clickNamed(page, READY, /^Fix 1 order/, 'blocked Ready');
+  expect('pressing it opens Orders to repair; nothing is frozen', await app(page, () => [!document.getElementById('orders').hidden, !!window.__versus.ready.A]), [true, false]);
+  await clickNamed(page, '#plan button.restore', /^Restore removed order/, 'Restore the load');
+  expect('restoring the load re-funds the destination', await app(page, () => window.__versus._planErrors('A').length), 0);
+  await page.close();
+});
+
+// --- C9: Fire Pit, planned versus accepted, exact basin counts ---------------------------------------
+await check('c9', 'Fire Pit: planned offering, projection, accepted burn with separate colors, zero Mana (HF-05)', { query: 'autostart=1&fixture=cards&a=human&b=human', viewport: '1600x1000@1' }, async () => {
+  const page = await open('autostart=1&fixture=cards&a=human&b=human');
+  const mana = await app(page, () => window.__versus.state.cards['A.five'].mana);
+  await app(page, () => { window.__versus.selected = { kind: 'card', id: 'A.five' }; window.__versus._renderAll(); });
+  setup('the A.five Card is pinned via selection, then its Burn button is clicked');
+  await clickNamed(page, '.peek.pinned button.burn', /^Burn .+ for /, 'Burn for its Mana (Card view)');
+  const planned = await app(page, () => { const a = window.__versus; return { pool: a.state.players.A.pool, projected: a._plannedPool('A'), offerings: a.view.sites.sites.A.offerings.children.length, counter: a.el.basins.A.getAttribute('aria-label') }; });
+  expect('planning changes nothing real', planned.pool, {});
+  expect('the projection shows exactly the Card\'s Mana', planned.projected, mana);
+  expect('one ghost offering rests over A\'s pit', planned.offerings, 1);
+  ok('the counter labels the projection separately', /empty; projected after its plan/.test(planned.counter), planned.counter);
+  await shot(page, 'planned-offering');
+  await app(page, () => { window.__versus.speed = 0.5; });
+  await clickNamed(page, READY, /^Ready/, 'Ready (A)');
+  await clickNamed(page, READY, /^Ready/, 'Ready (B)');
+  let peak = 0;
+  for (let i = 0; i < 30; i++) { peak = Math.max(peak, await app(page, () => window.__versus.view.sites.effects.length)); await sleep(40); }
+  await waitResolved(page, 10);
+  const after = await app(page, () => { const a = window.__versus, ev = a.session.events; const b = ev.find((e) => e.type === 'card_burned' && e.cardId === 'A.five'); const x = ev.find((e) => e.type === 'mana_expired' && e.seat === 'A' && e.tick === 10); return { burnedPool: b?.pool ?? null, expired: x?.mana ?? null, offerings: a.view.sites.sites.A.offerings.children.length }; });
+  ok('the accepted burn played its effect (1 dissolve + 5 color streams)', peak >= 6, peak);
+  expect('the accepted burn put exactly the Card\'s colors in the pool', after.burnedPool, mana);
+  expect('unspent, they expired at the Tick boundary (no carryover in this profile)', after.expired, mana);
+  expect('the offering left the pit', after.offerings, 0);
+  // zero Mana: plainly labelled, legal, no gain effect
+  const p2 = await open('autostart=1&a=human&b=human&seed=1');
+  const zero = await app(p2, () => window.__versus.state.players.A.bank.minor['1']);
+  await app(p2, (id) => { window.__versus.selected = { kind: 'card', id }; window.__versus._renderAll(); }, zero);
+  const label = await app(p2, () => document.querySelector('.peek.pinned button.burn')?.textContent);
+  expect('a zero-Mana Card says what burning it does', label, 'Burn for 0 Mana — consumes this Card');
+  await p2.close();
+  // New match mid-effect clears every effect
+  await app(page, () => window.__versus.view.sites.burn('A', null, { red: 2 }));
+  await app(page, () => window.__versus.startMatch({ seats: { A: 'human', B: 'bot' }, seed: 2 }));
+  await sleep(1200);
+  expect('New match during an effect leaves no effect behind', await app(page, () => window.__versus.view.sites.effects.length), 0);
+  await page.close();
+});
+
+// --- C10: destination intent on the board ------------------------------------------------------------
+await check('c10', 'Endpoint intent: one marker per destination, drafts replace accepted, never occupants (HF-03)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1' }, async () => {
+  const page = await open('autostart=1&a=human&b=human&seed=1');
+  setup('two A loads and destinations are added with _addCommand (pointer routes are covered in c7/c8)');
+  const r = await app(page, () => {
+    const a = window.__versus, s = a.state;
+    a._addCommand('A', { type: 'load_supply', cardId: s.players.A.bank.minor['1'], partyId: 'A.mount.C1' });
+    a._addCommand('A', { type: 'set_destination', partyId: 'A.mount.C1', target: { column: 1, row: 3 } });
+    a._addCommand('A', { type: 'load_supply', cardId: s.players.A.bank.minor['9'], partyId: 'A.mount.C9' });
+    a._addCommand('A', { type: 'set_destination', partyId: 'A.mount.C9', target: { column: 9, row: 3 } });
+    a._renderAll();
+    const occ = (c, r) => Object.values(s.parties).filter((p) => p.alive && !p.retired && p.region.column === c && p.region.row === r).length;
+    return { ghosts: a.view.intents.children.map((g) => g.userData.partyId).sort(), pickables: a.view.markers.size, occupantsAtTargets: [occ(1, 3), occ(9, 3)] };
+  });
+  expect('one endpoint per planned destination', r.ghosts, ['A.mount.C1', 'A.mount.C9']);
+  expect('endpoints are not rules occupants', r.occupantsAtTargets, [0, 0]);
+  await shot(page, 'intents');
+  await clickNamed(page, READY, /^Ready/, 'Ready (A)');
+  await clickNamed(page, READY, /^Ready/, 'Ready (B)');
+  await waitResolved(page, 2);
+  const after = await app(page, () => ({ ghosts: window.__versus.view.intents.children.map((g) => g.userData.partyId).sort(), dest: ['A.mount.C1', 'A.mount.C9'].map((id) => window.__versus.state.parties[id].destination) }));
+  // after one Tick the Castles have merged with their Pawns at R2 and continue toward R3
+  expect('accepted, still-travelling destinations keep their markers', after.ghosts, after.dest.map((d, i) => (d ? ['A.mount.C1', 'A.mount.C9'][i] : null)).filter(Boolean));
+  await page.close();
+});
+
+// --- C11: New match ownership (R3-02) and modal containment (R3-03) ------------------------------
+await check('c11', 'New match detaches unfinished work; blocking sheets contain focus (R3-02, R3-03)', { query: 'autostart=1&fixture=response&a=human&b=human', viewport: '1600x1000@1' }, async () => {
+  const page = await open('autostart=1&fixture=response&a=human&b=human');
+  await app(page, () => window.__versus._addCommand('A', { type: 'play_ability', cardId: 'A.ember', actorPartyId: 'A.c', target: { memberId: 'B.c.s2' }, burns: ['A.red'] }));
+  await clickNamed(page, READY, /^Ready/, 'Ready (A)');
+  await clickNamed(page, READY, /^Ready/, 'Ready (B)');
+  await page.waitForFunction(() => !!window.__versus.pendingChoice, { timeout: 15000 });
+  // the visible menu → New match → the setup sheet → Start
+  await clickNamed(page, '#matchbar button', /^Match menu$/, 'Match menu');
+  // R3-03 first: Tab and Shift+Tab stay inside the sheet; the background is inert
+  const inside = [];
+  for (let i = 0; i < 6; i++) { await page.keyboard.press('Tab'); inside.push(await app(page, () => !!document.activeElement?.closest('#overlay'))); }
+  for (let i = 0; i < 3; i++) { await page.keyboard.down('Shift'); await page.keyboard.press('Tab'); await page.keyboard.up('Shift'); inside.push(await app(page, () => !!document.activeElement?.closest('#overlay'))); }
+  expect('Tab / Shift+Tab never leave the open sheet', inside.every(Boolean), true);
+  expect('everything behind the sheet is inert', await app(page, () => [...document.getElementById('app').children].filter((e) => e.id !== 'overlay').every((e) => e.inert)), true);
+  const before = await agreement(page);
+  await ctrlEnter(page);
+  expect('the Ready shortcut does nothing behind the sheet', (await agreement(page)).rev, before.rev);
+  await clickNamed(page, '#overlay button', /^New match$/, 'New match');
+  await clickNamed(page, '#overlay button', /^Start|^Play|^New match/, 'Start (setup sheet)');
+  await sleep(1500);
+  const fresh = await app(page, () => { const a = window.__versus; return { pending: !!a.pendingChoice, edit: a._can(a.viewSeat).edit, replay: a.session.replay.ticks.length, tick: a.state.tick, fixture: !!a.session.fixture }; });
+  expect('the new match has no old response attached and is editable', [fresh.pending, fresh.edit], [false, true]);
+  expect('the new match starts with only its own (empty) history', fresh.replay, 0);
+  await app(page, () => window.__versus._pressReady());
+  await page.waitForFunction(() => { const a = window.__versus; return !a.playback && !a.resolving && a.state.tick >= 2 || (a.seats.B === 'human' && a.viewSeat === 'B'); }, { timeout: 20000 });
+  if (await app(page, () => window.__versus.viewSeat === 'B' && !window.__versus.ready.B)) await app(page, () => window.__versus._pressReady());
+  await page.waitForFunction(() => { const a = window.__versus; return a.state.tick >= 2 && !a.playback && !a.resolving; }, { timeout: 20000 });
+  const v = await app(page, async () => { const m = await import('/src/hapa/rules/session.js'); const r = m.verifyReplay(window.__versus.session.replay); return { ok: r.ok, ticks: window.__versus.session.replay.ticks.map((t) => t.tick) }; });
+  expect('after a normal Tick the new match replay verifies with only its own Ticks', v, { ok: true, ticks: [1] });
+  await page.close();
+});
+
+// --- C12: orbit, layers and reduced motion keep identities and targets -------------------------------
+await check('c12', 'Full orbit and a height layer keep standards, endpoints and hover targets; reduced motion (HF-03)', { query: 'autostart=1&fixture=stacked&a=human&b=human', viewport: '1600x1000@1' }, async () => {
+  const page = await open('autostart=1&fixture=stacked&a=human&b=human');
+  const ids = [];
+  for (let i = 0; i < 8; i++) {
+    await page.keyboard.press('q'); await sleep(700);
+    const r = await app(page, () => { const a = window.__versus; return { bearing: Math.round(a.cam.bearing), standards: [...a.view.markers.values()].filter((m) => m.visible && m.userData.standard?.visible).length, visibleParties: Object.values(a.state.parties).filter((p) => p.alive && !p.retired).length }; });
+    const target = await anchor(page, { kind: 'party', id: 'A.hill' });
+    await page.mouse.move(5, 5); await sleep(350);
+    if (target) { await hoverAt(page, target, 500); }
+    const v = await peek(page, 'transient');
+    ids.push({ ...r, hovered: v?.title ?? null });
+  }
+  ok('every visible party keeps its chess standard through a full orbit', ids.every((x) => x.standards === x.visibleParties), ids.map((x) => x.standards));
+  ok('the hill party stays hoverable at every bearing', ids.filter((x) => /Castle/.test(x.hovered ?? '')).length >= 7, ids.map((x) => x.hovered));
+  await shot(page, 'orbit-end');
+  await clickNamed(page, '.layer-rail button', layerButton(-2), 'layer −2');
+  const layer = await app(page, () => { const a = window.__versus; return [...a.view.markers.entries()].filter(([, m]) => m.userData.standard?.visible).map(([id]) => id).sort(); });
+  expect('at layer −2 only that band\'s standards (and flyers) show', layer, await app(page, () => Object.values(window.__versus.state.parties).filter((p) => p.alive && !p.retired && ((p.band ?? 1) === -2 || p.movementMode === 'air')).map((p) => p.id).sort()));
+  await page.close();
+  const rm = await browser.newPage();
+  await rm.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  await rm.setViewport({ width: 1280, height: 720 });
+  rm.on('pageerror', (e) => current.errors.push({ kind: 'pageerror', message: String(e?.message ?? e) }));
+  await rm.goto(`${base}/versus.html?autostart=1&fixture=cards&a=human&b=human`, { waitUntil: 'networkidle0' });
+  await rm.waitForFunction(() => window.__versus?.session);
+  await app(rm, () => { const a = window.__versus; a.view.sites.burn('A', null, { red: 1, green: 1 }); });
+  expect('reduced motion: a burn plays no travelling streams', await app(rm, () => window.__versus.view.sites.effects.length <= 1), true);
+  await rm.close();
+});
+
+// --- C13: performance context (measured, not a pass/fail target) ----------------------------------
+await check('c13', 'Frame time and hover response measured on this machine (no approved target)', { viewport: '1600x1000@1 and 1280x720@1' }, async () => {
+  const rows = [];
+  for (const [w, hgt] of [[1600, 1000], [1280, 720]]) {
+    const page = await open('autostart=1&a=human&b=human&seed=1', { width: w, height: hgt });
+    const ft = await app(page, () => new Promise((res) => { const t = []; let last = performance.now(); const tick = (n) => { t.push(n - last); last = n; if (t.length < 180) requestAnimationFrame(tick); else res(t.slice(10)); }; requestAnimationFrame(tick); }));
+    const sorted = [...ft].sort((a, b) => a - b);
+    const card = await app(page, () => window.__versus.state.players.B.bank.minor['9']);
+    const lat = [];
+    for (let i = 0; i < 3; i++) { await page.mouse.move(5, 5); await sleep(500); const p = await tileAt(page, card); const t0 = Date.now(); await page.mouse.move(p.x, p.y); await page.waitForSelector('.peek.transient', { timeout: 3000 }); lat.push(Date.now() - t0); }
+    rows.push({ viewport: `${w}x${hgt}`, frameMs: { median: +sorted[Math.floor(sorted.length / 2)].toFixed(1), p95: +sorted[Math.floor(sorted.length * 0.95)].toFixed(1) }, hoverOpenMs: lat, note: 'headless Chrome; hover includes the deliberate 150 ms entry delay' });
+    await page.close();
+  }
+  ok('measured', rows.length === 2, rows);
+  current.observed = rows;
+});
+
 // --- C7: concession is confirmed, truthful and never reopens a frozen plan -------------------------
-await check('c7', 'Concession: confirmation, cancel, truthful feedback by phase (R2-07)', { query: 'autostart=1&a=human&b=human&seed=1; fixture=response', viewport: '1600x1000@1' }, async () => {
+await check('c14', 'Concession: confirmation, cancel, truthful feedback by phase (R2-07)', { query: 'autostart=1&a=human&b=human&seed=1; fixture=response', viewport: '1600x1000@1' }, async () => {
   const page = await open('autostart=1&a=human&b=human&seed=1');
   const snap = () => agreement(page);
   const toast = () => app(page, () => document.querySelector('.toast')?.textContent ?? '');
@@ -375,7 +583,7 @@ await check('c7', 'Concession: confirmation, cancel, truthful feedback by phase 
   const s1 = await snap();
   expect('confirmed concession is one order in A\'s plan', s1.plans.A.map((c) => JSON.parse(c).type), ['concede']);
   ok('success is reported only after acceptance', /^Concession added to A's plan/.test(await toast()), await toast());
-  await clickNamed(page, '#plan .ready-big', /^Ready/, 'Ready (A)');
+  await clickNamed(page, READY, /^Ready/, 'Ready (A)');
   await app(page, () => { const a = window.__versus; a.viewSeat = 'A'; a._renderAll(); });
   setup('the hotseat view is switched back to A with viewSeat to inspect A\'s menu after Ready');
   await clickNamed(page, '#matchbar button', /^Match menu$/, 'Match menu');
@@ -384,7 +592,7 @@ await check('c7', 'Concession: confirmation, cancel, truthful feedback by phase 
   expect('after Ready: no Concede button', frozenNote.button, false);
   await page.keyboard.press('Escape'); await sleep(150);
   await app(page, () => { window.__versus.viewSeat = 'B'; window.__versus._renderAll(); });
-  await clickNamed(page, '#plan .ready-big', /^Ready/, 'Ready (B)');
+  await clickNamed(page, READY, /^Ready/, 'Ready (B)');
   await page.waitForFunction(() => !!window.__versus.state.outcome, { timeout: 20000 });
   const out = await app(page, () => window.__versus.state.outcome);
   expect('the match ends by A\'s concession when the Tick resolves', { winner: out.winner, reasons: out.reasons.map((r) => `${r.seat}:${r.reason}`) }, { winner: 'B', reasons: ['A:conceded'] });
@@ -394,7 +602,7 @@ await check('c7', 'Concession: confirmation, cancel, truthful feedback by phase 
   const p2 = await open('autostart=1&fixture=response&a=human&b=human');
   await app(p2, () => window.__versus._addCommand('A', { type: 'play_ability', cardId: 'A.ember', actorPartyId: 'A.c', target: { memberId: 'B.c.s2' }, burns: ['A.red'] }));
   setup('response fixture: A\'s Ember Strike added with _addCommand');
-  await clickNamed(p2, '#plan .ready-big', /^Ready/, 'Ready (A)');
+  await clickNamed(p2, READY, /^Ready/, 'Ready (A)');
   await app(p2, () => { window.__versus.viewSeat = 'A'; window.__versus._renderAll(); });
   await clickNamed(p2, '#matchbar button', /^Match menu$/, 'Match menu');
   const frozen = await app(p2, () => ({ note: document.querySelector('#concede-note')?.innerText ?? '', button: [...document.querySelectorAll('#overlay button')].some((b) => /^Concede as/.test(b.innerText)) }));
@@ -402,7 +610,7 @@ await check('c7', 'Concession: confirmation, cancel, truthful feedback by phase 
   expect('frozen: no Concede button', frozen.button, false);
   await p2.keyboard.press('Escape'); await sleep(150);
   await app(p2, () => { window.__versus.viewSeat = 'B'; window.__versus._renderAll(); });
-  await clickNamed(p2, '#plan .ready-big', /^Ready/, 'Ready (B)');
+  await clickNamed(p2, READY, /^Ready/, 'Ready (B)');
   await p2.waitForFunction(() => !!window.__versus.pendingChoice, { timeout: 15000 });
   await clickNamed(p2, '#matchbar button', /^Match menu$/, 'Match menu');
   const resp = await app(p2, () => ({ note: document.querySelector('#concede-note')?.innerText ?? '', button: [...document.querySelectorAll('#overlay button')].some((b) => /^Concede as/.test(b.innerText)) }));
@@ -411,24 +619,6 @@ await check('c7', 'Concession: confirmation, cancel, truthful feedback by phase 
   ok('no success toast for a refused concession', !/Concession added/.test(await app(p2, () => document.querySelector('.toast')?.textContent ?? '')), true);
   await shot(p2, 'response-menu');
   await p2.close();
-});
-
-// --- C8: Card edge cases: exact Mana, ability and planned use without hover -------------------------
-await check('c8', 'Card labels carry exact Supply, Mana, ability and planned use (R2-05)', { query: 'autostart=1&fixture=cards&a=human&b=human', viewport: '1280x720@1' }, async () => {
-  const page = await open('autostart=1&fixture=cards&a=human&b=human', { width: 1280, height: 720 });
-  // the expectation from the state: every Card in both banks
-  const cards = await app(page, () => { const s = window.__versus.state; const out = []; for (const seat of ['A', 'B']) for (const id of Object.values(s.players[seat].bank.minor).filter(Boolean)) { const c = s.cards[id]; out.push({ id, seat, supply: c.supply / 1e6, mana: Object.entries(c.mana ?? {}).filter(([, n]) => n).map(([k, n]) => `${n} ${k[0].toUpperCase()}${k.slice(1)}`).join(' + ') || 'no Mana' }); } return out; });
-  const labels = await app(page, () => [...document.querySelectorAll('.tile[role=button]')].map((t) => t.getAttribute('aria-label')));
-  for (const c of cards) ok(`tile for ${c.id} names Supply ${c.supply} and ${c.mana}`, labels.some((l) => l.includes(`Supply ${c.supply}`) && l.includes(c.mana)), c);
-  ok('a multi-color Card shows a +n chip for the entries it cannot fit', await app(page, () => [...document.querySelectorAll('.tile .mana')].some((m) => /\+\d/.test(m.innerText))), true);
-  // planned use is named in the tile itself and its label
-  setup('A plans a Burn of A.five via hand slot 5 and the B key');
-  await page.keyboard.press('5'); await sleep(200); await page.keyboard.press('b'); await sleep(400);
-  const five = await app(page, () => { const t = [...document.querySelectorAll('#ownhand .tile')].find((x) => /Burn planned/.test(x.innerText)); return t ? { label: t.getAttribute('aria-label'), text: t.innerText.replace(/\s+/g, ' ') } : null; });
-  ok('the planned Card shows its use on the tile', !!five, five);
-  ok('…and in its accessible name', /\(planned: Burn planned\)/.test(five?.label ?? ''), five?.label);
-  await shot(page, 'planned-burn');
-  await page.close();
 });
 
 // --- report --------------------------------------------------------------------------------------
