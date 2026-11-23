@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux08b,ux09,ux10,ux14rm,ux06,ux14kb,hv41').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07,ux08,ux08b,ux09,ux10,ux14rm,ux06,ux14kb,hv41,ux12').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -475,6 +475,45 @@ if (want.has('hv41')) {
   j.shots.push(await shot(page, 'hv41-2-revision-compare-batch'));
   j.errors = errors;
   report.journeys.hv41 = j;
+  await page.close();
+}
+
+// --- UX-12: one mixed party through a full orbit — gear sides, facing, footprint ------------------
+if (want.has('ux12')) {
+  const page = await open('autostart=1&fixture=corner&a=human&b=human');
+  const j = { frames: [] };
+  await page.evaluate(() => { const a = window.__versus, P = a.state.parties['A.mid']; a.selected = { kind: 'party', id: 'A.mid' }; a._renderAll(); a.cam.focusOn(a.view.toWorld(P.x, P.y).setY(0.4)); a.cam.goal.distance = a.view.size * 0.24; a.cam.goal.pitch = 40 * Math.PI / 180; });
+  await sleep(1500);
+  const clip = await page.evaluate(() => { const r = document.getElementById('world').getBoundingClientRect(); return { x: r.x + r.width * 0.22, y: r.y + r.height * 0.12, width: r.width * 0.56, height: r.height * 0.76 }; });
+  for (let i = 0; i < 8; i++) {
+    // for each Swordsman: is the shield on the member's world left and the sword on its right, as seen on screen?
+    const m = await page.evaluate(() => {
+      const a = window.__versus, cam = a.engine.camera, r = a.engine.renderer.domElement.getBoundingClientRect();
+      const scr = (v) => { const p = v.clone().project(cam); return (p.x + 1) / 2 * r.width; };
+      const out = [];
+      for (const id of ['A.mid.s1', 'A.mid.s2', 'A.mid.s3']) {
+        const spr = a.view.sprites.get(id), g = spr.userData.gear;
+        if (!g?.shield || !g?.sword) continue;
+        const ws = new (cam.position.constructor)(), wb = new (cam.position.constructor)(), wl = new (cam.position.constructor)();
+        g.shield.getWorldPosition(ws); g.sword.getWorldPosition(wb);
+        const P = a.state.parties['A.mid'], F = { N: [0, 1], S: [0, -1], E: [1, 0], W: [-1, 0] }[P.facing]; // rules y up = world -z
+        // the member's own left in world terms: rotate front (fx, fy) by +90° → (-fy, fx); world (x, -y)
+        wl.copy(spr.position).add({ x: -F[1] * 1.0, y: 0, z: -F[0] * 1.0 });
+        const leftOnScreen = scr(wl) - scr(spr.position.clone());
+        // seen edge-on (the member's left/right axis points at the camera) the screen test is undefined
+        const wf = spr.position.clone().add({ x: F[0] * 1.0, y: 0, z: -F[1] * 1.0 }); const frontOnScreen = scr(wf) - scr(spr.position.clone());
+        if (Math.abs(leftOnScreen) < Math.abs(frontOnScreen)) { out.push({ id, shieldSide: 'edge-on', swordSide: 'edge-on' }); continue; }
+        out.push({ id, shieldSide: Math.sign(scr(ws) - scr(spr.position.clone())) === Math.sign(leftOnScreen) ? 'left' : 'right', swordSide: Math.sign(scr(wb) - scr(spr.position.clone())) === Math.sign(leftOnScreen) ? 'left' : 'right' });
+      }
+      return { yawDeg: Math.round(a.cam.yaw * 180 / Math.PI) % 360, members: out };
+    });
+    m.shot = `${label}-ux12-orbit-${i * 45}.png`;
+    await page.mouse.move(4, 4); await page.screenshot({ path: path.join(out, m.shot), clip });
+    j.frames.push(m);
+    await page.evaluate(() => window.__versus.cam.rotate(45)); await sleep(1200);
+  }
+  j.errors = page.errors;
+  report.journeys.ux12 = j;
   await page.close();
 }
 
