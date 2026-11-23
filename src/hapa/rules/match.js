@@ -377,6 +377,9 @@ export function orderActions(tick, plans) {
  */
 export function* resolveTick(state, ctx, plans) {
   const events = [];
+  // presentation only (like ctx.trace): observe the state after each event to inspect playback
+  // moments (review 06, R6-03); never read by the rules, absent in bots, replays and peers
+  if (ctx.observeEvents) Object.defineProperty(events, 'observe', { value: ctx.observeEvents, enumerable: false });
   if (state.outcome) return events;
   state.phase = 'resolving';
   emit(state, events, 'plans_locked', { plans: { A: plans.A ?? [], B: plans.B ?? [] } });

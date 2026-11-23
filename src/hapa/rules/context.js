@@ -19,11 +19,16 @@ export function createContext(manifest) {
   };
 }
 
-/** Append an identified event. */
+/**
+ * Append an identified event. An `observe` callback on the events array (set only by a
+ * presentation that records playback moments, see `resolveTick`) sees the state right after each
+ * event; it must not mutate state, and rules never read what it records.
+ */
 export function emit(state, events, type, data = {}) {
   state.eventSeq += 1;
   const e = { id: `${state.matchId}:${state.eventSeq}`, seq: state.eventSeq, tick: state.tick, phase: state.phase, type, ...data };
   events.push(e);
+  events.observe?.(state, e);
   return e;
 }
 

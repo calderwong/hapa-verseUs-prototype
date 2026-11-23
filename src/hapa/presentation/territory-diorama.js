@@ -10,8 +10,13 @@
  *     a broken pillar with a fallen drum and a torn banner — at another depth, for real parallax;
  *   - on raised ground, a rock outcrop on the slope; around running work, rising dust.
  * Everything here is decoration: never pickable, no collision, cover, resource or visibility
- * rule; it hides when a cutaway shows a lower band, keeps still under reduced motion, and is
- * disposed on change or New match. Textures and geometry are painted here (no external media).
+ * rule. Each territory's dressing follows the terrain view's cutaway policy by its own surface
+ * height: a cutaway below a territory's surface (a +3 hill viewed at +1, any surface viewed at a
+ * lower band) hides that territory's dressing, as the terrain there turns see-through (review 06,
+ * R6-05). It is rebuilt whenever the open/solid content of the neighbourhood changes — not only
+ * its entry count — so an excavated or refilled cube is never covered by a stale floor. It keeps
+ * still under reduced motion and is disposed on change or New match. Textures and geometry are
+ * painted here (no external media).
  */
 import * as THREE from 'three';
 import { brushRng } from './palette.js';
@@ -103,7 +108,7 @@ export class TerritoryDiorama {
    */
   sync(state, at, o = {}) {
     const work = (o.runningWork ?? []).map((t) => `${t.target.x},${t.target.y},${t.target.band}`).join(';');
-    const key = at ? `${at.column},${at.row}|${JSON.stringify(state.terrain.hills ?? {})}|${Object.keys(state.terrain.cells ?? {}).length}|${work}` : null;
+    const key = at ? `${at.column},${at.row}|${this.terrainSignature(state, at)}|${work}` : null;
     if (key === this.key) return;
     this.clear();
     this.key = key;
@@ -118,13 +123,31 @@ export class TerritoryDiorama {
     for (const t of o.runningWork ?? []) this._dust(t);
   }
 
-  _mat(m) { m.transparent = true; m.opacity = this.opacity; this.mats.push(m); return m; }
+  /**
+   * What the dressing depends on in the 3×3 neighbourhood: each territory's surface band and the
+   * open/solid state of its nine surface squares (R6-05). Bounded: 81 lookups, no full scan.
+   */
+  terrainSignature(state, at) {
+    const { geo, U } = this.ctx, out = [];
+    for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) {
+      const column = at.column + dc, row = at.row + dr;
+      if (column < 1 || row < 1 || column > geo.columns || row > geo.rows) continue;
+      const c = geo.center(column, row), cx = Math.round(c.x / U), cy = Math.round(c.y / U);
+      let mask = '';
+      for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) mask += solidAt(state.terrain, cx - 1 + i, cy + 1 - j, -1) ? '1' : '0';
+      out.push(`${surfaceBand(state.terrain, column, row)}:${mask}`);
+    }
+    return out.join(',');
+  }
+
+  _mat(m) { m.transparent = true; m.opacity = this.opacity; m.userData.surface = this._surface ?? 1; this.mats.push(m); return m; }
 
   _territory(state, column, row, main) {
     const S = this.S, U = this.ctx.U;
     const c = this.ctx.geo.center(column, row), w = this.toWorld(c.x, c.y);
     const cx = Math.round(c.x / U), cy = Math.round(c.y / U);
     const band = surfaceBand(state.terrain, column, row);
+    this._surface = band;
     const top = this.bandY(band);
     const rng = brushRng(column * 97 + row * 13 + 5);
     const open = [];
@@ -216,6 +239,7 @@ export class TerritoryDiorama {
   /** Dust over running work (only around the inspected area; a few drifting motes). */
   _dust(t) {
     const S = this.S, U = this.ctx.U;
+    this._surface = t.target.band;
     const w = this.toWorld(t.target.x * U, t.target.y * U);
     for (let i = 0; i < 7; i++) {
       const sp = new THREE.Sprite(this._mat(new THREE.SpriteMaterial({ color: 0xd9c9a4, depthWrite: false })));
@@ -234,11 +258,15 @@ export class TerritoryDiorama {
    */
   update(dt, amount, cutaway) {
     this.time += dt;
-    const target = cutaway !== null && cutaway < 1 ? 0 : amount;
+    const target = amount;
     this.opacity += (target - this.opacity) * Math.min(1, dt * 6);
     if (Math.abs(this.opacity - target) < 0.01) this.opacity = target;
-    this.group.visible = this.opacity > 0.01;
-    for (const m of this.mats ?? []) m.opacity = this.opacity * (m.userData.max ?? 1);
+    this.cutaway = cutaway;
+    // a cutaway below a territory's surface hides that territory's dressing (its ground is cut away)
+    const shown = (m) => cutaway === null || cutaway >= (m.userData.surface ?? 1);
+    let any = false;
+    for (const m of this.mats ?? []) { const v = shown(m); m.opacity = v ? this.opacity * (m.userData.max ?? 1) : 0; m.visible = v; any ||= v; }
+    this.group.visible = this.opacity > 0.01 && any;
     if (reduced()) return;
     for (const g of this.sway) g.rotation.z = Math.sin(this.time * 1.6 + g.userData.phase) * 0.06;
     for (const d of this.dust) { const k = (this.time * 0.6 + d.userData.phase) % 1; d.position.y = d.userData.base.y + k * 0.9; d.material.opacity = this.opacity * 0.55 * (1 - k); }

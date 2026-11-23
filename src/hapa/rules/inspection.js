@@ -10,6 +10,9 @@
  *     hit would reach, labelled as such;
  *   - consequential conditions and the party's collective facts (Mount, Supply held, facing,
  *     destination, band, shared pool) once, not per member.
+ *   - one displayed moment (review 06, R6-03): during playback every fact is read from the state
+ *     recorded right after the last event shown (`momentSlice` / `stateAt`), so a ward, a
+ *     headcount, a pool and a body never come from different moments.
  * Values stay in fixed point (ctx.U); presentation formats them. No DOM, no wall clock.
  */
 import { individualProtection, lineProtection, rangedShot, faceFrom } from './combat.js';
@@ -63,6 +66,39 @@ export function memberFacts(state, ctx, id, at = null) {
   };
 }
 
+/**
+ * Line-defense preview (line profiles; review 06, R6-04): the applied value of a hit that reaches
+ * one edge of the formation — by default the front row (slots 1–3), the line a frontal contact
+ * reaches — from the rules' own `lineProtection`. A member's own value is only its contribution.
+ * @returns {{ face: string, slots: number[], members: string[], total: number, sources: any[] } | null}
+ */
+export function linePreview(state, ctx, partyId, channel, face = 'front') {
+  const p = state.parties[partyId];
+  if (!p) return null;
+  const slots = face === 'front' ? [1, 2, 3] : face === 'rear' ? [7, 8, 9] : null;
+  const members = slots ? slots.map((n) => state.members[p.slots[String(n)]]).filter((m) => m?.alive) : livingMembers(state, p);
+  if (!members.length) return null;
+  const r = lineProtection(state, ctx, p, members, channel, face);
+  return { face, slots: slots ?? [], members: members.map((m) => m.id), total: r.total, sources: r.sources };
+}
+
+/**
+ * The enemy parties a member's ranged attack could actually reach, in the rules' own order
+ * (active engagements of its party, nearest first, within the shot's range and not blocked),
+ * each with its preview. Ranged volleys only go to engaged parties; none means no preview target.
+ */
+export function rangedTargets(state, ctx, memberId, attackId) {
+  const m = state.members[memberId], P = state.parties[m?.party];
+  const atk = (ctx.catalog.archetypes[m?.archetype]?.attacks ?? []).find((a) => a.id === attackId);
+  if (!m || !P || !atk || atk.kind !== 'ranged') return [];
+  const pitch = ctx.geo.pitch;
+  return Object.values(state.engagements ?? {}).filter((E) => E.active && (E.a === P.id || E.b === P.id))
+    .map((E) => state.parties[E.a === P.id ? E.b : E.a]).filter((q) => q?.alive)
+    .map((q) => ({ q, d: Math.max(Math.abs(q.x - P.x), Math.abs(q.y - P.y)) }))
+    .sort((a, b) => a.d - b.d || (a.q.id < b.q.id ? -1 : 1))
+    .map(({ q, d }) => ({ ...rangedPreview(state, ctx, memberId, attackId, q.id), distance: d, inRange: d <= rangedShot(state, ctx, m, P, atk, q).range * pitch }));
+}
+
 /** The shared line value of a party against a hit reaching all its living members (line profiles). */
 export function partyLineProtection(state, ctx, partyId, channel, face) {
   const p = state.parties[partyId];
@@ -97,8 +133,27 @@ export function rangedPreview(state, ctx, memberId, attackId, enemyPartyId) {
   return { ...shot, basePower: atk.power, baseRange: atk.range ?? ctx.profile.combat.ranged.baseRange, face, target: enemyPartyId, preview: true };
 }
 
+/** The parts of the state inspection reads, copied (for one recorded playback moment). */
+export function momentSlice(state) {
+  return structuredClone({ members: state.members, parties: state.parties, effects: state.effects, engagements: state.engagements, terrain: state.terrain, tasks: state.tasks, items: state.items });
+}
+
 /**
- * Presentation-time health during playback (R5-04): the state before resolution plus only the
+ * The state as of the last event shown (review 06, R6-03): `moments[n - 1]` is the slice
+ * recorded right after event n; nothing shown is the state before the Tick; everything shown is
+ * the accepted state. A read model only — the authoritative state is never changed.
+ * @param {any} before state before the Tick @param {any[]} moments one slice per event
+ * @param {number} shown events displayed so far @param {any} final the accepted state
+ */
+export function stateAt(before, moments, shown, final) {
+  if (shown <= 0 || !moments?.length) return shown > 0 && final ? final : before;
+  if (shown >= moments.length) return final ?? { ...before, ...moments.at(-1) };
+  return { ...before, ...moments[shown - 1] };
+}
+
+/**
+ * Presentation-time health during playback (R5-04; superseded for display by `stateAt`, which
+ * also carries wards, membership and pools): the state before resolution plus only the
  * damage and deaths of events already shown. Keyed by member id.
  */
 export function healthAt(before, events, shownCount) {
