@@ -29,6 +29,19 @@ export const UI_FIXTURES = {
       return fx;
     },
   },
+  ward: {
+    title: 'Ward provider falls at contact',
+    description: 'Review 06 case (default profile v3_02): A\'s Queen with a Swordsman reaches B\'s Castle in Tick 5; B\'s front Mage dies at first contact, ending the ward on B\'s Archer. Inspect B and watch the playback.',
+    build() {
+      const fx = scenario({ matchId: 'fixture-ward', profileId: 'hapa_open_10x9_v3_02', parties: [
+        { id: 'A.p', owner: 'A', mount: 'queen', column: 5, row: 5, slots: { 5: 'center', 2: 'swordsman' }, supply: 1 },
+        { id: 'B.p', owner: 'B', mount: 'castle', column: 5, row: 6, slots: { 5: 'center', 2: 'mage', 8: 'archer' }, supply: 1 },
+      ] });
+      fx.state.tick = 4; fx.state.phase = 'resolved';
+      setDestination(fx.state, fx.ctx, [], fx.state.parties['A.p'], { column: 5, row: 6 }, { command: 'fixture' });
+      return fx;
+    },
+  },
   contact_turn: {
     title: 'Turning in contact',
     description: 'A\'s Castle is about to be engaged from the north. A turn to face E keeps its touching Swordsman in contact (legal); a turn to W would pull it out (refused, old formation kept).',
@@ -185,6 +198,28 @@ UI_FIXTURES.dig = {
     s.terrain.kind = 'volume';
     placeDeposit(s, 'deposit.A.C1.R3', 3, 10, -3);
     s.tick = 8; s.phase = 'resolved';
+    return fx;
+  },
+};
+
+/**
+ * Surface dig over an existing filled cube (review 06, R6-05): A's worker stands in an open
+ * surface square (band −1) of R5C5; the square east of it already has a recorded solid entry (a
+ * prior fill), so digging it changes an existing entry without changing the entry count. Dig, fill
+ * and dig again; the territory environment and the terrain must change at each accepted event.
+ */
+UI_FIXTURES.surface_dig = {
+  title: 'Surface dig over a filled cube',
+  description: 'A\'s worker is in an open surface square of R5C5 (band −1); the square east of it is a recorded filled cube. Dig it, fill it, dig it again with Work while inspecting the territory.',
+  build() {
+    const fx = scenario({ matchId: 'fixture-surface-dig', profileId: 'hapa_open_10x9_v3_02', parties: [{ id: 'A.worker', owner: 'A', mount: 'castle', column: 5, row: 5, slots: { 5: 'center' } }] });
+    const s = fx.state, P = s.parties['A.worker'], m = s.members['A.worker.s5'];
+    P.band = -1; m.band = -1;
+    const cx = Math.round(P.x / U), cy = Math.round(P.y / U);
+    s.terrain.kind = 'volume';
+    s.terrain.cells[cellKey(cx, cy, -1)] = { solid: false, material: 'earth' };
+    s.terrain.cells[cellKey(cx + 1, cy, -1)] = { solid: true, material: 'earth' };
+    s.tick = 4; s.phase = 'resolved';
     return fx;
   },
 };

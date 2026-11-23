@@ -8,7 +8,9 @@
  *
  *   node tools/hapa/ui-regress.mjs [--base http://127.0.0.1:5199] [--only c1,c3] [--sabotage]
  *   (contract 2: the board-first interface of addendum 01 / response 05; contract 3: z-checks for
- *    addendum 02 / response 06 — select to command, approach to inspect, one territory environment)
+ *    addendum 02 / response 06 — select to command, approach to inspect, one territory environment;
+ *    contract 4: z08–z11 for review 06 / response 07 — one displayed moment, intent across controls,
+ *    unobstructed reading at real text sizes, terrain content and cutaway truth)
  *        [--out-root docs/reviews/evidence/2026-11-22/regress] [--run <id>] [--source-dir <checkout>]
  *
  * --source-dir names the checkout the server is serving when it is not this one (a baseline
@@ -16,7 +18,9 @@
  *
  * Each run writes to a new directory <out-root>/<run id> (default: UTC time + source commit, with
  * "-dirty" for an uncommitted tree) and refuses to reuse an existing one, so evidence is never
- * overwritten. --sabotage swaps two expectations for wrong values to show the checks can fail.
+ * overwritten. --sabotage swaps two expectations for wrong values (c1, c3) and reinstates two
+ * review 06 defects in the page (z10: final-state playback facts; z11: count-keyed scenery) to
+ * show the checks can fail.
  *
  * Drives the dev server (127.0.0.1 only) in headless Chrome with real pointer and keyboard input.
  * A few setup steps call the app's own methods (named as setup in the report); assertions never
@@ -72,7 +76,7 @@ const manifest = {
   runId, startedAt: new Date().toISOString(), tool: 'tools/hapa/ui-regress.mjs', base, source, engine,
   browser: await browser.version(), os: `${os.type()} ${os.release()} ${os.arch()}`, node: process.version,
   sabotage, allowedResourceErrors: ALLOWED.map((a) => ({ pattern: String(a.pattern), reason: a.reason })),
-  conventions: 'Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio; the HUD uses px type, so it has no separate text-size setting. Camera: the default fitted Home view unless a check says otherwise.',
+  conventions: 'Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio. Text size (contract 4): the browser default font size is set through CDP Page.setFontSizes (16 px = 100%, 24 = 150%, 32 = 200%); inspection text, the command and inspection bars use rem and follow it, other HUD parts still use px. Camera: the default fitted Home view unless a check says otherwise.',
   checks: [],
 };
 
@@ -158,7 +162,7 @@ const tileAt = (page, cardId) => app(page, (id) => { const a = window.__versus; 
 // --- C1: Ready freezes the own plan; an opponent revision is reviewed and acknowledged ----------
 await check('c1', 'Ready freezes the own plan through an opponent revision (UX-01)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1', seat: 'A then B (hotseat)', profile: 'hapa_open_10x9_v3_02' }, async () => {
   const page = await open('autostart=1&a=human&b=human&seed=1');
-  await pinVia(page, /^Your Castle at R1C1/, 'navigator row for your C1 Castle');
+  await pinVia(page, /^Select Your Castle at R1C1/, 'navigator row for your C1 Castle');
   await clickNamed(page, '.cmdbar summary', /^Supply ▾/, 'Supply menu (command bar)');
   await clickNamed(page, '.cmdbar button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply from the C1 card (command bar)');
   const before = await agreement(page);
@@ -230,11 +234,13 @@ await check('c3', 'Selection follows the visible height (UX-03)', { query: 'auto
     await clickNamed(page, '.layer-rail button', layerButton(band), `layer ${band ?? 'All'}`);
     await page.keyboard.press('Escape'); await page.keyboard.press('Escape'); await sleep(150);
     await clickAt(page, await screenOf(page, memberId, lift));
-    return app(page, () => window.__versus.selected?.id ?? null);
+    // contract 4 (R6-02): an own party becomes the command selection; another party is read (its
+    // public summary pinned) without replacing the selection — either way, the clicked identity
+    return app(page, () => { const a = window.__versus; return a.pinned?.kind === 'hint' ? a.pinned.id : a.selected?.id ?? null; });
   };
-  expect('layer −2: clicking the tunnel party selects it', await pickAt(-2, 'B.tunnel.s5'), sabotage ? 'A.fly' : 'B.tunnel', sabotage ? 'SABOTAGE: deliberately wrong expected target' : undefined);
+  expect('layer −2: clicking the tunnel party picks it (B\'s: read, not commanded)', await pickAt(-2, 'B.tunnel.s5'), sabotage ? 'A.fly' : 'B.tunnel', sabotage ? 'SABOTAGE: deliberately wrong expected target' : undefined);
   await shot(page, 'layer-minus2-tunnel');
-  expect('layer +3: clicking the flyer selects it', await pickAt(3, 'A.fly.s5'), 'A.fly');
+  expect('layer +3: clicking the flyer picks it', await pickAt(3, 'A.fly.s5'), 'A.fly');
   const hidden = await pickAt(3, 'B.tunnel.s5', 0);
   ok('layer +3: the hidden tunnel party never wins a click', hidden !== 'B.tunnel', hidden);
   await page.close();
@@ -343,7 +349,7 @@ await check('c7', 'Opening by keyboard alone through the navigator and pinned vi
   const log = [];
   const step = async (name, re, max) => { const f = await tabTo(page, re, max); ok(`reach by Tab: ${name}`, !!f, f); if (f) { ok(`focus is visible on ${name}`, f.visible, f); log.push({ name, tabs: f.tabs }); } return !!f; };
   if (await step('Parties & Cards', /^☰ Parties & Cards$/, 40)) { await page.keyboard.press('Enter'); await sleep(300); }
-  if (await step('navigator: your C1 Castle', /^Your Castle at R1C1/, 40)) { await page.keyboard.press('Enter'); await sleep(500); }
+  if (await step('navigator: your C1 Castle', /^Select Your Castle at R1C1/, 40)) { await page.keyboard.press('Enter'); await sleep(500); }
   expect('1 · the C1 Castle is selected for commands (no party document pinned)', await app(page, () => [window.__versus.selected?.id, !!document.querySelector('.peek.pinned')]), ['A.mount.C1', false]);
   ok('1 · focus moved into the command bar', await app(page, () => !!document.activeElement?.closest('.cmdbar')), await focused(page));
   if (await step('Supply menu', /^Supply ▾/, 20)) { await page.keyboard.press('Enter'); await sleep(300); }
@@ -370,7 +376,7 @@ await check('c7', 'Opening by keyboard alone through the navigator and pinned vi
 // --- C8: funded destinations in the interface ---------------------------------------------------------
 await check('c8', 'Funded destinations: range, refusal with shortfall, invalidated funding blocks Ready (HF-04)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1', profile: 'hapa_open_10x9_v3_02' }, async () => {
   const page = await open('autostart=1&a=human&b=human&seed=1');
-  await pinVia(page, /^Your Castle at R1C1/, 'navigator: C1 Castle');
+  await pinVia(page, /^Select Your Castle at R1C1/, 'navigator: C1 Castle');
   const list0 = await app(page, () => document.querySelector('.cmdbar .cmd-why')?.textContent ?? '');
   ok('with 0 Supply the bar says no route is funded', /No Supply for any route/.test(list0), list0);
   await clickNamed(page, '.cmdbar summary', /^Supply ▾/, 'Supply menu');
@@ -624,9 +630,12 @@ await check('z03', 'Approach to inspect: zoom over an enemy keeps the own select
   const archer = await app(p2, () => Object.values(window.__versus.state.parties['A.mount.C1'].slots).find((id) => id && window.__versus.state.members[id].archetype === 'archer'));
   const sp = await app(p2, (id) => { const a = window.__versus, v = a.view.sprites.get(id).position.clone(); v.y += 0.5; const q = v.project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); return { x: r.left + (q.x + 1) / 2 * r.width, y: r.top + (1 - q.y) / 2 * r.height }; }, archer);
   await hoverAt(p2, sp, 500);
-  const exp = await app(p2, () => [...document.querySelectorAll('.mlabel.expanded:not([hidden])')].map((e) => e.innerText.replace(/\s+/g, ' ')));
-  ok('one hovered member expands with its attack and a labelled preview', exp.length === 1 && /Bow: 2 × 1 Physical, base range 2/.test(exp[0]) && /not a result/.test(exp[0]), exp);
-  ok('…and the Mage ward shows as applied Magic protection with its source', /Magic 1 = 1 .*ward/i.test(exp[0] ?? ''), exp[0]);
+  // contract 4 (review 06, R6-01/R6-04): the label is only highlighted; the explanation is in the
+  // reading panel beside the formation, and without an engaged party no target is implied
+  const exp = await app(p2, () => ({ highlighted: document.querySelectorAll('.mlabel.expanded:not([hidden])').length, reading: document.querySelector('.mreading:not([hidden])')?.innerText.replace(/\s+/g, ' ') ?? '' }));
+  ok('one hovered member is highlighted and its explanation opens in the reading panel', exp.highlighted === 1 && /Bow: 2 × 1 Physical, base range 2/.test(exp.reading), exp);
+  ok('…with no engaged party, no ranged target is implied', /No engaged target/.test(exp.reading) && !/Preview vs/.test(exp.reading), exp.reading);
+  ok('…and the Mage ward is one grouped row with its source', /Magic protection 1 on all six faces: 1 from the party Mage \(ward\)/.test(exp.reading), exp.reading);
   await shot(p2, 'expanded-member');
   // labels are passive: a wheel over a label still zooms the camera
   const d0 = await app(p2, () => window.__versus.cam.goal.distance);
@@ -688,7 +697,7 @@ await check('z07', 'Territory environment: world-stable through a full orbit, no
   // a genuine pit keeps its opening; a roofed tunnel is not x-rayed; a cutaway hides the dressing
   await app(page, () => { const a = window.__versus; a.selected = { kind: 'party', id: 'B.tunnel' }; a._renderAll(); a._focusInspect('B.tunnel'); });
   await settle(2000);
-  const tunnel = await app(page, () => ({ labels: document.querySelectorAll('.mlabel:not([hidden])').length, note: document.querySelector('.mparty')?.innerText ?? '' }));
+  const tunnel = await app(page, () => ({ labels: document.querySelectorAll('.mlabel:not([hidden])').length, note: `${document.querySelector('.mparty')?.innerText ?? ''} ${document.querySelector('.inspect-bar:not([hidden])')?.innerText ?? ''}` }));
   expect('a roofed tunnel party shows no member labels at ordinary close zoom', tunnel.labels, 0);
   ok('…and says how to read it (open its layer)', /Roofed tunnel/.test(tunnel.note), tunnel.note);
   await clickNamed(page, '.layer-rail button', layerButton(-2), 'layer −2');
@@ -716,6 +725,315 @@ await check('z07', 'Territory environment: world-stable through a full orbit, no
   setup('dig fixture: the begin_work order is added with _addCommand (the Work menu is the same command)');
   expect('a planned dig is drawn but the cube stays solid', [dig.planned > 0, dig.solidPlanned], [true, true]);
   expect('the accepted dig empties the cube (terrain_changed)', [dig.solidDone, dig.changed], [false, true]);
+  await p2.close();
+});
+
+// ================================================================================================
+// Contract 4 (review 06 / assignment 07): one displayed moment, consistent intent across controls,
+// explanations that never cover the formation, terrain content that updates the scenery. Geometry
+// is measured from the rendered DOM and independently projected bodies, never from the layout the
+// code under test computed.
+// ================================================================================================
+/** Independent geometry of the inspected party: DOM rects and projected bodies, client coordinates. */
+const geometry = (page) => app(page, () => {
+  const a = window.__versus, sub = a.inspectParty?.partyId;
+  if (!sub) return null;
+  const cam = a.engine.camera, r = a.engine.renderer.domElement.getBoundingClientRect(), world = a.el.world.getBoundingClientRect();
+  const proj = (v) => { const q = v.clone().project(cam); return { x: r.left + (q.x + 1) / 2 * r.width, y: r.top + (1 - q.y) / 2 * r.height }; };
+  const right = cam.position.clone().setY(0); right.set(cam.matrixWorld.elements[0], 0, cam.matrixWorld.elements[2]).normalize();
+  const bodies = [];
+  for (const id of Object.values(a.state.parties[sub].slots).filter(Boolean)) {
+    const sp = a.view.sprites.get(id);
+    if (!sp?.visible) continue;
+    const foot = proj(sp.position), head = proj(sp.position.clone().setY(sp.position.y + 1.25)), side = proj(sp.position.clone().addScaledVector(right, 0.5));
+    const half = Math.max(6, Math.abs(side.x - foot.x));
+    bodies.push({ id, x: Math.min(foot.x, head.x) - half, y: head.y, w: Math.abs(foot.x - head.x) + 2 * half, h: Math.max(6, foot.y - head.y) });
+  }
+  const rect = (el) => { if (!el || el.hidden || el.offsetParent === null) return null; const b = el.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; };
+  const labels = [...document.querySelectorAll('.mlabel:not([hidden])')].map(rect).filter(Boolean);
+  const controls = ['.cmdbar', '.inspect-bar', '.cam-pad', '.layer-rail', '#matchbar'].map((q) => rect(document.querySelector(q))).filter(Boolean);
+  const ov = (p, q) => !!p && !!q && p.x < q.x + q.w - 0.5 && q.x < p.x + p.w - 0.5 && p.y < q.y + q.h - 0.5 && q.y < p.y + p.h - 0.5;
+  const inside = (p) => !!p && p.x >= world.left - 0.5 && p.y >= world.top - 0.5 && p.x + p.w <= world.right + 0.5 && p.y + p.h <= world.bottom + 0.5;
+  const reading = rect(document.querySelector('.mreading')), party = rect(document.querySelector('.mparty'));
+  const fs = (q) => { const e = document.querySelector(q); return e ? parseFloat(getComputedStyle(e).fontSize) : null; };
+  return {
+    bearing: Math.round(a.cam.bearing), pitch: Math.round(a.cam.pitch * 180 / Math.PI), level: a.labels.level, labels: labels.length, bodies: bodies.length,
+    reading: !!reading, docked: !!document.querySelector('.mreading.docked:not([hidden])'),
+    readingOverBodies: bodies.filter((b) => ov(reading, b)).map((b) => b.id), readingOverLabels: labels.filter((l) => ov(reading, l)).length, readingOverControls: controls.filter((c) => ov(reading, c)).length, readingInside: !reading || inside(reading),
+    partyShown: !!party, partyInside: !party || inside(party), partyOverBodies: bodies.filter((b) => ov(party, b)).length, partyOverReading: ov(party, reading),
+    // role and health are read beside the bodies, or (when the labels step back) in the inspection bar
+    font: { root: fs('html'), role: fs('.mlabel:not([hidden]) b') ?? fs('.inspect-bar .ib-member'), hp: fs('.mlabel:not([hidden]) .mhp') ?? fs('.inspect-bar .ib-member'), reading: fs('.mreading:not([hidden])'), cmd: fs('.cmdbar button') },
+    // the controls actually rendered (buttons inside a closed menu are not)
+    // (a member scrolled out of the compact bar's one scrolling row is reached by arrows: its row must be on screen)
+    cmdInside: [...document.querySelectorAll('.cmdbar summary, .cmdbar button, .inspect-bar .ib-head, .inspect-bar .ib-row, .inspect-bar:not(.compact) button')].filter((e) => e.getClientRects().length).every((e) => inside(rect(e) ?? { x: -1, y: -1, w: 0, h: 0 })),
+    labelsShown: labels.length, labelOverlaps: labels.reduce((n, l, i) => n + labels.slice(i + 1).filter((m) => ov({ x: l.x + 2, y: l.y + 2, w: l.w - 4, h: l.h - 4 }, m)).length, 0),
+    partyCrowded: !!document.querySelector('.mparty.crowded'), barFacts: document.querySelector('.inspect-bar:not([hidden]) .ib-head')?.innerText ?? '',
+  };
+});
+const setTextScale = async (page, px) => { const cdp = await page.target().createCDPSession(); await cdp.send('Page.setFontSizes', { fontSizes: { standard: px, fixed: Math.round(px * 0.8125) } }); await sleep(400); return app(page, () => getComputedStyle(document.documentElement).fontSize); };
+const openingMerge = async (page) => {
+  await app(page, async () => { const a = window.__versus, s = a.state; a._addCommand('A', { type: 'load_supply', cardId: s.players.A.bank.minor['1'], partyId: 'A.mount.C1' }); a._addCommand('A', { type: 'set_destination', partyId: 'A.mount.C1', target: { column: 1, row: 2 } }); a._pressReady(); await new Promise((r) => setTimeout(r, 200)); a._pressReady(); });
+  setup('opening merge played with _addCommand/_pressReady (the pointer route is z01/z08)');
+  await waitResolved(page, 2);
+  await app(page, () => { const a = window.__versus; a.viewSeat = 'A'; a._renderAll(); });
+};
+/** Press Escape only while an explanation, inspection or pinned view is open (a bare Escape deselects). */
+const escOpen = async (page) => { for (let i = 0; i < 4; i++) { const open = await app(page, () => { const a = window.__versus; return !!(a.expandedPin || a.inspectParty || a.pinned || document.querySelector('.peek.pinned') || document.body.classList.contains('roster-open')); }); if (!open) return; await page.keyboard.press('Escape'); await sleep(150); } };
+/** Open a member's explanation through the inspection bar (the keyboard/touch route). */
+const openMember = async (page, re) => clickNamed(page, '.inspect-bar .ib-member', re, `inspection bar member ${re}`);
+
+// --- Z08: reading another party keeps the command selection; Home and Return; real-height zoom ---
+await check('z08', 'Intent across controls: navigator and board reading keep the friendly selection and orders; one Home transition; zoom anchored at real height (R6-02)', { query: 'autostart=1&a=human&b=human&seed=1; fixture=terrain', viewport: '1280x720@1' }, async () => {
+  const page = await open('autostart=1&a=human&b=human&seed=1', { width: 1280, height: 720 });
+  await clickAt(page, await partyAt(page, 'A.mount.C1'));
+  await clickNamed(page, '.cmdbar summary', /^Supply ▾/, 'Supply menu');
+  await clickNamed(page, '.cmdbar button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply');
+  await clickNamed(page, '.cmdbar .movelist button', /to R2C1: needs 1/, 'Move to R2C1');
+  const plans1 = (await agreement(page)).plans.A;
+  expect('a legal funded order is queued for the friendly Castle', plans1.map((c) => JSON.parse(c).type), ['load_supply', 'set_destination']);
+  const pose0 = await app(page, () => JSON.stringify(window.__versus.cam.goal));
+  // keyboard navigator: inspect B's Bishop
+  await page.keyboard.press('n'); await sleep(300);
+  const row = await tabTo(page, /^Inspect B's Bishop/);
+  ok('keyboard reaches "Inspect B\'s Bishop" in the navigator', !!row, row);
+  await page.keyboard.press('Enter'); await settle(1800);
+  const r1 = await app(page, () => ({ sel: window.__versus.selected?.id, sub: window.__versus.inspectParty?.partyId ?? null, ret: !!window.__versus._returnPose, bar: document.querySelector('.inspect-bar:not([hidden])')?.innerText.replace(/\s+/g, ' ') ?? '' }));
+  expect('inspecting B keeps A\'s command selection', r1.sel, 'A.mount.C1');
+  ok('B\'s Bishop is the inspected party and a Return pose is saved', /^B\./.test(r1.sub ?? '') && r1.ret, r1);
+  ok('the inspection bar says which party is commanded', /commanding your Castle/.test(r1.bar), r1.bar);
+  expect('no order changed', (await agreement(page)).plans.A, plans1);
+  ok('focus lands on a member of the inspection bar', /HP/.test((await focused(page))?.name ?? ''), await focused(page));
+  await page.keyboard.press('Escape'); await sleep(250); // closes the navigator first
+  await page.keyboard.press('ArrowRight'); await page.keyboard.press('Enter'); await sleep(500);
+  const pinned = await app(page, () => ({ pin: window.__versus.expandedPin, reading: document.querySelector('.mreading:not([hidden])')?.innerText.replace(/\s+/g, ' ') ?? '', described: document.activeElement?.getAttribute('aria-describedby') }));
+  ok('Enter on a member opens its explanation (keyboard route), described by the reading panel', !!pinned.pin && pinned.reading.length > 20 && pinned.described === 'member-reading', pinned);
+  await page.keyboard.press('Escape'); await sleep(200);
+  expect('Escape closes the explanation first; inspection stays', await app(page, () => [window.__versus.expandedPin, !!window.__versus.inspectParty]), [null, true]);
+  await page.keyboard.press('Escape'); await sleep(200);
+  await page.keyboard.press('r'); await settle(1200);
+  expect('Return restores the pose before Inspect', await app(page, () => JSON.stringify(window.__versus.cam.goal)), pose0);
+  // another command to the original party, without reselecting it
+  await clickNamed(page, '.cmdbar summary', /^Face/, 'Face menu');
+  const faced = await app(page, () => { const b = [...document.querySelectorAll('.cmdbar .cmd-pop button')].find((x) => !x.disabled); b?.click(); return b?.innerText ?? null; });
+  await sleep(300);
+  const plans2 = (await agreement(page)).plans.A;
+  ok('a further order for the friendly Castle is queued without reselecting it', plans2.length === 3 && plans1.every((c) => plans2.includes(c)), { faced, plans2 });
+  // a board click on an enemy reads it; F inspects it; the selection stays
+  await clickAt(page, await partyAt(page, 'B.mount.C5'));
+  const read = await app(page, () => ({ sel: window.__versus.selected?.id, pin: window.__versus.pinned, view: document.querySelector('.peek.pinned')?.innerText.replace(/\s+/g, ' ') ?? '' }));
+  ok('a click on an enemy pins its public summary and keeps the selection', read.sel === 'A.mount.C1' && read.pin?.kind === 'hint' && /Inspect up close/.test(read.view), read);
+  await page.keyboard.press('f'); await settle(1500);
+  expect('F inspects the party being read; the selection stays', await app(page, () => [window.__versus.selected?.id, window.__versus.inspectParty?.partyId]), ['A.mount.C1', 'B.mount.C5']);
+  await shot(page, 'enemy-read-friendly-kept');
+  // visible Home and keyboard Home are one transition
+  for (const how of ['button', 'key']) {
+    await escOpen(page);
+    await page.keyboard.press('q'); await settle(900);           // a non-home view
+    await app(page, () => { window.__versus.pinned = null; window.__versus._renderAll(); });
+    await page.keyboard.press('f'); await settle(1200);           // Focus saves that pose
+    if (how === 'button') {
+      const cover = await app(page, () => { const b = document.querySelector('.cam-pad button[aria-label="Home view (Home)"]').getBoundingClientRect(); const e = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); return e?.closest('.cam-pad') ? null : (e?.className || e?.tagName || 'nothing'); });
+      ok('the Home button is not covered by any panel', cover === null, cover);
+      await clickNamed(page, '.cam-pad button', /^Home view \(Home\)$/, 'Home button');
+    } else await page.keyboard.press('Home');
+    await settle(900);
+    const h1 = await app(page, () => ({ sub: window.__versus.inspectParty, ret: window.__versus._returnPose, home: window.__versus.cam.atHome }));
+    expect(`${how} Home: inspection and the old Return pose are cleared; the view is home`, [h1.sub, h1.ret, h1.home], [null, null, true]);
+    const homePose = await app(page, () => JSON.stringify(window.__versus.cam.goal));
+    await page.keyboard.press('f'); await settle(1200);
+    await page.keyboard.press('r'); await settle(1200);
+    expect(`${how} Home → Focus → Return comes back to home, not the older pose`, await app(page, () => JSON.stringify(window.__versus.cam.goal)), homePose);
+  }
+  expect('the friendly selection survived the whole journey', await app(page, () => window.__versus.selected?.id), 'A.mount.C1');
+  await page.close();
+  // wheel approach at real height: hilltop, flyer and an underground party with its layer open
+  const p2 = await open('autostart=1&fixture=terrain&a=human&b=human', { width: 1280, height: 720 });
+  await app(p2, () => { const a = window.__versus; a.selected = { kind: 'party', id: 'A.hill' }; a._renderAll(); });
+  const drift = [];
+  for (const [id, layer] of [['A.hill', null], ['A.fly', null], ['B.tunnel', -2]]) {
+    await p2.keyboard.press('Home'); await settle(900);
+    if (layer !== null) { await clickNamed(p2, '.layer-rail button', layerButton(layer), `layer ${layer}`); await settle(600); }
+    const at = () => app(p2, (pid) => { const a = window.__versus, p = a.state.parties[pid]; const v = a.view.toWorld(p.x, p.y).setY(a.view.partyY(p)); const q = v.project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); return { x: r.left + (q.x + 1) / 2 * r.width, y: r.top + (1 - q.y) / 2 * r.height }; }, id);
+    const s0 = await at();
+    await p2.mouse.move(s0.x, s0.y);
+    for (let i = 0; i < 4; i++) { await p2.mouse.wheel({ deltaY: -240 }); await sleep(90); }
+    await settle(1400);
+    const s1 = await at();
+    const st = await app(p2, () => ({ sel: window.__versus.selected?.id, layer: window.__versus.view.terrain.cutaway }));
+    drift.push({ id, wantLayer: layer, before: s0, after: s1, px: +Math.hypot(s1.x - s0.x, s1.y - s0.y).toFixed(1), ...st });
+    if (layer !== null) { await clickNamed(p2, '.layer-rail button', layerButton(null), 'All layers'); await settle(400); }
+  }
+  ok('a wheel approach keeps each party under the cursor at its real height (drift ≤ 12 px)', drift.every((d) => d.px <= 12), drift);
+  ok('…without changing the selected party or the chosen layer', drift.every((d) => d.sel === 'A.hill' && d.layer === d.wantLayer), drift.map((d) => [d.sel, d.layer, d.wantLayer]));
+  current.observed = { drift };
+  await p2.close();
+});
+
+// --- Z09: explanations never cover the formation; text scale; orbit, low pitch, screen edge --------
+await check('z09', 'Unobstructed reading: four and nine members, 1280×720 and 1600×1000, eight bearings, low pitch, screen edge, 150% and 200% text (R6-01)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1280x720@1, 1600x1000@1', textScale: 'CDP Page.setFontSizes 16/24/32 px' }, async () => {
+  const cases = [];
+  const judge = (tag, g) => {
+    cases.push({ tag, ...g });
+    return g;
+  };
+  for (const [w, hgt] of [[1280, 720], [1600, 1000]]) {
+    const page = await open('autostart=1&a=human&b=human&seed=1', { width: w, height: hgt });
+    await openingMerge(page);
+    for (const [pid, who, re] of [['A.mount.C3', 'four', /^Mage/], ['A.mount.C1', 'nine', /^Archer/]]) {
+      await page.keyboard.press('Home'); await settle(800);
+      await app(page, (id) => { const a = window.__versus; a.selected = { kind: 'party', id }; a._renderAll(); }, pid);
+      await page.keyboard.press('f'); await settle(2000);
+      await openMember(page, re); await sleep(500);
+      for (let i = 0; i < 8; i++) {
+        judge(`${w}x${hgt} ${who} bearing`, await geometry(page));
+        if (w === 1280 && i % 2 === 0) await shot(page, `${who}-${w}-b${(await geometry(page))?.bearing}`);
+        await page.keyboard.press('q'); await settle(900);
+      }
+      // low pitch, then a screen edge
+      await page.keyboard.press('x'); await page.keyboard.press('x'); await settle(1000);
+      judge(`${w}x${hgt} ${who} low pitch`, await geometry(page));
+      if (w === 1280) await shot(page, `${who}-low-pitch`);
+      await page.keyboard.down('d'); await sleep(260); await page.keyboard.up('d'); await settle(900);
+      const edge = await geometry(page);
+      if (edge) { judge(`${w}x${hgt} ${who} screen edge`, edge); if (w === 1280) await shot(page, `${who}-edge`); }
+      await escOpen(page);
+    }
+    // enlarged text at the same views (1280×720 is the dense case)
+    if (w === 1280) {
+      for (const [px, pct] of [[24, 150], [32, 200]]) {
+        const root = await setTextScale(page, px);
+        for (const [pid, who, re] of [['A.mount.C3', 'four', /^Mage/], ['A.mount.C1', 'nine', /^Archer/]]) {
+          await page.keyboard.press('Home'); await settle(700);
+          await app(page, (id) => { const a = window.__versus; a.selected = { kind: 'party', id }; a._renderAll(); }, pid);
+          await page.keyboard.press('f'); await settle(2000);
+          await openMember(page, re); await sleep(600);
+          const g = judge(`${w}x${hgt} ${who} text ${pct}%`, { ...(await geometry(page)), rootFont: root });
+          await shot(page, `${who}-text-${pct}`);
+          await escOpen(page);
+        }
+      }
+      await setTextScale(page, 16);
+    }
+    await page.close();
+  }
+  const real = cases.filter((c) => c.reading);
+  ok('every case was measured with an open explanation', real.length === cases.length && cases.length >= 40, cases.filter((c) => !c.reading).map((c) => c.tag));
+  ok('the explanation never covers an inspected body', real.every((c) => c.readingOverBodies.length === 0), real.filter((c) => c.readingOverBodies.length).map((c) => [c.tag, c.bearing, c.readingOverBodies]));
+  ok('…nor a member label', real.every((c) => c.readingOverLabels === 0), real.filter((c) => c.readingOverLabels).map((c) => [c.tag, c.bearing, c.readingOverLabels]));
+  ok('…nor the command bar, inspection bar, camera pad, layer rail or match bar', real.every((c) => c.readingOverControls === 0), real.filter((c) => c.readingOverControls).map((c) => [c.tag, c.bearing]));
+  ok('the explanation and the party facts stay inside the view', cases.every((c) => c.readingInside && c.partyInside), cases.filter((c) => !c.readingInside || !c.partyInside).map((c) => c.tag));
+  ok('the party facts never cover a body or the explanation', cases.every((c) => c.partyOverBodies === 0 && !c.partyOverReading), cases.filter((c) => c.partyOverBodies || c.partyOverReading).map((c) => [c.tag, c.bearing]));
+  ok('collective facts stay reachable: beside the formation, or (when it steps aside) in the inspection bar', cases.every((c) => (c.partyShown && !c.partyCrowded) || /Supply .* band .*(exposed|not exposed)/.test(c.barFacts)), cases.filter((c) => c.partyCrowded).map((c) => [c.tag, c.barFacts]));
+  ok('core role and health text is at least 14 px at 100% and scales with the text setting', cases.every((c) => { const k = /text 150/.test(c.tag) ? 1.5 : /text 200/.test(c.tag) ? 2 : 1; return c.font.role >= 14 * k - 0.5 && c.font.hp >= 14 * k - 0.5 && c.font.reading >= 14 * k - 0.5; }), cases.map((c) => [c.tag, c.font]));
+  ok('compact member labels never overlap each other (beyond a 2 px edge)', cases.every((c) => c.labelOverlaps === 0), cases.filter((c) => c.labelOverlaps).map((c) => [c.tag, c.bearing, c.labelOverlaps]));
+  ok('command and inspection bar controls stay on screen at every size', cases.every((c) => c.cmdInside), cases.filter((c) => !c.cmdInside).map((c) => c.tag));
+  current.observed = { cases: cases.length, docked: cases.filter((c) => c.docked).map((c) => [c.tag, c.bearing]), summary: cases.map((c) => ({ tag: c.tag, bearing: c.bearing, pitch: c.pitch, level: c.level, labels: c.labels, docked: c.docked, font: c.font })) };
+});
+
+// --- Z10: playback facts belong to the displayed moment; open explanations refresh ----------------
+await check('z10', 'Playback moment: ward provider, headcount and body agree before and after the displayed death; an open explanation refreshes; pause; New match (R6-03, R6-04)', { query: 'autostart=1&fixture=ward&a=human&b=human', viewport: '1280x720@1', profile: 'hapa_open_10x9_v3_02' }, async () => {
+  const page = await open('autostart=1&fixture=ward&a=human&b=human', { width: 1280, height: 720 });
+  await app(page, () => { window.__versus._focusInspect('B.p'); });
+  setup('ward fixture: B\'s Castle inspected with _focusInspect (the navigator route is z08)');
+  if (sabotage) { await app(page, () => { window.__versus._displayState = function () { return this.state; }; }); setup('SABOTAGE: inspection reads the final accepted state during playback (the review 06 defect)'); }
+  await settle(1600);
+  await openMember(page, /^Archer/);
+  await app(page, () => { window.__versus.speed = 0.2; });
+  await clickNamed(page, READY, /^Ready/, 'Ready (A)');
+  await clickNamed(page, READY, /^Ready/, 'Ready (B)');
+  const samples = [];
+  let paused = null;
+  for (let i = 0; i < 400; i++) {
+    const s = await app(page, () => { const a = window.__versus, pb = a.playback; if (!pb) return null; const L = [...document.querySelectorAll('.mlabel:not([hidden])')].map((e) => e.innerText.replace(/\s+/g, ' ')); const ev = pb.events.slice(0, pb.shown); return { shown: pb.shown, mageDiedShown: ev.some((e) => e.type === 'member_died' && e.memberId === 'B.p.s2'), contactShown: ev.some((e) => e.type === 'contact'), mageLabel: L.some((t) => /^Mage/.test(t)), party: document.querySelector('.mparty')?.innerText.replace(/\s+/g, ' ') ?? '', reading: document.querySelector('.mreading:not([hidden])')?.innerText.replace(/\s+/g, ' ') ?? '' }; });
+    if (s) samples.push(s); else if (samples.length) break;
+    if (s && s.contactShown && !paused) {
+      await page.keyboard.press('Space'); await sleep(150);
+      const a0 = await app(page, () => [window.__versus.playback?.shown, document.querySelector('.mreading:not([hidden])')?.innerText]);
+      await sleep(600);
+      const a1 = await app(page, () => [window.__versus.playback?.shown, document.querySelector('.mreading:not([hidden])')?.innerText]);
+      paused = { same: JSON.stringify(a0) === JSON.stringify(a1), shown: a0[0] };
+      await page.keyboard.press('Space');
+    }
+    await sleep(25);
+  }
+  await waitResolved(page, 6);
+  ok('playback was sampled across the death', samples.length >= 8 && samples.some((x) => !x.mageDiedShown) && samples.some((x) => x.mageDiedShown), samples.length);
+  // independent expectation: from the events shown, not from the inspection code
+  const before = samples.filter((x) => !x.mageDiedShown), after = samples.filter((x) => x.mageDiedShown);
+  ok('before the displayed death: the Mage is labelled, the Archer is warded and the party counts 3 living', before.every((x) => x.mageLabel && /Magic protection 1 on all six faces: 1 from the party Mage/.test(x.reading) && /3\/9/.test(x.party)), before.slice(0, 2));
+  ok('after it: no Mage label, no ward on the Archer, 2 living', after.every((x) => !x.mageLabel && !/from the party Mage/.test(x.reading) && /2\/9/.test(x.party)), after.slice(0, 2));
+  ok('the open Archer explanation refreshed at contact without re-hovering (engaged, a named target)', samples.some((x) => x.contactShown && /engaged/.test(x.reading)) && samples.some((x) => !x.contactShown && /No engaged target/.test(x.reading)), samples.map((x) => x.reading.slice(-90)).filter((v, i, a) => a.indexOf(v) === i));
+  ok('pausing holds the moment and its facts', !!paused?.same, paused);
+  const fin = await app(page, () => { const a = window.__versus, f = a._labelFacts('B.p'); return { labels: f.party.living, rules: Object.values(a.state.parties['B.p'].slots).filter((id) => id && a.state.members[id].alive).length, mage: a.state.members['B.p.s2'].alive }; });
+  expect('after playback the facts are the accepted state', [fin.labels, fin.mage], [fin.rules, false]);
+  await shot(page, 'after-death');
+  await clickNamed(page, '#matchbar button', /^Match menu$/, 'Match menu');
+  await clickNamed(page, '#overlay button', /^New match$/, 'New match');
+  await clickNamed(page, '#overlay button', /^Start|^Play|^New match/, 'Start (setup sheet)');
+  await sleep(1500);
+  const fresh = await app(page, () => ({ labels: document.querySelectorAll('.mlabel:not([hidden])').length, reading: !document.querySelector('.mreading')?.hidden, bar: !document.querySelector('.inspect-bar')?.hidden, sub: window.__versus.inspectParty, pin: window.__versus.expandedPin ?? null }));
+  expect('New match leaves no labels, explanation, inspection bar or subject', fresh, { labels: 0, reading: false, bar: false, sub: null, pin: null });
+  await page.close();
+});
+
+// --- Z11: terrain content updates the scenery; raised ground under a lower cutaway -----------------
+await check('z11', 'Terrain truth: an existing filled cube dug, filled and dug again changes the scenery with the terrain; hill dressing follows the cutaway (R6-05)', { query: 'autostart=1&fixture=surface_dig&a=human&b=human; fixture=terrain', viewport: '1280x720@1' }, async () => {
+  const page = await open('autostart=1&fixture=surface_dig&a=human&b=human', { width: 1280, height: 720 });
+  await app(page, () => { window.__versus._focusInspect('A.worker'); });
+  setup('surface_dig fixture: the worker is inspected with _focusInspect; work orders added with _addCommand (the Work menu issues the same command); Ticks advanced with both Ready buttons until C5 is active');
+  if (sabotage) { await app(page, () => { const d = window.__versus.view.diorama; d.terrainSignature = (s) => `count:${Object.keys(s.terrain.cells).length}`; d.key = null; }); setup('SABOTAGE: the scenery keys on the terrain entry count again (the review 06 defect)'); }
+  await settle(1800);
+  const target = await app(page, () => { const a = window.__versus, P = a.state.parties['A.worker']; return { x: Math.round(P.x / 1e6) + 1, y: Math.round(P.y / 1e6), band: -1 }; });
+  const look = () => app(page, async (t) => {
+    const a = window.__versus, { solidAt } = await import('/src/hapa/rules/terrain.js');
+    const d = a.view.diorama, sig = d.key ?? '';
+    // the dressing's own record of the inspected territory's nine squares (centre of the 3×3 list)
+    const parts = sig.split('|')[1]?.split(',') ?? [];
+    const mine = parts[4] ?? '';
+    const c = a.ctx.geo.center(5, 5), cx = Math.round(c.x / 1e6), cy = Math.round(c.y / 1e6);
+    const idx = (1 - (t.y - cy)) * 3 + (t.x - cx + 1);
+    const openInTerrainView = a.view.terrain.sig.includes(`${t.x},${t.y},-1`);
+    return { solid: solidAt(a.state.terrain, t.x, t.y, -1), dressingSolid: mine.split(':')[1]?.[idx] === '1', terrainViewOpen: openInTerrainView, tick: a.state.tick, entries: Object.keys(a.state.terrain.cells).length };
+  }, target);
+  const runWork = async (work) => {
+    for (let i = 0; i < 24; i++) {
+      const active = await app(page, () => window.__versus.state.activeColumns.includes(5));
+      if (active) break;
+      await app(page, async () => { const a = window.__versus; a.speed = 8; a._pressReady(); await new Promise((r) => setTimeout(r, 120)); a._pressReady(); await new Promise((r) => { const t = setInterval(() => { if (!a.playback && !a.resolving) { clearInterval(t); r(); } }, 50); }); });
+    }
+    const added = await app(page, (w, t) => { const a = window.__versus; a.viewSeat = 'A'; const ok = a._addCommand('A', { type: 'begin_work', partyId: 'A.worker', work: w, target: t }); a._renderAll(); return ok; }, work, target);
+    await app(page, async () => { const a = window.__versus; a._pressReady(); await new Promise((r) => setTimeout(r, 150)); a._pressReady(); await new Promise((r) => { const t = setInterval(() => { if (!a.playback && !a.resolving) { clearInterval(t); r(); } }, 50); }); });
+    await settle(900);
+    return { work, added: !!added, ...(await look()) };
+  };
+  const steps = [{ work: 'start', ...(await look()) }];
+  steps.push(await runWork('excavate'));
+  steps.push(await runWork('fill'));
+  steps.push(await runWork('excavate'));
+  current.observed = { target, steps };
+  ok('each work order was accepted for planning', steps.slice(1).every((s) => s.added), steps);
+  expect('the authoritative cube: solid → empty → solid → empty', steps.map((s) => s.solid), [true, false, true, false]);
+  expect('the scenery agrees at every step (same entry count throughout)', steps.map((s) => s.dressingSolid), steps.map((s) => s.solid));
+  expect('the terrain view shows the opening exactly when the cube is empty', steps.map((s) => s.terrainViewOpen), steps.map((s) => !s.solid));
+  ok('the entry count never changed, so a count-based key would have missed every step', new Set(steps.map((s) => s.entries)).size === 1, steps.map((s) => s.entries));
+  await shot(page, 'dug-again');
+  await page.close();
+  // raised ground: the +3 hill's dressing hides under layer +1 and returns with All layers
+  const p2 = await open('autostart=1&fixture=terrain&a=human&b=human', { width: 1280, height: 720 });
+  await app(p2, () => { window.__versus._focusInspect('A.hill'); });
+  await settle(2000);
+  const vis = () => app(p2, () => { const a = window.__versus, mats = a.view.diorama.mats ?? []; const hill = mats.filter((m) => (m.userData.surface ?? 1) > 1); return { hillShown: hill.filter((m) => m.visible && m.opacity > 0.05).length, hill: hill.length, flatShown: mats.filter((m) => (m.userData.surface ?? 1) === 1 && m.visible).length, cut: a.view.terrain.cutaway, hillMeshOpacity: a.view.terrain.hillMeshes[0]?.material[2]?.opacity }; });
+  const all = await vis();
+  await clickNamed(p2, '.layer-rail button', layerButton(1), 'layer +1'); await settle(900);
+  const at1 = await vis();
+  await shot(p2, 'hill-at-layer-plus1');
+  await clickNamed(p2, '.layer-rail button', layerButton(null), 'All layers'); await settle(900);
+  const back = await vis();
+  ok('the hill top carries dressing at All layers', all.hill > 0 && all.hillShown === all.hill, all);
+  ok('at layer +1 (below the +3 surface) the hill dressing is hidden as the hill turns see-through; flat ground keeps its own', at1.hillShown === 0 && at1.hillMeshOpacity < 1 && at1.flatShown > 0, at1);
+  ok('All layers restores it', back.hillShown === back.hill, back);
+  const pick = await app(p2, () => { const a = window.__versus, p = a.state.parties['A.hill'], v = a.view.toWorld(p.x, p.y).setY(a.view.partyY(p) + 0.5), q = v.project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); const ev = { clientX: r.left + (q.x + 1) / 2 * r.width, clientY: r.top + (1 - q.y) / 2 * r.height }; const on = a._rayFrom(ev); a.view.diorama.group.visible = false; const off = a._rayFrom(ev); a.view.diorama.group.visible = true; return [on?.party?.id ?? null, off?.party?.id ?? null]; });
+  expect('the dressing never changes what is picked on the hill', pick[0], pick[1]);
   await p2.close();
 });
 
