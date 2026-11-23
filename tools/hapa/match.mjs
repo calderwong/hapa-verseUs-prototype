@@ -11,7 +11,7 @@ import { dirname } from 'node:path';
 import { createSession, playMatch, verifyReplay } from '../../src/hapa/rules/session.js';
 import { HeuristicBot } from '../../src/hapa/controllers/heuristic-bot.js';
 import { summarize } from '../../src/hapa/rules/stats.js';
-import { profileById, BASE_PROFILE } from '../../fixtures/hapa/profiles.js';
+import { profileById, DEFAULT_PROFILE_ID } from '../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../fixtures/hapa/content.js';
 
 const arg = (name, dflt) => {
@@ -19,7 +19,7 @@ const arg = (name, dflt) => {
   return i > 0 ? process.argv[i + 1] : dflt;
 };
 const quiet = process.argv.includes('--quiet');
-const profileId = arg('profile', BASE_PROFILE.id);
+const profileId = arg('profile', DEFAULT_PROFILE_ID);
 const seed = Number(arg('seed', 1));
 const budget = Number(arg('ticks', 400));
 const out = arg('out', null);
@@ -27,7 +27,7 @@ const out = arg('out', null);
 const t0 = Date.now();
 const session = createSession({
   matchId: `bot-${profileId}-${seed}`, profile: profileById(profileId), catalog: CATALOG, seed: seed || 1,
-  controllers: { A: { type: 'bot', revision: 'heuristic-bot/0.1.0' }, B: { type: 'bot', revision: 'heuristic-bot/0.1.0' } },
+  controllers: { A: { type: 'bot', revision: 'heuristic-bot/0.2.0' }, B: { type: 'bot', revision: 'heuristic-bot/0.2.0' } },
 });
 const bots = { A: new HeuristicBot({ seat: 'A', seed: seed * 2 + 1 }), B: new HeuristicBot({ seat: 'B', seed: seed * 2 + 2 }) };
 const outcome = playMatch(session, bots, { tickBudget: budget });

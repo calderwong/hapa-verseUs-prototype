@@ -134,6 +134,19 @@ export const BASE_PROFILE = Object.freeze({
 
 /** Named field changes from the base profile. */
 export const PROFILE_VARIANTS = Object.freeze({
+  /**
+   * The default for new matches (human-feedback addendum 01, HF-04): a new or replaced voluntary
+   * destination must have its whole remaining route funded by held Supply plus earlier planned
+   * loads, and the debit follows each Mount's declared route price (a Knight L costs
+   * knightRouteCost over its three pitches). Speed is still the rate; nothing is prepaid. The base
+   * v3 profile keeps partial-Supply travel for its golden fixtures and old replays.
+   */
+  hapa_open_10x9_v3_02: {
+    title: 'Open 10×9, v3 fixture 02 — Supply-funded destinations',
+    revision: 1,
+    rulesVersion: 'hapa-versus-rules/0.2.0',
+    movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1' },
+  },
   hapa_open_9x9_v3_01: {
     title: 'Open 9×9 comparison',
     board: { rows: 9, manaRows: [3, 4, 5, 6, 7], dualRows: [5], geographyBoundary: 4, rankCap: 10 },
@@ -180,3 +193,6 @@ export function profileById(id) {
 }
 
 export const PROFILE_IDS = [BASE_PROFILE.id, ...Object.keys(PROFILE_VARIANTS)];
+
+/** The profile new local matches, bots and peer tools start with. */
+export const DEFAULT_PROFILE_ID = 'hapa_open_10x9_v3_02';

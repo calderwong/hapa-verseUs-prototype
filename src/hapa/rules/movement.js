@@ -91,6 +91,62 @@ export function planPartyRoute(state, ctx, party, from, to) {
   return e ? { error: e } : plan;
 }
 
+// --- Supply-funded destinations (human-feedback addendum 01, HF-04) ----------------------------
+
+/** The profile's destination policy; absent means v3 partial-Supply travel (old manifests). */
+export const destinationPolicy = (profile) => profile.movement.destinationFunding ?? 'partial_supply_v3';
+/** The profile's debit policy; absent means v3: stepCost per pitch for every Mount. */
+export const debitPolicy = (profile) => profile.movement.debit ?? 'step_cost_per_pitch_v3';
+
+/**
+ * Supply price per coordinate unit of travel, as an integer ratio [num, den]. Under
+ * `route_price_v1` a Knight's L (three pitches) costs exactly knightRouteCost; otherwise every
+ * pitch costs stepCost. Both are identical at baseline prices.
+ */
+export function pricePerUnit(ctx, party) {
+  const { profile, U } = ctx;
+  const pitch = ctx.geo.pitch;
+  if (debitPolicy(profile) === 'route_price_v1' && profile.movement.patterns[party.mount] === 'knight_l') return [profile.movement.knightRouteCost * U, 3 * pitch];
+  return [profile.movement.stepCost * U, pitch];
+}
+
+/**
+ * The one exact route-and-funding quote (shared by highlights, previews, keyboard lists, bots,
+ * validation, peers and replay): the actual path from the party's present position — finishing
+ * (or backing out of) an unfinished edge — then the Mount route; its distance; and the Supply
+ * that distance debits under the profile's price, including the carried fixed-point remainder.
+ * `held` is the party's Supply in the given state (a validation scratch state already includes
+ * earlier planned loads).
+ * @returns {{ error?: string, route?: {column:number,row:number}[], distance?: number, required?: number, held?: number, funded?: boolean, shortfall?: number }}
+ */
+export function quoteRoute(state, ctx, party, target) {
+  const from = routeOrigin(state, ctx, party);
+  const plan = planPartyRoute(state, ctx, party, from, target);
+  if (plan.error) return { error: plan.error };
+  const { geo } = ctx;
+  const points = [...(from.midEdge ? [geo.center(from.column, from.row)] : []), ...plan.route.map((n) => geo.center(n.column, n.row))];
+  let distance = 0, x = party.x, y = party.y;
+  for (const p of points) { distance += Math.max(Math.abs(p.x - x), Math.abs(p.y - y)); x = p.x; y = p.y; }
+  const [num, den] = pricePerUnit(ctx, party);
+  const required = Math.floor((distance * num + (party.supplyRemainder ?? 0)) / den);
+  const held = supplyOf(party);
+  return { route: plan.route, distance, required, held, funded: held >= required, shortfall: Math.max(0, required - held) };
+}
+
+/**
+ * Why a new voluntary destination is not funded under the profile's policy, or null. Legacy v3
+ * profiles never refuse for Supply (the route may pause and resume). Free pursuit and Card-defined
+ * movement do not come through here.
+ */
+export function fundingError(state, ctx, party, target) {
+  if (destinationPolicy(ctx.profile) !== 'full_route_funded_v1') return null;
+  const q = quoteRoute(state, ctx, party, target);
+  if (q.error) return q.error;
+  if (q.funded) return null;
+  const f = (u) => { const v = u / ctx.U; return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0+$/, '').replace(/[.]$/, ''); };
+  return `not enough Supply for the whole route: it needs ${f(q.required)}, the party has ${f(q.held)} (counting earlier planned loads)`;
+}
+
 /** Legal destinations of a party (for previews). */
 export function legalDestinations(state, ctx, party) {
   if (!party.mount || !party.alive || party.retired) return [];
@@ -101,6 +157,18 @@ export function legalDestinations(state, ctx, party) {
     if (p.route) out.push({ column: c, row: r, cost: p.cost });
   }
   return out;
+}
+
+/**
+ * Every legal destination with its funding quote, for the policy in force: `funded` is always true
+ * under v3 partial-Supply travel. Unlimited — presentation filters, never truncates.
+ */
+export function quotedDestinations(state, ctx, party) {
+  const strict = destinationPolicy(ctx.profile) === 'full_route_funded_v1';
+  return legalDestinations(state, ctx, party).map((d) => {
+    const q = quoteRoute(state, ctx, party, d);
+    return { ...d, required: q.required, held: q.held, shortfall: q.shortfall, funded: strict ? q.funded : true };
+  });
 }
 
 /**
@@ -248,7 +316,8 @@ export function simulateMovement(state, ctx, events, onContact) {
     for (const p of list) {
       const free = !!p.freeFollow; // following a withdrawing defender costs no Supply
       const avail = free ? Number.MAX_SAFE_INTEGER : supplyOf(p);
-      if (avail <= 0) {
+      const priced = !free && debitPolicy(profile) === 'route_price_v1';
+      if (avail <= 0 && !priced) {
         p.state = 'waiting_supply';
         emit(state, events, 'travel_paused', { partyId: p.id, reason: 'no Supply', quantum: q, destination: p.destination });
         continue;
@@ -261,8 +330,12 @@ export function simulateMovement(state, ctx, events, onContact) {
       const dx = node.x - p.x, dy = node.y - p.y;
       const along = Math.max(Math.abs(dx), Math.abs(dy));
       step = Math.min(step, along);
-      // Supply limits distance: costPerPitch units per pitch of the larger axis displacement
-      const affordable = Math.floor((avail * pitch) / costPerPitch);
+      // Supply limits distance: costPerPitch units per pitch of the larger axis displacement.
+      // route_price_v1: the exact largest step whose debit (with the carried remainder) fits the
+      // Supply held, so a funded route always arrives (no fixed-point stall short of the node).
+      let affordable;
+      if (priced) { const [pn, pd] = pricePerUnit(ctx, p); affordable = Math.floor(((avail + 1) * pd - 1 - (p.supplyRemainder ?? 0)) / pn); }
+      else affordable = Math.floor((avail * pitch) / costPerPitch);
       step = Math.min(step, affordable);
       if (step <= 0) {
         p.state = 'waiting_supply';
@@ -330,8 +403,9 @@ export function simulateMovement(state, ctx, events, onContact) {
         p.lastMovedTick = state.tick;
         p.x += pr.sx * pr.step;
         p.y += pr.sy * pr.step;
-        const cost = p.freeFollow ? 0 : Math.floor((pr.step * costPerPitch + (p.supplyRemainder ?? 0)) / pitch);
-        if (!p.freeFollow) p.supplyRemainder = (pr.step * costPerPitch + (p.supplyRemainder ?? 0)) % pitch;
+        const [pn, pd] = debitPolicy(profile) === 'route_price_v1' ? pricePerUnit(ctx, p) : [costPerPitch, pitch];
+        const cost = p.freeFollow ? 0 : Math.floor((pr.step * pn + (p.supplyRemainder ?? 0)) / pd);
+        if (!p.freeFollow) p.supplyRemainder = (pr.step * pn + (p.supplyRemainder ?? 0)) % pd;
         const spent = cost ? spendSupply(p, cost) : [];
         const acc = (spentThisTick[p.id] ??= { units: 0, portions: {} });
         acc.units += cost;

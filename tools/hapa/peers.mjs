@@ -12,7 +12,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { createDevIdentity, publicIdentity } from '../../src/hapa/protocol/messages.js';
 import { createManifest } from '../../src/hapa/rules/state.js';
-import { profileById, BASE_PROFILE } from '../../fixtures/hapa/profiles.js';
+import { profileById, DEFAULT_PROFILE_ID } from '../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../fixtures/hapa/content.js';
 
 const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i > 0 ? process.argv[i + 1] : d; };
@@ -20,9 +20,9 @@ const seed = Number(arg('seed', 2)), ticks = Number(arg('ticks', 120)), port = N
 const root = '.data/peers';
 rmSync(root, { recursive: true, force: true });
 const ids = { A: createDevIdentity('peer-a'), B: createDevIdentity('peer-b') };
-const manifest = createManifest({ matchId: `peers-${seed}-${Date.now().toString(36)}`, profile: profileById(BASE_PROFILE.id), catalog: CATALOG, seed,
+const manifest = createManifest({ matchId: `peers-${seed}-${Date.now().toString(36)}`, profile: profileById(DEFAULT_PROFILE_ID), catalog: CATALOG, seed,
   participants: { A: publicIdentity(ids.A), B: publicIdentity(ids.B) },
-  controllers: { A: { type: 'bot', revision: 'heuristic-bot/0.1.0' }, B: { type: 'bot', revision: 'heuristic-bot/0.1.0' } } });
+  controllers: { A: { type: 'bot', revision: 'heuristic-bot/0.2.0' }, B: { type: 'bot', revision: 'heuristic-bot/0.2.0' } } });
 const procs = {}, keys = {}, results = {};
 const ready = [];
 for (const seat of ['A', 'B']) {

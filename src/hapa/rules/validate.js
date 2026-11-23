@@ -15,6 +15,14 @@ const ENUMS = {
   'actions.firstAction': ['A_on_odd_ticks'],
   'visibility': ['public'],
 };
+/**
+ * Policies a profile may name; absence means the v3 behavior (old manifests carry no such field and
+ * must replay unchanged). An unknown value is rejected rather than silently treated as legacy.
+ */
+const OPTIONAL_ENUMS = {
+  'movement.destinationFunding': ['partial_supply_v3', 'full_route_funded_v1'],
+  'movement.debit': ['step_cost_per_pitch_v3', 'route_price_v1'],
+};
 const MOUNTS = ['castle', 'bishop', 'queen', 'king', 'commander', 'knight'];
 const ROLES = ['swordsman', 'pikeman', 'archer', 'mage', 'priest'];
 
@@ -34,6 +42,10 @@ export function validateProfile(p, catalog) {
   for (const [path, allowed] of Object.entries(ENUMS)) {
     const v = get(p, path);
     if (!allowed.includes(v)) err(`unknown ${path} policy "${v}" (supported: ${allowed.join(', ')})`);
+  }
+  for (const [path, allowed] of Object.entries(OPTIONAL_ENUMS)) {
+    const v = get(p, path);
+    if (v !== undefined && !allowed.includes(v)) err(`unknown ${path} policy "${v}" (supported: ${allowed.join(', ')})`);
   }
   const b = p.board ?? {};
   if (b.columns !== 9) err('board.columns must be 9 in this rules version');

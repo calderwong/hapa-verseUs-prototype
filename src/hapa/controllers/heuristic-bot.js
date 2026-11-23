@@ -11,7 +11,7 @@
  *  4. Counter an opposing Spell with Blue Denial when Blue can be paid.
  */
 import { xorshift32 } from '../rules/encoding.js';
-import { legalDestinations, routeOrigin, planPartyRoute } from '../rules/movement.js';
+import { legalDestinations, routeOrigin, planPartyRoute, quoteRoute, destinationPolicy } from '../rules/movement.js';
 import { supplyOf, planPayment } from '../rules/economy.js';
 import { other } from '../rules/state.js';
 
@@ -42,6 +42,21 @@ export class HeuristicBot {
     const bank = Object.values(state.players[seat].bank.minor).filter(Boolean).map((id) => state.cards[id]);
     const used = new Set();
     const routed = new Set();
+    // full_route_funded_v1 (addendum HF-04): a new destination must be funded by held Supply plus
+    // loads that come before it in this plan, so the bot picks the Cards first and emits them first
+    const funded = destinationPolicy(profile) === 'full_route_funded_v1';
+    const fundWith = (p, target) => {
+      const q = quoteRoute(state, ctx, p, target);
+      if (q.error) return null;
+      let need = q.required - q.held;
+      const picks = [];
+      for (const c of [...bank].filter((c) => !used.has(c.id)).sort((a, b) => b.supply - a.supply || a.column - b.column)) {
+        if (need <= 0) break;
+        picks.push(c);
+        need -= c.supply;
+      }
+      return need <= 0 ? picks : null;
+    };
 
     // 1. destinations for mounted parties in active columns
     for (const p of mine) {
@@ -74,9 +89,12 @@ export class HeuristicBot {
         if (occupant && occupant.owner !== seat) score += 25; // attack
         score -= o.cost * 2;
         score += this.rand();
-        if (!best || score > best.score) best = { o, score };
+        const picks = funded ? fundWith(p, o) : [];
+        if (!picks) continue; // cannot fund the whole route this Tick
+        if (!best || score > best.score) best = { o, score, picks };
       }
       if (best && best.score > 0) {
+        for (const c of best.picks) { cmds.push({ type: 'load_supply', cardId: c.id, partyId: p.id }); used.add(c.id); }
         cmds.push({ type: 'set_destination', partyId: p.id, target: { column: best.o.column, row: best.o.row } });
         routed.add(p.id);
       }

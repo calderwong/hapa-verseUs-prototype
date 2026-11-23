@@ -22,7 +22,7 @@ import { summarize } from '../rules/stats.js';
 import { clone, canonicalize } from '../rules/encoding.js';
 import { HeuristicBot } from '../controllers/heuristic-bot.js';
 import { ALLOCATION_POLICIES } from '../rules/combat.js';
-import { profileById, PROFILE_IDS, BASE_PROFILE } from '../../../fixtures/hapa/profiles.js';
+import { profileById, PROFILE_IDS, BASE_PROFILE, DEFAULT_PROFILE_ID } from '../../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../../fixtures/hapa/content.js';
 
 /** The catalog the running match agreed (bundled + local Cards); presentation reads definitions from it. */
@@ -147,7 +147,7 @@ export class VersusApp {
 
   // --- setup -------------------------------------------------------------------------------------
   showSetup() {
-    const profileSel = h('select', { id: 'set-profile' }, ...PROFILE_IDS.map((id) => h('option', { value: id }, `${id} — ${profileById(id).title}`)), ...labProfiles().map((p) => h('option', { value: p.id }, `${p.id} — lab revision: ${p.changes.join(', ')}`)));
+    const profileSel = h('select', { id: 'set-profile' }, ...PROFILE_IDS.map((id) => h('option', { value: id, selected: id === DEFAULT_PROFILE_ID }, `${id} — ${profileById(id).title}${id === DEFAULT_PROFILE_ID ? ' (default)' : ''}`)), ...labProfiles().map((p) => h('option', { value: p.id }, `${p.id} — lab revision: ${p.changes.join(', ')}`)));
     const seatSel = (seat, dflt) => h('select', { id: `set-${seat}` }, h('option', { value: 'human', selected: dflt === 'human' }, 'Human'), h('option', { value: 'bot', selected: dflt === 'bot' }, 'Heuristic bot'));
     const seed = h('input', { id: 'set-seed', type: 'number', value: '1', min: '1' });
     const policySel = (seat) => h('select', { id: `set-pol-${seat}` }, ...ALLOCATION_POLICIES.map((p) => h('option', { value: p }, { slot_order: 'Slot order (fixture)', center_first: 'Center first (sacrifice the center)', protect_ranged: 'Protect ranged members' }[p])));
@@ -179,7 +179,7 @@ export class VersusApp {
     this.el.overlay.hidden = false;
   }
 
-  async startMatch({ profileId = BASE_PROFILE.id, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null }) {
+  async startMatch({ profileId = DEFAULT_PROFILE_ID, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null }) {
     // the new match owns everything from here: the previous match's pending response, playback and
     // continuation are detached so a late answer cannot write into this session (review 03, R3-02)
     const gen = this.generation = (this.generation ?? 0) + 1;
@@ -193,11 +193,11 @@ export class VersusApp {
       // a labeled diagnostic fixture: its state is prepared directly, not reached by ordinary play
       this.session = createFixtureSession(fx.build(), { id: fixture, title: fx.title });
     } else {
-      const profile = profileObj ? JSON.parse(JSON.stringify(profileObj)) : anyProfile(profileId) ?? profileById(BASE_PROFILE.id);
+      const profile = profileObj ? JSON.parse(JSON.stringify(profileObj)) : anyProfile(profileId) ?? profileById(DEFAULT_PROFILE_ID);
       profileId = profile.id;
       this.session = createSession({
         matchId: `local-${profileId}-${seed}-${Date.now().toString(36)}`, profile, catalog: localCatalog(), decks: localDecks(profile), seed, allocationPolicies: policies,
-        controllers: { A: { type: seats.A, revision: seats.A === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' }, B: { type: seats.B, revision: seats.B === 'bot' ? 'heuristic-bot/0.1.0' : 'ui/0.1.0' } },
+        controllers: { A: { type: seats.A, revision: seats.A === 'bot' ? 'heuristic-bot/0.2.0' : 'ui/0.2.0' }, B: { type: seats.B, revision: seats.B === 'bot' ? 'heuristic-bot/0.2.0' : 'ui/0.2.0' } },
       });
     }
     this.ctx = this.session.ctx;

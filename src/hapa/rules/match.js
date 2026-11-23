@@ -15,7 +15,7 @@ import { emit } from './context.js';
 import { clone } from './encoding.js';
 import { SEATS, other, livingMembers } from './state.js';
 import { activeColumnsAt, roundOf, mintAndClear, planPayment, supplyOf } from './economy.js';
-import { setDestination, simulateMovement, placeMembers, planRoute, planPartyRoute, routeOrigin, touchingPairs, contactTolerance, rearrangementError, engagementBetween } from './movement.js';
+import { setDestination, simulateMovement, placeMembers, planRoute, planPartyRoute, routeOrigin, touchingPairs, contactTolerance, rearrangementError, engagementBetween, fundingError } from './movement.js';
 import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember, applyBreaches, applyCornerHelpers, returnHelpers } from './combat.js';
 import { workError, startWork, completeWork } from './terrain.js';
 
@@ -68,7 +68,8 @@ export function commandError(state, ctx, seat, cmd) {
       if (!state.activeColumns.includes(P.region.column)) return `column C${P.region.column} is not active this Tick`;
       if (!cmd.target) return 'no destination';
       const plan = planPartyRoute(state, ctx, P, routeOrigin(state, ctx, P), cmd.target);
-      return plan.error ?? null;
+      // full_route_funded_v1: the whole remaining route must be funded now (addendum HF-04)
+      return plan.error ?? fundingError(state, ctx, P, cmd.target);
     }
     case 'change_formation': {
       const e = needParty(P);
@@ -87,7 +88,7 @@ export function commandError(state, ctx, seat, cmd) {
       if (supplyOf(P) <= 0) return 'retreat needs positive Supply';
       if (!state.activeColumns.includes(P.region.column)) return `column C${P.region.column} is not active this Tick`;
       const plan = planPartyRoute(state, ctx, P, routeOrigin(state, ctx, P), cmd.target ?? {});
-      return plan.error ?? null;
+      return plan.error ?? fundingError(state, ctx, P, cmd.target);
     }
     case 'play_ability': return abilityError(state, ctx, seat, cmd, 'ordinary_action');
     case 'begin_work': return workError(state, ctx, seat, cmd);
@@ -170,6 +171,26 @@ export function validatePlan(state, ctx, seat, commands) {
     execute(scratch, ctx, sink, seat, cmd, { dryRun: true });
   });
   return { ok: errors.length === 0, accepted, errors };
+}
+
+/**
+ * The plan's projected effect on a scratch state (presentation forecasts: held-plus-planned Supply,
+ * funded ranges, the Mana pool after this plan's burns and payments). Same order and checks as
+ * validatePlan; the real state is untouched. A projection, not a promise: the opponent's plan and
+ * responses can still change the outcome.
+ */
+export function projectPlan(state, ctx, seat, commands) {
+  const scratch = clone(state);
+  const sink = [];
+  const accepted = [];
+  const errors = [];
+  commands.forEach((cmd, index) => {
+    const e = commandError(scratch, ctx, seat, cmd);
+    if (e) { errors.push({ index, type: cmd.type, error: e }); return; }
+    accepted.push(cmd);
+    execute(scratch, ctx, sink, seat, cmd, { dryRun: true });
+  });
+  return { ok: errors.length === 0, accepted, errors, state: scratch, events: sink };
 }
 
 /** Pay a colored cost: burns first, then the planned assignment. */
