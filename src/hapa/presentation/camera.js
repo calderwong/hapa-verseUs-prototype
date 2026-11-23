@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { globalUniforms } from '../../../vendor/lumina/src/engine/render/GlobalUniforms.js';
 
 const DEG = Math.PI / 180;
+const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const damp = (a, b, lambda, dt) => b + (a - b) * Math.exp(-lambda * dt);
 const dampAngle = (a, b, lambda, dt) => {
   let d = b - a;
@@ -118,7 +119,11 @@ export class BoardCamera {
 
   rotate(stepDeg) { this.goal.yaw += stepDeg * DEG; if (this.atHome) this._refit(); } // a turn keeps the whole subject in view
   tilt(stepDeg) { this.atHome = false; this.goal.pitch = Math.min(86 * DEG, Math.max(18 * DEG, this.goal.pitch + stepDeg * DEG)); }
-  /** Zoom by `factor`; with a ground point, keep that point under the cursor (zoom toward it). */
+  /**
+   * Zoom by `factor`; with a world point, keep that point under the cursor (zoom toward it). The
+   * point keeps its real height (a hilltop, flyer or tunnel party; review 06, R6-02): the focus
+   * moves toward it in all three axes, so the camera slides along the ray through the point.
+   */
   zoom(factor, toward = null) {
     this.atHome = false;
     const before = this.goal.distance;
@@ -126,6 +131,7 @@ export class BoardCamera {
     const k = this.goal.distance / before;
     if (toward && k !== 1) {
       this.goal.focus.x = toward.x + (this.goal.focus.x - toward.x) * k;
+      this.goal.focus.y = (toward.y ?? 0) + (this.goal.focus.y - (toward.y ?? 0)) * k;
       this.goal.focus.z = toward.z + (this.goal.focus.z - toward.z) * k;
       this._clampFocus();
     }
@@ -182,12 +188,17 @@ export class BoardCamera {
     if (keys.has('KeyA') || keys.has('ArrowLeft')) this.pan(panSpeed, 0);
     if (keys.has('KeyD') || keys.has('ArrowRight')) this.pan(-panSpeed, 0);
     if (this.held) this.held(dt);
-    this.yaw = dampAngle(this.yaw, this.goal.yaw, 9, dt);
-    this.pitch = damp(this.pitch, this.goal.pitch, 9, dt);
-    this.distance = damp(this.distance, this.goal.distance, 8, dt);
-    this.focus.x = damp(this.focus.x, this.goal.focus.x, 8, dt);
-    this.focus.z = damp(this.focus.z, this.goal.focus.z, 8, dt);
-    this.focus.y = damp(this.focus.y, this.goal.focus.y, 8, dt);
+    // reduced motion: camera transitions (Home, Focus, Return, turns) arrive at once (review 06)
+    if (this.reduced ?? reducedMotion()) {
+      this.yaw = this.goal.yaw; this.pitch = this.goal.pitch; this.distance = this.goal.distance; this.focus.copy(this.goal.focus);
+    } else {
+      this.yaw = dampAngle(this.yaw, this.goal.yaw, 9, dt);
+      this.pitch = damp(this.pitch, this.goal.pitch, 9, dt);
+      this.distance = damp(this.distance, this.goal.distance, 8, dt);
+      this.focus.x = damp(this.focus.x, this.goal.focus.x, 8, dt);
+      this.focus.z = damp(this.focus.z, this.goal.focus.z, 8, dt);
+      this.focus.y = damp(this.focus.y, this.goal.focus.y, 8, dt);
+    }
     const c = this.camera;
     const r = this.distance * Math.cos(this.pitch);
     c.position.set(this.focus.x + Math.sin(this.yaw) * r, this.focus.y + this.distance * Math.sin(this.pitch), this.focus.z + Math.cos(this.yaw) * r);

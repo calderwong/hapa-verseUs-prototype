@@ -1,15 +1,19 @@
 /**
  * The actual formation as the composition view (human-feedback addendum 02, HF2-04/HF2-06/HF2-07;
- * review 05, R5-03). For one intentionally inspected party, a passive label sits beside each
- * visible member's real body — role first, then true health, then a concise combat summary when the
- * on-screen space allows; one hovered member expands to its full breakdown. The party's collective
- * facts (Mount, Supply, facing, destination, height/exposure, shared pool) appear once at its edge.
+ * reviews 05 and 06, R5-03 and R6-01). For one intentionally inspected party, a passive compact
+ * label sits beside each visible member's real body — role, then true health, then a concise
+ * combat summary when the on-screen space allows. Opening one member (hover, a tap on its body, or
+ * its button in the inspection bar) never expands that label over its neighbours: the full
+ * explanation goes to one reading panel placed in measured free space beside the formation, joined
+ * to its member by a leader line and a highlighted label. The party's collective facts appear once,
+ * also placed clear of the formation, the reading panel and the docked controls.
  *
- * Space is measured, not guessed: the projected size of one member width at the party's real
- * height decides the detail level, with entry/exit hysteresis and a settling interval. Labels are
- * upright DOM text outside the world post-processing, carry `pointer-events: none` (wheel and
- * camera gestures pass through), and keep a stable side per member. Strings are rebuilt only when
- * their facts change; positions follow the displayed bodies every frame.
+ * Space is measured, not guessed: the projected size of one member width and of one formation row
+ * at the party's real height decides the detail level (hysteresis and a settling interval), and
+ * every placed element uses its real rendered rectangle at the current text size. Labels are
+ * upright DOM text outside the world post-processing and carry `pointer-events: none` (wheel and
+ * camera gestures pass through). Text and DOM are rebuilt only when their facts change (a complete
+ * signature); positions follow the displayed bodies every frame.
  */
 import { h } from './dom.js';
 
@@ -18,6 +22,7 @@ export const LEVELS = { identity: { enter: 64, exit: 54 }, combat: { enter: 150,
 /** Projected px between formation rows needed before a level's lines fit without covering a row. */
 export const ROW_PX = { identity: 34, combat: 120 };
 const SETTLE_MS = 140;
+const GAP = 14, EDGE = 8;
 
 export function levelFor(prev, pxPerMember, rowPx = Infinity) {
   const { identity, combat } = LEVELS;
@@ -34,37 +39,99 @@ function levelFor0(prev, pxPerMember, identity, combat) {
   return pxPerMember >= combat.enter ? 'combat' : pxPerMember >= identity.enter ? 'identity' : 'none';
 }
 
+/** @typedef {{ x: number, y: number, w: number, h: number }} Rect */
+export const overlaps = (a, b) => !!a && !!b && a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+const union = (rs) => { const v = rs.filter(Boolean); if (!v.length) return null; const x0 = Math.min(...v.map((r) => r.x)), y0 = Math.min(...v.map((r) => r.y)); return { x: x0, y: y0, w: Math.max(...v.map((r) => r.x + r.w)) - x0, h: Math.max(...v.map((r) => r.y + r.h)) - y0 }; };
+const clampRect = (r, W, H) => ({ ...r, x: Math.max(EDGE, Math.min(W - EDGE - r.w, r.x)), y: Math.max(EDGE, Math.min(H - EDGE - r.h, r.y)) });
+const inside = (r, W, H) => r.x >= EDGE - 0.5 && r.y >= EDGE - 0.5 && r.x + r.w <= W - EDGE + 0.5 && r.y + r.h <= H - EDGE + 0.5;
+
+/**
+ * Place a box of size w×h beside `around` without covering it or any `avoid` rectangle, preferring
+ * `prefer` (the previous side, for stability), then right, left, above, below; `anchorY` centers
+ * the side placements on a point (the member being read). Returns the rect and side, or null.
+ */
+export function placeBeside(w, h, around, avoid, W, H, { prefer = null, anchorY = null } = {}) {
+  const cy = anchorY ?? around.y + around.h / 2, cx = around.x + around.w / 2;
+  const at = {
+    right: { x: around.x + around.w + GAP, y: cy - h / 2 },
+    left: { x: around.x - GAP - w, y: cy - h / 2 },
+    above: { x: cx - w / 2, y: around.y - GAP - h },
+    below: { x: cx - w / 2, y: around.y + around.h + GAP },
+  };
+  const order = [...new Set([prefer, 'right', 'left', 'above', 'below'].filter(Boolean))];
+  for (const side of order) {
+    const r = { ...at[side], w, h };
+    // slide along the side to stay on screen, but never across the formation
+    if (side === 'right' || side === 'left') r.y = Math.max(EDGE, Math.min(H - EDGE - h, r.y));
+    else r.x = Math.max(EDGE, Math.min(W - EDGE - w, r.x));
+    if (!inside(r, W, H) || overlaps(r, around) || avoid.some((a) => overlaps(r, a))) continue;
+    return { rect: r, side };
+  }
+  return null;
+}
+
 export class MemberLabels {
   /** @param {HTMLElement} host the world element */
   constructor(host) {
     this.host = host;
     this.root = h('div', { class: 'mlabels', 'aria-hidden': 'true' });
+    this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    this.svg.setAttribute('class', 'mleader');
+    this.leader = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    this.svg.append(this.leader);
     this.partyEl = h('div', { class: 'mparty' });
-    this.root.append(this.partyEl);
-    host.append(this.root);
+    this.root.append(this.svg, this.partyEl);
+    // the reading panel is real content (not aria-hidden): the inspection bar's member buttons
+    // describe themselves with it, so keyboard and touch reach the same explanation
+    this.reading = h('section', { class: 'mreading', id: 'member-reading', role: 'region', 'aria-label': 'Member explanation' });
+    this.reading.hidden = true;
+    host.append(this.root, this.reading);
     this.els = new Map();
+    this.sizes = new Map();
     this.level = 'none';
     this.pending = null;
     this.keys = new Map();
+    this.layout = null;
   }
 
   /** Remove every label (no subject, new match, playback start). */
   clear() {
     for (const el of this.els.values()) el.remove();
-    this.els.clear(); this.keys.clear();
+    this.els.clear(); this.keys.clear(); this.sizes.clear();
     this.partyEl.hidden = true;
+    this.reading.hidden = true; this.readingKey = null; this.readingSide = null;
+    this.leader.setAttribute('visibility', 'hidden');
     this.level = 'none'; this.pending = null;
-    this.subject = null;
+    this.subject = null; this.partyKey = null; this.partySide = null;
+    this.layout = null;
+  }
+
+  _size(id, el, key) {
+    const s = this.sizes.get(id);
+    if (s?.key === key) return s;
+    const r = { key, w: el.offsetWidth, h: el.offsetHeight };
+    this.sizes.set(id, r);
+    return r;
+  }
+
+  /** Measured sizes depend on the text size: drop them when the root font size changes. */
+  _checkTextScale() {
+    const fs = getComputedStyle(document.documentElement).fontSize;
+    if (fs !== this.fontSize) { this.fontSize = fs; this.sizes.clear(); this.readingKey = null; this.partyKey = null; this.keys.clear(); }
   }
 
   /**
    * Per frame.
-   * @param {{ partyId: string, members: Array<{ id: string, anchor: {x:number,y:number}|null, visible: boolean, text: { role: string, health: string, healthPct: number|null, combat: string, detail: Node|null, key: string } }>,
-   *          party: { anchor: {x:number,y:number}|null, lines: string[], key: string, note?: string|null }, pxPerMember: number, expanded: string|null } | null} m
+   * @param {{ partyId: string,
+   *   members: Array<{ id: string, anchor: {x:number,y:number}|null, foot?: {x:number,y:number}|null, visible: boolean, occluded?: boolean,
+   *     text: { role: string, health: string, healthPct: number|null, combat: string, detail: (() => Node)|Node|null, key: string, where?: string } }>,
+   *   party: { anchor: {x:number,y:number}|null, lines: string[], key: string, note?: string|null },
+   *   pxPerMember: number, rowPx?: number, expanded: string|null, avoid?: Rect[] } | null} m
    */
   update(m, now = performance.now()) {
     if (!m) { if (this.subject) this.clear(); return 'none'; }
     if (this.subject !== m.partyId) { this.clear(); this.subject = m.partyId; }
+    if (!this._scaleCheckAt || now - this._scaleCheckAt > 500) { this._scaleCheckAt = now; this._checkTextScale(); }
     // detail level from measured space, with hysteresis and a short settling interval
     const want = levelFor(this.level, m.pxPerMember, m.rowPx);
     if (want !== this.level) {
@@ -72,41 +139,97 @@ export class MemberLabels {
       else if (now - this.pending.since >= SETTLE_MS) { this.level = want; this.pending = null; }
     } else this.pending = null;
     const W = this.host.clientWidth, H = this.host.clientHeight;
-    const seen = new Set();
+    const avoid = m.avoid ?? [];
+    const seen = new Set(), labelRects = new Map(), bodyRects = [];
     for (const mm of m.members) {
-      const show = this.level !== 'none' && mm.visible && mm.anchor && mm.anchor.x >= 0 && mm.anchor.x <= W && mm.anchor.y >= 0 && mm.anchor.y <= H;
+      const onScreen = mm.visible && mm.anchor && mm.anchor.x >= 0 && mm.anchor.x <= W && mm.anchor.y >= 0 && mm.anchor.y <= H;
+      // the real body's screen extent (head anchor to feet), whether or not a label is shown
+      if (onScreen) { const half = m.pxPerMember * 0.42, foot = mm.foot ?? { x: mm.anchor.x, y: mm.anchor.y + m.pxPerMember * 1.1 }; bodyRects.push({ x: mm.anchor.x - half, y: mm.anchor.y, w: half * 2, h: Math.max(8, foot.y - mm.anchor.y) }); }
+      const show = this.level !== 'none' && onScreen;
       let el = this.els.get(mm.id);
       if (!show) { if (el) el.hidden = true; continue; }
       seen.add(mm.id);
       if (!el) { el = h('div', { class: 'mlabel' }); this.els.set(mm.id, el); this.root.append(el); }
       const expanded = m.expanded === mm.id;
-      const key = `${this.level}|${expanded}|${mm.text.key}`;
+      const maxW = `${Math.max(100, Math.round(m.pxPerMember * 0.96))}px`;
+      const key = `${this.level}|${expanded}|${mm.occluded ? 1 : 0}|${mm.text.role}|${mm.text.health}|${mm.text.healthPct}|${mm.text.combat}|${maxW}`;
+      el.hidden = false;
       if (this.keys.get(mm.id) !== key) {
         this.keys.set(mm.id, key);
-        el.className = `mlabel${expanded ? ' expanded' : ''}`;
+        el.className = `mlabel${expanded ? ' expanded' : ''}${mm.occluded ? ' occluded' : ''}`;
         const hp = mm.text.healthPct;
         el.replaceChildren(...[
           h('b', {}, mm.text.role),
           h('div', { class: 'mhp' }, hp != null ? h('i', { style: `width:${Math.round(hp * 100)}%` }) : null, h('span', {}, mm.text.health)),
-          this.level === 'combat' || expanded ? h('div', { class: 'mcombat' }, mm.text.combat) : null,
-          expanded && mm.text.detail ? h('div', { class: 'mdetail' }, mm.text.detail) : null,
+          this.level === 'combat' ? h('div', { class: 'mcombat' }, mm.text.combat) : null,
+          mm.occluded ? h('div', { class: 'mocc' }, 'behind terrain') : null,
         ].filter(Boolean));
+        el.style.maxWidth = maxW;
       }
-      el.hidden = false;
+      const size = this._size(mm.id, el, key);
       // stable side: above the head, centered on the body
       el.style.transform = `translate(${Math.round(mm.anchor.x)}px, ${Math.round(mm.anchor.y)}px) translate(-50%, -100%)`;
       el.style.zIndex = expanded ? 3 : 2;
-      el.style.maxWidth = expanded ? '280px' : `${Math.max(100, Math.round(m.pxPerMember * 0.96))}px`;
+      labelRects.set(mm.id, { x: mm.anchor.x - size.w / 2, y: mm.anchor.y - size.h, w: size.w, h: size.h });
     }
     for (const [id, el] of this.els) if (!seen.has(id)) el.hidden = true;
-    // collective facts once, at the party's edge
-    const pa = m.party.anchor;
-    this.partyEl.hidden = !pa;
-    if (pa) {
-      if (this.partyKey !== `${m.party.key}|${this.level}`) { this.partyKey = `${m.party.key}|${this.level}`; this.partyEl.replaceChildren(...[...m.party.lines.map((t, i) => h(i ? 'div' : 'b', {}, t)), m.party.note ? h('div', { class: 'warn' }, m.party.note) : null, this.level === 'none' ? h('div', { class: 'dim' }, 'Closer to read each member') : this.level === 'identity' ? h('div', { class: 'dim' }, 'Hover a member for its combat facts') : null].filter(Boolean)); }
-      // at the formation's side edge, clear of the members and of the command bar below
-      this.partyEl.style.transform = `translate(${Math.round(pa.x)}px, ${Math.round(pa.y)}px) translate(0, -50%)`;
+    // the formation as the player sees it: every body and its compact label (nothing may cover it)
+    const formation = union([...bodyRects, ...labelRects.values()]);
+    // one deeper explanation, beside the formation (R6-01)
+    const open = m.members.find((x) => x.id === m.expanded && x.visible && x.anchor);
+    let readingRect = null;
+    if (open && formation) {
+      const rkey = `${open.text.key}|${open.text.where ?? ''}`;
+      if (this.readingKey !== rkey) {
+        this.readingKey = rkey;
+        const d = typeof open.text.detail === 'function' ? open.text.detail() : open.text.detail;
+        this.reading.replaceChildren(h('div', { class: 'mr-head' }, h('b', {}, open.text.role), h('span', {}, ` ${open.text.health}`), open.text.where ? h('span', { class: 'dim' }, ` · ${open.text.where}`) : null), d ?? h('div', { class: 'dim' }, 'No further facts'));
+        this.reading.hidden = false;
+        this.readingSize = { w: this.reading.offsetWidth, h: this.reading.offsetHeight };
+      }
+      this.reading.hidden = false;
+      const { w, h: hh } = this.readingSize;
+      const placed = placeBeside(w, hh, formation, avoid, W, H, { prefer: this.readingSide, anchorY: open.anchor.y });
+      if (placed) { readingRect = placed.rect; this.readingSide = placed.side; this.reading.classList.remove('docked'); }
+      else {
+        // no free side: an intentional docked reading view at the screen edge farther from the
+        // formation (the command selection and controls stay as they are)
+        const left = formation.x + formation.w / 2 > W / 2;
+        readingRect = clampRect({ x: left ? EDGE : W - EDGE - w, y: 56, w, h: hh }, W, H);
+        this.readingSide = null;
+        this.reading.classList.add('docked');
+      }
+      this.reading.style.transform = `translate(${Math.round(readingRect.x)}px, ${Math.round(readingRect.y)}px)`;
+      // the source cue: a leader from the highlighted label to the panel's nearest edge
+      const lr = labelRects.get(open.id) ?? { x: open.anchor.x, y: open.anchor.y, w: 0, h: 0 };
+      const from = { x: Math.max(lr.x, Math.min(lr.x + lr.w, readingRect.x + readingRect.w / 2)), y: Math.max(lr.y, Math.min(lr.y + lr.h, readingRect.y + readingRect.h / 2)) };
+      const to = { x: Math.max(readingRect.x, Math.min(readingRect.x + readingRect.w, from.x)), y: Math.max(readingRect.y, Math.min(readingRect.y + readingRect.h, from.y)) };
+      this.leader.setAttribute('x1', from.x); this.leader.setAttribute('y1', from.y);
+      this.leader.setAttribute('x2', to.x); this.leader.setAttribute('y2', to.y);
+      this.leader.setAttribute('visibility', 'visible');
+    } else {
+      this.reading.hidden = true; this.readingKey = null;
+      this.leader.setAttribute('visibility', 'hidden');
     }
+    // collective facts once, clear of the formation, the reading panel and the docked controls
+    let partyRect = null;
+    const pa = m.party.anchor;
+    this.partyEl.hidden = !pa || !formation;
+    if (pa && formation) {
+      const pkey = `${m.party.key}|${this.level}`;
+      if (this.partyKey !== pkey) {
+        this.partyKey = pkey;
+        this.partyEl.replaceChildren(...[...m.party.lines.map((t, i) => h(i ? 'div' : 'b', {}, t)), m.party.note ? h('div', { class: 'warn' }, m.party.note) : null, this.level === 'none' ? h('div', { class: 'dim' }, 'Closer to read each member') : this.level === 'identity' ? h('div', { class: 'dim' }, 'Hover or tap a member for its facts') : null].filter(Boolean));
+        this.partySize = { w: this.partyEl.offsetWidth, h: this.partyEl.offsetHeight };
+      }
+      const { w, h: hh } = this.partySize;
+      const placed = placeBeside(w, hh, formation, [...avoid, readingRect].filter(Boolean), W, H, { prefer: this.partySide });
+      partyRect = placed ? placed.rect : clampRect({ x: formation.x + formation.w + GAP, y: formation.y + formation.h / 2 - hh / 2, w, h: hh }, W, H);
+      this.partySide = placed?.side ?? null;
+      this.partyEl.classList.toggle('crowded', !placed);
+      this.partyEl.style.transform = `translate(${Math.round(partyRect.x)}px, ${Math.round(partyRect.y)}px)`;
+    }
+    this.layout = { W, H, level: this.level, formation, bodies: bodyRects, labels: Object.fromEntries(labelRects), reading: readingRect, party: partyRect, avoid, readingDocked: !!readingRect && this.reading.classList.contains('docked'), partyCrowded: !!partyRect && this.partyEl.classList.contains('crowded') };
     return this.level;
   }
 }

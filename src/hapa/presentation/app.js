@@ -43,7 +43,7 @@ import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } 
 import { openEditor } from './editor.js';
 import { InspectController } from './inspect.js';
 import { MemberLabels } from './member-labels.js';
-import { memberFacts, partyFacts, rangedPreview, healthAt } from '../rules/inspection.js';
+import { memberFacts, partyFacts, rangedTargets, linePreview, momentSlice, stateAt } from '../rules/inspection.js';
 import { term, closeTerms } from './glossary.js';
 import { openLab, anyProfile, labProfiles } from './lab.js';
 import { localCatalog, localDecks } from './local-content.js';
@@ -59,6 +59,26 @@ const STATE_NAME = { idle: 'waiting', moving: 'moving', engaged: 'in combat', tu
 /** Attributes that make a click-driven element a keyboard button too (Enter / Space; review UX-14). */
 const kbd = (fn, label) => ({ tabindex: '0', role: 'button', ...(label ? { 'aria-label': label } : {}), onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); fn(e); } } });
 const cap = (x) => (x ? x[0].toUpperCase() + x.slice(1) : x);
+const FACES_ALL = ['front', 'left', 'right', 'rear', 'above', 'below'];
+const listWords = (xs) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
+/** A Card effect's readable name from its definition id (`fixture.bound_standard@1` → "Bound Standard"). */
+const cardEffectName = (kind) => String(kind).replace(/@\d+$/, '').replace(/^.*\./, '').split('_').map(cap).join(' ');
+/**
+ * One member's protection grouped into rows (review 06, R6-01): faces sharing the same channel,
+ * total, base and named sources become one row ("Magic 1 on all six faces, from the party Mage"),
+ * so identical values are not repeated while every real exception keeps its own row.
+ */
+function protectionGroups(f) {
+  const rows = new Map();
+  for (const channel of ['physical', 'magic']) for (const face of FACES_ALL) {
+    const v = f.protection[channel]?.[face];
+    if (!v) continue;
+    const k = `${channel}|${v.total}|${v.base}|${v.sources.map((x) => `${x.source}:${x.kind}:${x.amount}`).join(',')}`;
+    if (!rows.has(k)) rows.set(k, { channel, total: v.total, base: v.base, sources: v.sources, faces: [] });
+    rows.get(k).faces.push(face);
+  }
+  return [...rows.values()];
+}
 /** A party in plain words: "Castle R1C1" (Mount kind, or Pawn, and its global territory). */
 const partyShort = (state, id) => { const p = state.parties[id]; return p ? `${p.mount ? cap(p.mount) : 'Pawn'} R${p.region.row}C${p.region.column}` : id; };
 /** A card in plain words: "2♣ (C1)". */
@@ -267,6 +287,7 @@ export class VersusApp {
     this.inspectParty = null;
     this._returnPose = null;
     this.expandedMember = null;
+    this.expandedPin = null;
     this.labels.clear();
     this.view?.diorama.clear();
     this.inspect.reset();
@@ -423,6 +444,9 @@ export class VersusApp {
     const snap = (q, evLen) => frames.push({ q, pos: snapshot(state), evLen });
     let lastQ = -1;
     ctx.trace = (s, q, events) => { if (q - lastQ >= 20 || events.length !== frames.at(-1)?.evLen) { snap(q, events.length); lastQ = q; } };
+    // the state right after each event, so inspection during playback reads one moment (R6-03)
+    const moments = [];
+    ctx.observeEvents = (s) => moments.push(momentSlice(s));
     const gen = resolveTick(state, ctx, accepted);
     const answers = [];
     let step = gen.next();
@@ -436,12 +460,13 @@ export class VersusApp {
       step = gen.next(answer ?? { pass: true });
     }
     ctx.trace = null;
+    ctx.observeEvents = null;
     const events = step.value;
     session.events.push(...events);
     session.replay.ticks.push({ tick: state.tick, plans: clone(accepted), choices: answers, fingerprint: stateFingerprint(state) });
     this.tickEvents.push(...events);
     this.lastEvents = this.tickEvents;
-    await this._play(before, frames, events);
+    await this._play(before, frames, events, moments);
     return owner === this.generation;
   }
 
@@ -456,7 +481,7 @@ export class VersusApp {
   }
 
   /** Play back a resolved Tick: members follow the traced trajectories; casualties fall at their event. */
-  _play(before, frames, events) {
+  _play(before, frames, events, moments = []) {
     const startPos = snapshot(before);
     const all = timeline(startPos, frames, events.length, eventsBeforeMovement(events));
     const duration = (this.watch ? 0.9 : 1.4) / this.speed;
@@ -466,7 +491,7 @@ export class VersusApp {
     for (const t of this.view.supplyTokens?.values() ?? []) t.visible = false; // they return at their new places after playback
     this.view.syncPlanLinks(this.state, []); // the planned relationship ends where the resolved landing begins
     return new Promise((resolve) => {
-      this.playback = { t: 0, duration, all, events, resolve, shown: 0, paused: false, before };
+      this.playback = { t: 0, duration, all, events, resolve, shown: 0, paused: false, before, moments };
       this._renderReadyButton();
       this._renderBasins(); // offerings leave the pit; counters show the accepted pool at once
     });
@@ -560,15 +585,16 @@ export class VersusApp {
       if (e.code === 'Escape' && this.inspect.dismissTop()) return; // the top contextual view first
       if (e.code === 'Escape' && this.ordersOpen && !this._can(this.viewSeat).stale) { this._toggleOrders(false); return; }
       if (e.code === 'Escape' && this.tool) { this.tool = null; this._renderAll(); return; } // tool cancel, orders kept
-      if (e.code === 'Escape' && this.inspectParty) { this.inspectParty = null; this.expandedMember = null; return; } // labels off, camera stays
+      if (e.code === 'Escape' && this.inspectParty && this.expandedPin) { this.expandedPin = null; this._renderInspectBar(); return; } // the explanation first
+      if (e.code === 'Escape' && this.inspectParty) { const back = document.activeElement?.closest?.('.inspect-bar'); this.inspectParty = null; this.expandedMember = null; this._renderInspectBar(); if (back) this._inspectorEl()?.querySelector?.('summary:not(.off), button')?.focus({ preventScroll: true }); return; } // labels off, camera stays
       if (e.code === 'Escape') { if (this.tool) { this.tool = null; this._renderAll(); } else { this.selected = null; this.view?.select(this.state, null); this._renderAll(); } return; }
       if (k === 'q') this.cam.rotate(45);
       else if (k === 'e') this.cam.rotate(-45);
       else if (k === 'z') this.cam.tilt(15);
       else if (k === 'x') this.cam.tilt(-15);
       else if (k === 'v') this.cam.toggleTactical();
-      else if (e.code === 'Home') { this.cam.home(); this.inspectParty = null; this._returnPose = null; this._renderCommandBar(); }
-      else if (k === 'f') { if (this.selected?.kind === 'party') this._focusInspect(this.selected.id); else this._focusSelection(); }
+      else if (e.code === 'Home') this._goHome();
+      else if (k === 'f') { const id = this._inspectCandidate(); if (id) this._focusInspect(id); else this._focusSelection(); }
       else if (k === 'r') this._returnCamera();
       else if (e.code === 'Space' && document.activeElement?.tagName !== 'BUTTON') { e.preventDefault(); if (this.playback) this.playback.paused = !this.playback.paused; }
       else if (/^[1-9]$/.test(e.key)) this._selectHandSlot(Number(e.key));
@@ -623,7 +649,7 @@ export class VersusApp {
         b('▲', 'Pan forward (W / ↑ / left-drag)', hold((dt) => cam.pan(0, 620 * dt))),
         b('⟳', 'Turn right 45° (E)', { onclick: () => cam.rotate(-45) }),
         b('◀', 'Pan left (A / ←)', hold((dt) => cam.pan(620 * dt, 0))),
-        b('⌂', 'Home view (Home)', { onclick: () => cam.home() }),
+        b('⌂', 'Home view (Home)', { onclick: () => this._goHome() }),
         b('▶', 'Pan right (D / →)', hold((dt) => cam.pan(-620 * dt, 0))),
         b('⤒', 'Tilt up — look more from above (Z)', hold((dt) => cam.tilt(40 * dt))),
         b('▼', 'Pan back (S / ↓)', hold((dt) => cam.pan(0, -620 * dt))),
@@ -746,10 +772,19 @@ export class VersusApp {
         this.tool = null; this._renderAll(); return;
       }
     }
-    // plain selection
+    // a tap or click on a member of the party being inspected opens its explanation (the touch
+    // route to member facts); it never changes the command selection (review 06, R6-01/R6-02)
+    if (this.inspectParty && pick.member && pick.member.party === this.inspectParty.partyId && !e.altKey) {
+      this.expandedPin = this.expandedPin === pick.member.id ? null : pick.member.id;
+      this._renderInspectBar();
+      return;
+    }
+    // plain selection: only a party you can command becomes the command selection; any other party
+    // is read (its public summary pinned, F to inspect it) and your selection and orders stay
     if (pick.member && e.altKey) this.selected = { kind: 'member', id: pick.member.id };
+    else if (pick.party && !this._commandable(pick.party)) { this.pinned = { kind: 'hint', id: pick.party.id }; }
     else if (pick.party) { this.selected = { kind: 'party', id: pick.party.id }; this._autoLayer(pick.party); }
-    else this.selected = null; // empty ground: quiet board, nothing pinned
+    else { this.selected = null; if (this.pinned?.kind === 'hint') this.pinned = null; } // empty ground: quiet board
     this._renderAll();
   }
 
@@ -911,10 +946,37 @@ export class VersusApp {
     const r = Math.max(2.2 * 1.5, ...pts.map((v) => Math.hypot(v.x - c.x, v.z - c.z))) + 2.4;
     if (!this._returnPose) this._returnPose = this.cam.savePose();
     this.cam.frame(c, r);
+    if (this.inspectParty?.partyId !== partyId) this.expandedPin = null;
     this.inspectParty = { partyId, via: 'focus', since: performance.now() };
     this._cmdOpen = null;
     this._renderCommandBar();
+    this._renderInspectBar();
   }
+
+  /**
+   * Home, from the camera pad or the Home key (review 06, R6-02): the fitted home view, close
+   * inspection released and the saved Return pose dropped, so a later Focus starts a fresh
+   * Return journey from home. Command selection and orders are kept.
+   */
+  _goHome() {
+    this.cam.home();
+    this.inspectParty = null;
+    this.expandedMember = null;
+    this.expandedPin = null;
+    this._returnPose = null;
+    this._renderCommandBar();
+    this._renderInspectBar();
+  }
+
+  /** The party F inspects: a party being read (pinned) first, else the command selection. */
+  _inspectCandidate() {
+    const pin = this.pinned;
+    if (pin && ['hint', 'party'].includes(pin.kind) && this.state.parties[pin.id]?.alive) return pin.id;
+    return this.selected?.kind === 'party' ? this.selected.id : this.selected?.kind === 'member' ? this.state.members[this.selected.id]?.party ?? null : null;
+  }
+
+  /** Can the viewing seat give this party orders here (own party, human seat)? */
+  _commandable(p) { return !!p && p.owner === this.viewSeat && this.seats[p.owner] === 'human' && !this.watch; }
 
   /** One-step return to the pose before Inspect (HF2-03); releases close inspection. */
   _returnCamera() {
@@ -923,49 +985,87 @@ export class VersusApp {
     this._returnPose = null;
     this.inspectParty = null;
     this.expandedMember = null;
+    this.expandedPin = null;
     this._renderCommandBar();
+    this._renderInspectBar();
+  }
+
+  /**
+   * The state as of the displayed moment (review 06, R6-03): during playback, the slice recorded
+   * right after the last event shown; otherwise the accepted state. Read-only.
+   */
+  _displayState() {
+    const pb = this.playback;
+    if (!pb?.before) return this.state;
+    const key = `${this.generation}:${this.session.events.length}:${pb.shown}`;
+    if (this._momentCache?.key !== key) this._momentCache = { key, state: stateAt(pb.before, pb.moments, pb.shown, this.state) };
+    return this._momentCache.state;
   }
 
   /** Facts for the inspected party at the displayed moment, cached until that moment changes. */
   _labelFacts(partyId) {
-    const pb = this.playback;
+    const pb = this.playback, S = this._displayState();
     const key = `${this.generation}:${partyId}:${this.state.tick}:${this.session.events.length}:${pb ? pb.shown : 'final'}:${this.rev?.A}:${this.rev?.B}`;
     if (this._factsCache?.key === key) return this._factsCache.facts;
-    const at = pb?.before ? healthAt(pb.before, pb.events, pb.shown) : null;
-    const party = partyFacts(this.state, this.ctx, partyId);
+    const party = partyFacts(S, this.ctx, partyId);
     const members = {};
-    for (const id of Object.values(this.state.parties[partyId]?.slots ?? {})) if (id) members[id] = memberFacts(this.state, this.ctx, id, at);
+    for (const id of Object.values(S.parties[partyId]?.slots ?? {})) if (id) { const f = memberFacts(S, this.ctx, id); if (f) { f.sig = JSON.stringify(f); members[id] = f; } }
     // helpers of other parties standing in this formation's strip keep their own identity
-    const facts = { party, members, playing: !!pb };
+    const facts = { party, members, playing: !!pb, state: S };
     this._factsCache = { key, facts };
     return facts;
   }
 
-  /** Text for one member's label from the shared read model (HF2-05). */
-  _memberText(f, enemyId) {
-    const U = this.ctx.U, ch = { physical: 'Phys', magic: 'Mag' }, CH = { physical: 'Physical', magic: 'Magic' };
+  /**
+   * Context only an open explanation needs (R6-04): the ranged targets the rules would actually
+   * consider (engaged parties only) and, in line profiles, the front line a frontal hit reaches.
+   * Its JSON is part of the label signature, so any change refreshes the open text.
+   */
+  _memberContext(S, f) {
+    const ranged = f.attacks.find((a) => a.kind === 'ranged');
+    const targets = ranged ? rangedTargets(S, this.ctx, f.id, ranged.id) : [];
+    const line = f.protectionMode === 'line' ? Object.fromEntries(['physical', 'magic'].map((c) => [c, linePreview(S, this.ctx, f.partyId, c, 'front')])) : null;
+    return { targets, line };
+  }
+
+  /** Text for one member's label from the shared read model (HF2-05); detail is built on demand. */
+  _memberText(f, S, ctx = null) {
+    const ch = { physical: 'Phys', magic: 'Mag' }, CH = { physical: 'Physical', magic: 'Magic' };
     const role = f.role === 'center' ? `${f.mount ? cap(f.mount) : 'Center'}${f.conditions.includes('commander') ? ' ★' : ''}` : cap(f.role);
     const hpText = f.health.mode === 'party_pool' ? `pool ${pts(f.health.hp)}/${pts(f.health.max)}` : `${pts(f.health.hp)}/${pts(f.health.max)} HP`;
     const hpPct = f.health.max ? Math.max(0, Math.min(1, f.health.hp / f.health.max)) : null;
     const atk = f.attacks.map((a) => `${a.hits > 1 ? `${a.hits}×` : ''}${a.power} ${ch[a.channel]}${a.range ? ` r${a.range}` : ''}`).join(', ');
+    const line = f.protectionMode === 'line';
     // protection grouped by channel and the faces it really covers; "+applied" marks a value that
     // another source (a Card effect, a party ward) raises above the member's own
-    const def = [];
-    for (const c of ['physical', 'magic']) {
-      const byVal = new Map();
-      for (const [face, v] of Object.entries(f.protection[c])) { const k = `${v.total}|${v.total !== v.base}`; if (!byVal.has(k)) byVal.set(k, []); byVal.get(k).push(face); }
-      for (const [k, faces] of byVal) { const [total, applied] = k.split('|'); def.push(`${ch[c]} ${total} ${faces.length >= 5 ? 'all sides' : faces.join('/')}${applied === 'true' ? ' (+applied)' : ''}`); }
-    }
-    const combat = `Atk ${atk || '—'} · Def ${def.length ? def.join(' · ') : 'none'}${f.alive ? '' : ' · fallen'}`;
-    // the expanded breakdown: attacks in words, protection by face with base + applied sources
-    const detail = h('div', {},
-      ...f.attacks.map((a) => h('div', {}, `${cap(a.id)}: ${a.hits} × ${a.power} ${CH[a.channel]}${a.kind === 'ranged' ? `, base range ${a.range}${a.elevationAware ? ' (elevation changes it)' : ''}` : ', melee'}${a.charge ? ', charges' : ''}`)),
-      ...(() => { const out = []; for (const c of ['physical', 'magic']) for (const [face, v] of Object.entries(f.protection[c])) out.push(h('div', {}, `${cap(face)} ${CH[c]} ${v.total}${v.sources.length > 1 || v.total !== v.base ? ` = ${v.sources.map((x) => `${x.amount} ${String(x.kind).replace(/@\d+$/, '').replace(/^fixture\./, '').replace(/_/g, ' ')}`).join(' + ')}` : ''}`)); return out.length ? out : [h('div', { class: 'dim' }, 'No protection on any face')]; })(),
-      f.protectionMode === 'line' ? h('div', { class: 'dim' }, 'Line defense: a hit uses the shared value of the members it reaches.') : null,
-      f.health.mode === 'party_pool' ? h('div', { class: 'dim' }, 'Health is the party\'s shared pool.') : null,
-      (() => { const a = f.attacks.find((x) => x.kind === 'ranged'); const pv = a && enemyId ? rangedPreview(this.state, this.ctx, f.id, a.id, enemyId) : null; return pv ? h('div', { class: 'ok' }, `Preview vs ${partyShort(this.state, enemyId)}: power ${pv.power}, range ${pv.range}${pv.elevation !== 'level' ? ` (${pv.elevation.replace('_', ' ')})` : ''}${pv.blocked ? ', blocked (needs open sky)' : ''} — not a result`) : null; })(),
-      f.conditions.filter((c) => !['center'].includes(c)).length ? h('div', { class: 'warn' }, f.conditions.filter((c) => c !== 'center').join(', ').replace(/_/g, ' ')) : null);
-    return { role, health: hpText, healthPct: f.health.mode === 'member' ? hpPct : null, combat, detail, key: `${f.id}|${hpText}|${combat}|${f.alive}|${enemyId}` };
+    const groups = protectionGroups(f);
+    const def = groups.map((g) => `${ch[g.channel]} ${g.total} ${g.faces.length === 6 ? 'all sides' : g.faces.length >= 5 ? 'all but ' + FACES_ALL.filter((x) => !g.faces.includes(x)).join('/') : g.faces.join('/')}${g.total !== g.base ? ' (+applied)' : ''}`);
+    const combat = `Atk ${atk || '—'} · ${line ? 'Line contribution' : 'Def'} ${def.length ? def.join(' · ') : 'none'}${f.alive ? '' : ' · fallen'}`;
+    const name = (src) => { const m = S.members[src.source]; if (src.source === f.id) return src.kind === 'shield' ? 'its own shield' : `its own ${String(src.kind).replace(/_/g, ' ')}`; if (m) return `the party ${cap(m.archetype)} (${String(src.kind).replace(/_/g, ' ')})`; return cardEffectName(src.kind); };
+    // the explanation: built only when this member is opened (R6-04), from the same facts and context
+    const detail = () => {
+      const out = [];
+      for (const a of f.attacks) out.push(h('div', {}, `${cap(a.id)}: ${a.hits} × ${a.power} ${CH[a.channel]}${a.kind === 'ranged' ? `, base range ${a.range}${a.elevationAware ? ' (height changes it)' : ''}${a.needsArc ? ', needs open sky' : ''}` : ', melee'}${a.charge ? ', charges' : ''}`));
+      if (!groups.length) out.push(h('div', { class: 'dim' }, 'No protection on any face'));
+      for (const g of groups) {
+        const where = g.faces.length === 6 ? 'on all six faces' : `on the ${listWords(g.faces)}`;
+        const from = g.sources.filter((x) => x.amount).map((x) => `${x.amount} from ${name(x)}`);
+        out.push(h('div', {}, `${CH[g.channel]} ${line ? 'contribution' : 'protection'} ${g.total} ${where}${from.length ? `: ${from.join(' + ')}` : ''}${g.total !== g.base ? ` (base ${g.base}, applied ${g.total})` : ''}`));
+      }
+      if (line && ctx?.line) for (const c of ['physical', 'magic']) { const lp = ctx.line[c]; if (lp && lp.total) out.push(h('div', { class: 'dim' }, `Line defense: a frontal hit on the front row (slots ${lp.slots.join(', ')}) meets ${CH[c]} ${lp.total} shared by ${lp.members.length} member${lp.members.length === 1 ? '' : 's'}.`)); }
+      if (f.health.mode === 'party_pool') out.push(h('div', { class: 'dim' }, 'Health is the party\'s shared pool.'));
+      const ranged = f.attacks.find((a) => a.kind === 'ranged');
+      if (ranged && ctx) {
+        const t = ctx.targets.find((x) => x.inRange && !x.blocked) ?? ctx.targets[0];
+        if (!t) out.push(h('div', { class: 'dim' }, 'No engaged target: a volley only reaches a party this formation is engaged with.'));
+        else out.push(h('div', { class: t.inRange && !t.blocked ? 'ok' : 'dim' }, `Preview vs ${partyShort(S, t.target)} (engaged): power ${t.power}, range ${t.range}${t.elevation !== 'level' ? ` (${t.elevation.replace('_', ' ')})` : ''}${t.blocked ? ', blocked: needs open sky' : t.inRange ? '' : ', out of range'} — a preview, not a result`));
+      }
+      const cond = f.conditions.filter((c) => c !== 'center');
+      if (cond.length) out.push(h('div', { class: 'warn' }, cond.join(', ').replace(/_/g, ' ')));
+      return h('div', {}, ...out);
+    };
+    const key = `${f.sig}|${ctx ? JSON.stringify(ctx) : ''}`;
+    return { role, health: hpText, healthPct: f.health.mode === 'member' ? hpPct : null, combat, detail, key };
   }
 
   /**
@@ -985,8 +1085,12 @@ export class VersusApp {
 
   /** Per frame: annotate the inspected party's real members (HF2-04/06/07). */
   _updateLabels(dt = 0) {
+    if (!this.inspectParty && this.el.inspectBar && !this.el.inspectBar.hidden) { this.expandedPin = null; this._renderInspectBar(); }
     const sub = this.inspectParty;
-    const p = sub ? this.state?.parties[sub.partyId] : null;
+    // survival is read at the displayed moment: a party defeated later in the Tick keeps its labels
+    // until its defeat is shown (R6-03)
+    const S = sub ? this._displayState() : null;
+    const p = sub ? S?.parties[sub.partyId] : null;
     if (!p || p.retired || !p.alive) { if (sub) this.inspectParty = null; this.labels.update(null); this._updateDiorama(dt, null, 0); return; }
     const cam = this.engine.camera, world = this.el.world.getBoundingClientRect(), canvas = this.engine.renderer.domElement.getBoundingClientRect();
     const toScreen = (v) => { const q = v.clone().project(cam); return q.z > 1 ? null : { x: canvas.left - world.left + ((q.x + 1) / 2) * canvas.width, y: canvas.top - world.top + ((1 - q.y) / 2) * canvas.height }; };
@@ -1004,11 +1108,16 @@ export class VersusApp {
     if ((pxPerMember < 36 || away) && performance.now() - (sub.since ?? 0) > 1200) { this.inspectParty = null; this.expandedMember = null; this.labels.update(null); this._updateDiorama(dt, null, 0); this._renderCommandBar(); return; }
     this._updateDiorama(dt, p, pxPerMember);
     const facts = this._labelFacts(p.id);
-    const roofed = standingOf(this.state, this.ctx, p).kind === 'tunnel' && this.view.terrain.cutaway === null;
-    const enemy = Object.values(this.state.parties).filter((q) => q.owner !== p.owner && q.alive && !q.retired).sort((x, y) => Math.max(Math.abs(x.region.column - p.region.column), Math.abs(x.region.row - p.region.row)) - Math.max(Math.abs(y.region.column - p.region.column), Math.abs(y.region.row - p.region.row)))[0];
+    const roofed = standingOf(S, this.ctx, p).kind === 'tunnel' && this.view.terrain.cutaway === null;
+    // the open explanation: the member under the pointer, else the one chosen by tap or keyboard
+    const expanded = this.expandedMember ?? (this.expandedPin && facts.members[this.expandedPin] ? this.expandedPin : null);
+    const occluded = this._occlusion(facts, cam);
     const members = Object.values(facts.members).map((f) => {
       const sp = this.view.sprites.get(f.id);
-      return { id: f.id, visible: !!sp?.visible && !roofed, anchor: sp ? toScreen(sp.position.clone().setY(sp.position.y + 1.35)) : null, text: this._memberText(f, enemy?.id ?? null) };
+      const open = expanded === f.id;
+      const text = this._memberText(f, S, open ? this._memberContext(S, f) : null);
+      text.where = `slot ${f.slot} · ${f.slot <= 3 ? 'front row' : f.slot <= 6 ? 'middle row' : 'rear row'}`;
+      return { id: f.id, visible: !!sp?.visible && !roofed, occluded: occluded.has(f.id), anchor: sp ? toScreen(sp.position.clone().setY(sp.position.y + 1.35)) : null, foot: sp ? toScreen(sp.position) : null, text };
     });
     const pf = facts.party, planned = this._plannedSupply(p);
     const party = {
@@ -1020,7 +1129,91 @@ export class VersusApp {
       note: roofed ? 'Roofed tunnel: open its layer to read the members (cutaway)' : facts.playing ? 'Playing back: health as of the moment shown' : null,
       key: `${JSON.stringify(pf)}|${planned}|${roofed}|${facts.playing}`,
     };
-    this.labels.update({ partyId: p.id, members, party, pxPerMember, rowPx, expanded: this.expandedMember });
+    this.labels.update({ partyId: p.id, members, party, pxPerMember, rowPx, expanded, avoid: this._avoidRects() });
+    if (this._inspectBarKey !== `${p.id}|${party.key}|${members.map((m) => `${m.id}:${m.text.health}`).join(',')}|${expanded}`) this._renderInspectBar(facts, members, expanded);
+  }
+
+  /**
+   * Docked controls the member explanation and party facts must never cover (R6-01): the command
+   * bar, the inspection bar, the camera pad, the layer rail and any pinned view, in world-element
+   * coordinates. Measured at most every 200 ms (they move only when re-rendered).
+   */
+  _avoidRects(now = performance.now()) {
+    if (this._avoidCache && now - this._avoidCache.at < 200) return this._avoidCache.rects;
+    const world = this.el.world.getBoundingClientRect();
+    const els = [this.el.cmdbar, this.el.inspectBar, this.el.camPad, this.el.world.querySelector('.layer-rail'), this.inspect.shown?.pinned?.el, document.getElementById('matchbar')];
+    const rects = els.filter((el) => el && !el.hidden && el.offsetParent !== null).map((el) => { const r = el.getBoundingClientRect(); return { x: r.left - world.left, y: r.top - world.top, w: r.width, h: r.height }; }).filter((r) => r.w > 0 && r.h > 0);
+    this._avoidCache = { at: now, rects };
+    return rects;
+  }
+
+  /**
+   * Members whose body is hidden behind raised terrain from this camera (low-angle hills; review
+   * 06 general occlusion): a ray from the camera to the body's middle meets a hill block first.
+   * Such a label is drawn as "behind terrain" rather than as if the body were in view. Throttled.
+   */
+  _occlusion(facts, cam, now = performance.now()) {
+    const key = `${this._factsCache?.key}|${cam.position.x.toFixed(1)},${cam.position.y.toFixed(1)},${cam.position.z.toFixed(1)}`;
+    if (this._occCache && (this._occCache.key === key || now - this._occCache.at < 150)) return this._occCache.set;
+    const set = new Set(), hills = this.view.terrain.hillMeshes ?? [];
+    if (hills.length) {
+      const ray = new THREE.Raycaster();
+      for (const f of Object.values(facts.members)) {
+        const sp = this.view.sprites.get(f.id);
+        if (!sp?.visible) continue;
+        const mid = sp.position.clone().setY(sp.position.y + 0.6), dir = mid.clone().sub(cam.position), dist = dir.length();
+        ray.set(cam.position, dir.normalize()); ray.far = dist - 0.3;
+        if (ray.intersectObjects(hills, false).length) set.add(f.id);
+      }
+    }
+    this._occCache = { key, at: now, set };
+    return set;
+  }
+
+  /**
+   * The inspection bar (R6-01/R6-02): the deliberate keyboard and touch route to the same member
+   * facts — who is being inspected, the collective facts, one button per member (activating it
+   * opens that member's explanation, described by the reading panel), Return and Close. It never
+   * changes the command selection. Arrow keys move between members; Escape closes the explanation.
+   */
+  _renderInspectBar(facts = null, members = null, expanded = null) {
+    const sub = this.inspectParty;
+    if (!this.el.inspectBar) {
+      this.el.inspectBar = h('section', { class: 'inspect-bar', role: 'region', 'aria-label': 'Inspection' });
+      this.el.inspectBar.addEventListener('keydown', (ev) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(ev.code)) return;
+        const bs = [...this.el.inspectBar.querySelectorAll('.ib-member')], i = bs.indexOf(document.activeElement);
+        if (i < 0) return;
+        ev.preventDefault(); ev.stopPropagation();
+        bs[(i + (ev.code === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length]?.focus();
+      });
+      this.el.inspectBar.addEventListener('pointerup', (ev) => ev.stopPropagation());
+      this.el.world.append(this.el.inspectBar);
+    }
+    const bar = this.el.inspectBar;
+    const p = sub ? this._displayState().parties[sub.partyId] : null;
+    if (!p) { bar.hidden = true; this._inspectBarKey = null; return; }
+    facts ??= this._labelFacts(p.id);
+    const S = facts.state, pf = facts.party;
+    const list = members ?? Object.values(facts.members).map((f) => ({ id: f.id, text: this._memberText(f, S) }));
+    const open = expanded ?? this.expandedMember ?? this.expandedPin;
+    this._inspectBarKey = `${p.id}|${members ? '' : 'x'}${JSON.stringify(pf)}|${list.map((m) => `${m.id}:${m.text.health}`).join(',')}|${open}`;
+    const focused = document.activeElement?.closest?.('.inspect-bar') ? document.activeElement.dataset.member ?? document.activeElement.dataset.act : null;
+    const sel = this.selected?.kind === 'party' && this.selected.id !== p.id ? this.state.parties[this.selected.id] : null;
+    bar.replaceChildren(
+      h('div', { class: 'ib-head' },
+        h('b', {}, `Inspecting ${p.owner === this.viewSeat ? 'your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'} · R${p.region.row}C${p.region.column}`),
+        h('span', { class: 'dim' }, ` ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · Supply ${pts(pf.supply)} · band ${fmtBand(pf.band)}${pf.exposed ? '' : ' · not exposed'}`),
+        sel ? h('span', { class: 'ib-keep' }, ` · commanding your ${partyShort(this.state, sel.id)}`) : null),
+      h('div', { class: 'ib-row' },
+        ...list.map((m) => h('button', { class: `ib-member${open === m.id ? ' on' : ''}`, 'data-member': m.id, 'aria-pressed': String(this.expandedPin === m.id), 'aria-describedby': this.expandedPin === m.id ? 'member-reading' : null, 'aria-label': `${m.text.role}, ${m.text.health}${this.expandedPin === m.id ? ', explanation open' : ''}`,
+          onclick: () => { this.expandedPin = this.expandedPin === m.id ? null : m.id; this._renderInspectBar(); } }, h('b', {}, m.text.role), ' ', h('span', { class: 'dim' }, m.text.health))),
+        this._returnPose ? h('button', { 'data-act': 'return', onclick: () => this._returnCamera(), title: 'Back to the view before Inspect (R)' }, '↩ Return (R)') : null,
+        h('button', { 'data-act': 'close', onclick: () => { this.inspectParty = null; this.expandedPin = null; this.expandedMember = null; this._renderInspectBar(); }, title: 'Stop inspecting; the camera stays (Esc)' }, 'Close (Esc)')));
+    bar.hidden = false;
+    if (focused) bar.querySelector(`[data-member="${focused}"], [data-act="${focused}"]`)?.focus({ preventScroll: true });
+    if (this._focusInspectBarNext) { this._focusInspectBarNext = false; bar.querySelector('.ib-member')?.focus({ preventScroll: true }); }
+    this._avoidCache = null;
   }
 
   _focusSelection() {
@@ -1309,14 +1502,22 @@ export class VersusApp {
    */
   _renderRoster() {
     const s = this.state;
+    // a party row: your own party is selected for commands (no camera move); any party can be
+    // inspected up close, which keeps the command selection and its orders (review 06, R6-02)
+    const inspectRow = (p) => { this._focusInspect(p.id); this._focusInspectBarNext = true; this._renderAll(); };
     const subjectRow = (subject, label, text, cls = '') => {
+      const party = subject.kind === 'party' ? s.parties[subject.id] : null;
+      const own = party && this._commandable(party);
       const pick = () => {
-        if (subject.kind === 'party') { this.selected = { kind: 'party', id: subject.id }; this._autoLayer(s.parties[subject.id]); this._focusSelection(); }
+        if (party && !own) return inspectRow(party);
+        if (party) { this.selected = { kind: 'party', id: subject.id }; this._autoLayer(party); }
         else this.pinned = { kind: subject.kind, id: subject.id };
         this._focusInspectorNext = true; this._renderAll();
       };
-      const peekAs = subject.kind === 'party' ? { kind: 'hint', id: subject.id } : subject;
-      return h('button', { class: `rrow ${cls}${this.selected?.id === subject.id || this.pinned?.id === subject.id ? ' sel' : ''}`, 'aria-label': label, onclick: pick, onfocus: () => this.inspect.focusSubject(peekAs), onblur: () => this.inspect.blurSubject() }, ...text);
+      const peekAs = party ? { kind: 'hint', id: subject.id } : subject;
+      const row = h('button', { class: `rrow ${cls}${this.selected?.id === subject.id || this.pinned?.id === subject.id ? ' sel' : ''}`, 'aria-label': party && !own ? `Inspect ${label}` : party ? `Select ${label}` : label, onclick: pick, onfocus: () => this.inspect.focusSubject(peekAs), onblur: () => this.inspect.blurSubject() }, ...text, party && !own ? h('span', { class: 'dim' }, ' · inspect') : null);
+      if (!own) return row;
+      return h('div', { class: 'rpair' }, row, h('button', { class: 'rinspect', 'aria-label': `Inspect ${label} up close`, title: 'Inspect up close (keeps your selection)', onclick: () => inspectRow(party) }, '⌕'));
     };
     const parties = (seat) => Object.values(s.parties).filter((p) => p.owner === seat && p.alive && !p.retired).sort((a, b) => a.localColumn - b.localColumn || (a.kind < b.kind ? -1 : 1)).map((p) => {
       const living = Object.values(p.slots).filter((id) => id && s.members[id].alive).length;
@@ -1474,7 +1675,7 @@ export class VersusApp {
    */
   _syncInspection() {
     const ref = this.pinned;
-    const subj = ref && ['card', 'party', 'member', 'event', 'basin', 'territory'].includes(ref.kind)
+    const subj = ref && ['card', 'party', 'hint', 'member', 'event', 'basin', 'territory'].includes(ref.kind)
       ? { kind: ref.kind, id: ref.kind === 'territory' ? `${ref.column},${ref.row}` : ref.id, event: ref.event } : null;
     const cur = this.inspect.pinnedSubject;
     if (subj && this.inspect.key(subj) !== this.inspect.key(cur)) this.inspect.pin(subj, { opener: document.activeElement });
@@ -1501,7 +1702,7 @@ export class VersusApp {
     if (sub.kind === 'party') {
       const p = s.parties[sub.id];
       if (!p) return null;
-      if (p.retired) return { title: `${partyShort(s, p.id)} (merged)`, tag: 'history', node: h('div', {}, h('p', {}, `This party merged into ${partyShort(s, p.mergedInto)}.`), h('button', { class: 'linkish', onclick: () => { this.selected = { kind: 'party', id: p.mergedInto }; this._renderAll(); } }, `Inspect ${partyShort(s, p.mergedInto)}`)) };
+      if (p.retired) return { title: `${partyShort(s, p.id)} (merged)`, tag: 'history', node: h('div', {}, h('p', {}, `This party merged into ${partyShort(s, p.mergedInto)}.`), h('button', { class: 'linkish', onclick: () => { this.pinned = { kind: 'hint', id: p.mergedInto }; this._renderAll(); } }, `Read ${partyShort(s, p.mergedInto)}`)) };
       return { title: `${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★ Commander' : ''}`, tag: p.owner === this.viewSeat ? 'Yours' : `${p.owner}'s`, node: this._partyPanel(p) };
     }
     if (sub.kind === 'hint') {
@@ -1510,7 +1711,9 @@ export class VersusApp {
       const living = Object.values(p.slots).filter((id) => id && s.members[id]?.alive).length, planned = this._plannedSupply(p);
       const why = p.owner === this.viewSeat ? this._moveReason(p) : null;
       return { title: `${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★' : ''} · R${p.region.row}C${p.region.column}`, tag: 'party', compact: true,
-        node: h('div', { class: 'hint-line' }, `${living}/9 · Supply ${pts(supplyOf(p))}${planned ? ` (+${pts(planned)} planned)` : ''} · ${STATE_NAME[p.state] ?? p.state}${p.destination ? ` → R${p.destination.row}C${p.destination.column}` : ''}`, why ? h('div', { class: 'warn' }, why) : null, h('div', { class: 'dim' }, p.owner === this.viewSeat ? 'Click to command · F or zoom in to inspect its members' : 'Zoom in to inspect its members')) };
+        node: h('div', { class: 'hint-line' }, `${living}/9 · Supply ${pts(supplyOf(p))}${planned ? ` (+${pts(planned)} planned)` : ''} · ${STATE_NAME[p.state] ?? p.state}${p.destination ? ` → R${p.destination.row}C${p.destination.column}` : ''}`, why ? h('div', { class: 'warn' }, why) : null,
+          this.pinned?.kind === 'hint' && this.pinned.id === p.id ? h('div', {}, h('button', { onclick: () => this._focusInspect(p.id) }, 'Inspect up close (F)'), this.selected?.kind === 'party' && this.selected.id !== p.id ? h('span', { class: 'dim' }, ` · your ${partyShort(s, this.selected.id)} stays selected`) : null)
+            : h('div', { class: 'dim' }, this._commandable(p) ? 'Click to command · F or zoom in to inspect its members' : 'Click to read · F or zoom in to inspect its members')) };
     }
     if (sub.kind === 'member') { const m = s.members[sub.id]; return m ? { title: memberName(s, m.id), tag: 'Member', node: this._memberPanel(m) } : null; }
     if (sub.kind === 'event') return sub.event ? { title: cap(sub.event.type.replace(/_/g, ' ')), tag: `Tick ${sub.event.tick ?? s.tick}`, node: this._eventPanel(sub.event) } : null;
@@ -1668,7 +1871,13 @@ export class VersusApp {
    * party reference only when asked.
    */
   _renderCommandBar() {
-    if (!this.el.cmdbar) { this.el.cmdbar = h('section', { class: 'cmdbar', role: 'region', 'aria-label': 'Selected party commands' }); this.el.world.append(this.el.cmdbar); }
+    if (!this.el.cmdbar) {
+      this.el.cmdbar = h('section', { class: 'cmdbar', role: 'region', 'aria-label': 'Selected party commands' });
+      this.el.world.append(this.el.cmdbar);
+      // the inspection bar docks just above the command bar, whatever its height (text scale)
+      const bar = this.el.cmdbar;
+      new ResizeObserver(() => { this.el.world.style.setProperty('--cmdbar-h', bar.hidden ? '0px' : `${bar.offsetHeight + 6}px`); this._avoidCache = null; }).observe(bar);
+    }
     const bar = this.el.cmdbar, s = this.state;
     const p = this.selected?.kind === 'party' ? s.parties[this.selected.id] : null;
     if (!p || p.retired || !p.alive || this.playback) { bar.hidden = true; bar.replaceChildren(); return; }
@@ -1994,7 +2203,7 @@ export class VersusApp {
       causes.length ? h('p', { class: 'dim small' }, `Involves: ${causes.join(' · ')} · Tick ${e.tick ?? s.tick}`) : null,
       // the Card behind a resolved result stays one step away (its instance, Supply and Mana)
       e.cardId && s.cards[e.cardId] ? h('button', { class: 'linkish', onclick: () => { this.pinned = { kind: 'card', id: e.cardId }; this._focusInspectorNext = true; this._renderAll(); } }, `Inspect the Card: ${cardShort(s, e.cardId)} (Supply ${pts(s.cards[e.cardId].supply)}, ${Object.keys(s.cards[e.cardId].mana ?? {}).length ? fmtMana(s.cards[e.cardId].mana) : 'no Mana'})`) : null,
-      e.partyId && s.parties[e.partyId] ? h('button', { class: 'linkish', onclick: () => { this.selected = { kind: 'party', id: e.partyId }; this._focusInspectorNext = true; this._focusSelection(); this._renderAll(); } }, `Inspect the party: ${partyShort(s, e.partyId)}`) : null,
+      e.partyId && s.parties[e.partyId]?.alive ? h('button', { class: 'linkish', onclick: () => { this.inspect.dismissTop?.(); this._focusInspect(e.partyId); this._focusInspectBarNext = true; this._renderAll(); } }, `Inspect the party: ${partyShort(s, e.partyId)}`) : null,
       h('details', { class: 'details' }, h('summary', {}, 'Details (exact record)'), h('pre', { class: 'raw' }, JSON.stringify(e, null, 1).slice(0, 1600))));
   }
 

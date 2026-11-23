@@ -7,7 +7,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink); font: 14.5px/1.4 var(--sans); font-variant-numeric: tabular-nums; overflow: hidden; }
+html, body { margin: 0; height: 100%; background: var(--slate); color: var(--ink); font: 0.90625rem/1.4 var(--sans); font-variant-numeric: tabular-nums; overflow: hidden; }
 #app {
   position: fixed; inset: 0; display: grid; gap: 4px; padding: 4px;
   /* the board is the interface (human-feedback addendum 01 §2): a compact decision strip, the
@@ -486,11 +486,14 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .gloss-tip .gloss-src { margin-top: 4px; font-size: 11.5px; color: var(--dim); }
 /* --- addendum 02: command selection and close inspection ------------------------------------ */
 /* the command group for the selected party: docked, small, never the party document */
-.cmdbar { position: absolute; z-index: 22; left: 50%; bottom: 8px; transform: translateX(-50%); max-width: min(760px, calc(100% - 140px)); padding: 5px 8px; background: rgba(23,33,45,0.94); border: 1px solid var(--brass); border-radius: 6px; box-shadow: 0 8px 22px rgba(0,0,0,.5); font-size: 13px; }
+/* the command bar and every inspection text are sized in rem: a browser text-size change (the
+   default font size) reaches them, not only page zoom (review 06, R6-01) */
+.cmdbar { position: absolute; z-index: 22; left: 50%; bottom: 8px; transform: translateX(-50%); max-width: min(760px, calc(100% - 140px)); padding: 5px 8px; background: rgba(23,33,45,0.94); border: 1px solid var(--brass); border-radius: 6px; box-shadow: 0 8px 22px rgba(0,0,0,.5); font-size: 0.8125rem; }
 .cmdbar[hidden] { display: none; }
 .cmdbar .cmd-id { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
 .cmdbar .cmd-why { margin-left: 8px; padding: 0 6px; border-radius: 3px; background: rgba(230,160,93,.16); color: var(--warn); font-weight: 600; }
 .cmdbar .cmd-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; align-items: center; }
+.cmdbar button, .inspect-bar button, .cmd-menu > summary { font-size: 0.8125rem; }
 .cmd-menu { position: relative; }
 .cmd-menu > summary { list-style: none; cursor: pointer; padding: 3px 9px; border: 1px solid #4a5573; border-radius: 3px; background: #262d3f; }
 .cmd-menu > summary::-webkit-details-marker { display: none; }
@@ -500,19 +503,39 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .cmd-pop .movelist > summary { display: none; }
 .cmd-pop .supply-loader h4 { margin-top: 0; }
 .peek.transient:has(.hint-line) { width: auto; max-width: 300px; }
-.hint-line { font-size: 13px; } .hint-line .warn { margin-top: 2px; } .hint-line .dim { margin-top: 2px; font-size: 12px; }
+.hint-line { font-size: 0.8125rem; } .hint-line .warn { margin-top: 2px; } .hint-line .dim { margin-top: 2px; font-size: 0.75rem; }
+.hint-line button { margin-top: 4px; font-size: 0.8125rem; }
 /* member annotations: passive upright text beside the real bodies; wheel and drags pass through */
 .mlabels { position: absolute; inset: 0; z-index: 12; pointer-events: none; overflow: hidden; }
-.mlabel { position: absolute; left: 0; top: 0; padding: 2px 5px 3px; border-radius: 4px; background: rgba(16,24,32,0.86); border: 1px solid rgba(201,166,94,.55); color: var(--ivory); font: 600 14px/1.2 var(--sans); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 2px 6px rgba(0,0,0,.45); }
+.mlabel { position: absolute; left: 0; top: 0; padding: 2px 5px 3px; border-radius: 4px; background: rgba(16,24,32,0.86); border: 1px solid rgba(201,166,94,.55); color: var(--ivory); font: 600 0.875rem/1.2 var(--sans); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 2px 6px rgba(0,0,0,.45); }
 .mlabel[hidden] { display: none; }
 .mlabel b { display: block; font-weight: 700; }
-.mlabel .mhp { position: relative; display: block; min-width: 56px; height: 15px; margin-top: 1px; background: rgba(0,0,0,.45); border-radius: 2px; font-size: 12px; line-height: 15px; }
+.mlabel .mhp { position: relative; display: block; min-width: 56px; margin-top: 1px; background: rgba(0,0,0,.45); border-radius: 2px; font-size: 0.875rem; line-height: 1.15; }
 .mlabel .mhp i { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(143,211,160,.55); border-radius: 2px; }
 .mlabel .mhp span { position: relative; }
-.mlabel .mcombat { margin-top: 2px; font: 500 12.5px/1.25 var(--sans); color: #d9e2ea; white-space: normal; }
-.mlabel.expanded { text-align: left; white-space: normal; border-color: var(--gold); background: rgba(12,18,26,0.95); }
-.mlabel .mdetail { margin-top: 4px; font: 500 12.5px/1.35 var(--sans); }
-.mlabel .mdetail .ok { color: var(--ok); } .mlabel .mdetail .warn { color: var(--warn); }
-.mparty { position: absolute; left: 0; top: 0; padding: 3px 8px; border-radius: 5px; background: rgba(23,33,45,0.9); border: 1px solid var(--brass); color: var(--ivory); font: 13px/1.35 var(--sans); white-space: nowrap; pointer-events: none; }
+.mlabel .mcombat { margin-top: 2px; font: 500 0.8125rem/1.25 var(--sans); color: #d9e2ea; white-space: normal; }
+/* the member being read: a gold outline joined to the reading panel by the leader line */
+.mlabel.expanded { border: 2px solid var(--gold); background: rgba(12,18,26,0.95); box-shadow: 0 0 0 2px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.5); }
+.mlabel.occluded { opacity: .78; border-style: dashed; background: rgba(16,24,32,0.7); }
+.mlabel .mocc { font: 500 0.75rem/1.2 var(--sans); color: var(--dim); }
+.mleader { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.mleader line { stroke: var(--gold); stroke-width: 2; stroke-dasharray: 5 3; }
+.mreading { position: absolute; left: 0; top: 0; z-index: 20; width: max-content; max-width: min(23rem, calc(100% - 16px)); max-height: calc(100% - 80px); overflow: auto; padding: 6px 10px 8px; border-radius: 6px; background: rgba(12,18,26,0.96); border: 1px solid var(--gold); border-left-width: 4px; color: var(--ivory); font: 500 0.875rem/1.4 var(--sans); box-shadow: 0 8px 22px rgba(0,0,0,.55); }
+.mreading[hidden] { display: none; }
+.mreading .mr-head { margin-bottom: 3px; font-size: 0.9375rem; }
+.mreading .ok { color: var(--ok); } .mreading .warn { color: var(--warn); } .mreading .dim { color: var(--dim); }
+.mreading.docked { border-style: solid; border-left-width: 4px; }
+.mparty { position: absolute; left: 0; top: 0; padding: 3px 8px; border-radius: 5px; background: rgba(23,33,45,0.9); border: 1px solid var(--brass); color: var(--ivory); font: 0.8125rem/1.35 var(--sans); white-space: nowrap; pointer-events: none; }
 .mparty[hidden] { display: none; }
 .mparty .warn { color: var(--warn); } .mparty .dim { color: var(--dim); }
+.mparty.crowded { opacity: .9; }
+/* the inspection bar: keyboard and touch route to every member's facts, above the command bar */
+.inspect-bar { position: absolute; z-index: 21; left: 50%; bottom: calc(8px + var(--cmdbar-h, 0px)); transform: translateX(-50%); max-width: min(820px, calc(100% - 140px)); padding: 4px 8px 5px; background: rgba(16,24,32,0.94); border: 1px solid #6c7a8c; border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.45); font-size: 0.8125rem; }
+.inspect-bar[hidden] { display: none; }
+.inspect-bar .ib-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.inspect-bar .ib-member { padding: 2px 7px; }
+.inspect-bar .ib-member.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.inspect-bar .ib-keep { color: #9cc0f5; }
+#roster .rpair { display: flex; gap: 2px; align-items: stretch; }
+#roster .rpair .rrow { flex: 1; }
+#roster .rinspect { padding: 0 7px; font-size: 0.875rem; }
