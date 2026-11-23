@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewer_verification",
+  "reviewDateLocal": "2026-11-22",
+  "reviewTimezone": "America/Los_Angeles",
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "reviewedCommit": "a68cfd0b8af874498cdb3e617715f941e52b76f2",
+  "previousHandoff": "663e8f4cdcf0d76445cb9473e4ea6cc0c04826f0",
+  "engineCommit": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "sourceAcquisition": {
+    "method": "GitHub connector reads pinned by commit, reconstructed local snapshot",
+    "nonImageBlobCount": 88,
+    "gitBlobHashesVerified": true,
+    "originalLocalCheckoutInspected": false
+  },
+  "screenshots": {
+    "origin": "Implementing-agent committed response-02 evidence",
+    "reviewerInspected": [
+      "after-ux04-band-3-scenery-on.jpg",
+      "after-ux07-home-A-1280x720.jpg",
+      "after-ux07-home-A-1600x1000.jpg",
+      "after-ux08-hand-and-inspector.jpg",
+      "after-ux10-selected-castle-home.jpg",
+      "after-ux10-selected-castle-rotated90.jpg",
+      "before-ux07-home-A-1600x1000.jpg"
+    ],
+    "count": 7,
+    "gitBlobHashesVerified": true,
+    "freshReviewerGameScreenshots": false
+  },
+  "independentTests": {
+    "node": "v24.22.3",
+    "platform": "linux",
+    "command": [
+      "node",
+      "--test",
+      "tests/hapa/boundaries.test.js",
+      "tests/hapa/content.test.js",
+      "tests/hapa/contracts.test.js",
+      "tests/hapa/corner.test.js",
+      "tests/hapa/effects.test.js",
+      "tests/hapa/elevation.test.js",
+      "tests/hapa/golden.test.js",
+      "tests/hapa/history.test.js",
+      "tests/hapa/play.test.js",
+      "tests/hapa/profile-lab.test.js",
+      "tests/hapa/terrain.test.js",
+      "tests/hapa/ui-fixtures.test.js"
+    ],
+    "testFiles": 12,
+    "tests": 76,
+    "passed": 76,
+    "failed": 0,
+    "exitCode": 0,
+    "log": "rules-tests.log",
+    "initialAttempt": "75 pass, one git check-ignore boundary failure because snapshot was not a git repository; initialized empty local Git metadata, reran boundary file and then all 76 tests unchanged",
+    "excluded": [
+      "tests/hapa/protocol.test.js"
+    ],
+    "notRun": [
+      "complete npm run check",
+      "two-process peer smoke",
+      "production build",
+      "full interactive browser game journeys"
+    ],
+    "reason": "External npm dependencies and vendored engine runtime were not installed; a Chromium DOM probe also failed before page execution because socket creation was not permitted."
+  },
+  "controllerReproduction": {
+    "artifact": "playback-layer-overwrite-result.json",
+    "script": "reproduce-playback-layer-overwrite.mjs",
+    "cases": 12,
+    "defectCases": 6,
+    "kind": "original controller method and visibility predicate with stub view",
+    "fullBrowser": false,
+    "predatesUpdates": true
+  },
+  "newSourceRisksNotRuntimeVerified": [
+    "narrow breakpoint resource bounds/Burn target",
+    "focus after Card selection and complete keyboard journey",
+    "intermediate ramp elevation during playback",
+    "concession user interaction across phases"
+  ],
+  "implementingAgentReportedChecks": {
+    "source": "../../../2026-11-22-ui-design-response-02.md",
+    "reported": "npm run check at 05de8fa; 80/80 tests plus peer/build checks",
+    "independentlyRerunInFull": false
+  },
+  "acceptance": "CJ acceptance not recorded; this is review evidence only"
+}
