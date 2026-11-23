@@ -186,7 +186,7 @@ export class VersusApp {
     const v = this.view, Sx = 1.5;
     buildScenery(v.root, { x0: -6 * Sx, x1: (v.w + 6) * Sx, z0: -(v.h + 12) * Sx, z1: 12 * Sx }).then((sc) => { if (this.view === v) this.scenery = sc; }).catch((err) => console.warn('[versus] scenery unavailable', err));
     this.cam?.dispose();
-    this.cam = new BoardCamera(this.engine.camera, this.el.world, { center: this.view.center, size: this.view.size });
+    this.cam = new BoardCamera(this.engine.camera, this.el.world, { center: this.view.center, size: this.view.size, subject: this.view.subject });
     this.cam.groundAt = (cx, cy) => this._groundAt(cx, cy);
     this.cam.setHome(this.viewSeat);
     this._renderCamPad();
@@ -370,7 +370,7 @@ export class VersusApp {
     for (const e of events) {
       if (e.type === 'supply_loaded') { // the planned Supply actually lands
         const mk = this.view.markers.get(e.partyId);
-        if (mk) this.view.fx.supply(mk.position.clone(), `Supply ${pts(e.total)}`);
+        if (mk) this.view.fx.supply(mk.position.clone(), `+${pts(e.units)} landed · Supply ${pts(e.total)}`);
         continue;
       }
       const hits = e.type === 'exchange' ? e.hits : e.type === 'card_damage' ? [e] : [];
@@ -644,6 +644,16 @@ export class VersusApp {
     return burns;
   }
 
+  /** The reserved use of a planned card, in words ("Supply → Knight R1C8", "Burn", "Ember Strike", "pays for …"). */
+  _plannedUse(seat, cardId) {
+    const c = this.plans[seat].find((x) => x.cardId === cardId);
+    if (c?.type === 'load_supply') { const p = this.state.parties[c.partyId]; return `Supply → ${p?.mount ? p.mount[0].toUpperCase() + p.mount.slice(1) : 'Pawn'} R${p?.region.row}C${p?.region.column}`; }
+    if (c?.type === 'burn') return 'Burn planned';
+    if (c?.type === 'play_ability') return `${activeCatalog.cards[this.state.cards[cardId]?.abilityId]?.title ?? 'Ability'} planned`;
+    const payer = this.plans[seat].find((x) => x.burns?.includes(cardId));
+    return payer ? `pays ${activeCatalog.cards[this.state.cards[payer.cardId]?.abilityId]?.title ?? 'a Spell'}` : 'planned';
+  }
+
   _plannedCardIds(seat) {
     const s = new Set();
     for (const c of this.plans[seat]) { if (c.cardId) s.add(c.cardId); for (const b of c.burns ?? []) s.add(b); }
@@ -753,6 +763,7 @@ export class VersusApp {
     this._renderLayers();
     this._renderToolHint();
     if (!this.playback) this.view.syncSupplyTokens(this.state, this._plannedSupplyMap());
+    this.view.syncPlanLinks(this.state, this.playback ? [] : ['A', 'B'].flatMap((seat) => this.plans[seat].filter((c) => c.type === 'load_supply')));
     const sel = this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null;
     if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? legalDestinations(this.state, this.ctx, sel) : []);
     else if (!sel) this.view.select(this.state, null);
@@ -859,7 +870,7 @@ export class VersusApp {
         own ? h('div', { class: 'sup' }, `Supply ${pts(card.supply)}`) : h('div', { class: 'sup' }, `S${pts(card.supply)}`),
         h('div', { class: 'mana' }, ...(Object.keys(card.mana).length ? manaChips(card.mana) : [h('span', { class: 'dim' }, 'no Mana')])),
         own ? h('div', { class: 'abil' }, def?.title ?? '—') : null,
-        planned.has(id) ? h('div', { class: 'plannedtag' }, 'planned') : null,
+        planned.has(id) ? h('div', { class: 'plannedtag' }, this._plannedUse(seat, id)) : null,
       ] : h('div', { class: 'dim' }, 'empty'),
       own ? h('div', { class: 'fc' }, forecast) : null));
     }

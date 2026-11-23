@@ -100,6 +100,25 @@ export class HitFX {
    * Supply delivered (planned) to a formation: an expanding brass ring on the ground, sparks rising
    * from the drop point and a "+n Supply" callout. `at` is the formation's world position.
    */
+  /**
+   * A planned (not yet resolved) Supply or other reserved use: a dashed ring that settles in place
+   * and a mint "+n planned" tag — no sparks, no rise, no coin. The resolved event keeps the brass
+   * burst (`supply`), so completion is celebrated once, when it happens (review UX-09).
+   */
+  planned(at, text) {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.0, 1.12, 40, 1), new THREE.MeshBasicMaterial({ color: 0x8FD3A0, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+    // dashed: drop alternate segments of the ring
+    const idx = ring.geometry.index.array, keep = [];
+    for (let i = 0; i < idx.length; i += 6) if ((i / 6) % 4 < 2) keep.push(...idx.slice(i, i + 6));
+    ring.geometry.setIndex(keep);
+    ring.rotation.x = -Math.PI / 2; ring.position.copy(at).add(new THREE.Vector3(0, 0.09, 0)); ring.renderOrder = 8;
+    this.group.add(ring);
+    const label = numberSprite(text, '#8FD3A0');
+    label.position.copy(at).add(new THREE.Vector3(0, 2.0, 0));
+    this.group.add(label);
+    this.items.push({ parts: [ring, label], t: 0, life: 1.1, base: at.clone(), label, mark: null, ring, sparks: [], kind: 'planned' });
+  }
+
   supply(at, text) {
     const still = reduced();
     const parts = [];
@@ -134,6 +153,12 @@ export class HitFX {
       }
       const fade = k < 0.7 ? 1 : 1 - (k - 0.7) / 0.3;
       for (const p of it.parts) p.material.opacity = fade;
+      if (it.kind === 'planned') {
+        const r = still ? 1.7 : 2.3 - Math.min(1, k * 2.5) * 0.6; // closes in once, then holds
+        it.ring.scale.set(r, r, r);
+        it.ring.rotation.z = still ? 0 : k * 0.6;
+        continue;
+      }
       if (it.kind === 'supply') {
         const r = 0.6 + (still ? 1.6 : Math.min(1, k * 1.6) * 2.2);
         it.ring.scale.set(r, r, r);

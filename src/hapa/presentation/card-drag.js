@@ -184,12 +184,12 @@ export class CardDrag {
       a.dragging = false;
       if (t.kind === 'supply') {
         const w = a.view.toWorld(t.party.x, t.party.y);
-        a.view.fx.supply(w, `+${pts(d.card.supply)} Supply`);
-        a.sound?.play('coin', { volume: 0.7 });
+        a.view.fx.planned(w.setY(a.view.partyY(t.party)), `+${pts(d.card.supply)} planned`);
+        a.sound?.play('blip', { volume: 0.45 }); // the coin is kept for the resolved landing
         a.selected = { kind: 'party', id: t.party.id };
         a._toast(`+${pts(d.card.supply)} Supply planned for ${this.h.partyName(a.state, t.party.id)} — it lands when the Tick resolves`);
       } else {
-        a.sound?.play('chime', { volume: 0.6 });
+        a.sound?.play('blip', { volume: 0.45 });
         document.getElementById('resources')?.classList.add('flash');
         setTimeout(() => document.getElementById('resources')?.classList.remove('flash'), 700);
         a._toast(`Burn planned: +${this.h.fmtMana(d.card.mana)} this Tick`);

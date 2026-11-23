@@ -156,6 +156,12 @@ export class BoardView {
   get center() { return new THREE.Vector3((this.w / 2) * S, 0, -(this.h / 2) * S); }
   get size() { return Math.max(this.w, this.h) * S; }
   /**
+   * The camera's framing subject: the playable territory plus a one-member-width allowance (edge
+   * labels, Capitals, active-column headers). The banks are not part of it: the hand ribbons show
+   * the same instances, and fitting the world banks too would halve the board (review UX-07).
+   */
+  get subject() { const m = 1; return { x0: -m * S, x1: (this.w + m) * S, z0: -(this.h + m) * S, z1: m * S }; }
+  /**
    * The world height at which a party is drawn: its members' band (a flyer at its flight band, a
    * hilltop party on the hill, a tunnel party below ground). Overlays and focus use it so markers
    * sit with what the player sees.
@@ -616,6 +622,30 @@ export class BoardView {
       const F = FACINGS[p.facing] ?? FACINGS.N;
       tok.position.set(base.x + F.rx * 2.0 * S, base.y + 0.95, base.z - F.ry * 2.0 * S);
       tok.visible = true;
+    }
+  }
+
+  /**
+   * Planned Supply as a visible, reversible relationship: a dashed mint line from the card's bank
+   * slot to the recipient formation while the plan holds it (review UX-09). Cleared during playback
+   * and when the order is removed; the resolved landing has its own effect.
+   */
+  syncPlanLinks(state, cmds) {
+    this.planLinks ??= new THREE.Group();
+    if (!this.planLinks.parent) this.root.add(this.planLinks);
+    for (const l of this.planLinks.children) { l.geometry.dispose(); l.material.dispose(); }
+    this.planLinks.clear();
+    for (const c of cmds) {
+      const tile = [...this.cardTiles.values()].find((t) => t.userData.cardId === c.cardId);
+      const p = state.parties[c.partyId], mk = this.markers.get(c.partyId);
+      if (!tile || !p || !mk) continue;
+      const a = new THREE.Vector3(tile.position.x, 0.12, tile.position.z), b = mk.position.clone().setY(this.partyY(p) + 0.12);
+      const mid = a.clone().lerp(b, 0.5).setY(Math.max(a.y, b.y) + 1.2);
+      const pts = new THREE.QuadraticBezierCurve3(a, mid, b).getPoints(24);
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineDashedMaterial({ color: 0x8fd3a0, dashSize: 0.35, gapSize: 0.25, transparent: true, opacity: 0.85, depthTest: false, toneMapped: false }));
+      line.computeLineDistances();
+      line.renderOrder = 7;
+      this.planLinks.add(line);
     }
   }
 

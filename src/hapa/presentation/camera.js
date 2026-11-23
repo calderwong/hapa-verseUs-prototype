@@ -21,7 +21,8 @@ export class BoardCamera {
   /**
    * @param {THREE.PerspectiveCamera} camera
    * @param {HTMLElement} el element receiving pointer input (the world viewport)
-   * @param {{ center: THREE.Vector3, size: number }} board
+   * @param {{ center: THREE.Vector3, size: number, subject?: { x0: number, x1: number, z0: number, z1: number } }} board
+   *   `subject`: the world rectangle (y = 0) the home and tactical views fit to the viewport
    */
   constructor(camera, el, board) {
     this.camera = camera;
@@ -33,10 +34,56 @@ export class BoardCamera {
     this.tactical = false;
     this._saved = null;
     this.homeYaw = 0;
-    camera.fov = 32;
+    camera.fov = 24; // a long lens: far rows crowd less behind near ones (review UX-07); home and tactical fit the distance
     camera.far = 1000;
     camera.updateProjectionMatrix();
     this._bind();
+    // while the view is still the fitted home / tactical view, refit when the viewport changes size
+    this.atHome = false;
+    this._resize = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { if (this.atHome) this._refit(); }) : null;
+    this._resize?.observe(el);
+  }
+
+  /**
+   * The distance and focus that fit the declared subject (playable territory plus both seats'
+   * bank allowance) inside the actual viewport at a yaw and pitch, balancing its projected top and
+   * bottom margins (Design Companion ch.4; review UX-07). Pure viewing: no rule reads it.
+   */
+  fit(yaw, pitch) {
+    const b = this.board.subject;
+    if (!b) return { distance: this.board.size * 1.55, focus: this.board.center.clone() };
+    const W = this.el.clientWidth || 960, H = this.el.clientHeight || 600;
+    const cam = new THREE.PerspectiveCamera(this.camera.fov, W / H, 0.1, 2000);
+    const corners = [[b.x0, b.z0], [b.x1, b.z0], [b.x0, b.z1], [b.x1, b.z1], [(b.x0 + b.x1) / 2, b.z0], [(b.x0 + b.x1) / 2, b.z1]].map(([x, z]) => new THREE.Vector3(x, 0, z));
+    const focus = new THREE.Vector3((b.x0 + b.x1) / 2, 0, (b.z0 + b.z1) / 2);
+    const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)); // ground direction the camera looks along
+    const place = (d) => {
+      const r = d * Math.cos(pitch);
+      cam.position.set(focus.x + Math.sin(yaw) * r, d * Math.sin(pitch), focus.z + Math.cos(yaw) * r);
+      cam.lookAt(focus); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const c of corners) { const p = c.clone().project(cam); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+      return { x0, x1, y0, y1 };
+    };
+    // margins leave room for the camera pad (top-left) and the layer rail (right)
+    const MX = 0.93, MT = 0.9, MB = 0.97;
+    const fits = (e) => e.x0 >= -MX && e.x1 <= MX && e.y1 <= MT && e.y0 >= -MB;
+    let d = this.board.size;
+    for (let pass = 0; pass < 4; pass++) {
+      let lo = this.board.size * 0.2, hi = this.board.size * 6;
+      for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (fits(place(m))) hi = m; else lo = m; }
+      d = hi;
+      // slide the focus along the view so the subject's top and bottom margins match
+      const e = place(d), off = ((e.y1 - MT) + (e.y0 + MB)) / 2;
+      if (Math.abs(off) < 0.005) break;
+      focus.addScaledVector(fwd, off * d * 0.35);
+    }
+    return { distance: d, focus };
+  }
+
+  _refit() {
+    const f = this.fit(this.goal.yaw, this.goal.pitch);
+    this.goal.distance = f.distance; this.goal.focus.copy(f.focus);
   }
 
   /** The controlling participant's home view: A looks from low rows toward B, B the reverse. */
@@ -49,29 +96,33 @@ export class BoardCamera {
     this.tactical = false;
     this.goal.yaw = this.homeYaw;
     this.goal.pitch = 56 * DEG;
-    this.goal.distance = this.board.size * 1.55;
-    // aim a little toward the viewer's home edge so the near rows and the home banks stay in frame
-    this.goal.focus.copy(this.board.center).add(new THREE.Vector3(Math.sin(this.homeYaw), 0, Math.cos(this.homeYaw)).multiplyScalar(this.board.size * 0.07));
+    this._refit(); // the whole subject, fitted to this viewport (no fixed near-edge bias)
+    this.atHome = true;
   }
 
   toggleTactical() {
     if (!this.tactical) {
       this._saved = { ...this.goal, focus: this.goal.focus.clone() };
+      this._savedHome = this.atHome;
       this.goal.pitch = 84 * DEG;
-      this.goal.distance = this.board.size * 1.35;
+      this._refit();
       this.tactical = true;
+      this.atHome = true;
     } else {
       Object.assign(this.goal, this._saved, { focus: this._saved.focus.clone() });
       this.tactical = false;
+      this.atHome = !!this._savedHome;
+      if (this.atHome) this._refit();
     }
   }
 
-  rotate(stepDeg) { this.goal.yaw += stepDeg * DEG; }
-  tilt(stepDeg) { this.goal.pitch = Math.min(86 * DEG, Math.max(18 * DEG, this.goal.pitch + stepDeg * DEG)); }
+  rotate(stepDeg) { this.goal.yaw += stepDeg * DEG; if (this.atHome) this._refit(); } // a turn keeps the whole subject in view
+  tilt(stepDeg) { this.atHome = false; this.goal.pitch = Math.min(86 * DEG, Math.max(18 * DEG, this.goal.pitch + stepDeg * DEG)); }
   /** Zoom by `factor`; with a ground point, keep that point under the cursor (zoom toward it). */
   zoom(factor, toward = null) {
+    this.atHome = false;
     const before = this.goal.distance;
-    this.goal.distance = Math.min(this.board.size * 2.6, Math.max(this.board.size * 0.1, before * factor));
+    this.goal.distance = Math.min(this.board.size * 3.6, Math.max(this.board.size * 0.1, before * factor));
     const k = this.goal.distance / before;
     if (toward && k !== 1) {
       this.goal.focus.x = toward.x + (this.goal.focus.x - toward.x) * k;
@@ -85,14 +136,15 @@ export class BoardCamera {
     this.goal.focus.z = Math.min(this.board.center.z + h, Math.max(this.board.center.z - h, this.goal.focus.z));
   }
   /** Orbit by screen drag pixels: horizontal turns the view, vertical tilts it. */
-  orbit(dx, dy) { this.goal.yaw -= dx * 0.006; this.goal.pitch = Math.min(86 * DEG, Math.max(18 * DEG, this.goal.pitch + dy * 0.004)); }
+  orbit(dx, dy) { this.atHome = false; this.goal.yaw -= dx * 0.006; this.goal.pitch = Math.min(86 * DEG, Math.max(18 * DEG, this.goal.pitch + dy * 0.004)); }
   /** Did the last pointer gesture move far enough to count as a camera drag (not a click)? */
   wasDrag() { return this._moved > 5; }
   /** Focus a world point at its own height (a flyer, a hilltop or a tunnel floor), closing in if far. */
-  focusOn(v) { this.goal.focus.set(v.x, v.y ?? 0, v.z); this.goal.distance = Math.min(this.goal.distance, this.board.size * 0.55); }
+  focusOn(v) { this.atHome = false; this.goal.focus.set(v.x, v.y ?? 0, v.z); this.goal.distance = Math.min(this.goal.distance, this.board.size * 0.55); }
 
   /** Pan in screen directions (world units scaled by distance). */
   pan(dx, dy) {
+    this.atHome = false;
     // scale by the view: a pixel of drag moves about one pixel of ground at the focus
     const viewH = this.el.clientHeight || 600;
     const s = (2 * this.distance * Math.tan((this.camera.fov * DEG) / 2)) / viewH;
@@ -127,7 +179,7 @@ export class BoardCamera {
   }
 
   /** Remove this camera's input listeners (a new match creates a new camera). */
-  dispose() { this._abort?.abort(); }
+  dispose() { this._abort?.abort(); this._resize?.disconnect(); }
 
   _bind() {
     this._abort = new AbortController();

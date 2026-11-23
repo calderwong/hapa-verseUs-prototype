@@ -360,3 +360,5 @@ body.card-dragging .ready-big { pointer-events: none; }
 #plan .ready-big:disabled { box-shadow: 0 3px 0 #1A2430; }
 .tile .tl small { color: var(--dim); }
 .ribbon-label { flex: none; width: 16px; white-space: nowrap; overflow: hidden; } /* equal on both ribbons so the nine columns align */
+/* the reserved use of a planned card, in words (UX-09) */
+.tile .plannedtag { position: static; display: block; margin-top: 1px; padding: 0 3px; border: 1px dashed currentColor; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 700 10px var(--sans); }

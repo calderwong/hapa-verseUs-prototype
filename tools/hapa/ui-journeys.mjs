@@ -18,7 +18,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, all) => (
 const out = path.resolve(String(args.out ?? 'ui-journeys-out'));
 const label = String(args.label ?? 'run');
 const base = String(args.base ?? 'http://127.0.0.1:5199');
-const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04').split(','));
+const want = new Set(String(args.journeys ?? 'ux01,ux02,ux03,ux04,ux07').split(','));
 const W = 1600, H = 1000;
 
 const pcPath = process.env.PUPPETEER_CORE;
@@ -41,7 +41,7 @@ async function open(query) {
   page.errors = errors;
   return page;
 }
-const shot = async (page, name) => { const f = `${label}-${name}.png`; await page.mouse.move(W - 4, H / 2); await sleep(700); await page.screenshot({ path: path.join(out, f) }); return f; };
+const shot = async (page, name) => { const f = `${label}-${name}.png`; await page.mouse.move(4, 4); await sleep(700); await page.screenshot({ path: path.join(out, f) }); return f; };
 /** What the interface currently holds about agreement (plans, revisions, Ready pairs, phase). */
 const agreement = (page) => page.evaluate(() => {
   const a = window.__versus;
@@ -231,6 +231,39 @@ if (want.has('ux04')) {
   j.errors = page.errors;
   report.journeys.ux04 = j;
   await page.close();
+}
+
+// --- UX-07: the home view frames the board and both banks in the available viewport --------------
+if (want.has('ux07')) {
+  const j = { cases: [] };
+  for (const [vw, vh] of [[1600, 1000], [1280, 720], [1100, 900]]) {
+    for (const seat of ['A', 'B']) {
+      const page = await open(`autostart=1&a=${seat === 'A' ? 'human' : 'bot'}&b=${seat === 'B' ? 'human' : 'bot'}&seed=1`);
+      await page.setViewport({ width: vw, height: vh, deviceScaleFactor: 1 });
+      await sleep(1500);
+      await page.evaluate(() => { window.__versus.cam.home(); });
+      await sleep(1500);
+      const m = await page.evaluate(() => {
+        const a = window.__versus, v = a.view, cam = a.engine.camera, r = a.engine.renderer.domElement.getBoundingClientRect();
+        const scr = (x, z) => { const p = new (cam.position.constructor)(x, 0, z).project(cam); return { x: (p.x + 1) / 2 * r.width, y: (1 - p.y) / 2 * r.height }; };
+        const S = 1.5, w = v.w, h = v.h;
+        const board = [scr(0, 0), scr(w * S, 0), scr(0, -h * S), scr(w * S, -h * S)];
+        const bx = board.map((p) => p.x), by = board.map((p) => p.y);
+        const area = (Math.max(...bx) - Math.min(...bx)) * (Math.max(...by) - Math.min(...by)) / (r.width * r.height);
+        const inView = (p) => p.x >= 0 && p.x <= r.width && p.y >= 0 && p.y <= r.height;
+        const tiles = [...v.cardTiles.values()].map((t) => scr(t.position.x, t.position.z));
+        // territory width on screen, nearest home row vs farthest row (perspective crowding)
+        const rowW = (row) => { const y = (4 * row - 2) * S; const p0 = scr(0, -y), p1 = scr(w * S, -y); return Math.hypot(p1.x - p0.x, p1.y - p0.y) / 9; };
+        const near = a.viewSeat === 'A' ? 1 : v.rows, far = a.viewSeat === 'A' ? v.rows : 1;
+        return { viewport: [Math.round(r.width), Math.round(r.height)], boardCornersInView: `${board.filter(inView).length}/4`, boardBBoxShare: +area.toFixed(3), bankTilesInView: `${tiles.filter(inView).length}/${tiles.length}`, nearRowTerritoryPx: +rowW(near).toFixed(1), farRowTerritoryPx: +rowW(far).toFixed(1), camera: { yawDeg: Math.round(a.cam.yaw * 180 / Math.PI), pitchDeg: Math.round(a.cam.pitch * 180 / Math.PI), distance: +a.cam.distance.toFixed(1) } };
+      });
+      m.seat = seat; m.window = [vw, vh];
+      m.shot = await shot(page, `ux07-home-${seat}-${vw}x${vh}`);
+      j.cases.push(m);
+      await page.close();
+    }
+  }
+  report.journeys.ux07 = j;
 }
 
 await browser.close();
