@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "kind": "isolated_controller_reproduction",
+  "reviewedRepository": "calderwong/hapa-verseUs-prototype",
+  "reviewedCommit": "a68cfd0b8af874498cdb3e617715f941e52b76f2",
+  "provenance": {
+    "appPath": "src/hapa/presentation/app.js",
+    "appGitBlob": "45cf2a10104aa43611a649d43563002c73a9a650",
+    "appMethod": "_stepPlayback",
+    "appMethodLines": "393-424",
+    "extractedMethodSha256": "a482a48b7a02e0f7ba61b1a1b1babc7647f4949fa17efff0dff964c0abc7465c",
+    "boardPath": "src/hapa/presentation/board-view.js",
+    "boardGitBlob": "69da8a7bc1ed9369a80d06ee6c14585bb60b5060",
+    "boardPredicateLine": 322,
+    "unchangedBoardVisibilityPredicate": "(m.alive || (positions?.[m.id] !== undefined && positions[m.id][2])) && (layer === null || band === layer)",
+    "priorSourceCommit": "af6977d295dd0970a744bb65281f7ec4ea8c1457",
+    "priorAppGitBlob": "4ee4f6e349aec62e83bd324febacccb7d64f629c",
+    "overwritePresentBeforeReviewedUpdates": true
+  },
+  "environment": {
+    "node": "v24.22.3",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "limitations": [
+    "This executes the original controller method and original selected-band predicate in an isolated fixture.",
+    "The surrounding view, session, and renderer are stubs. No browser, WebGL, DOM, real sprite, or gameplay session was executed.",
+    "This establishes a visibility-property overwrite, not the composited appearance of a real rendered frame.",
+    "Live stacked-fixture playback remains necessary to verify the user-visible consequence and any correction.",
+    "The overwrite predates the reviewed update commits; it is a remaining defect, not an introduced regression."
+  ],
+  "observed": {
+    "caseCount": 12,
+    "mismatchCount": 6,
+    "conclusion": "During partial playback, the controller restores off-layer live members to visible; final sync restores filtering."
+  },
+  "cases": [
+    {
+      "selectedBand": -2,
+      "progress": 0.01,
+      "expectedVisibility": {
+        "air": false,
+        "tunnel": true
+      },
+      "afterSync": {
+        "air": false,
+        "tunnel": true
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": true,
+      "playbackComplete": false
+    },
+    {
+      "selectedBand": -2,
+      "progress": 0.5,
+      "expectedVisibility": {
+        "air": false,
+        "tunnel": true
+      },
+      "afterSync": {
+        "air": false,
+        "tunnel": true
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": true,
+      "playbackComplete": false
+    },
+    {
+      "selectedBand": -2,
+      "progress": 0.99,
+      "expectedVisibility": {
+        "air": false,
+        "tunnel": true
+      },
+      "afterSync": {
+        "air": false,
+        "tunnel": true
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": true,
+      "playbackComplete": false
+    },
+    {
+      "selectedBand": -2,
+      "progress": 1,
+      "expectedVisibility": {
+        "air": false,
+        "tunnel": true
+      },
+      "afterSync": {
+        "air": false,
+        "tunnel": true
+      },
+      "finalVisibility": {
+        "air": false,
+        "tunnel": true
+      },
+      "mismatch": false,
+      "playbackComplete": true
+    },
+    {
+      "selectedBand": 3,
+      "progress": 0.01,
+      "expectedVisibility": {
+        "air": true,
+        "tunnel": false
+      },
+      "afterSync": {
+        "air": true,
+        "tunnel": false
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": true,
+      "playbackComplete": false
+    },
+    {
+      "selectedBand": 3,
+      "progress": 0.5,
+      "expectedVisibility": {
+        "air": true,
+        "tunnel": false
+      },
+      "afterSync": {
+        "air": true,
+        "tunnel": false
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": true,
+      "playbackComplete": false
+    },
+    {
+      "selectedBand": 3,
+      "progress": 0.99,
+      "expectedVisibility": {
+        "air": true,
+        "tunnel": false
+      },
+      "afterSync": {
+        "air": true,
+        "tunnel": false
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": true,
+      "playbackComplete": false
+    },
+    {
+      "selectedBand": 3,
+      "progress": 1,
+      "expectedVisibility": {
+        "air": true,
+        "tunnel": false
+      },
+      "afterSync": {
+        "air": true,
+        "tunnel": false
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": false
+      },
+      "mismatch": false,
+      "playbackComplete": true
+    },
+    {
+      "selectedBand": null,
+      "progress": 0.01,
+      "expectedVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "afterSync": {
+        "air": true,
+        "tunnel": true
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": false,
+      "playbackComplete": false
+    },
+    {
+      "selectedBand": null,
+      "progress": 0.5,
+      "expectedVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "afterSync": {
+        "air": true,
+        "tunnel": true
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": false,
+      "playbackComplete": false
+    },
+    {
+      "selectedBand": null,
+      "progress": 0.99,
+      "expectedVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "afterSync": {
+        "air": true,
+        "tunnel": true
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": false,
+      "playbackComplete": false
+    },
+    {
+      "selectedBand": null,
+      "progress": 1,
+      "expectedVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "afterSync": {
+        "air": true,
+        "tunnel": true
+      },
+      "finalVisibility": {
+        "air": true,
+        "tunnel": true
+      },
+      "mismatch": false,
+      "playbackComplete": true
+    }
+  ]
+}

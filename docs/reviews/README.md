@@ -4,12 +4,14 @@ This folder is the shared handoff between CJ, the reviewing assistant, and the l
 
 ## Start here
 
-- **Current review:** [UI and design review — 22 November 2026](2026-11-22-ui-design-review.md), findings **UX-01 through UX-14**.
+- **Current review:** [UI and design review 02 — 22 November 2026](2026-11-22-ui-design-review-02.md), reviewed `a68cfd0b`; contextual findings **R2-01 through R2-09** and disposition of the original UX-01–UX-14.
+- **Next implementation brief:** [Readable opening and planning — assignment 03](2026-11-22-next-agent-assignment-03.md). Repair the specific interaction defects, then complete a readable compact-layout and keyboard opening journey; keep the fitted camera provisionally.
+- **Original review:** [UI and design review 01](2026-11-22-ui-design-review.md), retained with its source baseline and UX-01–UX-14 findings.
 - **Original visual evidence:** [prototype screenshot](evidence/2026-11-22/prototype-ui.png).
 - **Local agent response:** use the [implementation report template](IMPLEMENTATION_REPORT_TEMPLATE.md).
-- **Current response:** [Implementation response 03 — 22 November 2026](2026-11-22-ui-design-response-03.md): the rest of UX-06 and UX-14, UX-11 and UX-13 implemented, UX-12 verified through an orbit (art direction awaits CJ), a UX-08 overflow fixture, and the HV-41 experiment panel verified (`00089e5`…`46e8249`). Evidence in [evidence/2026-11-22/response-03](evidence/2026-11-22/response-03/). Earlier: [response 02](2026-11-22-ui-design-response-02.md) (UX-04/05/07/08/09/10), [response 01](2026-11-22-ui-design-response-01.md) (UX-01–03). Overwatch cards HV-46…HV-51 track the findings. CJ acceptance: not yet recorded.
+- **Current response:** [Implementation response 03 — 22 November 2026](2026-11-22-ui-design-response-03.md): the rest of UX-06 and UX-14, UX-11 and UX-13 implemented, UX-12 verified through an orbit (art direction awaits CJ), a UX-08 overflow fixture, and the HV-41 experiment panel verified (`00089e5`…`46e8249`). Evidence in [evidence/2026-11-22/response-03](evidence/2026-11-22/response-03/). Earlier: [response 02](2026-11-22-ui-design-response-02.md) (UX-04/05/07/08/09/10), [response 01](2026-11-22-ui-design-response-01.md) (UX-01–03). Overwatch cards HV-46…HV-51 track the findings. Response 03 was built from the same `a68cfd0` baseline in parallel with review 02 and does not yet answer R2-01…R2-09. CJ acceptance: not yet recorded.
 
-The review examined prototype commit `af6977d295dd0970a744bb65281f7ec4ea8c1457` and its Lumina submodule at `ba838cca09ba43afceda0452b63d28df4cbf7f72`. Compare those revisions with the current work before acting. Later local or pushed changes may already address a finding.
+The current follow-up reviewed prototype commit `a68cfd0b8af874498cdb3e617715f941e52b76f2`; the original review examined `af6977d295dd0970a744bb65281f7ec4ea8c1457`. Both use Lumina `ba838cca09ba43afceda0452b63d28df4cbf7f72`. Compare the relevant pinned revisions with current local and remote work before acting. The follow-up includes independent source/test evidence and direct inspection of committed captures; it is not CJ acceptance or a fresh full-game browser run.
 
 ## Authority and ownership
 
@@ -53,7 +55,7 @@ Run the checks required by the changed area and play the changed journey. `npm r
 
 ## Copyable instruction for the local agent
 
-> Read `AGENTS.md` and `docs/reviews/README.md`, safely fetch the latest handoff, and compare the current checkout with the review's baseline. Review findings UX-01 through UX-14 against the current implementation and the three requirements/design documents. Within my requested implementation scope, address the highest-priority coherent slice first. Establish expected results independently, reproduce the issue, implement, and verify the changed player journey. Preserve remaining findings. Add a dated response using `docs/reviews/IMPLEMENTATION_REPORT_TEMPLATE.md`, include source revisions and visual evidence, link it from the review index, and append the appropriate Overwatch evidence. Report what is ready for my review and what remains unverified.
+> Read `AGENTS.md`, `docs/reviews/README.md`, the current review and its next implementation brief. Safely fetch and compare the current checkout with the pinned baseline; preserve local work. Within my requested scope, repair the documented interaction defects and complete the readable opening/planning journey at compact sizes and by keyboard. Preserve the recent Ready, picking, Card-state and physical-column fixes. Establish expected results independently, reproduce, implement and verify; use explicit assertions for the confirmed behavioral risks. Add a dated response using the template with commits, preserved visual evidence and limitations, update this index and append the appropriate Overwatch evidence. Keep the following terrain/party scene separate and report what is ready for my review.
 
 ## Keep history readable
 
@@ -66,5 +68,6 @@ Update the current-review/current-response links above as work advances. Maintai
 | 2026-11-22 | [Initial UI/design review](2026-11-22-ui-design-review.md) | Screenshot plus static review of `af6977d`; engine `ba838cc` |
 | 2026-11-22 | [Implementation response 01](2026-11-22-ui-design-response-01.md) | UX-01/02/03 implemented in `d61d56d` (Ready freeze, single resolution, height-aware picking); scripted Chrome journeys before/after; engine `ba838cc` unchanged |
 | 2026-11-22 | [Implementation response 02](2026-11-22-ui-design-response-02.md) | UX-04/05/07/08/09/10 and parts of UX-06/14 in `8569829`…`05de8fa` (scenery cut-out, aligned ribbons and one Ready, fitted home view, Card anatomy, planned vs. landed Supply, quieter ownership); engine `ba838cc` unchanged |
+| 2026-11-22 | [Follow-up review 02](2026-11-22-ui-design-review-02.md) and [assignment 03](2026-11-22-next-agent-assignment-03.md) | Reviews `a68cfd0b`; 76 independent tests passed; isolated playback-filter reproduction; compact planning/keyboard next; CJ acceptance not recorded |
 | 2026-11-22 | [Implementation response 03](2026-11-22-ui-design-response-03.md) | Rest of UX-06/UX-14, UX-11, UX-13, UX-12 orbit check, UX-08 overflow fixture, HV-41 panel check in `00089e5`…`46e8249`; engine `ba838cc` unchanged |
 
