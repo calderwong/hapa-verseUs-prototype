@@ -45,6 +45,16 @@ const U = 1e6;
 const SUIT = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
 const SUIT_NAME = { wands: 'Wands', pentacles: 'Pentacles', cups: 'Cups', swords: 'Swords', wildcard: 'Wildcard' };
 const ROLE_ABBR = { swordsman: 'Sw', pikeman: 'Pk', archer: 'Ar', mage: 'Mg', priest: 'Pr', center: '★' };
+/** Role names shown with their marks (review UX-13: pair role icons with full names). */
+const ROLE_NAME = { swordsman: 'Sword', pikeman: 'Pike', archer: 'Archer', mage: 'Mage', priest: 'Priest' };
+const FACING_NAME = { N: 'North', E: 'East', S: 'South', W: 'West' };
+const STATE_NAME = { idle: 'waiting', moving: 'moving', engaged: 'in combat', turning: 'turning', working: 'working' };
+const cap = (x) => (x ? x[0].toUpperCase() + x.slice(1) : x);
+/** A party in plain words: "Castle R1C1" (Mount kind, or Pawn, and its global territory). */
+const partyShort = (state, id) => { const p = state.parties[id]; return p ? `${p.mount ? cap(p.mount) : 'Pawn'} R${p.region.row}C${p.region.column}` : id; };
+/** A card in plain words: "2♣ (C1)". */
+const cardShort = (state, id) => { const c = state.cards[id]; return c ? `${c.rank ?? ''}${SUIT_GLYPH_TXT[c.suit] ?? ''} (C${c.localColumn})` : id; };
+const SUIT_GLYPH_TXT = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
 const COLOR_LETTER = { red: 'R', green: 'G', purple: 'P', yellow: 'Y', blue: 'B', orange: 'O', black: 'K', white: 'W', rainbow: '✦' };
 const pts = (u) => { const v = u / U; return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); };
 /** Mana as emblem + count (the emblem carries the color identity by shape; the name is in the title). */
@@ -795,13 +805,13 @@ export class VersusApp {
     const cmd = (seat) => Object.values(s.members).find((m) => m.commander && m.owner === seat);
     const next = s.tick + 1;
     this.el.matchbar.replaceChildren(
-      h('div', { class: 'crest a' }, 'A', h('small', {}, this.seats.A === 'bot' ? 'bot' : 'human')),
+      h('div', { class: 'crest a', title: `Seat A · ${this.seats.A}` }, 'A', h('small', {}, this.seats.A === 'bot' ? 'bot' : this.viewSeat === 'A' ? 'you' : 'human')),
       h('div', { class: 'tick' }, this.session.fixture ? h('span', { class: 'fixture-tag', title: 'This state was prepared directly as a diagnostic fixture; it did not emerge from ordinary play.' }, `FIXTURE · ${this.session.fixture.title}`) : null, h('b', {}, `Tick ${s.tick}`), ` · ${r.period === 'prologue' ? 'Prologue' : `Round ${r.round}`}`),
       h('div', { class: 'active' }, 'Active ', ...s.activeColumns.map((c) => h('span', { class: 'colchip' }, `C${c}`)), h('small', {}, ` next T${next}: ${this.ctx.profile.clock.activation[(next - 1) % 9].map((c) => `C${c}`).join('/')}`)),
       h('div', { class: 'phase' }, this.playback ? 'Resolving…' : this.pendingChoice ? `Response window · ${this.pendingChoice.req.seat} to act` : s.outcome ? 'Match over' : `Planning · you are ${this.viewSeat}`),
       h('div', { class: 'cmds' }, ...['A', 'B'].map((seat) => { const c = cmd(seat); return h('span', { class: `cmdhp ${seat.toLowerCase()}` }, `${seat} Commander ${c?.alive ? `${pts(c.hp)}/${pts(c.maxHp)} HP` : 'fallen'}`); })),
       h('div', { class: 'speed' }, h('label', {}, 'Playback ', h('select', { onchange: (e) => (this.speed = Number(e.target.value)) }, ...[0.5, 1, 2, 4].map((v) => h('option', { value: v, selected: v === this.speed }, `${v}×`))))),
-      h('div', { class: 'crest b' }, 'B', h('small', {}, this.seats.B === 'bot' ? 'bot' : 'human')),
+      h('div', { class: 'crest b', title: `Seat B · ${this.seats.B}` }, 'B', h('small', {}, this.seats.B === 'bot' ? 'bot' : this.viewSeat === 'B' ? 'you' : 'human')),
       this.sound ? h('button', { class: 'menu', title: this.sound.muted ? 'Sound off (click to turn on)' : 'Sound on (click to mute)', 'aria-pressed': String(!this.sound.muted), onclick: () => { this.sound.toggle(); this._renderMatchBar(); } }, this.sound.muted ? '🔇' : '🔊') : null,
       h('button', { class: 'menu', onclick: () => this._menu() }, '☰'),
     );
@@ -997,11 +1007,11 @@ export class VersusApp {
   _renderInspector() {
     const s = this.state, sel = this.selected, el = this.el.inspector;
     if (this.pendingChoice) return el.replaceChildren(this._responsePanel());
-    if (!sel) return el.replaceChildren(h('h3', {}, 'How a Tick goes'),
+    if (!sel) return el.replaceChildren(this._nowPanel(), h('h3', {}, 'How a Tick goes'),
       h('ol', { class: 'quickstart' },
         h('li', {}, h('b', {}, 'Supply. '), h('b', {}, 'Drag'), ' a card from your hand (or its slot on the board) onto one of your formations and let go. Each step of movement costs 1 Supply. Drop a card on the Mana pool panel to burn it instead.'),
         h('li', {}, h('b', {}, 'Move. '), 'With the party selected, ', h('b', {}, 'right-click'), ' a highlighted territory. New orders need the party\'s column to be active (striped edges).'),
-        h('li', {}, h('b', {}, 'Ready. '), 'Press the gold ', h('b', {}, 'Ready ▶'), ' button at the end of your hand (or Ctrl/⌘ + Enter). Both plans resolve together and play back.')),
+        h('li', {}, h('b', {}, 'Ready. '), 'Press the gold ', h('b', {}, 'Ready ▶'), ' button under the public plans (or Ctrl/⌘ + Enter). It freezes your plan; when both players are Ready the plans resolve together and play back.')),
       h('p', { class: 'dim small' }, 'Opening: drag the C1 card onto your C1 Castle (R1), select the Castle and right-click the Pawn ahead of it (R2) — they merge into one nine-member party.'),
       this._hoverHelp());
     if (sel.kind === 'party') return el.replaceChildren(this._partyPanel(s.parties[sel.id]));
@@ -1010,9 +1020,34 @@ export class VersusApp {
     if (sel.kind === 'event') return el.replaceChildren(this._eventPanel(sel.event));
     if (sel.kind === 'territory') {
       const c = this.ctx.geo.toLocal(this.viewSeat, sel.column, sel.row);
-      return el.replaceChildren(h('h3', {}, `Territory R${sel.row}C${sel.column}`), h('p', {}, `Your home view: R${c.row}C${c.column}`), h('p', { class: 'dim' }, `Mana row: ${[...this.ctx.profile.board.manaRows, ...this.ctx.profile.board.dualRows].includes(sel.row) ? 'yes' : 'no'}`));
+      const occ = Object.values(s.parties).filter((p) => p.alive && !p.retired && p.region.column === sel.column && p.region.row === sel.row);
+      const mana = [...this.ctx.profile.board.manaRows, ...this.ctx.profile.board.dualRows].includes(sel.row);
+      return el.replaceChildren(h('h3', {}, `Territory R${sel.row}C${sel.column}`),
+        h('p', {}, (c.row !== sel.row || c.column !== sel.column) ? `Your R${c.row}C${c.column}. ` : '', mana ? 'A Mana row: cards minted from here can carry Mana. ' : '', s.activeColumns.includes(sel.column) ? 'Its column is active this Tick.' : ''),
+        h('p', {}, occ.length ? `Here: ${occ.map((p) => `${p.owner === this.viewSeat ? 'your' : `${p.owner}'s`} ${partyShort(s, p.id)} (band ${fmtBand(p.band ?? 1)})`).join('; ')}.` : 'Empty.'));
     }
     return el.replaceChildren(h('h3', {}, 'Inspector'));
+  }
+
+  /**
+   * What matters now, in plain words (review UX-13): what is active, what you can do, and what
+   * Ready will commit or acknowledge.
+   */
+  _nowPanel() {
+    const s = this.state, me = this.viewSeat, c = this._can(me), n = this.plans[me]?.length ?? 0;
+    const cols = s.activeColumns.map((x) => `C${this.ctx.geo.toLocal(me, x, 1).column}`).join(' and ');
+    const mine = Object.values(s.parties).filter((p) => p.owner === me && p.alive && !p.retired);
+    const movable = mine.filter((p) => p.mount && s.activeColumns.includes(p.region.column)).length;
+    const cards = Object.values(s.players[me].bank.minor).filter(Boolean).filter((id) => !this._plannedCardIds(me).has(id)).length;
+    const moving = mine.filter((p) => p.destination).length;
+    const ready = c.stale ? `it acknowledges ${other(me)}'s updated plan; your ${n} order${n === 1 ? '' : 's'} stay frozen.`
+      : c.current ? `you already pressed it; waiting for ${other(me)}.`
+      : n ? `it freezes your ${n} order${n === 1 ? '' : 's'} for Tick ${s.tick}.` : `it continues with existing orders${moving ? ` (${moving} of your parties keep moving)` : ''}.`;
+    return h('div', { class: 'now' },
+      h('h3', {}, `Tick ${s.tick} · you are ${me}`),
+      h('div', {}, h('b', {}, 'Active: '), `your columns ${cols} mint new cards and take new move orders.`),
+      h('div', {}, h('b', {}, 'You can: '), `spend ${cards} unplanned card${cards === 1 ? '' : 's'} (drag onto a formation for Supply, onto Mana pools to Burn, or use its ability), and order ${movable} mounted part${movable === 1 ? 'y' : 'ies'} in active columns.`),
+      h('div', {}, h('b', {}, 'If you press Ready: '), ready));
   }
 
   _hoverHelp() {
@@ -1035,17 +1070,27 @@ export class VersusApp {
       const id = p.slots[String(slot)];
       const m = id ? s.members[id] : null;
       grid.append(h('div', { class: `slot${m ? (m.alive ? '' : ' dead') : ' empty'}${slot === 5 ? ' center' : ''}${m ? ` role-${m.archetype}` : ''}`, onclick: () => { if (m) { this.selected = { kind: 'member', id: m.id }; this._renderAll(); } }, title: m ? memberName(s, m.id) : `slot ${slot} empty` },
-        h('span', { class: 'sn' }, slot), m?.alive && m.helperAway ? h('span', { class: 'away', title: m.helperAway.kind === 'corner' ? `helping ${partyName(s, m.helperAway.helps)} in the contact strip` : 'advanced into an enemy gap' }, m.helperAway.kind === 'corner' ? '◇' : '▲') : null, m ? [h('b', {}, m.isCenter ? (p.mount ?? '★').slice(0, 3) : ROLE_ABBR[m.archetype]), m.alive && !p.pool ? h('div', { class: 'hp' }, h('i', { style: `width:${Math.max(0, m.hp / m.maxHp) * 100}%` })) : m.alive ? null : h('small', {}, '†')] : h('small', { class: 'dim' }, slot === 5 ? 'empty center' : '')));
+        h('span', { class: 'sn' }, slot), m?.alive && m.helperAway ? h('span', { class: 'away', title: m.helperAway.kind === 'corner' ? `helping ${partyName(s, m.helperAway.helps)} in the contact strip` : 'advanced into an enemy gap' }, m.helperAway.kind === 'corner' ? '◇' : '▲') : null, m ? [h('b', {}, m.isCenter ? cap(p.mount ?? 'center') : ROLE_NAME[m.archetype] ?? ROLE_ABBR[m.archetype]), m.alive && !p.pool ? h('div', { class: 'hp' }, h('i', { style: `width:${Math.max(0, m.hp / m.maxHp) * 100}%` })) : m.alive ? null : h('small', {}, '†')] : h('small', { class: 'dim' }, slot === 5 ? 'empty center' : '')));
     }
     const engagedWith = Object.values(s.engagements).filter((e) => e.active && (e.a === p.id || e.b === p.id)).map((e) => (e.a === p.id ? e.b : e.a));
     const active = s.activeColumns.includes(p.region.column);
     const facing = (f) => h('button', { disabled: !own || !active || f === p.facing || !!p.formationChange || !this._can(p.owner).edit, title: p.state === 'engaged' ? 'In contact: combat keeps the old arrangement this Tick; the change fails if it would pull a touching member out of contact' : `face ${f} (one Tick)`, onclick: () => this._addCommand(p.owner, { type: 'change_formation', partyId: p.id, facing: f }) && this._toast(`Formation change to face ${f} planned (takes one Tick${p.state === 'engaged' ? '; legality is rechecked at completion' : ''})`) }, f);
     return h('div', {},
-      h('h3', {}, partyName(s, p.id)),
+      (() => {
+        const living = Object.values(p.slots).filter((id) => id && s.members[id].alive).length;
+        const whose = p.owner === this.viewSeat ? 'yours' : `${p.owner}'s`;
+        const planned = this._plannedSupply(p);
+        return h('div', { class: 'ident' },
+          h('h3', {}, `${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★ Commander' : ''}`, h('span', { class: `whose ${p.owner.toLowerCase()}` }, whose)),
+          h('div', { class: 'ident-line' }, `${STATE_NAME[p.state] ?? p.state}${engagedWith.length ? ` with ${engagedWith.map((id) => partyShort(s, id)).join(', ')}` : ''}${p.mountLost ? ' · mount lost' : ''} · faces ${FACING_NAME[p.facing]}${p.turn ? ` → ${FACING_NAME[p.turn.to]} at Tick end` : ''}`),
+          h('div', { class: 'ident-line' }, `${living} member${living === 1 ? '' : 's'} · capacity 9 · Supply ${pts(supplyOf(p))}`, planned ? h('b', { class: 'planned-supply' }, ` → ${pts(supplyOf(p) + planned)} planned`) : null, p.destination ? ` · heading to R${p.destination.row}C${p.destination.column}` : ''));
+      })(),
+      h('details', { class: 'details' }, h('summary', {}, 'Details'),
+        h('div', { class: 'kv' },
+          h('span', {}, 'Territory'), h('span', {}, `global R${p.region.row}C${p.region.column}${p.owner !== 'A' || local.row !== p.region.row || local.column !== p.region.column ? ` · ${p.owner}'s home R${local.row}C${local.column}` : ''}`),
+          h('span', {}, 'Record id'), h('span', { class: 'mono' }, p.id),
+          h('span', {}, 'State'), h('span', {}, p.state))),
       h('div', { class: 'kv' },
-        h('span', {}, 'Global / home'), h('span', {}, `R${p.region.row}C${p.region.column} / R${local.row}C${local.column}`),
-        h('span', {}, 'State'), h('span', {}, `${p.state}${p.mountLost ? ' (mount lost)' : ''}${engagedWith.length ? ` with ${engagedWith.map((id) => partyName(s, id)).join(', ')}` : ''}`),
-        h('span', {}, 'Facing'), h('span', {}, `${p.facing}${p.turn ? ` → ${p.turn.to} at Tick end` : ''}`),
         ...(() => { const st = standingOf(s, this.ctx, p); return st.kind === 'ground'
           ? [h('span', {}, 'Stands'), h('span', {}, 'surface ground (band +1, exposed)')]
           : [h('span', {}, 'Stands'), h('span', {}, `${st.label} · ${st.exposed ? 'exposed (counts for income and blocking)' : 'not exposed (roofed)'}`, h('div', { class: 'dim small' }, st.note))]; })(),
@@ -1053,7 +1098,7 @@ export class VersusApp {
         h('span', {}, 'Speed'), h('span', {}, p.mount ? `${this.ctx.profile.movement.speeds[p.mount].join('/')} step per Tick` : 'none (needs a Mount)'),
         h('span', {}, 'Destination'), h('span', {}, p.destination ? `R${p.destination.row}C${p.destination.column}` : '—'),
         p.pool ? h('span', {}, 'Party pool') : null, p.pool ? h('span', {}, `${pts(p.pool.hp)}/${pts(p.pool.max)} (maintenance)`) : null),
-      h('h4', {}, 'Formation (front at top, seen from behind)'), grid,
+      h('h4', { title: 'The grid is the party\'s own frame: its front is at the top whatever way the camera looks.' }, `Formation · front (${FACING_NAME[p.facing]}) at top`), grid,
       own ? this._supplyLoader(p) : null,
       own ? h('div', { class: 'actions' },
         h('div', { class: 'dim small' }, active ? (p.mount ? 'Right-click a highlighted territory: destination (one step costs 1 Supply).' : 'An unmounted Pawn stores Supply but cannot move.') : `C${p.region.column} is not active: only Supply can reach this party now.`),
@@ -1148,7 +1193,10 @@ export class VersusApp {
         h('p', { class: 'dim small' }, `Protection ${e.mode.protection}, allocation ${e.mode.allocation}, health ${e.mode.health}. All hits come from one snapshot and land together.`),
         h('ol', { class: 'hits' }, ...e.hits.map((x) => h('li', {}, explainHit(s, x)))));
     }
-    return h('div', {}, h('h3', {}, e.type.replace(/_/g, ' ')), h('p', {}, eventLine(s, e) ?? ''), h('pre', { class: 'raw' }, JSON.stringify(e, null, 1).slice(0, 1600)));
+    const causes = [e.cardId ? `card ${cardShort(s, e.cardId)}` : null, e.partyId ? partyShort(s, e.partyId) : null, e.memberId ? memberName(s, e.memberId) : null, e.seat ? `player ${e.seat}` : null].filter(Boolean);
+    return h('div', {}, h('h3', {}, cap(e.type.replace(/_/g, ' '))), h('p', {}, eventLine(s, e) ?? ''),
+      causes.length ? h('p', { class: 'dim small' }, `Involves: ${causes.join(' · ')} · Tick ${e.tick ?? s.tick}`) : null,
+      h('details', { class: 'details' }, h('summary', {}, 'Details (exact record)'), h('pre', { class: 'raw' }, JSON.stringify(e, null, 1).slice(0, 1600))));
   }
 
   _responsePanel() {
@@ -1189,12 +1237,13 @@ export class VersusApp {
 
 function describeCmd(state, c) {
   switch (c.type) {
-    case 'load_supply': return `Supply ${c.cardId} → ${partyName(state, c.partyId)}`;
-    case 'burn': return `Burn ${c.cardId} (${fmtMana(state.cards[c.cardId]?.mana)})`;
-    case 'set_destination': return `${partyName(state, c.partyId)} → R${c.target.row}C${c.target.column}`;
-    case 'change_formation': return `${partyName(state, c.partyId)} faces ${c.facing}`;
-    case 'retreat': return `${partyName(state, c.partyId)} retreats → R${c.target.row}C${c.target.column}`;
-    case 'play_ability': { const d = activeCatalog.cards[state.cards[c.cardId]?.abilityId]; return `${d?.title ?? 'Ability'} (${c.cardId})${c.burns?.length ? `, burning ${c.burns.join(', ')}` : ''}`; }
+    // plain words first; exact ids stay in the event log and the card / party inspectors (UX-13)
+    case 'load_supply': return `+${pts(state.cards[c.cardId]?.supply ?? 0)} Supply from ${cardShort(state, c.cardId)} → ${partyShort(state, c.partyId)}`;
+    case 'burn': { const m = state.cards[c.cardId]?.mana; return `Burn ${cardShort(state, c.cardId)} for ${m && Object.keys(m).length ? fmtMana(m) : 'no Mana'}`; }
+    case 'set_destination': return `Move ${partyShort(state, c.partyId)} → R${c.target.row}C${c.target.column}`;
+    case 'change_formation': return `Turn ${partyShort(state, c.partyId)} to face ${FACING_NAME[c.facing] ?? c.facing}`;
+    case 'retreat': return `Retreat ${partyShort(state, c.partyId)} → R${c.target.row}C${c.target.column}`;
+    case 'play_ability': { const d = activeCatalog.cards[state.cards[c.cardId]?.abilityId]; const t = c.target?.memberId ? ` at ${memberName(state, c.target.memberId)}` : c.target?.row ? ` on row ${c.target.row}` : ''; return `Cast ${d?.title ?? 'ability'} from ${cardShort(state, c.cardId)}${c.actorPartyId ? ` by ${partyShort(state, c.actorPartyId)}` : ''}${t}${c.burns?.length ? `, burning ${c.burns.map((b) => cardShort(state, b)).join(', ')}` : ''}`; }
     case 'concede': return 'Concede';
     default: return c.type;
   }
