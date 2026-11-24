@@ -1167,6 +1167,30 @@ await check('z16', 'Center-to-center opening (default v3_06: free Knight turns, 
   await b.close();
 });
 
+await check('z17', 'Fallback definitions when no body label is drawn: a roofed formation read by keyboard; definitions follow the subject (R8-04)', { query: 'autostart=1&fixture=terrain&a=human&b=human', viewport: '1280x720@1' }, async () => {
+  const page = await open('autostart=1&fixture=terrain&a=human&b=human', { width: 1280, height: 720 });
+  await app(page, () => window.__versus._focusInspect('B.tunnel')); await settle(2200);
+  const start = await app(page, () => ({ labels: document.querySelectorAll('.mlabel:not([hidden])').length, roof: document.querySelector('.inspect-bar .warn')?.textContent ?? '' }));
+  expect('the roofed formation shows no body label from the outset', start.labels, 0);
+  ok('the strip says why', /Roofed tunnel/.test(start.roof), start.roof);
+  await openMember(page, /^Pikeman/); await sleep(400);
+  await page.mouse.move(2, 2); await sleep(200);
+  const tip = () => app(page, () => ({ focus: document.activeElement?.getAttribute('aria-label') ?? '', shown: !document.getElementById('member-tip').hidden, text: document.getElementById('member-tip').innerText.replace(/\s+/g, ' ') }));
+  const role = await tip();
+  ok('role: the first symbol is focused and defined without any drawn label', /^Pikeman/.test(role.focus) && role.shown && /a member in slot 2/.test(role.text), role);
+  await page.keyboard.press('ArrowRight'); await sleep(250);
+  const hp = await tip();
+  ok('health: its current value is defined', /^Health 3\/3/.test(hp.focus) && hp.shown && /3\/3/.test(hp.text), hp);
+  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await sleep(250);
+  const sh = await tip();
+  ok('protection: front-only value and coverage', /^Physical protection 1/.test(sh.focus) && /Physical protection 1 on the front face; other faces meet 0/.test(sh.text), sh);
+  await shot(page, 'roofed-fallback');
+  // another subject: no definition of the previous formation survives
+  await app(page, () => window.__versus._focusInspect('A.hill')); await settle(1800);
+  expect('a new subject leaves no stale definition open or registered', await app(page, () => [document.getElementById('member-tip').hidden, [...window.__versus.labels.chips.keys()].some((k) => k.startsWith('B.tunnel'))]), [true, false]);
+  await page.close();
+});
+
 await check('z13', 'Development controllers: validated launch, A bot / B human, both bots Pause / Step / Stop, saved preset and launch link (HF3-04, R7-03)', { query: 'several; see setup', viewport: '1280x720@1' }, async () => {
   const bad = await open('autostart=1&a=robot&b=bot&seed=-4', { width: 1280, height: 720 });
   const eff = await app(bad, () => ({ eff: window.__versus.effective, toast: window.__versus.el.toast.textContent, problems: window.__versus.launch?.problems }));
@@ -1174,7 +1198,8 @@ await check('z13', 'Development controllers: validated launch, A bot / B human, 
   expect('an invalid seed falls back to 1', eff.eff.seed, 1);
   expect('both problems are reported', eff.problems?.length, 2);
   const link = await app(bad, () => { window.__versus._menu(); return document.querySelector('.dev-preset .launch-link')?.textContent ?? ''; });
-  ok('the menu shows the effective configuration as a launch link', /\/versus\.html\?autostart=1&a=human&b=bot&seed=1$/.test(link), link);
+  const defaultProfile = await app(bad, () => window.__versus.ctx.profile.id);
+  ok('the menu link carries the effective profile, even the default (R8-03)', link.endsWith(`/versus.html?autostart=1&a=human&b=bot&seed=1&profile=${defaultProfile}`), link);
   await bad.close();
   const ab = await open('autostart=1&a=bot&b=human&seed=1', { width: 1280, height: 720 });
   const s0 = await app(ab, () => ({ view: window.__versus.viewSeat, botReady: !!window.__versus.agreement.ready.A }));
@@ -1220,6 +1245,19 @@ await check('z13', 'Development controllers: validated launch, A bot / B human, 
   await st.goto(`${base}/versus.html?autostart=1&a=human&b=bot`, { waitUntil: 'networkidle0' });
   await st.waitForFunction(() => window.__versus?.session, { timeout: 30000 });
   expect('URL values override the preset (seed still from the preset)', await st.evaluate(() => ({ ...window.__versus.effective.seats, seed: window.__versus.effective.seed })), { A: 'human', B: 'bot', seed: 7 });
+  // R8-03: a copied link reopens its own profile even when this browser saved a legacy preset
+  await st.evaluate(() => localStorage.setItem('hapa-versus.dev-preset.v1', JSON.stringify({ a: 'human', b: 'bot', seed: 1, profile: 'hapa_open_10x9_v3_02' })));
+  await st.goto(`${base}/versus.html?autostart=1&a=human&b=bot&seed=1`, { waitUntil: 'networkidle0' });
+  await st.waitForFunction(() => window.__versus?.session, { timeout: 30000 });
+  const copied = await st.evaluate(() => { window.__versus._menu(); return document.querySelector('.dev-preset .launch-link')?.textContent ?? ''; });
+  expect('a bare URL still follows the saved legacy preset (intentional)', await st.evaluate(() => [window.__versus.ctx.profile.id, window.__versus.agreement.policy]), ['hapa_open_10x9_v3_02', 'pair_acknowledgment_v3']);
+  await st.evaluate(() => window.__versus._closeSheet());
+  ok('the legacy match\'s own menu link names its legacy profile', copied.endsWith('&profile=hapa_open_10x9_v3_02'), copied);
+  await st.goto(`${base}/versus.html?autostart=1&a=human&b=bot&seed=1&profile=${defaultProfile}`, { waitUntil: 'networkidle0' });
+  await st.waitForFunction(() => window.__versus?.session, { timeout: 30000 });
+  const reopened = await st.evaluate(() => { window.__versus._menu(); return { profile: window.__versus.ctx.profile.id, policy: window.__versus.agreement.policy, link: document.querySelector('.dev-preset .launch-link')?.textContent ?? '' }; });
+  expect('the copied current-profile link wins over the saved legacy preset', [reopened.profile, reopened.policy], [defaultProfile, 'own_plan_ready_v1']);
+  ok('…and its own menu link reproduces it exactly', reopened.link.endsWith(`&profile=${defaultProfile}`), reopened.link);
   await st.evaluate(() => localStorage.removeItem('hapa-versus.dev-preset.v1'));
   await st.close();
 });

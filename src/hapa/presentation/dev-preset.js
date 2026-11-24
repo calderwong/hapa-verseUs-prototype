@@ -72,7 +72,7 @@ export function resolveLaunch(search, preset = null, { profileOk = () => true, f
   return { autostart: q.has('autostart'), config: { seats: { A: a, B: b }, seed, profileId, fixture }, sources, problems };
 }
 
-/** A copyable launch link that reproduces a configuration exactly. */
+/** A copyable launch link that reproduces a configuration exactly (pass the effective profile: a link without one follows the opener's saved preset). */
 export function launchURL(config, base = (typeof location !== 'undefined' ? `${location.origin}${location.pathname}` : '/versus.html')) {
   const q = new URLSearchParams({ autostart: '1' });
   if (config.fixture) q.set('fixture', config.fixture);

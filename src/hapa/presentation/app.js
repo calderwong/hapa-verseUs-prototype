@@ -233,7 +233,9 @@ export class VersusApp {
     const remember = h('input', { id: 'set-remember', type: 'checkbox', checked: true });
     const read = () => ({ seats: { A: document.getElementById('set-A').value, B: document.getElementById('set-B').value }, seed: Math.max(1, Math.floor(Number(seed.value) || 1)), profileId: profileSel.value });
     const linkOut = h('code', { class: 'launch-link' });
-    const showLink = () => { const c = read(); linkOut.textContent = launchURL({ ...c, profileId: c.profileId === DEFAULT_PROFILE_ID ? null : c.profileId, fixture: null }); };
+    // a copied link reproduces the whole configuration, the profile included even when it is the
+    // default (a bare URL still follows the saved preset; review 08, R8-03)
+    const showLink = () => { const c = read(); linkOut.textContent = launchURL({ ...c, fixture: null }); };
     const start = (over = {}) => {
       const c = { ...read(), ...over };
       if (remember.checked && !over.seats) savePreset({ a: c.seats.A, b: c.seats.B, seed: c.seed, profile: c.profileId === DEFAULT_PROFILE_ID ? null : c.profileId });
@@ -1691,7 +1693,7 @@ export class VersusApp {
   _devSection() {
     const c = this.effective;
     if (!c) return null;
-    const url = launchURL({ ...c, profileId: c.profileId === DEFAULT_PROFILE_ID ? null : c.profileId });
+    const url = launchURL({ ...c, profileId: c.fixture ? null : (c.profileId ?? this.ctx.profile.id) });
     const swap = (A, B) => h('button', { disabled: c.seats.A === A && c.seats.B === B, onclick: () => { this._closeSheet({ restore: false }); this.startMatch({ fixture: c.fixture, profileId: c.profileId ?? undefined, seats: { A, B }, seed: c.seed }); } }, `A ${A} · B ${B}`);
     return h('div', { class: 'dev-preset' },
       h('h3', {}, 'Development controllers'),
@@ -1806,7 +1808,9 @@ export class VersusApp {
       h('div', { class: 'orders-head' }, h('h3', {}, 'Parties & Cards'), h('button', { class: 'peek-btn', 'aria-label': 'Close Parties and Cards', onclick: () => this._toggleRoster(false) }, '×')),
       ...['A', 'B'].map((seat) => h('div', { class: 'navseat' }, h('div', { class: `rhead ${seat.toLowerCase()}` }, `${seat}${seat === this.viewSeat ? ' (you)' : ''}`),
         group('Parties', parties(seat)), group('Cards', cards(seat)),
-        subjectRow({ kind: 'basin', id: seat }, `${seat}'s Fire Pit and Mana basin: ${Object.keys(s.players[seat].pool).length ? fmtMana(s.players[seat].pool) : 'empty'}`, [h('b', {}, 'Fire Pit & Mana basin'), h('span', { class: 'dim' }, ` ${Object.keys(s.players[seat].pool).length ? fmtMana(s.players[seat].pool) : 'empty'}`)]))));
+        // the same quantity the basin shows: available this Tick while planning (review 08, R8-06)
+        (() => { const planning = !(this.resolving || this.playback || this.pendingChoice), av = this._availablePool(seat), has = Object.values(av).some((n) => n > 0), label = planning ? 'available this Tick' : 'pool now';
+          return subjectRow({ kind: 'basin', id: seat }, `${seat}'s Fire Pit and Mana basin: ${label} ${has ? fmtMana(av) : 'none'}`, [h('b', {}, 'Fire Pit & Mana basin'), h('span', { class: 'dim' }, ` ${label}: ${has ? fmtMana(av) : '0'}`)]); })())));
   }
 
   /**

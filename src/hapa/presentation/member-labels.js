@@ -52,6 +52,22 @@ function levelFor0(prev, pxPerMember, identity, combat) {
   return pxPerMember >= combat.enter ? 'combat' : pxPerMember >= identity.enter ? 'identity' : 'none';
 }
 
+/**
+ * The definition registry for the inspected party: every member's current symbols, whether or
+ * not its on-body label is drawn (roofed, off screen, too small) — the inspection bar's keyboard
+ * and touch route needs them all (review 08, R8-04). Rebuilt from the current facts each update.
+ * @param {Array<{ id: string, chips?: Array<{ key: string }> }>} members
+ * @returns {Map<string, any>} `${memberId}|${chipKey}` → chip
+ */
+export function definitionRegistry(members) {
+  const reg = new Map();
+  for (const mm of members ?? []) for (const c of mm.chips ?? []) reg.set(`${mm.id}|${c.key}`, c);
+  return reg;
+}
+
+/** The text a definition shows (used to tell whether an open definition is stale). */
+const tipText = (c) => `${c.title}|${c.value}|${c.text}`;
+
 /** @typedef {{ x: number, y: number, w: number, h: number }} Rect */
 export const overlaps = (a, b) => !!a && !!b && a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 const union = (rs) => { const v = rs.filter(Boolean); if (!v.length) return null; const x0 = Math.min(...v.map((r) => r.x)), y0 = Math.min(...v.map((r) => r.y)); return { x: x0, y: y0, w: Math.max(...v.map((r) => r.x + r.w)) - x0, h: Math.max(...v.map((r) => r.y + r.h)) - y0 }; };
@@ -192,7 +208,7 @@ export class MemberLabels {
   showTip(ref, anchor, { pinned = false } = {}) {
     const c = this.chips.get(ref);
     if (!c || !anchor) return false;
-    this.tipFor = ref; this.tipPinned = pinned;
+    this.tipFor = ref; this.tipPinned = pinned; this.tipShown = tipText(c); this.tipAnchor = anchor;
     this.tip.replaceChildren(h('div', { class: 'mt-head' }, h('b', {}, c.title), c.value ? h('span', { class: 'mt-val' }, ` ${c.value}`) : null), h('div', {}, c.text));
     this.tip.hidden = false;
     const host = this.host.getBoundingClientRect(), a = anchor.getBoundingClientRect();
@@ -210,7 +226,7 @@ export class MemberLabels {
   hideTip() {
     clearTimeout(this._tipShow); clearTimeout(this._tipHide);
     if (this.tip.hidden) return false;
-    this.tip.hidden = true; this.tipFor = null; this.tipPinned = false;
+    this.tip.hidden = true; this.tipFor = null; this.tipPinned = false; this.tipShown = null; this.tipAnchor = null;
     for (const el of this.root.querySelectorAll('.mfact.asked')) el.classList.remove('asked');
     return true;
   }
@@ -257,6 +273,16 @@ export class MemberLabels {
     if (!m) { if (this.subject) this.clear(); return 'none'; }
     if (this.subject !== m.partyId) { this.clear(); this.subject = m.partyId; }
     if (!this._scaleCheckAt || now - this._scaleCheckAt > 500) { this._scaleCheckAt = now; this._checkTextScale(); }
+    // every member's current definitions, drawn or not; an open definition follows its source
+    this.chips = definitionRegistry(m.members);
+    if (this.tipFor) {
+      const c = this.chips.get(this.tipFor);
+      if (!c) this.hideTip();
+      else if (tipText(c) !== this.tipShown) {
+        const anchor = this.chipEl(this.tipFor) ?? (this.tipAnchor?.isConnected ? this.tipAnchor : null);
+        if (anchor) this.showTip(this.tipFor, anchor, { pinned: this.tipPinned }); else this.hideTip();
+      }
+    }
     // detail level from measured space, with hysteresis and a short settling interval
     const k = (parseFloat(this.fontSize) || 16) / 16;
     const want = levelFor(this.level, m.pxPerMember, m.rowPx, k, (this.labelH ?? 36 * k) + 2, Math.max(ROW_PX.combat * k, (this.combatH ?? 0) + 2));
@@ -288,7 +314,6 @@ export class MemberLabels {
       if (this.keys.get(mm.id) !== key) {
         this.keys.set(mm.id, key);
         el.className = `mlabel${expanded ? ' expanded' : ''}${hovered ? ' hovered' : ''}${mm.occluded ? ' occluded' : ''}`;
-        for (const c of chips) this.chips.set(`${mm.id}|${c.key}`, c);
         const chip = (c) => { const sp = h('span', { class: `mfact ${c.cls}`, 'data-ref': `${mm.id}|${c.key}` }); sp.innerHTML = `${c.icon}${c.value ? `<b>${c.value}</b>` : ''}`; return sp; };
         const hp = mm.text.healthPct;
         const of = (kinds) => chips.filter((c) => kinds.includes(c.kind));
