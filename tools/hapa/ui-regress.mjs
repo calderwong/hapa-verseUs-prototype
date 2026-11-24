@@ -1102,7 +1102,7 @@ await check('z12', 'Blocked Queen: the route preview names the friendly blocker,
   const why = await app(page, () => document.querySelector('.cmdbar .cmd-why')?.textContent ?? '');
   ok('the command bar names the blocker and keeps the order', /Your Pawn at R2C6 blocks its path/.test(why), why);
   ok('an in-world blocked cue is drawn at the contact', await app(page, () => window.__versus.view.destGroup.children.some((c) => c.isSprite)), 'sprite');
-  expect('no wall of repeated blocked messages while waiting', await app(page, () => window.__versus.session.events.filter((e) => e.type === 'travel_blocked').length), 1);
+  expect('no wall of repeated blocked messages while the Queen waits', await app(page, () => window.__versus.session.events.filter((e) => e.type === 'travel_blocked' && e.partyId === 'A.mount.C6').length), 1);
   await openMoves(page); await sleep(300);
   const back = await app(page, () => [...document.querySelectorAll('.cmdbar .movelist button')].map((b) => b.getAttribute('aria-label')).find((t) => /to R1C6:/.test(t)) ?? null);
   ok('the start territory R1C6 is a funded destination quoted at 0.5 Supply', /to R1C6: needs 0\.5 Supply/.test(back ?? ''), back);

@@ -59,7 +59,9 @@ const ROLE_ABBR = { swordsman: 'Sw', pikeman: 'Pk', archer: 'Ar', mage: 'Mg', pr
 /** Role names shown with their marks (review UX-13: pair role icons with full names). */
 const ROLE_NAME = { swordsman: 'Sword', pikeman: 'Pike', archer: 'Archer', mage: 'Mage', priest: 'Priest' };
 const FACING_NAME = { N: 'North', E: 'East', S: 'South', W: 'West' };
-const STATE_NAME = { idle: 'waiting', moving: 'moving', engaged: 'in combat', turning: 'turning', working: 'working' };
+const STATE_NAME = { idle: 'waiting', moving: 'moving', engaged: 'in combat', turning: 'turning', working: 'working', blocked: 'blocked' };
+/** A party's travel state in words; a known obstruction says so instead of "moving" (HF3-01). */
+const stateWord = (state, p) => (p?.blockedBy && p.destination && state.parties[p.blockedBy.partyId] ? `blocked by ${state.parties[p.blockedBy.partyId].owner === p.owner ? 'your' : `${state.parties[p.blockedBy.partyId].owner}'s`} ${state.parties[p.blockedBy.partyId].mount ? cap(state.parties[p.blockedBy.partyId].mount) : 'Pawn'} R${state.parties[p.blockedBy.partyId].region.row}C${state.parties[p.blockedBy.partyId].region.column}` : STATE_NAME[p?.state] ?? p?.state);
 /** Attributes that make a click-driven element a keyboard button too (Enter / Space; review UX-14). */
 const kbd = (fn, label) => ({ tabindex: '0', role: 'button', ...(label ? { 'aria-label': label } : {}), onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); fn(e); } } });
 const cap = (x) => (x ? x[0].toUpperCase() + x.slice(1) : x);
@@ -207,6 +209,7 @@ export class VersusApp {
   /** A short message over whatever is shown (setup or match): invalid launch values, etc. */
   notice(msg) {
     if (this.session) { this._toast(msg, true); return; }
+    if (this.launch?.autostart) this._pendingNotice = msg; // shown once the match opens
     this.el.overlay.querySelector('.launch-notice')?.remove();
     this.el.overlay.querySelector('.setup')?.prepend(h('p', { class: 'launch-notice warn', role: 'alert' }, msg));
   }
@@ -364,6 +367,7 @@ export class VersusApp {
     this.view.sync(this.state);
     this.view.syncBanks(this.state, drawCardCanvas);
     this._renderAll();
+    if (this._pendingNotice) { const m = this._pendingNotice; this._pendingNotice = null; setTimeout(() => this._toast(m, true), 50); }
     if (this.watch) this._scheduleAuto();
   }
 
@@ -1280,7 +1284,7 @@ export class VersusApp {
       // just beyond the rightmost visible member on screen, whatever the orbit (never over a body)
       anchor: a0 ? { x: Math.max(a0.x + pxPerMember * 1.2, ...members.filter((m) => m.anchor && m.visible).map((m) => m.anchor.x + pxPerMember * 0.75)), y: a0.y } : null,
       lines: [`${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'}${pf.commander ? ' ★ Commander' : ''} · ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]}`,
-        `Supply ${pts(pf.supply)}${planned ? ` (+${pts(planned)} planned)` : ''} · ${STATE_NAME[pf.state] ?? pf.state}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''}`,
+        `Supply ${pts(pf.supply)}${planned ? ` (+${pts(planned)} planned)` : ''} · ${stateWord(S, p)}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''}`,
         `Band ${fmtBand(pf.band)}${standingOf(S, this.ctx, p).kind === 'hilltop' ? ' · hilltop' : ''} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`],
       note: roofed ? 'Roofed tunnel: open its layer to read the members (cutaway)' : facts.playing ? 'Playing back: health as of the moment shown' : null,
       key: `${JSON.stringify(pf)}|${planned}|${roofed}|${facts.playing}`,
@@ -1373,7 +1377,7 @@ export class VersusApp {
     bar.replaceChildren(
       h('div', { class: 'ib-head' },
         h('b', {}, `Inspecting ${p.owner === this.viewSeat ? 'your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'} · R${p.region.row}C${p.region.column}`),
-        partyShown ? null : h('span', { class: 'dim' }, ` ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]} · Supply ${pts(pf.supply)} · ${STATE_NAME[pf.state] ?? pf.state}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''} · band ${fmtBand(pf.band)} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`),
+        partyShown ? null : h('span', { class: 'dim' }, ` ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]} · Supply ${pts(pf.supply)} · ${stateWord(S, p)}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''} · band ${fmtBand(pf.band)} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`),
         sel ? h('span', { class: 'ib-keep' }, ` · commanding your ${partyShort(this.state, sel.id)}`) : null,
         standingOf(S, this.ctx, p).kind === 'tunnel' && this.view.terrain.cutaway === null ? h('div', { class: 'warn' }, 'Roofed tunnel: open its layer to read the members (cutaway)') : null),
       h('div', { class: 'ib-row' },
@@ -1819,7 +1823,7 @@ export class VersusApp {
       const gone = removed.map((k) => h('li', { class: 'removed' }, h('span', { class: 'chg' }, 'REMOVED'), h('span', { class: 'otext' }, describeCmd(s, JSON.parse(k)))));
       const restore = editable && this._lastRemoved?.[seat]?.tick === s.tick ? h('button', { class: 'restore', 'aria-label': `Restore removed order: ${describeCmd(s, this._lastRemoved[seat].cmd)}`, onclick: () => this._restoreOrder(seat) }, `↶ Restore “${describeCmd(s, this._lastRemoved[seat].cmd)}”`) : null;
       const body = [h('ol', {}, ...items, ...gone), n || removed.length ? null : h('div', { class: 'dim' }, 'No orders: a legal pass (parties keep any destination they already have).'), restore];
-      const head = h('div', { class: 'phead', title: `revision r${this.rev[seat]}${rd ? ` · its Ready named A r${rd.A} · B r${rd.B}` : ''}` }, h('b', {}, who), ` · ${n} order${n === 1 ? '' : 's'} · `, status);
+      const head = h('div', { class: 'phead', title: `revision r${this.rev[seat]}${this.agreement?.ready?.[seat] ? ' · committed' : ''}` }, h('b', {}, who), ` · ${n} order${n === 1 ? '' : 's'} · `, status);
       // during a stale review the frozen own plan folds away (one click / Enter reopens it in full)
       if (own && can.stale) return h('details', { class: `planbox ${seat.toLowerCase()} frozen` }, h('summary', {}, head), ...body);
       return h('div', { class: `planbox ${seat.toLowerCase()}${rd ? ' frozen' : ''}` }, head, ...body);
@@ -1949,7 +1953,7 @@ export class VersusApp {
       const living = Object.values(p.slots).filter((id) => id && s.members[id]?.alive).length, planned = this._plannedSupply(p);
       const why = p.owner === this.viewSeat ? this._moveReason(p) : null;
       return { title: `${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★' : ''} · R${p.region.row}C${p.region.column}`, tag: 'party', compact: true,
-        node: h('div', { class: 'hint-line' }, `${living}/9 · Supply ${pts(supplyOf(p))}${planned ? ` (+${pts(planned)} planned)` : ''} · ${STATE_NAME[p.state] ?? p.state}${p.destination ? ` → R${p.destination.row}C${p.destination.column}` : ''}`, why ? h('div', { class: 'warn' }, why) : null,
+        node: h('div', { class: 'hint-line' }, `${living}/9 · Supply ${pts(supplyOf(p))}${planned ? ` (+${pts(planned)} planned)` : ''} · ${stateWord(s, p)}${p.destination ? ` → R${p.destination.row}C${p.destination.column}` : ''}`, why ? h('div', { class: 'warn' }, why) : null,
           this.pinned?.kind === 'hint' && this.pinned.id === p.id ? h('div', {}, h('button', { onclick: () => this._focusInspect(p.id) }, 'Inspect up close (F)'), this.selected?.kind === 'party' && this.selected.id !== p.id ? h('span', { class: 'dim' }, ` · your ${partyShort(s, this.selected.id)} stays selected`) : null)
             : h('div', { class: 'dim' }, this._commandable(p) ? 'Click to command · F or zoom in to inspect its members' : 'Click to read · F or zoom in to inspect its members')) };
     }
@@ -2235,7 +2239,7 @@ export class VersusApp {
         const planned = this._plannedSupply(p);
         return h('div', { class: 'ident' },
           h('h3', {}, `${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★ Commander' : ''}`, h('span', { class: `whose ${p.owner.toLowerCase()}` }, whose)),
-          h('div', { class: 'ident-line' }, `${STATE_NAME[p.state] ?? p.state}${engagedWith.length ? ` with ${engagedWith.map((id) => partyShort(s, id)).join(', ')}` : ''}${p.mountLost ? ' · mount lost' : ''} · faces ${FACING_NAME[p.facing]}${p.turn ? ` → ${FACING_NAME[p.turn.to]} at Tick end` : ''}`),
+          h('div', { class: 'ident-line' }, `${stateWord(s, p)}${engagedWith.length ? ` with ${engagedWith.map((id) => partyShort(s, id)).join(', ')}` : ''}${p.mountLost ? ' · mount lost' : ''} · faces ${FACING_NAME[p.facing]}${p.turn ? ` → ${FACING_NAME[p.turn.to]} at Tick end` : ''}`),
           h('div', { class: 'ident-line' }, `${living} member${living === 1 ? '' : 's'} · capacity 9 · Supply ${pts(supplyOf(p))}`, planned ? h('b', { class: 'planned-supply' }, ` → ${pts(supplyOf(p) + planned)} planned`) : null, p.destination ? ` · heading to R${p.destination.row}C${p.destination.column}` : ''));
       })(),
       h('details', { class: 'details' }, h('summary', {}, 'Details'),
@@ -2249,7 +2253,7 @@ export class VersusApp {
           : [h('span', {}, term('exposure', 'Stands', { standing: `${st.label}, ${st.exposed ? 'exposed' : 'not exposed'}` })), h('span', {}, `${st.label} · ${st.exposed ? 'exposed (counts for income and blocking)' : 'not exposed (roofed)'}`, h('div', { class: 'dim small' }, st.note))]; })(),
         h('span', {}, term('supply', 'Supply', { party: p, held: supplyOf(p), planned: this._plannedSupply(p), need: (() => { const d = this.plans[p.owner].find((c) => c.type === 'set_destination' && c.partyId === p.id); return d ? quoteRoute(this.state, this.ctx, p, d.target).required ?? null : null; })() })), h('span', {}, `${pts(supplyOf(p))}${p.supply.length ? ` (${p.supply.map((x) => `${pts(x.units)} from ${x.cardId}`).join(', ')})` : ''}`, this._plannedSupply(p) ? h('b', { class: 'planned-supply' }, ` +${pts(this._plannedSupply(p))} planned`) : null),
         h('span', {}, term('speed', 'Speed', { speed: p.mount ? this.ctx.profile.movement.speeds[p.mount].join('/') + ' step' : null })), h('span', {}, p.mount ? `${this.ctx.profile.movement.speeds[p.mount].join('/')} step per Tick` : 'none (needs a Mount)'),
-        h('span', {}, term('route', 'Destination')), h('span', {}, (() => { const d = this.plans[p.owner].find((c) => c.type === 'set_destination' && c.partyId === p.id); return d ? `R${d.target.row}C${d.target.column} (planned)${p.destination ? `, replacing R${p.destination.row}C${p.destination.column}` : ''}` : p.destination ? `R${p.destination.row}C${p.destination.column} (${STATE_NAME[p.state] ?? p.state})` : '—'; })()),
+        h('span', {}, term('route', 'Destination')), h('span', {}, (() => { const d = this.plans[p.owner].find((c) => c.type === 'set_destination' && c.partyId === p.id); return d ? `R${d.target.row}C${d.target.column} (planned)${p.destination ? `, replacing R${p.destination.row}C${p.destination.column}` : ''}` : p.destination ? `R${p.destination.row}C${p.destination.column} (${stateWord(s, p)})` : '—'; })()),
         p.pool ? h('span', {}, 'Party pool') : null, p.pool ? h('span', {}, `${pts(p.pool.hp)}/${pts(p.pool.max)} (maintenance)`) : null),
       h('h4', { title: 'The grid is the party\'s own frame: its front is at the top whatever way the camera looks.' }, `Formation · front (${FACING_NAME[p.facing]}) at top`), grid,
       own ? this._supplyLoader(p) : null,
