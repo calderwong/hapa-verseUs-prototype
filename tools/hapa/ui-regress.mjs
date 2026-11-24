@@ -404,7 +404,8 @@ await check('c8', 'Funded destinations: range, refusal with shortfall, invalidat
   current.observed = { moveLabels: labels };
   const targets = labels.map((l) => l.match(/to (R\d+C\d+): needs (\d+(?:\.\d+)?)/)?.slice(1)).filter(Boolean);
   const names = targets.map(([t]) => t).sort();
-  expect('2 Supply funds exactly the targets within two steps of R1C1', names, ['R1C2', 'R1C3', 'R2C1', 'R3C1'].sort());
+  // v3_04 (center to center): R1C2 and R1C3 hold A's own Knight and Bishop, so they are not places to stop
+  expect('2 Supply funds exactly the unheld targets within two steps of R1C1', names, ['R2C1', 'R3C1'].sort());
   await clickNamed(page, '#matchbar .strip-btn', /^☰ Parties & Cards$/, 'close the navigator'); await sleep(250);
   await page.keyboard.press('Home'); await sleep(1200); // the home view: the whole field in sight
   // right-click a legal but unfunded target that is visibly on the canvas: refused with its shortfall
