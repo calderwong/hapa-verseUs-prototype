@@ -1,0 +1,20 @@
+{
+  "toast": {
+    "profile": "hapa_open_10x9_v3_07",
+    "text": "Arrives facing ↑ N — Shift+right-click the destination (or O) to change",
+    "zToast": "28",
+    "zCounter": "20",
+    "overlapsCounter": true,
+    "toastRect": [
+      395,
+      99,
+      491,
+      32
+    ]
+  },
+  "mana": {
+    "navigator": "A's Fire Pit and Mana basin: available this Tick 2 Red",
+    "basin": "A's Mana available this Tick: 2 Red",
+    "authoritativePool": {}
+  }
+}

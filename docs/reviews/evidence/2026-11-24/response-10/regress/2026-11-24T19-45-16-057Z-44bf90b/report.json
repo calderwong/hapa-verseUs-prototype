@@ -1,0 +1,856 @@
+{
+ "runId": "2026-11-24T19-45-16-057Z-44bf90b",
+ "startedAt": "2026-11-24T19:45:16.857Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "44bf90b706a4e55dd740fd3276f077aac3ea5aa1",
+  "dirty": false,
+  "diffSha256": null,
+  "untracked": [],
+  "untrackedSha256": null
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/158.0.8127.37",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": false,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio. Text size (contract 4): the browser default font size is set through CDP Page.setFontSizes (16 px = 100%, 24 = 150%, 32 = 200%); inspection text, the command and inspection bars use rem and follow it, other HUD parts still use px. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "z08",
+   "title": "Intent across controls: navigator and board reading keep the friendly selection and orders; one Home transition; zoom anchored at real height (R6-02)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1; fixture=terrain",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Move to R2C1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "a legal funded order is queued for the friendly Castle",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "keyboard reaches \"Inspect B's Bishop\" in the navigator",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Inspect B's Bishop at R10C7, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 47
+     }
+    },
+    {
+     "name": "inspecting B keeps A's command selection",
+     "pass": true,
+     "actual": "A.mount.C1",
+     "expected": "A.mount.C1"
+    },
+    {
+     "name": "B's Bishop is the inspected party and a Return pose is saved",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "sel": "A.mount.C1",
+      "sub": "B.mount.C3",
+      "ret": true,
+      "bar": "Inspecting B's Bishop · R10C7 · commanding your Castle R1C1 3/3 1×3 1 1 6/6 1×3 1 1 3/3 1×2 2 1 3/3 1×1 2 1 ↩ Return (R) Close (Esc)"
+     }
+    },
+    {
+     "name": "the inspection bar says which party is commanded",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Inspecting B's Bishop · R10C7 · commanding your Castle R1C1 3/3 1×3 1 1 6/6 1×3 1 1 3/3 1×2 2 1 3/3 1×1 2 1 ↩ Return (R) Close (Esc)"
+    },
+    {
+     "name": "no order changed",
+     "pass": true,
+     "actual": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}",
+      "{\"type\":\"set_destination\",\"partyId\":\"A.mount.C1\",\"target\":{\"column\":1,\"row\":2}}"
+     ],
+     "expected": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}",
+      "{\"type\":\"set_destination\",\"partyId\":\"A.mount.C1\",\"target\":{\"column\":1,\"row\":2}}"
+     ]
+    },
+    {
+     "name": "focus lands on a member of the inspection bar (its symbols spoken as values)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Pikeman, slot 4: Health 3/3 · Physical attack 1×3 · Melee · Physical protection 1 on the f",
+      "visible": true,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "Enter on a member opens its source breakdown (keyboard route), described by the reading panel",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "pin": "B.C3.m5",
+      "reading": "Bishop 6/6 HP · slot 5 · middle row Sources and exceptions Blade: 1 × 3 Physical, melee, charges Physical protection 1 on the front: 1 from its own center-guard Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1)",
+      "described": "member-reading",
+      "fact": true,
+      "tip": true
+     }
+    },
+    {
+     "name": "…and focus moves to its first symbol, whose definition shows (contract 5)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "pin": "B.C3.m5",
+      "reading": "Bishop 6/6 HP · slot 5 · middle row Sources and exceptions Blade: 1 × 3 Physical, melee, charges Physical protection 1 on the front: 1 from its own center-guard Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1)",
+      "described": "member-reading",
+      "fact": true,
+      "tip": true
+     }
+    },
+    {
+     "name": "Escape closes the symbol definition first",
+     "pass": true,
+     "actual": [
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true
+     ]
+    },
+    {
+     "name": "Escape then closes the explanation; inspection stays",
+     "pass": true,
+     "actual": [
+      null,
+      true
+     ],
+     "expected": [
+      null,
+      true
+     ]
+    },
+    {
+     "name": "Return restores the pose before Inspect",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "control present: Face menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "a further order for the friendly Castle is queued without reselecting it",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "faced": "+2 C9 2♣ if loaded: +2 destinations",
+      "plans2": [
+       "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}",
+       "{\"type\":\"set_destination\",\"partyId\":\"A.mount.C1\",\"target\":{\"column\":1,\"row\":2}}",
+       "{\"type\":\"load_supply\",\"cardId\":\"A.C9.T1.0\",\"partyId\":\"A.mount.C1\"}"
+      ]
+     }
+    },
+    {
+     "name": "a click on an enemy pins its public summary and keeps the selection",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "sel": "A.mount.C1",
+      "pin": {
+       "kind": "hint",
+       "id": "B.mount.C5"
+      },
+      "view": "B'S COMMANDER ★ · R10C5 party × 4/9 · Speed 1/Tick · Supply 0 · waiting Inspect up close (F) · your Castle R1C1 stays selected"
+     }
+    },
+    {
+     "name": "F inspects the party being read; the selection stays",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "B.mount.C5"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "B.mount.C5"
+     ]
+    },
+    {
+     "name": "the Home button is not covered by any panel",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Home button",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "button Home: inspection and the old Return pose are cleared; the view is home",
+     "pass": true,
+     "actual": [
+      null,
+      null,
+      true
+     ],
+     "expected": [
+      null,
+      null,
+      true
+     ]
+    },
+    {
+     "name": "button Home → Focus → Return comes back to home, not the older pose",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "key Home: inspection and the old Return pose are cleared; the view is home",
+     "pass": true,
+     "actual": [
+      null,
+      null,
+      true
+     ],
+     "expected": [
+      null,
+      null,
+      true
+     ]
+    },
+    {
+     "name": "key Home → Focus → Return comes back to home, not the older pose",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "the friendly selection survived the whole journey",
+     "pass": true,
+     "actual": "A.mount.C1",
+     "expected": "A.mount.C1"
+    },
+    {
+     "name": "control present: layer -2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: All layers",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "a wheel approach keeps each party under the cursor at its real height (drift ≤ 12 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      {
+       "id": "A.hill",
+       "wantLayer": null,
+       "before": {
+        "x": 534.9355154763857,
+        "y": 353.93787848005564
+       },
+       "after": {
+        "x": 534.9355155033198,
+        "y": 353.937878467149
+       },
+       "px": 0,
+       "sel": "A.hill",
+       "layer": null
+      },
+      {
+       "id": "A.fly",
+       "wantLayer": null,
+       "before": {
+        "x": 747.2854252901982,
+        "y": 398.14342852647894
+       },
+       "after": {
+        "x": 747.1620348352382,
+        "y": 398.117741946536
+       },
+       "px": 0.1,
+       "sel": "A.hill",
+       "layer": null
+      },
+      {
+       "id": "B.tunnel",
+       "wantLayer": -2,
+       "before": {
+        "x": 741.7443374409181,
+        "y": 324.945390092865
+       },
+       "after": {
+        "x": 741.7443399414358,
+        "y": 324.9454238652866
+       },
+       "px": 0,
+       "sel": "A.hill",
+       "layer": -2
+      }
+     ]
+    },
+    {
+     "name": "…without changing the selected party or the chosen layer",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      [
+       "A.hill",
+       null,
+       null
+      ],
+      [
+       "A.hill",
+       null,
+       null
+      ],
+      [
+       "A.hill",
+       -2,
+       -2
+      ]
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z08-enemy-read-friendly-kept.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "drift": [
+     {
+      "id": "A.hill",
+      "wantLayer": null,
+      "before": {
+       "x": 534.9355154763857,
+       "y": 353.93787848005564
+      },
+      "after": {
+       "x": 534.9355155033198,
+       "y": 353.937878467149
+      },
+      "px": 0,
+      "sel": "A.hill",
+      "layer": null
+     },
+     {
+      "id": "A.fly",
+      "wantLayer": null,
+      "before": {
+       "x": 747.2854252901982,
+       "y": 398.14342852647894
+      },
+      "after": {
+       "x": 747.1620348352382,
+       "y": 398.117741946536
+      },
+      "px": 0.1,
+      "sel": "A.hill",
+      "layer": null
+     },
+     {
+      "id": "B.tunnel",
+      "wantLayer": -2,
+      "before": {
+       "x": 741.7443374409181,
+       "y": 324.945390092865
+      },
+      "after": {
+       "x": 741.7443399414358,
+       "y": 324.9454238652866
+      },
+      "px": 0,
+      "sel": "A.hill",
+      "layer": -2
+     }
+    ]
+   },
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z16",
+   "title": "Center-to-center opening (default v3_07: free Knight turns, arrival facing): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1",
+    "profile": "hapa_open_10x9_v3_04"
+   },
+   "assertions": [
+    {
+     "name": "the default profile travels center to center",
+     "pass": true,
+     "actual": [
+      "hapa_open_10x9_v3_07",
+      "center_to_center_v1"
+     ],
+     "expected": [
+      "hapa_open_10x9_v3_07",
+      "center_to_center_v1"
+     ]
+    },
+    {
+     "name": "the Knight entry names its default L and that it flips",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Knight R1C2 to R3C3: needs 3 Supply · ~2 Ticks · L via R2C2, R3C2 (L flips) · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R3C3 (Knight)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the switcher shows both L paths with the default chosen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "true|via R2C2 → R3C2 · absorbs Pawn",
+      "false|via R1C3 → R2C3 · absorbs Pawn"
+     ]
+    },
+    {
+     "name": "right-clicking R3C3 again flips the L, again and again (one order throughout)",
+     "pass": true,
+     "actual": [
+      "short",
+      "long",
+      "short"
+     ],
+     "expected": [
+      "short",
+      "long",
+      "short"
+     ]
+    },
+    {
+     "name": "the drafted L is drawn on the board",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "L flips the drafted order too (twice: back to the short L)",
+     "pass": true,
+     "actual": "short",
+     "expected": "short"
+    },
+    {
+     "name": "the command bar shows the Knight's Speed",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "default arrival facing is the way it is moving",
+     "pass": true,
+     "actual": [
+      null,
+      "N"
+     ],
+     "expected": [
+      null,
+      "N"
+     ]
+    },
+    {
+     "name": "Shift+right-click on the destination sets the next arrival facing (E), and the board shows its arrow",
+     "pass": true,
+     "actual": [
+      "E",
+      true
+     ],
+     "expected": [
+      "E",
+      true
+     ]
+    },
+    {
+     "name": "O cycles on and back to \"as moving\"",
+     "pass": true,
+     "actual": null,
+     "expected": null
+    },
+    {
+     "name": "the Knight passed the Bishop's territory, absorbed R2C3's Pawn and stands on R3C3's center",
+     "pass": true,
+     "actual": [
+      true,
+      9,
+      [
+       "A.pawn.C3"
+      ]
+     ],
+     "expected": [
+      true,
+      9,
+      [
+       "A.pawn.C3"
+      ]
+     ]
+    },
+    {
+     "name": "no Tick was spent turning: it set off in Tick 2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "R5C7 is not marked blocked; the Pawn on R2C4 is absorbed on the way",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Bishop R1C3 to R5C7: needs 4 Supply · ~4 Ticks · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R5C7 (Bishop)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "one Tick, one Supply: on R2C4's center, the Pawn absorbed, not blocked, 3 Supply left",
+     "pass": true,
+     "actual": [
+      true,
+      true,
+      0,
+      3
+     ],
+     "expected": [
+      true,
+      true,
+      0,
+      3
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z16-knight-switcher.jpg",
+    "z16-bishop-absorbed.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z17",
+   "title": "Fallback definitions when no body label is drawn: a roofed formation read by keyboard; definitions follow the subject (R8-04)",
+   "config": {
+    "query": "autostart=1&fixture=terrain&a=human&b=human",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "the roofed formation shows no body label from the outset",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "the strip says why",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Roofed tunnel: open its layer to read the members (cutaway)"
+    },
+    {
+     "name": "control present: inspection bar member /^Pikeman/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "role: the first symbol is focused and defined without any drawn label",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "focus": "Pikeman",
+      "shown": true,
+      "text": "Pikeman Pikeman — a member in slot 2, front row."
+     }
+    },
+    {
+     "name": "health: its current value is defined",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "focus": "Health 3/3",
+      "shown": true,
+      "text": "Health 3/3 3/3 — this member's own hit points. At 0 the member falls."
+     }
+    },
+    {
+     "name": "protection: front-only value and coverage",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "focus": "Physical protection 1",
+      "shown": true,
+      "text": "Physical protection 1 Physical protection 1 on the front face; other faces meet 0. Sources: 1 from its own pike-guard."
+     }
+    },
+    {
+     "name": "a new subject leaves no stale definition open or registered",
+     "pass": true,
+     "actual": [
+      true,
+      false
+     ],
+     "expected": [
+      true,
+      false
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z17-roofed-fallback.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": []
+  },
+  {
+   "id": "z15",
+   "title": "Symbols and history: exact member values, a symbol defined by pointer and keyboard, history opened, rotated and closed without hiding inspection or losing selection and orders (HF3-03/05/07, R7-04/06)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "close view reaches the symbol level",
+     "pass": true,
+     "actual": "combat",
+     "expected": "combat"
+    },
+    {
+     "name": "Archer: 3/3, two hits of 1, base range 2, no protection shown as 0",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "[\"role= health=3/3 attack:0=2×1 range:0=2 shield:none=0\",\"role= health=3/3 attack:0=2×1 range:0=2 shield:none=0\"]"
+    },
+    {
+     "name": "Swordsman: 3/3, one hit of 3, front-only Physical protection 1",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "[\"role= health=3/3 attack:0=1×3 range:0= shield:0=1\",\"role= health=3/3 attack:0=1×3 range:0= shield:0=1\",\"role= health=3/3 attack:0=1×3 range:0= shield:0=1\"]"
+    },
+    {
+     "name": "hovering the shield explains front-only Physical protection with its value",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Physical protection 1 Physical protection 1 on the front face; other faces meet 0. Sources: 1 from its own shield."
+    },
+    {
+     "name": "the member stays the same while the pointer is on its symbol",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Escape dismisses the definition first",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "choosing a member moves focus to its first symbol",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Archer"
+    },
+    {
+     "name": "arrowing to the attack symbol shows its definition (two separate hits of 1)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Physical volley 2×1 | Physical volley 2×1 Bow: 2 separate hits of 1 Physical each (not one hit of 2). Each hit meets the Physical protection of the face it reaches."
+    },
+    {
+     "name": "H opens the history voluntarily, nothing covered",
+     "pass": true,
+     "actual": [
+      true,
+      "history",
+      []
+     ],
+     "expected": [
+      true,
+      "history",
+      []
+     ]
+    },
+    {
+     "name": "history browses completed Ticks (not the current draft)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "{\"ticks\":[\"Tick 2 (open: minted so far)\",\"Tick 1\"],\"sum\":\"Tick 1: 2 Supply loaded\"}"
+    },
+    {
+     "name": "after one orbit step the drawer still covers nothing essential",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    },
+    {
+     "name": "closing history keeps the command selection, its orders and the inspection",
+     "pass": true,
+     "actual": [
+      false,
+      "A.mount.C1",
+      [
+       "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+      ],
+      "A.pawn.C3",
+      true
+     ],
+     "expected": [
+      false,
+      "A.mount.C1",
+      [
+       "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+      ],
+      "A.pawn.C3",
+      true
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z15-history-with-inspection.jpg"
+   ],
+   "setup": [
+    "A selects its C1 Castle (command) with one Supply order, then inspects its C3 Pawn (five members)"
+   ],
+   "allowedErrors": []
+  }
+ ],
+ "finishedAt": "2026-11-24T19:46:28.788Z",
+ "summary": {
+  "checks": 4,
+  "assertions": 70,
+  "failed": 0
+ }
+}

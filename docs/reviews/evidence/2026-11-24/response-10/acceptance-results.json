@@ -1,0 +1,133 @@
+{
+  "defaultProfile": "hapa_open_10x9_v3_07",
+  "kind": "actual headless rules (peer: exact Peer class, in-process verified inbox; no Hypercore transport)",
+  "successivePawns": {
+    "hapa_open_10x9_v3_07": {
+      "ownedAlive": 5,
+      "referenced": 5,
+      "slots": [
+        "1:A.p1.s1",
+        "2:A.p1.s2",
+        "3:A.p2.s1",
+        "4:A.p2.s2",
+        "5:A.q.s5"
+      ],
+      "assignments": [
+        [
+          "1->1",
+          "2->2"
+        ],
+        [
+          "1->3",
+          "2->4"
+        ]
+      ],
+      "replay": true
+    },
+    "hapa_open_10x9_v3_06": {
+      "ownedAlive": 5,
+      "referenced": 4,
+      "slots": [
+        "1:A.p1.s1",
+        "2:A.p1.s2",
+        "3:A.p2.s2",
+        "5:A.q.s5"
+      ],
+      "assignments": [
+        [
+          "1->1",
+          "2->2"
+        ],
+        [
+          "1->3",
+          "2->3"
+        ]
+      ],
+      "replay": true
+    }
+  },
+  "casualtyRefill": {
+    "ownedAlive": 9,
+    "referenced": 9,
+    "slots": [
+      "1:A.p.s1",
+      "2:A.p.s2",
+      "3:A.p.s3",
+      "4:A.p.s7",
+      "5:A.q.s5",
+      "6:A.q.s6",
+      "7:A.q.s7",
+      "8:A.q.s8",
+      "9:A.q.s9"
+    ],
+    "mergeFailed": 0,
+    "pawnRetired": true,
+    "assignment": [
+      "1->1",
+      "2->2",
+      "3->3",
+      "7->4"
+    ],
+    "supply": 0,
+    "replay": true
+  },
+  "openingQueen": {
+    "region": "R2C7",
+    "atCenter": true,
+    "supply": 5,
+    "pawnAbsorbed": true,
+    "ownedAlive": 9,
+    "referenced": 9,
+    "slots": [
+      "1:A.C7.p1",
+      "2:A.C7.p2",
+      "3:A.C7.p3",
+      "4:A.C6.m4",
+      "5:A.C6.m5",
+      "6:A.C6.m6",
+      "7:A.C7.p7",
+      "8:A.C6.m8",
+      "9:A.C7.p9"
+    ],
+    "replay": true
+  },
+  "botKnight": {
+    "order": {
+      "type": "set_destination",
+      "partyId": "A.k",
+      "target": {
+        "column": 2,
+        "row": 6
+      },
+      "via": "long"
+    },
+    "route": [
+      "R5C3",
+      "R6C3",
+      "R6C2"
+    ],
+    "clear": true,
+    "valid": true
+  },
+  "peerEdit": {
+    "remoteSequence": [
+      "plan r1",
+      "plan r2",
+      "ready r2"
+    ],
+    "ownReadies": 1,
+    "lockedPairInReceipt": {
+      "A": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "B": "sha256:6822d8a04b7c660ad7dae9fcf6e5cd1a654ea890b180cc14d104035de8b96f46"
+    },
+    "receipts": [
+      {
+        "count": 1,
+        "hash": "sha256:8eedd8406ebb5884cb052b4ee6102d3fcc384530055918368c63dbee47dce2c2",
+        "agreed": true
+      }
+    ],
+    "bBurnResolved": true,
+    "leftQueued": 0
+  }
+}

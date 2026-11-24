@@ -1,0 +1,703 @@
+{
+ "runId": "2026-11-24T19-46-28-980Z-44bf90b-sabotage",
+ "startedAt": "2026-11-24T19:46:29.686Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "44bf90b706a4e55dd740fd3276f077aac3ea5aa1",
+  "dirty": false,
+  "diffSha256": null,
+  "untracked": [],
+  "untrackedSha256": null
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/158.0.8127.37",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": true,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio. Text size (contract 4): the browser default font size is set through CDP Page.setFontSizes (16 px = 100%, 24 = 150%, 32 = 200%); inspection text, the command and inspection bars use rem and follow it, other HUD parts still use px. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "c1",
+   "title": "One Ready per seat: the opponent edits after my Ready, resolves once, no forced Orders; legacy v3_02 still acknowledges (HF3-02, UX-01)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1 · profile=hapa_open_10x9_v3_02",
+    "viewport": "1600x1000@1",
+    "seat": "A then B (hotseat)",
+    "profile": "hapa_open_10x9_v3_03 (default) and v3_02"
+   },
+   "assertions": [
+    {
+     "name": "the default match declares own-plan Ready",
+     "pass": true,
+     "actual": "own_plan_ready_v1",
+     "expected": "own_plan_ready_v1"
+    },
+    {
+     "name": "control present: navigator row for your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Supply menu (command bar)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply from the C1 card (command bar)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "A entered one Supply order",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "control present: Ready (strip)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Ready hands the hotseat to B",
+     "pass": true,
+     "actual": "B",
+     "expected": "B"
+    },
+    {
+     "name": "nothing resolved yet",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "B revised its plan",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "A's commitment is not stale",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "no drawer opened by itself",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "exactly one Tick resolved",
+     "pass": false,
+     "actual": 1,
+     "expected": 2,
+     "note": "SABOTAGE: deliberately wrong expectation (+1)"
+    },
+    {
+     "name": "the next Tick is open for planning",
+     "pass": true,
+     "actual": 2,
+     "expected": 2
+    },
+    {
+     "name": "the resolved Tick used exactly A's committed plan",
+     "pass": true,
+     "actual": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ],
+     "expected": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+     ]
+    },
+    {
+     "name": "B's edit after A's Ready was resolved too",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "the legacy profile declares pair acknowledgment",
+     "pass": true,
+     "actual": "pair_acknowledgment_v3",
+     "expected": "pair_acknowledgment_v3"
+    },
+    {
+     "name": "legacy: A must acknowledge the changed pair",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "legacy: nothing resolved on two first Readies",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "legacy: Orders is not forced open",
+     "pass": true,
+     "actual": false,
+     "expected": false
+    },
+    {
+     "name": "legacy: the primary action is Acknowledge",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Acknowledge updated plan ▶"
+    },
+    {
+     "name": "control present: Acknowledge updated plan (legacy)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "legacy: resolved after the acknowledgment",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c1-one-ready-resolved.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z12",
+   "title": "Blocked Queen (v3_03 body sweep): the route preview names the friendly blocker, travel stops once with Supply kept, recovery to the start is quoted and debited 0.5 (HF3-01, R7-01)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1&profile=hapa_open_10x9_v3_03",
+    "viewport": "1280x720@1",
+    "profile": "hapa_open_10x9_v3_03"
+   },
+   "assertions": [
+    {
+     "name": "the move list marks R4C9 as blocked by the Pawn at R2C6 before ordering",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Queen R1C6 to R4C9: needs 3 Supply · ✕ blocked by your Pawn R2C6 · ~3 Ticks"
+    },
+    {
+     "name": "blocked destinations are crossed on the board, not only tinted",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 32
+    },
+    {
+     "name": "control present: Move to R4C9 (command bar)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the Queen stops halfway at the friendly body",
+     "pass": true,
+     "actual": [
+      24,
+      4
+     ],
+     "expected": [
+      24,
+      4
+     ]
+    },
+    {
+     "name": "unspent Supply is kept (5.5)",
+     "pass": true,
+     "actual": 5.5,
+     "expected": 5.5
+    },
+    {
+     "name": "the destination is kept",
+     "pass": true,
+     "actual": {
+      "column": 9,
+      "row": 4
+     },
+     "expected": {
+      "column": 9,
+      "row": 4
+     }
+    },
+    {
+     "name": "one named obstruction event",
+     "pass": true,
+     "actual": [
+      "A.pawn.C6"
+     ],
+     "expected": [
+      "A.pawn.C6"
+     ]
+    },
+    {
+     "name": "the command bar names the blocker and keeps the order",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Your Pawn at R2C6 blocks its path — destination and Supply kept. When its column is active, order a clear route (returning to the territory it left is one)."
+    },
+    {
+     "name": "an in-world blocked cue is drawn at the contact",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "sprite"
+    },
+    {
+     "name": "no wall of repeated blocked messages while the Queen waits",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "the start territory R1C6 is a funded destination quoted at 0.5 Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Queen R1C6 to R1C6: needs 0.5 Supply · along its current segment · ~1 Tick"
+    },
+    {
+     "name": "control present: Move to R1C6 (recovery)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the Queen returned to the center of R1C6",
+     "pass": false,
+     "actual": [
+      22,
+      2
+     ],
+     "expected": [
+      24,
+      4
+     ],
+     "note": "SABOTAGE: reinstates the review 07 defect (no movement)"
+    },
+    {
+     "name": "the recovery debited exactly 0.5",
+     "pass": true,
+     "actual": 5,
+     "expected": 5
+    },
+    {
+     "name": "it arrived (idle)",
+     "pass": true,
+     "actual": "idle",
+     "expected": "idle"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z12-recovered.jpg"
+   ],
+   "setup": [
+    "Ticks 1–5 pass with Ready only; Tick 6 loads the C6, C5 and C4 Cards into the Queen (validated commands)"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z16",
+   "title": "Center-to-center opening (default v3_07: free Knight turns, arrival facing): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1",
+    "profile": "hapa_open_10x9_v3_04"
+   },
+   "assertions": [
+    {
+     "name": "the default profile travels center to center",
+     "pass": true,
+     "actual": [
+      "hapa_open_10x9_v3_07",
+      "center_to_center_v1"
+     ],
+     "expected": [
+      "hapa_open_10x9_v3_07",
+      "center_to_center_v1"
+     ]
+    },
+    {
+     "name": "the Knight entry names its default L and that it flips",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Knight R1C2 to R3C3: needs 3 Supply · ~2 Ticks · L via R2C2, R3C2 (L flips) · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R3C3 (Knight)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the switcher shows both L paths with the default chosen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "true|via R2C2 → R3C2 · absorbs Pawn",
+      "false|via R1C3 → R2C3 · absorbs Pawn"
+     ]
+    },
+    {
+     "name": "right-clicking R3C3 again flips the L, again and again (one order throughout)",
+     "pass": true,
+     "actual": [
+      "short",
+      "long",
+      "short"
+     ],
+     "expected": [
+      "short",
+      "long",
+      "short"
+     ]
+    },
+    {
+     "name": "the drafted L is drawn on the board",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "L flips the drafted order too (twice: back to the short L)",
+     "pass": true,
+     "actual": "short",
+     "expected": "short"
+    },
+    {
+     "name": "the command bar shows the Knight's Speed",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "default arrival facing is the way it is moving",
+     "pass": true,
+     "actual": [
+      null,
+      "N"
+     ],
+     "expected": [
+      null,
+      "N"
+     ]
+    },
+    {
+     "name": "Shift+right-click on the destination sets the next arrival facing (E), and the board shows its arrow",
+     "pass": true,
+     "actual": [
+      "E",
+      true
+     ],
+     "expected": [
+      "E",
+      true
+     ]
+    },
+    {
+     "name": "O cycles on and back to \"as moving\"",
+     "pass": true,
+     "actual": null,
+     "expected": null
+    },
+    {
+     "name": "the Knight passed the Bishop's territory, absorbed R2C3's Pawn and stands on R3C3's center",
+     "pass": false,
+     "actual": [
+      true,
+      9,
+      [
+       "A.pawn.C3"
+      ]
+     ],
+     "expected": [
+      true,
+      9,
+      [
+       "A.pawn.C2"
+      ]
+     ],
+     "note": "SABOTAGE: expects the long L despite the flip"
+    },
+    {
+     "name": "no Tick was spent turning: it set off in Tick 2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "R5C7 is not marked blocked; the Pawn on R2C4 is absorbed on the way",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Bishop R1C3 to R5C7: needs 4 Supply · ~4 Ticks · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R5C7 (Bishop)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "one Tick, one Supply: on R2C4's center, the Pawn absorbed, not blocked, 3 Supply left",
+     "pass": true,
+     "actual": [
+      true,
+      true,
+      0,
+      3
+     ],
+     "expected": [
+      true,
+      true,
+      0,
+      3
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z16-knight-switcher.jpg",
+    "z16-bishop-absorbed.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z14",
+   "title": "Same-Tick Mana: burn → exact available count → cast reserves it → undo leaves the cast invalid and Ready names it → restore → one burn, one payment (HF3-06, R7-05)",
+   "config": {
+    "query": "autostart=1&fixture=response&a=human&b=human",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: Burn A.red (Card view)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "burn → available this Tick is exactly its colors",
+     "pass": true,
+     "actual": {
+      "red": 2
+     },
+     "expected": {
+      "red": 2
+     }
+    },
+    {
+     "name": "the same-Tick cast validates against that Mana",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "queueing the cast reserves its cost at once",
+     "pass": true,
+     "actual": {},
+     "expected": {}
+    },
+    {
+     "name": "undo keeps the dependent cast visible",
+     "pass": true,
+     "actual": [
+      "play_ability"
+     ],
+     "expected": [
+      "play_ability"
+     ]
+    },
+    {
+     "name": "the cast is now invalid (not silently deleted)",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "Ready is blocked",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Fix 1 order"
+    },
+    {
+     "name": "the undo says which order became invalid",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Removed: Burn 2 (C4) for 2 Red — 1 dependent order is now invalid: cannot pay 2 red from the Mana pool"
+    },
+    {
+     "name": "the burn's credit is gone",
+     "pass": true,
+     "actual": {},
+     "expected": {}
+    },
+    {
+     "name": "restored: the plan is valid again",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "the response window uses B's actual pool",
+     "pass": true,
+     "actual": {},
+     "expected": {}
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the response window uses A's actual pool",
+     "pass": true,
+     "actual": {},
+     "expected": {}
+    },
+    {
+     "name": "control present: Pass",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "a genuine response window was offered",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "exactly one accepted burn and one payment",
+     "pass": false,
+     "actual": [
+      1,
+      1
+     ],
+     "expected": [
+      1,
+      2
+     ],
+     "note": "SABOTAGE: deliberately wrong expectation (two payments)"
+    },
+    {
+     "name": "the cast resolved its damage",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 1
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-11-24T19:47:16.177Z",
+ "summary": {
+  "checks": 4,
+  "assertions": 75,
+  "failed": 4
+ }
+}
