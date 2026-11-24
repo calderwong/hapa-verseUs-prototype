@@ -351,20 +351,53 @@ export function setDestination(state, ctx, events, party, target, cause, via = n
   return { ok: true };
 }
 
+/** Absorption allocation policy; absent = v3 slot-order allocation (kept for old replays). */
+export const absorptionPolicy = (profile) => profile.movement.absorption ?? 'slot_order_v3';
+
+/**
+ * The complete slot assignment for absorbing a Pawn, computed before anything moves, or an error.
+ * `living_reserved_v1` (review 08, R8-01): a slot is occupied only by a living member (a casualty's
+ * stale reference is free capacity); every chosen slot is reserved as the assignment is built, so
+ * two incoming members can never land in one slot. Nonconflicting members keep their slot number;
+ * the rest take the lowest free non-center slots in order. The legacy allocator is unchanged.
+ * @returns {{ moves: Array<[string, number, number]> } | { error: string }}
+ */
+export function absorptionPlan(state, ctx, mounted, pawn) {
+  const incoming = [];
+  for (let s = 1; s <= 9; s++) { const id = pawn.slots[String(s)]; if (id && state.members[id]?.alive) incoming.push([id, s]); }
+  if (absorptionPolicy(ctx.profile) !== 'living_reserved_v1') {
+    const moved = [];
+    for (const [id, s] of incoming) {
+      let slot = s;
+      if (mounted.slots[String(s)]) {
+        slot = 0;
+        for (let t = 1; t <= 9; t++) if (t !== 5 && !mounted.slots[String(t)]) { slot = t; break; }
+        if (!slot) return { error: 'over capacity' };
+      }
+      moved.push([id, s, slot]);
+    }
+    return { moves: moved };
+  }
+  const taken = new Set();
+  for (let t = 1; t <= 9; t++) { const id = mounted.slots[String(t)]; if (id && state.members[id]?.alive) taken.add(t); }
+  taken.add(5); // the Mount's center stays in slot 5
+  const moves = [], later = [];
+  for (const [id, s] of incoming) { if (!taken.has(s)) { taken.add(s); moves.push([id, s, s]); } else later.push([id, s]); }
+  for (const [id, s] of later) {
+    let slot = 0;
+    for (let t = 1; t <= 9; t++) if (!taken.has(t)) { slot = t; break; }
+    if (!slot) return { error: 'over capacity' };
+    taken.add(slot);
+    moves.push([id, s, slot]);
+  }
+  return { moves };
+}
+
 /** Merge a mounted party with a friendly unmounted Pawn at a route node (atomic). */
 export function mergeParties(state, ctx, events, mounted, pawn) {
-  const moved = [];
-  for (let s = 1; s <= 9; s++) {
-    const id = pawn.slots[String(s)];
-    if (!id || !state.members[id].alive) continue;
-    let slot = s;
-    if (mounted.slots[String(s)]) {
-      slot = 0;
-      for (let t = 1; t <= 9; t++) if (t !== 5 && !mounted.slots[String(t)]) { slot = t; break; }
-      if (!slot) return { error: 'over capacity' };
-    }
-    moved.push([id, s, slot]);
-  }
+  const plan = absorptionPlan(state, ctx, mounted, pawn);
+  if (plan.error) return { error: plan.error };
+  const moved = plan.moves;
   for (const [id, from, slot] of moved) {
     const m = state.members[id];
     mounted.slots[String(slot)] = id;
@@ -412,15 +445,17 @@ function friendlyObstacle(ctx, p, o, n, final) {
 export function destinationHeldError(state, ctx, party, target) {
   if (!centerToCenter(ctx.profile) || !target) return null;
   const holder = Object.values(state.parties).find((o) => o.id !== party.id && o.alive && !o.retired && o.owner === party.owner && o.region.column === target.column && o.region.row === target.row);
-  if (!holder || mergeCandidate(state, party, holder)) return null;
+  if (!holder || mergeCandidate(state, party, holder, ctx)) return null;
   return `your ${holder.mount ?? (holder.commander ? 'Commander' : 'Pawn')} already holds R${target.row}C${target.column}${!holder.mount ? ' and this party cannot absorb it (at most nine members)' : ''}`;
 }
 
 /** Is a friendly Pawn a merge candidate for a mounted party? */
-function mergeCandidate(state, mounted, pawn) {
+function mergeCandidate(state, mounted, pawn, ctx = null) {
   if (pawn.owner !== mounted.owner || pawn.mount || pawn.retired || !pawn.alive || !mounted.mount) return false;
   const total = livingMembers(state, mounted).length + livingMembers(state, pawn).length;
-  return total <= 9;
+  if (total > 9) return false;
+  // living_reserved_v1: permission and allocation are one computation (never "fits" then fails)
+  return !ctx || absorptionPolicy(ctx.profile) !== 'living_reserved_v1' || !absorptionPlan(state, ctx, mounted, pawn).error;
 }
 
 // --- body sweep -------------------------------------------------------------------------------
@@ -509,7 +544,7 @@ export function simulateMovement(state, ctx, events, onContact) {
     // merge claims: a Pawn assembles with one mount at a time; an earlier claim stands, and
     // simultaneous new claims both stop (no hidden right of way)
     for (const pr of proposals) {
-      const cand = others.find((o) => o.id !== pr.p.id && o.x === pr.node.x && o.y === pr.node.y && mergeCandidate(state, pr.p, o));
+      const cand = others.find((o) => o.id !== pr.p.id && o.x === pr.node.x && o.y === pr.node.y && mergeCandidate(state, pr.p, o, ctx));
       pr.mergeTarget = cand ?? null;
     }
     for (const pr of proposals) {
@@ -659,7 +694,7 @@ export function routeClearance(state, ctx, party, path) {
     const n = path[i];
     const dx = n.x - x, dy = n.y - y;
     // a Pawn joins only while the absorbed total stays within nine members
-    const join = others.find((o) => !gone.has(o.id) && o.x === n.x && o.y === n.y && mergeCandidate(state, party, o) && size + livingMembers(state, o).length <= 9);
+    const join = others.find((o) => !gone.has(o.id) && o.x === n.x && o.y === n.y && mergeCandidate(state, party, o, ctx) && size + livingMembers(state, o).length <= 9);
     let best = null;
     const final = i === path.length - 1;
     for (const o of others) {

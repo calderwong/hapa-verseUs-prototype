@@ -49,7 +49,7 @@ function atNextActivation(s) {
 
 test('v3_03 declares reachable recovery and own-plan Ready; the default carries both forward', () => {
   const p = profileById(V303);
-  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_06');
+  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_07');
   assert.equal(profileById(DEFAULT_PROFILE_ID).movement.recovery, 'reachable_segment_v1');
   assert.equal(agreementPolicy(profileById(DEFAULT_PROFILE_ID)), 'own_plan_ready_v1');
   assert.equal(p.movement.recovery, 'reachable_segment_v1');
@@ -213,4 +213,35 @@ test('two peers on the default profile commit own plans, bind the locked pair in
   assert.equal(new Set(readies).size, 8);
   await pa.close(); await pb.close();
   rmSync(dir, { recursive: true, force: true });
+});
+
+test('peer path: the opponent revises its plan (r1 → r2) before its one Ready; the final pair locks and resolves once (R8-05)', async () => {
+  const { stateFingerprint, initializeMatch } = await import('../../src/hapa/rules/state.js');
+  const { createContext } = await import('../../src/hapa/rules/context.js');
+  const { beginCount, validatePlan: vp, resolveTick } = await import('../../src/hapa/rules/match.js');
+  const { fingerprint } = await import('../../src/hapa/rules/encoding.js');
+  const manifest = createManifest({ matchId: 'peer-edit', profile: profileById(DEFAULT_PROFILE_ID), catalog: CATALOG, seed: 1 });
+  const peer = new Peer({ seat: 'A', identity: null, opponent: null, storage: null, manifest, controller: { plan: () => [], choose: () => ({ pass: true }) } });
+  peer.state = initializeMatch(manifest); peer.ctx = createContext(manifest);
+  // the opponent's verified records for Tick 1, in arrival order: r1, a legal edit r2, then Ready r2
+  const shadow = initializeMatch(manifest), sctx = createContext(manifest);
+  beginCount(shadow, sctx);
+  const prior = stateFingerprint(shadow);
+  const b2 = [{ type: 'burn', cardId: Object.values(shadow.players.B.bank.minor).find(Boolean) }];
+  assert.equal(vp(shadow, sctx, 'B', b2).ok, true);
+  const rec = (seq, type, payload) => ({ schemaVersion: 1, type, matchId: manifest.matchId, authorId: 'B', authorSequence: seq, count: 1, phaseId: 'plan', priorStateHash: prior, payload });
+  // B's own result, computed independently from the final pair, for its receipt
+  const gen = resolveTick(shadow, sctx, { A: [], B: vp(shadow, sctx, 'B', b2).accepted });
+  let st = gen.next(); while (!st.done) st = gen.next({ pass: true });
+  peer.inbox.push(rec(1, 'plan', { planRevision: 1, commands: [] }), rec(2, 'plan', { planRevision: 2, commands: b2 }), rec(3, 'ready', { planRevision: 2, planHash: fingerprint(b2) }),
+    rec(4, 'receipt', { stateHash: stateFingerprint(shadow), outcome: null, lockedPair: { A: fingerprint([]), B: fingerprint(b2) } }));
+  const published = [];
+  peer._publish = async function (type, count, phaseId, payload) { const r = { type, count, phaseId, payload }; published.push(r); return { schemaVersion: 1, type, matchId: manifest.matchId, authorId: 'A', authorSequence: ++this.sequence, count, phaseId, priorStateHash: this.priorHash, payload }; };
+  const out = await peer.playTick();
+  assert.equal(out.count, 1);
+  assert.deepEqual(peer.receipts, [{ count: 1, hash: stateFingerprint(shadow), agreed: true }]);
+  assert.deepEqual(published.filter((r) => r.type === 'ready').length, 1); // one own Ready
+  assert.deepEqual(published.find((r) => r.type === 'receipt').payload.lockedPair, { A: fingerprint([]), B: fingerprint(b2) }); // final pair A1/B2
+  assert.equal(peer.state.cards[b2[0].cardId].state, 'burned'); // B's edited plan resolved, once
+  assert.equal(peer.inbox.length, 0);
 });

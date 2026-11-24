@@ -194,7 +194,7 @@ export const PROFILE_VARIANTS = Object.freeze({
     planning: { agreement: 'own_plan_ready_v1' },
   },
   /**
-   * The default for new matches (CJ after the two-Queen change): v3_05 plus free Knight turns —
+   * The default for new matches until v3_07 (CJ after the two-Queen change): v3_05 plus free Knight turns —
    * a Knight spends no Tick or Supply turning to travel, faces each leg as it starts it, and on
    * arrival faces the order's chosen facing (default: the direction it was moving).
    * v3_05 and earlier keep the one-Tick travel turn for Knights.
@@ -205,6 +205,20 @@ export const PROFILE_VARIANTS = Object.freeze({
     rulesVersion: 'hapa-versus-rules/0.6.0',
     board: { columnMap: COLUMN_MAP.map((c) => (c.column === 4 ? { ...c, mount: 'queen' } : { ...c })) },
     movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1', recovery: 'reachable_segment_v1', traversal: 'center_to_center_v1', knightPaths: 'either_l_v1', knightTurn: 'free_follow_v1' },
+    planning: { agreement: 'own_plan_ready_v1' },
+  },
+  /**
+   * The default for new matches (review 08 / assignment 10): v3_06 plus movement.absorption
+   * living_reserved_v1 — a Pawn's survivors are absorbed into distinct living-free slots (casualty
+   * references are free capacity), and the capacity check is the same allocation. v3_06 and
+   * earlier keep the slot-order allocator their recorded replays used.
+   */
+  hapa_open_10x9_v3_07: {
+    title: 'Open 10×9, v3 fixture 07 — two Queens, free Knight turns, reliable absorption',
+    revision: 1,
+    rulesVersion: 'hapa-versus-rules/0.7.0',
+    board: { columnMap: COLUMN_MAP.map((c) => (c.column === 4 ? { ...c, mount: 'queen' } : { ...c })) },
+    movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1', recovery: 'reachable_segment_v1', traversal: 'center_to_center_v1', knightPaths: 'either_l_v1', knightTurn: 'free_follow_v1', absorption: 'living_reserved_v1' },
     planning: { agreement: 'own_plan_ready_v1' },
   },
   hapa_open_9x9_v3_01: {
@@ -255,4 +269,4 @@ export function profileById(id) {
 export const PROFILE_IDS = [BASE_PROFILE.id, ...Object.keys(PROFILE_VARIANTS)];
 
 /** The profile new local matches, bots and peer tools start with. */
-export const DEFAULT_PROFILE_ID = 'hapa_open_10x9_v3_06';
+export const DEFAULT_PROFILE_ID = 'hapa_open_10x9_v3_07';

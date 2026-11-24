@@ -27,11 +27,11 @@ function play(profileId, upTo, plansAt) {
 }
 const at = (s, id) => { const p = s.state.parties[id]; return [p.region.row, p.region.column, p.x === s.ctx.geo.center(p.region.column, p.region.row).x && p.y === s.ctx.geo.center(p.region.column, p.region.row).y]; };
 
-test('v3_04 validates; the default v3_06 keeps its travel rules', () => {
-  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_06');
-  const { knightTurn, ...rest } = profileById(DEFAULT_PROFILE_ID).movement;
+test('v3_04 validates; the default v3_07 keeps its travel rules', () => {
+  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_07');
+  const { knightTurn, absorption, ...rest } = profileById(DEFAULT_PROFILE_ID).movement;
   assert.deepEqual(rest, profileById(V304).movement);
-  assert.equal(knightTurn, 'free_follow_v1');
+  assert.deepEqual([knightTurn, absorption], ['free_follow_v1', 'living_reserved_v1']);
   const p = profileById(V304);
   assert.deepEqual([p.movement.traversal, p.movement.knightPaths, p.movement.recovery, p.planning.agreement], ['center_to_center_v1', 'either_l_v1', 'reachable_segment_v1', 'own_plan_ready_v1']);
 });

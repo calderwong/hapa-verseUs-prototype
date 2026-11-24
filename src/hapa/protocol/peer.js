@@ -120,14 +120,25 @@ export class Peer {
     agreement.receive(this.seat, planBody);
     // own_plan_ready_v1: Ready commits this peer's own plan at once — it does not wait for the
     // opponent's plan, and the opponent's later edits cannot make it stale
-    if (policy === 'own_plan_ready_v1') agreement.receive(this.seat, await this._publish('ready', count, phaseId, agreement.readyPayload(this.seat)));
-    const theirs = await this._take((b) => b.count === count && b.type === 'plan');
-    const r = agreement.receive(this.other, theirs);
-    if (!r.ok) throw new Error(`protocol: ${r.error}`);
-    if (policy !== 'own_plan_ready_v1') agreement.receive(this.seat, await this._publish('ready', count, phaseId, agreement.readyPayload(this.seat)));
-    const theirReady = await this._take((b) => b.count === count && b.type === 'ready');
-    const rr = agreement.receive(this.other, theirReady);
-    if (!rr.ok || !agreement.locked) throw new Error(`protocol: no matching Ready pair (${rr.error ?? 'stale'})`);
+    if (policy === 'own_plan_ready_v1') {
+      agreement.receive(this.seat, await this._publish('ready', count, phaseId, agreement.readyPayload(this.seat)));
+      // the opponent's public plan may be revised any number of times before its one Ready: take
+      // its plan/Ready records for this phase in arrival order through the agreement until the
+      // final pair locks (review 08, R8-05)
+      while (!agreement.locked) {
+        const rec = await this._take((b) => b.count === count && (b.type === 'plan' || b.type === 'ready'));
+        const r = agreement.receive(this.other, rec);
+        if (!r.ok) throw new Error(`protocol: ${r.error}`);
+      }
+    } else {
+      const theirs = await this._take((b) => b.count === count && b.type === 'plan');
+      const r = agreement.receive(this.other, theirs);
+      if (!r.ok) throw new Error(`protocol: ${r.error}`);
+      agreement.receive(this.seat, await this._publish('ready', count, phaseId, agreement.readyPayload(this.seat)));
+      const theirReady = await this._take((b) => b.count === count && b.type === 'ready');
+      const rr = agreement.receive(this.other, theirReady);
+      if (!rr.ok || !agreement.locked) throw new Error(`protocol: no matching Ready pair (${rr.error ?? 'stale'})`);
+    }
     const plans = {};
     for (const s of ['A', 'B']) plans[s] = validatePlan(state, ctx, s, agreement.locked[s]).accepted;
     const gen = resolveTick(state, ctx, plans);

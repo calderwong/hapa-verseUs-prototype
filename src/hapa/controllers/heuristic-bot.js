@@ -11,7 +11,7 @@
  *  4. Counter an opposing Spell with Blue Denial when Blue can be paid.
  */
 import { xorshift32 } from '../rules/encoding.js';
-import { legalDestinations, routeFromHere, routeClearance, recoveryPolicy, quoteRoute, destinationPolicy, destinationHeldError } from '../rules/movement.js';
+import { legalDestinations, routeFromHere, routeClearance, recoveryPolicy, quoteRoute, destinationPolicy, destinationHeldError, traversalPolicy } from '../rules/movement.js';
 import { supplyOf, planPayment } from '../rules/economy.js';
 import { other } from '../rules/state.js';
 
@@ -82,9 +82,13 @@ export class HeuristicBot {
         const plan = routeFromHere(state, ctx, p, o, o.via);
         const route = plan.route ?? [];
         if (clearance) { const c = routeClearance(state, ctx, p, plan.path); if (!c.clear && c.friendly) continue; }
-        // a friendly party blocking an intermediate node (other than a Pawn to join) makes it a poor route
-        const blocker = route.slice(0, -1).map((n) => at(n.column, n.row)).find((q) => q && q.owner === seat && !pawns.includes(q));
-        if (blocker) continue;
+        // body-sweep profiles: a friendly party on an intermediate node makes it a poor route. Under
+        // center_to_center_v1 the shared clearance above already decides (a Knight passes friendly
+        // territory; a line Mount is stopped by a friendly holder) — review 08, R8-02.
+        if (traversalPolicy(profile) !== 'center_to_center_v1') {
+          const blocker = route.slice(0, -1).map((n) => at(n.column, n.row)).find((q) => q && q.owner === seat && !pawns.includes(q));
+          if (blocker) continue;
+        }
         let score = 0;
         if (route.some((n) => pawns.some((q) => q.region.column === n.column && q.region.row === n.row))) score += 100; // join a Pawn on the way
         const gain = fwd(o.row) - fwd(p.region.row);
