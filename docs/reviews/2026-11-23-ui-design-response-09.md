@@ -112,3 +112,17 @@ Checks not rerun after `e6df0ed`: c1–c6, c9, c11–c14, z06, z07, z09–z11, z
 - **The L icon** is drawn in the viewer's orientation, with forward pointing up.
 - **CJ to judge:** the default-L choice (prefer absorbing a Pawn, then a clear path) and the switcher's look.
 - **CJ acceptance: not yet recorded.** Evidence was appended to Overwatch HV-55.
+
+## Addendum — flip the L by right-clicking again (`c7d362e`)
+
+CJ asked: *"if I right click the same destination it switches the L, and if I click it again, it switches back."* CJ also could not find the switcher.
+
+- **Right-click to flip.** Right-clicking a Knight's drafted destination again now flips its L, every time. The order is replaced, never duplicated, and the toast says which L is active and that another right-click flips it. The command-bar switcher and the **L** key still work.
+- **Visible path.** The drafted route used to be drawn only as a one-pixel line, which is why the L was hard to find. It is now a gold ribbon on the board, with a dot on each corner and a ring on the endpoint. It is cleared on deselect and during playback.
+- **Where the switcher is.** Select your Knight and order a destination. The switcher is the last row of the command bar docked at the bottom of the board, reading "To R3C3: ⟨L icon⟩ via R2C2 → R3C2 · ⟨L icon⟩ via R1C3 → R2C3 · L".
+
+**Verification**
+
+- In the Browser pane, at Tick 2 with real right-clicks on R3C3: long → short → long → short, with one destination order throughout and the ribbon redrawn each time.
+- z16 now checks three right-click flips, the drawn path and the **L** key. Together with c10, z01 and c12 it passed 38/38 at `c7d362e` ([run](evidence/2026-11-23/response-09/regress/2026-11-24T04-20-13-768Z-c7d362e/report.json)).
+- `npm test`: 129/129.

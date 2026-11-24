@@ -1,0 +1,475 @@
+{
+ "runId": "2026-11-24T04-20-13-768Z-c7d362e",
+ "startedAt": "2026-11-24T04:20:14.466Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "c7d362e4e7a5a1a44e4c581f2a6535eba12b3a78",
+  "dirty": false,
+  "diffSha256": null,
+  "untracked": [],
+  "untrackedSha256": null
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/158.0.8127.37",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": false,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio. Text size (contract 4): the browser default font size is set through CDP Page.setFontSizes (16 px = 100%, 24 = 150%, 32 = 200%); inspection text, the command and inspection bars use rem and follow it, other HUD parts still use px. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "c10",
+   "title": "Endpoint intent: one marker per destination, drafts replace accepted, never occupants (HF-03)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "one endpoint per planned destination",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ]
+    },
+    {
+     "name": "endpoints are not rules occupants",
+     "pass": true,
+     "actual": [
+      0,
+      0
+     ],
+     "expected": [
+      0,
+      0
+     ]
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "accepted, still-travelling destinations keep their markers",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c10-intents.jpg"
+   ],
+   "setup": [
+    "two A loads and destinations are added with _addCommand (pointer routes are covered in c7/c8)"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c12",
+   "title": "Full orbit and a height layer keep standards, endpoints and hover targets; reduced motion (HF-03)",
+   "config": {
+    "query": "autostart=1&fixture=stacked&a=human&b=human",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "every visible party keeps its chess standard through a full orbit",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7
+     ]
+    },
+    {
+     "name": "the hill party stays hoverable at every bearing",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "Your Castle · R5C3",
+      "Your Castle · R5C3",
+      "Your Castle · R5C3",
+      "Your Castle · R5C3",
+      "Your Castle · R5C3",
+      "Your Castle · R5C3",
+      "Your Castle · R5C3",
+      "Your Castle · R5C3"
+     ]
+    },
+    {
+     "name": "control present: layer −2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "at layer −2 only that band's standards (and flyers) show",
+     "pass": true,
+     "actual": [
+      "A.fly",
+      "B.tunnel"
+     ],
+     "expected": [
+      "A.fly",
+      "B.tunnel"
+     ]
+    },
+    {
+     "name": "reduced motion: a burn plays no travelling streams",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c12-orbit-end.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": []
+  },
+  {
+   "id": "z01",
+   "title": "Ordinary movement: select, funded Move from the command bar, no party document; reasons stay visible (Z01, Z02)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "a click selects the party for commands",
+     "pass": true,
+     "actual": "A.mount.C1",
+     "expected": "A.mount.C1"
+    },
+    {
+     "name": "no party document opens; the small command bar does",
+     "pass": true,
+     "actual": [
+      false,
+      true
+     ],
+     "expected": [
+      false,
+      true
+     ]
+    },
+    {
+     "name": "selecting does not move the camera",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "the bar says why it cannot move yet",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "No Supply for any route: load a Card first"
+    },
+    {
+     "name": "control present: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the bar lists exactly the funded targets with the rules' Supply quote",
+     "pass": true,
+     "actual": [
+      "R2C1:1",
+      "R3C1:2"
+     ],
+     "expected": [
+      "R2C1:1",
+      "R3C1:2"
+     ]
+    },
+    {
+     "name": "control present: Move to R2C1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the move is planned after its load",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "closing a Card view keeps the selected party and its orders",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      2
+     ],
+     "expected": [
+      "A.mount.C1",
+      2
+     ]
+    },
+    {
+     "name": "an unmounted Pawn shows \"Needs a Mount\"",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "after Ready the bar says the plan is frozen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z01-pawn-reason.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z16",
+   "title": "Center-to-center opening (v3_04): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1",
+    "profile": "hapa_open_10x9_v3_04"
+   },
+   "assertions": [
+    {
+     "name": "the default profile travels center to center",
+     "pass": true,
+     "actual": [
+      "hapa_open_10x9_v3_04",
+      "center_to_center_v1"
+     ],
+     "expected": [
+      "hapa_open_10x9_v3_04",
+      "center_to_center_v1"
+     ]
+    },
+    {
+     "name": "the Knight entry names its default L and that it flips",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Knight R1C2 to R3C3: needs 3 Supply · L via R2C2, R3C2 (L flips) · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R3C3 (Knight)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the switcher shows both L paths with the default chosen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "true|via R2C2 → R3C2 · absorbs Pawn",
+      "false|via R1C3 → R2C3 · absorbs Pawn"
+     ]
+    },
+    {
+     "name": "right-clicking R3C3 again flips the L, again and again (one order throughout)",
+     "pass": true,
+     "actual": [
+      "short",
+      "long",
+      "short"
+     ],
+     "expected": [
+      "short",
+      "long",
+      "short"
+     ]
+    },
+    {
+     "name": "the drafted L is drawn on the board",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "L flips the drafted order too (twice: back to the short L)",
+     "pass": true,
+     "actual": "short",
+     "expected": "short"
+    },
+    {
+     "name": "the Knight passed the Bishop's territory, absorbed R2C3's Pawn and stands on R3C3's center",
+     "pass": true,
+     "actual": [
+      true,
+      9,
+      [
+       "A.pawn.C3"
+      ]
+     ],
+     "expected": [
+      true,
+      9,
+      [
+       "A.pawn.C3"
+      ]
+     ]
+    },
+    {
+     "name": "R5C7 is not marked blocked; the Pawn on R2C4 is absorbed on the way",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Bishop R1C3 to R5C7: needs 4 Supply · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R5C7 (Bishop)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "one Tick, one Supply: on R2C4's center, the Pawn absorbed, not blocked, 3 Supply left",
+     "pass": true,
+     "actual": [
+      true,
+      true,
+      0,
+      3
+     ],
+     "expected": [
+      true,
+      true,
+      0,
+      3
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z16-knight-switcher.jpg",
+    "z16-bishop-absorbed.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-11-24T04:21:00.893Z",
+ "summary": {
+  "checks": 4,
+  "assertions": 38,
+  "failed": 0
+ }
+}
