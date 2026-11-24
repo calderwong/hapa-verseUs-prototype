@@ -159,9 +159,12 @@ const hoverAt = async (page, p, wait = 450) => { await page.mouse.move(p.x, p.y,
 const anchor = (page, subject) => app(page, (sub) => { const a = window.__versus; const c = a._screenAnchor(sub); if (!c) return null; const r = a.el.world.getBoundingClientRect(); return { x: r.left + c.x, y: r.top + c.y }; }, subject);
 const tileAt = (page, cardId) => app(page, (id) => { const a = window.__versus; const t = [...a.view.cardTiles.values()].find((x) => x.userData.cardId === id); if (!t) return null; const v = t.position.clone(); v.y = 0.06; const p = v.project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); return { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height }; }, cardId);
 
-// --- C1: Ready freezes the own plan; an opponent revision is reviewed and acknowledged ----------
-await check('c1', 'Ready freezes the own plan through an opponent revision (UX-01)', { query: 'autostart=1&a=human&b=human&seed=1', viewport: '1600x1000@1', seat: 'A then B (hotseat)', profile: 'hapa_open_10x9_v3_02' }, async () => {
+// --- C1: Ready commits the own plan once; opponent edits need no acknowledgment (HF3-02) ------
+// Contract 5 (response 08) replaces the review 01–07 stale-acknowledgment expectation for new
+// matches; the legacy pair-acknowledgment profile keeps its own branch below.
+await check('c1', 'One Ready per seat: the opponent edits after my Ready, resolves once, no forced Orders; legacy v3_02 still acknowledges (HF3-02, UX-01)', { query: 'autostart=1&a=human&b=human&seed=1 · profile=hapa_open_10x9_v3_02', viewport: '1600x1000@1', seat: 'A then B (hotseat)', profile: 'hapa_open_10x9_v3_03 (default) and v3_02' }, async () => {
   const page = await open('autostart=1&a=human&b=human&seed=1');
+  expect('the default match declares own-plan Ready', await app(page, () => window.__versus.agreement.policy), 'own_plan_ready_v1');
   await pinVia(page, /^Select Your Castle at R1C1/, 'navigator row for your C1 Castle');
   await clickNamed(page, '.cmdbar summary', /^Supply ▾/, 'Supply menu (command bar)');
   await clickNamed(page, '.cmdbar button', /^Load 2 Supply from 2♣ \(C1\)/, 'Load Supply from the C1 card (command bar)');
@@ -170,26 +173,42 @@ await check('c1', 'Ready freezes the own plan through an opponent revision (UX-0
   await clickNamed(page, READY, /^Ready/, 'Ready (strip)');
   const frozen = await agreement(page);
   expect('Ready hands the hotseat to B', frozen.viewSeat, 'B');
+  expect('nothing resolved yet', frozen.replayTicks, 0);
+  // B edits its own plan after A's Ready, then presses Ready once
   await page.keyboard.press('1'); await sleep(150); await page.keyboard.press('b'); await sleep(300);
+  const edited = await agreement(page);
+  expect('B revised its plan', edited.plans.B.length, 1);
+  expect('A\'s commitment is not stale', edited.stale.A, false);
+  const drawer = await app(page, () => !document.getElementById('orders').hidden);
+  expect('no drawer opened by itself', drawer, false);
+  // spam: Ready clicks and held Ctrl+Enter cannot resolve twice or skip a Tick
   await clickNamed(page, READY, /^Ready/, 'Ready (B)');
-  const st = await agreement(page);
-  expect('view returns to A to acknowledge', st.viewSeat, 'A');
-  expect('A acknowledgment is stale', st.stale.A, true);
-  await page.keyboard.press('2'); await sleep(150); await page.keyboard.press('b'); await sleep(300);
-  const after = await agreement(page);
-  expect('A plan unchanged after B revised and A tried to edit', after.plans.A, before.plans.A);
-  expect('A revision unchanged', after.rev.A, frozen.rev.A + (sabotage ? 1 : 0), sabotage ? 'SABOTAGE: deliberately wrong expectation (+1)' : undefined);
-  const view = await app(page, () => ({ ordersOpen: !document.getElementById('orders').hidden, removeInOwn: document.querySelectorAll('#plan .planbox.a button.x').length, added: document.querySelectorAll('#plan .planbox.b li.added').length, banner: document.querySelector('#plan .plan-banner')?.innerText ?? '', ready: document.querySelector('#matchbar .ready-big')?.innerText.replace(/\s+/g, ' ').trim() }));
-  expect('Orders opened by itself for the stale review', view.ordersOpen, true);
-  expect('no Remove controls on the frozen own plan', view.removeInOwn, 0);
-  expect('B\'s new order is marked NEW', view.added, 1);
-  ok('banner says the own orders stay frozen', /stay frozen/.test(view.banner), view.banner);
-  ok('primary action is Acknowledge', /^Acknowledge updated plan/.test(view.ready), view.ready);
-  await shot(page, 'stale-review');
-  await clickNamed(page, READY, /^Acknowledge/, 'Acknowledge updated plan');
+  for (let i = 0; i < 4; i++) await ctrlEnter(page);
   await waitResolved(page, 2);
-  expect('the resolved Tick used exactly the frozen A plan', await app(page, () => window.__versus.session.replay.ticks.at(-1).plans.A.map((c) => JSON.stringify(c))), before.plans.A);
+  await sleep(800);
+  const st = await agreement(page);
+  expect('exactly one Tick resolved', st.replayTicks, 1 + (sabotage ? 1 : 0), sabotage ? 'SABOTAGE: deliberately wrong expectation (+1)' : undefined);
+  expect('the next Tick is open for planning', st.tick, 2);
+  expect('the resolved Tick used exactly A\'s committed plan', await app(page, () => window.__versus.session.replay.ticks.at(-1).plans.A.map((c) => JSON.stringify(c))), before.plans.A);
+  expect('B\'s edit after A\'s Ready was resolved too', await app(page, () => window.__versus.session.replay.ticks.at(-1).plans.B.length), 1);
+  await shot(page, 'one-ready-resolved');
   await page.close();
+  // legacy: the archived pair-acknowledgment profile still needs the pair acknowledged, without a forced drawer
+  const old = await open('autostart=1&a=human&b=human&seed=1&profile=hapa_open_10x9_v3_02');
+  expect('the legacy profile declares pair acknowledgment', await app(old, () => window.__versus.agreement.policy), 'pair_acknowledgment_v3');
+  await app(old, () => window.__versus._pressReady());
+  await old.keyboard.press('1'); await sleep(150); await old.keyboard.press('b'); await sleep(300);
+  await app(old, () => window.__versus._pressReady());
+  const ls = await agreement(old);
+  expect('legacy: A must acknowledge the changed pair', ls.stale.A, true);
+  expect('legacy: nothing resolved on two first Readies', ls.replayTicks, 0);
+  const lv = await app(old, () => ({ open: !document.getElementById('orders').hidden, ready: document.querySelector('#matchbar .ready-big')?.innerText.replace(/\s+/g, ' ').trim() }));
+  expect('legacy: Orders is not forced open', lv.open, false);
+  ok('legacy: the primary action is Acknowledge', /^Acknowledge updated plan/.test(lv.ready), lv.ready);
+  await clickNamed(old, READY, /^Acknowledge/, 'Acknowledge updated plan (legacy)');
+  await waitResolved(old, 2);
+  expect('legacy: resolved after the acknowledgment', (await agreement(old)).replayTicks, 1);
+  await old.close();
 });
 
 // --- C2: one resolution despite Ready spam; a paid counter actually cast (R3-01) -----------------
@@ -423,35 +442,42 @@ await check('c8', 'Funded destinations: range, refusal with shortfall, invalidat
 });
 
 // --- C9: Fire Pit, planned versus accepted, exact basin counts ---------------------------------------
-await check('c9', 'Fire Pit: planned offering, projection, accepted burn with separate colors, zero Mana (HF-05)', { query: 'autostart=1&fixture=cards&a=human&b=human', viewport: '1600x1000@1' }, async () => {
+await check('c9', 'Fire Pit: a burn is available at once, animates when planned, reconciles once; zero Mana stays honest (HF3-06, HF-05)', { query: 'autostart=1&fixture=cards&a=human&b=human', viewport: '1600x1000@1' }, async () => {
   const page = await open('autostart=1&fixture=cards&a=human&b=human');
   const mana = await app(page, () => window.__versus.state.cards['A.five'].mana);
   await app(page, () => { window.__versus.pinned = { kind: 'card', id: 'A.five' }; window.__versus._renderAll(); });
   setup('the A.five Card is pinned via selection, then its Burn button is clicked');
   await clickNamed(page, '.peek.pinned button.burn', /^Burn .+ for /, 'Burn for its Mana (Card view)');
-  const planned = await app(page, () => { const a = window.__versus; return { pool: a.state.players.A.pool, projected: a._plannedPool('A'), offerings: a.view.sites.sites.A.offerings.children.length, counter: a.el.basins.A.getAttribute('aria-label') }; });
-  expect('planning changes nothing real', planned.pool, {});
-  expect('the projection shows exactly the Card\'s Mana', planned.projected, mana);
-  expect('one ghost offering rests over A\'s pit', planned.offerings, 1);
-  ok('the counter labels the projection separately', /empty; projected after its plan/.test(planned.counter), planned.counter);
-  await shot(page, 'planned-offering');
+  let planPeak = 0;
+  for (let i = 0; i < 10; i++) { planPeak = Math.max(planPeak, await app(page, () => window.__versus.view.sites.effects.length)); await sleep(40); }
+  const planned = await app(page, () => { const a = window.__versus; return { pool: a.state.players.A.pool, available: a._availablePool('A'), offerings: a.view.sites.sites.A.offerings.children.length, counter: a.el.basins.A.getAttribute('aria-label'), text: a.el.basins.A.innerText.replace(/\s+/g, ' ') }; });
+  expect('the authoritative pool is untouched before resolution', planned.pool, {});
+  expect('available this Tick is exactly the Card\'s Mana', planned.available, mana);
+  ok('the basin counter says available this Tick, with the colors', /available this Tick: /.test(planned.counter) && !/Empty|→ plan/.test(planned.text), `${planned.counter} | ${planned.text}`);
+  ok('the burn animated when planned (1 dissolve + 5 color streams)', planPeak >= 6, planPeak);
+  expect('no ghost offering lingers over the pit', planned.offerings, 0);
+  await shot(page, 'available-now');
   await app(page, () => { window.__versus.speed = 0.5; });
   await clickNamed(page, READY, /^Ready/, 'Ready (A)');
   await clickNamed(page, READY, /^Ready/, 'Ready (B)');
   let peak = 0;
   for (let i = 0; i < 30; i++) { peak = Math.max(peak, await app(page, () => window.__versus.view.sites.effects.length)); await sleep(40); }
   await waitResolved(page, 10);
-  const after = await app(page, () => { const a = window.__versus, ev = a.session.events; const b = ev.find((e) => e.type === 'card_burned' && e.cardId === 'A.five'); const x = ev.find((e) => e.type === 'mana_expired' && e.seat === 'A' && e.tick === 10); return { burnedPool: b?.pool ?? null, expired: x?.mana ?? null, offerings: a.view.sites.sites.A.offerings.children.length }; });
-  ok('the accepted burn played its effect (1 dissolve + 5 color streams)', peak >= 6, peak);
+  const after = await app(page, () => { const a = window.__versus, ev = a.session.events; const b = ev.filter((e) => e.type === 'card_burned' && e.cardId === 'A.five'); const x = ev.find((e) => e.type === 'mana_expired' && e.seat === 'A' && e.tick === 10); return { burns: b.length, burnedPool: b[0]?.pool ?? null, expired: x?.mana ?? null }; });
+  expect('the accepted burn is recorded once', after.burns, 1);
+  ok('the accepted burn did not animate a second gain', peak < 6, peak);
   expect('the accepted burn put exactly the Card\'s colors in the pool', after.burnedPool, mana);
   expect('unspent, they expired at the Tick boundary (no carryover in this profile)', after.expired, mana);
-  expect('the offering left the pit', after.offerings, 0);
   // zero Mana: plainly labelled, legal, no gain effect
   const p2 = await open('autostart=1&a=human&b=human&seed=1');
   const zero = await app(p2, () => window.__versus.state.players.A.bank.minor['1']);
   await app(p2, (id) => { window.__versus.pinned = { kind: 'card', id }; window.__versus._renderAll(); }, zero);
   const label = await app(p2, () => document.querySelector('.peek.pinned button.burn')?.textContent);
   expect('a zero-Mana Card says what burning it does', label, 'Burn for 0 Mana — consumes this Card');
+  await clickNamed(p2, '.peek.pinned button.burn', /0 Mana/, 'Burn the zero-Mana Card');
+  const z = await app(p2, () => ({ available: window.__versus._availablePool('A'), streams: window.__versus.view.sites.effects.length }));
+  expect('a zero-Mana burn manufactures no Mana', z.available, {});
+  ok('a zero-Mana burn shows the Card dissolving but no color stream (at most the dissolve and a settle)', z.streams <= 2, z.streams);
   await p2.close();
   // New match mid-effect clears every effect
   await app(page, () => window.__versus.view.sites.burn('A', null, { red: 2 }));
@@ -630,10 +656,13 @@ await check('z03', 'Approach to inspect: zoom over an enemy keeps the own select
   const archer = await app(p2, () => Object.values(window.__versus.state.parties['A.mount.C1'].slots).find((id) => id && window.__versus.state.members[id].archetype === 'archer'));
   const sp = await app(p2, (id) => { const a = window.__versus, v = a.view.sprites.get(id).position.clone(); v.y += 0.5; const q = v.project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); return { x: r.left + (q.x + 1) / 2 * r.width, y: r.top + (1 - q.y) / 2 * r.height }; }, archer);
   await hoverAt(p2, sp, 500);
-  // contract 4 (review 06, R6-01/R6-04): the label is only highlighted; the explanation is in the
-  // reading panel beside the formation, and without an engaged party no target is implied
+  // contract 5 (addendum 03, HF3-05): hovering a body highlights its label only; the source
+  // breakdown is a deliberate choice (a tap on the body or the inspection bar), never a hover essay
+  const hov = await app(p2, () => ({ hovered: document.querySelectorAll('.mlabel.hovered:not([hidden])').length, reading: !document.querySelector('.mreading')?.hidden }));
+  expect('one hovered member is highlighted; no explanation opens on hover', [hov.hovered, hov.reading], [1, false]);
+  await clickAt(p2, sp);
   const exp = await app(p2, () => ({ highlighted: document.querySelectorAll('.mlabel.expanded:not([hidden])').length, reading: document.querySelector('.mreading:not([hidden])')?.innerText.replace(/\s+/g, ' ') ?? '' }));
-  ok('one hovered member is highlighted and its explanation opens in the reading panel', exp.highlighted === 1 && /Bow: 2 × 1 Physical, base range 2/.test(exp.reading), exp);
+  ok('a tap on the body opens its source breakdown in the reading panel', exp.highlighted === 1 && /Bow: 2 × 1 Physical, base range 2/.test(exp.reading), exp);
   ok('…with no engaged party, no ranged target is implied', /No engaged target/.test(exp.reading) && !/Preview vs/.test(exp.reading), exp.reading);
   ok('…and the Mage ward is one grouped row with its source', /Magic protection 1 on all six faces: 1 from the party Mage \(ward\)/.test(exp.reading), exp.reading);
   await shot(p2, 'expanded-member');
@@ -641,7 +670,7 @@ await check('z03', 'Approach to inspect: zoom over an enemy keeps the own select
   const d0 = await app(p2, () => window.__versus.cam.goal.distance);
   const lab = await app(p2, () => { const r = document.querySelector('.mlabel:not([hidden])').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
   await p2.mouse.move(lab.x, lab.y); await p2.mouse.wheel({ deltaY: 200 }); await sleep(300);
-  ok('a wheel over a passive label still zooms (labels do not block)', (await app(p2, () => window.__versus.cam.goal.distance)) > d0, true);
+  ok('a wheel over a label (and its symbols) still zooms the camera', (await app(p2, () => window.__versus.cam.goal.distance)) > d0, true);
   await p2.close();
 });
 
@@ -762,7 +791,7 @@ const geometry = (page) => app(page, () => {
     readingOverBodies: bodies.filter((b) => ov(reading, b)).map((b) => b.id), readingOverLabels: labels.filter((l) => ov(reading, l)).length, readingOverControls: controls.filter((c) => ov(reading, c)).length, readingInside: !reading || inside(reading),
     partyShown: !!party, partyInside: !party || inside(party), partyOverBodies: bodies.filter((b) => ov(party, b)).length, partyOverReading: ov(party, reading),
     // role and health are read beside the bodies, or (when the labels step back) in the inspection bar
-    font: { root: fs('html'), role: fs('.mlabel:not([hidden]) b') ?? fs('.inspect-bar .ib-member'), hp: fs('.mlabel:not([hidden]) .mhp') ?? fs('.inspect-bar .ib-member'), reading: fs('.mreading:not([hidden])'), cmd: fs('.cmdbar button') },
+    font: { root: fs('html'), role: fs('.mlabel:not([hidden]) .mfact b') ?? fs('.inspect-bar .ib-member'), hp: fs('.mlabel:not([hidden]) .mfact.hp b') ?? fs('.inspect-bar .ib-member'), reading: fs('.mreading:not([hidden])'), cmd: fs('.cmdbar button') },
     // the controls actually rendered (buttons inside a closed menu are not)
     // (a member scrolled out of the compact bar's one scrolling row is reached by arrows: its row must be on screen)
     cmdInside: [...document.querySelectorAll('.cmdbar summary, .cmdbar button, .inspect-bar .ib-head, .inspect-bar .ib-row, .inspect-bar:not(.compact) button')].filter((e) => e.getClientRects().length).every((e) => inside(rect(e) ?? { x: -1, y: -1, w: 0, h: 0 })),
@@ -802,13 +831,16 @@ await check('z08', 'Intent across controls: navigator and board reading keep the
   ok('B\'s Bishop is the inspected party and a Return pose is saved', /^B\./.test(r1.sub ?? '') && r1.ret, r1);
   ok('the inspection bar says which party is commanded', /commanding your Castle/.test(r1.bar), r1.bar);
   expect('no order changed', (await agreement(page)).plans.A, plans1);
-  ok('focus lands on a member of the inspection bar', /HP/.test((await focused(page))?.name ?? ''), await focused(page));
+  ok('focus lands on a member of the inspection bar (its symbols spoken as values)', /Health \d/.test((await focused(page))?.name ?? ''), await focused(page));
   await page.keyboard.press('Escape'); await sleep(250); // closes the navigator first
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('Enter'); await sleep(500);
-  const pinned = await app(page, () => ({ pin: window.__versus.expandedPin, reading: document.querySelector('.mreading:not([hidden])')?.innerText.replace(/\s+/g, ' ') ?? '', described: document.activeElement?.getAttribute('aria-describedby') }));
-  ok('Enter on a member opens its explanation (keyboard route), described by the reading panel', !!pinned.pin && pinned.reading.length > 20 && pinned.described === 'member-reading', pinned);
+  const pinned = await app(page, () => ({ pin: window.__versus.expandedPin, reading: document.querySelector('.mreading:not([hidden])')?.innerText.replace(/\s+/g, ' ') ?? '', described: document.querySelector('.inspect-bar .ib-member[aria-pressed="true"]')?.getAttribute('aria-describedby'), fact: document.activeElement?.classList.contains('ib-fact'), tip: !document.getElementById('member-tip').hidden }));
+  ok('Enter on a member opens its source breakdown (keyboard route), described by the reading panel', !!pinned.pin && pinned.reading.length > 20 && pinned.described === 'member-reading', pinned);
+  ok('…and focus moves to its first symbol, whose definition shows (contract 5)', pinned.fact && pinned.tip, pinned);
   await page.keyboard.press('Escape'); await sleep(200);
-  expect('Escape closes the explanation first; inspection stays', await app(page, () => [window.__versus.expandedPin, !!window.__versus.inspectParty]), [null, true]);
+  expect('Escape closes the symbol definition first', await app(page, () => [document.getElementById('member-tip').hidden, !!window.__versus.expandedPin]), [true, true]);
+  await page.keyboard.press('Escape'); await sleep(200);
+  expect('Escape then closes the explanation; inspection stays', await app(page, () => [window.__versus.expandedPin, !!window.__versus.inspectParty]), [null, true]);
   await page.keyboard.press('Escape'); await sleep(200);
   await page.keyboard.press('r'); await settle(1200);
   expect('Return restores the pose before Inspect', await app(page, () => JSON.stringify(window.__versus.cam.goal)), pose0);
@@ -944,7 +976,7 @@ await check('z10', 'Playback moment: ward provider, headcount and body agree bef
   const samples = [];
   let paused = null;
   for (let i = 0; i < 400; i++) {
-    const s = await app(page, () => { const a = window.__versus, pb = a.playback; if (!pb) return null; const L = [...document.querySelectorAll('.mlabel:not([hidden])')].map((e) => e.innerText.replace(/\s+/g, ' ')); const ev = pb.events.slice(0, pb.shown); return { shown: pb.shown, mageDiedShown: ev.some((e) => e.type === 'member_died' && e.memberId === 'B.p.s2'), contactShown: ev.some((e) => e.type === 'contact'), mageLabel: L.some((t) => /^Mage/.test(t)), party: document.querySelector('.mparty')?.innerText.replace(/\s+/g, ' ') ?? '', reading: document.querySelector('.mreading:not([hidden])')?.innerText.replace(/\s+/g, ' ') ?? '' }; });
+    const s = await app(page, () => { const a = window.__versus, pb = a.playback; if (!pb) return null; const L = [...document.querySelectorAll('.mlabel:not([hidden])')].map((e) => e.innerText.replace(/\s+/g, ' ')); const ev = pb.events.slice(0, pb.shown); return { shown: pb.shown, mageDiedShown: ev.some((e) => e.type === 'member_died' && e.memberId === 'B.p.s2'), contactShown: ev.some((e) => e.type === 'contact'), mageLabel: !!document.querySelector('.mlabel:not([hidden]) .mfact[data-ref^="B.p.s2|"]') || L.some((t) => /^Mage/.test(t)), party: document.querySelector('.mparty')?.innerText.replace(/\s+/g, ' ') ?? '', reading: document.querySelector('.mreading:not([hidden])')?.innerText.replace(/\s+/g, ' ') ?? '' }; });
     if (s) samples.push(s); else if (samples.length) break;
     if (s && s.contactShown && !paused) {
       await page.keyboard.press('Space'); await sleep(150);
@@ -1035,6 +1067,194 @@ await check('z11', 'Terrain truth: an existing filled cube dug, filled and dug a
   const pick = await app(p2, () => { const a = window.__versus, p = a.state.parties['A.hill'], v = a.view.toWorld(p.x, p.y).setY(a.view.partyY(p) + 0.5), q = v.project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); const ev = { clientX: r.left + (q.x + 1) / 2 * r.width, clientY: r.top + (1 - q.y) / 2 * r.height }; const on = a._rayFrom(ev); a.view.diorama.group.visible = false; const off = a._rayFrom(ev); a.view.diorama.group.visible = true; return [on?.party?.id ?? null, off?.party?.id ?? null]; });
   expect('the dressing never changes what is picked on the hill', pick[0], pick[1]);
   await p2.close();
+});
+
+// ================================================================================================
+// Contract 5 (response 08): addendum 03 / review 07 / assignment 08 — the connected play loop.
+// Expected values come from the rules (fixtures, the reviewed opening) or from values entered
+// before the action under test.
+// ================================================================================================
+const pressReady = (page) => app(page, () => window.__versus._pressReady());
+const advanceTo = async (page, tick) => { while ((await app(page, () => window.__versus.state.tick)) < tick) { const t = await app(page, () => window.__versus.state.tick); await pressReady(page); await waitResolved(page, t + 1); } };
+const selectParty = (page, id) => app(page, (id) => { const a = window.__versus; a.selected = { kind: 'party', id }; a._renderAll(); }, id);
+const openMoves = (page) => app(page, () => { const a = window.__versus; a._cmdOpen = 'move'; a._renderCommandBar(); });
+
+await check('z12', 'Blocked Queen: the route preview names the friendly blocker, travel stops once with Supply kept, recovery to the start is quoted and debited 0.5 (HF3-01, R7-01)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1', profile: 'hapa_open_10x9_v3_03' }, async () => {
+  const page = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
+  await app(page, () => { window.__versus.speed = 4; });
+  setup('Ticks 1–5 pass with Ready only; Tick 6 loads the C6, C5 and C4 Cards into the Queen (validated commands)');
+  await advanceTo(page, 6);
+  await app(page, () => { const a = window.__versus, s = a.state; for (const c of [6, 5, 4]) a._addCommand('A', { type: 'load_supply', cardId: s.players.A.bank.minor[String(c)], partyId: 'A.mount.C6' }); });
+  await selectParty(page, 'A.mount.C6'); await openMoves(page); await sleep(300);
+  const pre = await app(page, () => [...document.querySelectorAll('.cmdbar .movelist button')].map((b) => b.getAttribute('aria-label')).find((t) => /to R4C9/.test(t)) ?? null);
+  ok('the move list marks R4C9 as blocked by the Pawn at R2C6 before ordering', /blocked by your Pawn R2C6/.test(pre ?? ''), pre);
+  const crossed = await app(page, () => window.__versus.view.destGroup.children.filter((m) => m.geometry?.parameters?.height && m.geometry.parameters.height < 0.5).length);
+  ok('blocked destinations are crossed on the board, not only tinted', crossed >= 2, crossed);
+  await clickNamed(page, '.cmdbar .movelist button', /to R4C9/, 'Move to R4C9 (command bar)');
+  await pressReady(page); await waitResolved(page, 7);
+  const q6 = await app(page, () => { const a = window.__versus, q = a.state.parties['A.mount.C6']; return { x: q.x / a.ctx.U, y: q.y / a.ctx.U, supply: q.supply.reduce((n, p) => n + p.units, 0) / a.ctx.U, destination: q.destination, blocked: a.session.events.filter((e) => e.type === 'travel_blocked' && e.partyId === q.id).map((e) => e.by) }; });
+  expect('the Queen stops halfway at the friendly body', [q6.x, q6.y], [24, 4]);
+  expect('unspent Supply is kept (5.5)', q6.supply, 5.5);
+  expect('the destination is kept', q6.destination, { column: 9, row: 4 });
+  expect('one named obstruction event', q6.blocked, ['A.pawn.C6']);
+  await advanceTo(page, 13);
+  await selectParty(page, 'A.mount.C6'); await sleep(300);
+  const why = await app(page, () => document.querySelector('.cmdbar .cmd-why')?.textContent ?? '');
+  ok('the command bar names the blocker and keeps the order', /Your Pawn at R2C6 blocks its path/.test(why), why);
+  ok('an in-world blocked cue is drawn at the contact', await app(page, () => window.__versus.view.destGroup.children.some((c) => c.isSprite)), 'sprite');
+  expect('no wall of repeated blocked messages while waiting', await app(page, () => window.__versus.session.events.filter((e) => e.type === 'travel_blocked').length), 1);
+  await openMoves(page); await sleep(300);
+  const back = await app(page, () => [...document.querySelectorAll('.cmdbar .movelist button')].map((b) => b.getAttribute('aria-label')).find((t) => /to R1C6:/.test(t)) ?? null);
+  ok('the start territory R1C6 is a funded destination quoted at 0.5 Supply', /to R1C6: needs 0\.5 Supply/.test(back ?? ''), back);
+  await clickNamed(page, '.cmdbar .movelist button', /to R1C6:/, 'Move to R1C6 (recovery)');
+  await pressReady(page); await waitResolved(page, 14);
+  const q13 = await app(page, () => { const a = window.__versus, q = a.state.parties['A.mount.C6']; return { at: [q.x / a.ctx.U, q.y / a.ctx.U], supply: q.supply.reduce((n, p) => n + p.units, 0) / a.ctx.U, state: q.state }; });
+  expect('the Queen returned to the center of R1C6', q13.at, sabotage ? [24, 4] : [22, 2], sabotage ? 'SABOTAGE: reinstates the review 07 defect (no movement)' : undefined);
+  expect('the recovery debited exactly 0.5', q13.supply, 5);
+  expect('it arrived (idle)', q13.state, 'idle');
+  await shot(page, 'recovered');
+  await page.close();
+});
+
+await check('z13', 'Development controllers: validated launch, A bot / B human, both bots Pause / Step / Stop, saved preset and launch link (HF3-04, R7-03)', { query: 'several; see setup', viewport: '1280x720@1' }, async () => {
+  const bad = await open('autostart=1&a=robot&b=bot&seed=-4', { width: 1280, height: 720 });
+  const eff = await app(bad, () => ({ eff: window.__versus.effective, toast: window.__versus.el.toast.textContent, problems: window.__versus.launch?.problems }));
+  expect('an invalid role never creates an uncontrolled seat (A falls back to human)', eff.eff.seats, { A: 'human', B: 'bot' });
+  expect('an invalid seed falls back to 1', eff.eff.seed, 1);
+  expect('both problems are reported', eff.problems?.length, 2);
+  const link = await app(bad, () => { window.__versus._menu(); return document.querySelector('.dev-preset .launch-link')?.textContent ?? ''; });
+  ok('the menu shows the effective configuration as a launch link', /\/versus\.html\?autostart=1&a=human&b=bot&seed=1$/.test(link), link);
+  await bad.close();
+  const ab = await open('autostart=1&a=bot&b=human&seed=1', { width: 1280, height: 720 });
+  const s0 = await app(ab, () => ({ view: window.__versus.viewSeat, botReady: !!window.__versus.agreement.ready.A }));
+  expect('A bot / B human: the human views B', s0.view, 'B');
+  expect('the bot committed its plan without a human', s0.botReady, true);
+  await pressReady(ab); await waitResolved(ab, 2);
+  expect('one human Ready resolved the Tick', await app(ab, () => window.__versus.session.replay.ticks.length), 1);
+  await ab.close();
+  const bb = await open('autostart=1&a=bot&b=bot&seed=1', { width: 1280, height: 720 });
+  await bb.waitForFunction(() => window.__versus.state.tick >= 3, { timeout: 30000 });
+  await clickNamed(bb, '.auto-ctl button', /Pause/, 'Pause (bot match)');
+  await bb.waitForFunction(() => !window.__versus.resolving && !window.__versus.playback, { timeout: 30000 });
+  const held = await app(bb, () => window.__versus.state.tick);
+  await sleep(2500);
+  expect('paused: no further Tick starts', await app(bb, () => window.__versus.state.tick), held);
+  await clickNamed(bb, '.auto-ctl button', /^Step/, 'Step');
+  await bb.waitForFunction((t) => window.__versus.state.tick === t + 1 && !window.__versus.playback && !window.__versus.resolving, { timeout: 30000 }, held);
+  await sleep(1500);
+  expect('Step advanced exactly one Tick and holds again', [await app(bb, () => window.__versus.state.tick), await app(bb, () => window.__versus.auto.mode)], [held + 1, 'pause']);
+  await clickNamed(bb, '.auto-ctl button', /Stop/, 'Stop');
+  await sleep(1500);
+  expect('stopped: no automatic Tick and Run is disabled', [await app(bb, () => window.__versus.state.tick), await app(bb, () => [...document.querySelectorAll('.auto-ctl button')].find((b) => /Run/.test(b.textContent))?.disabled)], [held + 1, true]);
+  await app(bb, () => { window.__versus.auto.mode = 'run'; window.__versus._scheduleAuto(); });
+  await app(bb, () => window.__versus.startMatch({ seats: { A: 'bot', B: 'bot' }, seed: 3 }));
+  await bb.waitForFunction(() => window.__versus.state.tick >= 2, { timeout: 30000 });
+  const gen = await app(bb, () => ({ ticks: window.__versus.session.replay.ticks.map((t) => t.tick), mode: window.__versus.auto.mode }));
+  ok('New match restarted cleanly: its own Ticks from 1, the old schedule gone', gen.ticks[0] === 1 && gen.ticks.every((t, i) => t === i + 1), JSON.stringify(gen));
+  await bb.close();
+  // saved preset: chosen in setup, used by a plain autostart; URL values still win
+  const st = await browser.newPage();
+  await st.setViewport({ width: 1280, height: 720 });
+  st.on('pageerror', (e) => current.errors.push({ kind: 'pageerror', message: String(e?.message ?? e) }));
+  await st.goto(`${base}/versus.html?debug=1`, { waitUntil: 'networkidle0' });
+  await st.waitForSelector('#set-A');
+  await st.select('#set-A', 'bot'); await st.select('#set-B', 'human');
+  await st.evaluate(() => { const s = document.getElementById('set-seed'); s.value = '7'; s.dispatchEvent(new Event('input', { bubbles: true })); });
+  const setupLink = await st.evaluate(() => document.querySelector('.setup .launch-link')?.textContent ?? '');
+  ok('setup shows the launch link for the chosen controllers', /a=bot&b=human&seed=7/.test(setupLink), setupLink);
+  await clickNamed(st, '.setup button', /^Start match$/, 'Start match (remember preset)');
+  await st.goto(`${base}/versus.html?autostart=1`, { waitUntil: 'networkidle0' });
+  await st.waitForFunction(() => window.__versus?.session, { timeout: 30000 });
+  expect('a plain autostart uses the saved preset', await st.evaluate(() => ({ ...window.__versus.effective.seats, seed: window.__versus.effective.seed })), { A: 'bot', B: 'human', seed: 7 });
+  await st.goto(`${base}/versus.html?autostart=1&a=human&b=bot`, { waitUntil: 'networkidle0' });
+  await st.waitForFunction(() => window.__versus?.session, { timeout: 30000 });
+  expect('URL values override the preset (seed still from the preset)', await st.evaluate(() => ({ ...window.__versus.effective.seats, seed: window.__versus.effective.seed })), { A: 'human', B: 'bot', seed: 7 });
+  await st.evaluate(() => localStorage.removeItem('hapa-versus.dev-preset.v1'));
+  await st.close();
+});
+
+await check('z14', 'Same-Tick Mana: burn → exact available count → cast reserves it → undo leaves the cast invalid and Ready names it → restore → one burn, one payment (HF3-06, R7-05)', { query: 'autostart=1&fixture=response&a=human&b=human', viewport: '1280x720@1' }, async () => {
+  const page = await open('autostart=1&fixture=response&a=human&b=human', { width: 1280, height: 720 });
+  const red = await app(page, () => window.__versus.state.cards['A.red'].mana);
+  await app(page, () => { window.__versus.pinned = { kind: 'card', id: 'A.red' }; window.__versus._renderAll(); });
+  await clickNamed(page, '.peek.pinned button.burn', /^Burn .+ for /, 'Burn A.red (Card view)');
+  expect('burn → available this Tick is exactly its colors', await app(page, () => window.__versus._availablePool('A')), red);
+  const added = await app(page, () => window.__versus._addCommand('A', { type: 'play_ability', cardId: 'A.ember', actorPartyId: 'A.c', target: { memberId: 'B.c.s2' }, burns: [] }));
+  expect('the same-Tick cast validates against that Mana', added, true);
+  expect('queueing the cast reserves its cost at once', await app(page, () => window.__versus._availablePool('A')), {});
+  const burnAt = await app(page, () => window.__versus.plans.A.findIndex((c) => c.type === 'burn'));
+  await app(page, (i) => window.__versus._removeOrder('A', i), burnAt);
+  const undone = await app(page, () => { const a = window.__versus; return { plan: a.plans.A.map((c) => c.type), errors: a._planErrors('A').map((e) => e.error), ready: a.el.readyBig.innerText.replace(/\s+/g, ' '), toast: a.el.toast.textContent, avail: a._availablePool('A') }; });
+  expect('undo keeps the dependent cast visible', undone.plan, ['play_ability']);
+  expect('the cast is now invalid (not silently deleted)', undone.errors.length, 1);
+  ok('Ready is blocked', /^Fix 1 order/.test(undone.ready), undone.ready);
+  ok('the undo says which order became invalid', /dependent order is now invalid/.test(undone.toast), undone.toast);
+  expect('the burn\'s credit is gone', undone.avail, {});
+  await app(page, () => window.__versus._restoreOrder('A'));
+  expect('restored: the plan is valid again', await app(page, () => window.__versus._planErrors('A').length), 0);
+  await pressReady(page); // A commits; hotseat hands to B
+  await pressReady(page);
+  let sawWindow = false;
+  for (let i = 0; i < 40; i++) {
+    const w = await app(page, () => { const a = window.__versus; if (!a.pendingChoice) return null; const seat = a.pendingChoice.req.seat; return { seat, avail: a._availablePool(seat), actual: a.state.players[seat].pool }; });
+    if (w) { sawWindow = true; expect(`the response window uses ${w.seat}'s actual pool`, w.avail, w.actual); await clickNamed(page, '#decision button', /^Pass$/, 'Pass'); }
+    else if (await app(page, () => !window.__versus.resolving && !window.__versus.playback && window.__versus.state.tick > 9)) break;
+    await sleep(250);
+  }
+  ok('a genuine response window was offered', sawWindow);
+  await waitResolved(page, 10);
+  const ev = await app(page, () => { const e = window.__versus.session.events; return { burns: e.filter((x) => x.type === 'card_burned' && x.cardId === 'A.red').length, paid: e.filter((x) => x.type === 'mana_paid' && x.cardId === 'A.ember').length, damage: e.filter((x) => x.type === 'card_damage').length }; });
+  expect('exactly one accepted burn and one payment', [ev.burns, ev.paid], [1, sabotage ? 2 : 1], sabotage ? 'SABOTAGE: deliberately wrong expectation (two payments)' : undefined);
+  ok('the cast resolved its damage', ev.damage >= 1, ev.damage);
+  await page.close();
+});
+
+await check('z15', 'Symbols and history: exact member values, a symbol defined by pointer and keyboard, history opened, rotated and closed without hiding inspection or losing selection and orders (HF3-03/05/07, R7-04/06)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1' }, async () => {
+  const page = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
+  await app(page, () => { window.__versus.speed = 4; });
+  await advanceTo(page, 2);
+  await selectParty(page, 'A.mount.C1');
+  await app(page, () => { const a = window.__versus; a._addCommand('A', { type: 'load_supply', cardId: a.state.players.A.bank.minor['1'] ?? a.state.players.A.bank.minor['9'], partyId: 'A.mount.C1' }); });
+  const orders = await app(page, () => window.__versus.plans.A.map((c) => JSON.stringify(c)));
+  setup('A selects its C1 Castle (command) with one Supply order, then inspects its C3 Pawn (five members)');
+  await app(page, () => window.__versus._focusInspect('A.pawn.C3'));
+  for (let i = 0; i < 10 && (await app(page, () => window.__versus.labels.level)) !== 'combat'; i++) { await app(page, () => window.__versus.cam.zoom(0.85)); await sleep(450); }
+  expect('close view reaches the symbol level', await app(page, () => window.__versus.labels.level), 'combat');
+  const vals = await app(page, () => { const a = window.__versus, out = {}; for (const el of document.querySelectorAll('.mlabel:not([hidden])')) { const ref = el.querySelector('.mfact')?.dataset.ref ?? ''; const id = ref.split('|')[0]; const m = a.state.members[id]; (out[m.archetype] ??= []).push([...el.querySelectorAll('.mfact')].map((c) => `${c.dataset.ref.split('|')[1]}=${c.textContent}`).join(' ')); } return out; });
+  ok('Archer: 3/3, two hits of 1, base range 2, no protection shown as 0', (vals.archer ?? []).every((t) => /health=3\/3/.test(t) && /attack:0=2×1/.test(t) && /range:0=2/.test(t) && /shield:none=0/.test(t)) && vals.archer?.length === 2, JSON.stringify(vals.archer));
+  ok('Swordsman: 3/3, one hit of 3, front-only Physical protection 1', (vals.swordsman ?? []).every((t) => /health=3\/3/.test(t) && /attack:0=1×3/.test(t) && /shield:0=1/.test(t)) && vals.swordsman?.length === 3, JSON.stringify(vals.swordsman));
+  // pointer: the shield symbol answers the protection question directly
+  const chip = await app(page, () => { const el = [...document.querySelectorAll('.mfact.sh')].find((c) => c.querySelector('.mface')); const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, ref: el.dataset.ref }; });
+  await hoverAt(page, chip, 600);
+  const tip = await app(page, () => ({ shown: !document.getElementById('member-tip').hidden, text: document.getElementById('member-tip').innerText.replace(/\s+/g, ' ') }));
+  ok('hovering the shield explains front-only Physical protection with its value', tip.shown && /Physical protection 1 on the front face; other faces meet 0/.test(tip.text), tip.text);
+  ok('the member stays the same while the pointer is on its symbol', await app(page, () => window.__versus.inspectParty?.partyId === 'A.pawn.C3'));
+  await page.keyboard.press('Escape'); await sleep(200);
+  expect('Escape dismisses the definition first', await app(page, () => document.getElementById('member-tip').hidden), true);
+  // keyboard: a member, then its symbols as stops with the same definitions
+  await openMember(page, /^Archer/); await sleep(400);
+  const kf = await focused(page);
+  ok('choosing a member moves focus to its first symbol', /^Archer/.test(kf?.name ?? ''), kf?.name);
+  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await sleep(300);
+  const kt = await app(page, () => ({ f: document.activeElement?.getAttribute('aria-label'), tip: document.getElementById('member-tip').innerText.replace(/\s+/g, ' '), shown: !document.getElementById('member-tip').hidden }));
+  ok('arrowing to the attack symbol shows its definition (two separate hits of 1)', kt.shown && /2 separate hits of 1 Physical each/.test(kt.tip), `${kt.f} | ${kt.tip}`);
+  // history composition: open, rotate, close; reading and controls stay clear of the drawer
+  const clear = () => app(page, () => { const a = window.__versus, o = a.el.orders.getBoundingClientRect(); const hit = (el) => { if (!el || el.hidden || !el.offsetParent) return false; const r = el.getBoundingClientRect(); return r.right > o.left && r.left < o.right && r.bottom > o.top && r.top < o.bottom; }; return { open: !a.el.orders.hidden, tab: a.ordersTab, covered: ['.inspect-bar', '.cmdbar', '.mreading', '.cam-pad', '.layer-rail'].filter((s) => hit(document.querySelector(s))) }; });
+  await page.keyboard.press('Escape'); await sleep(200);
+  await page.mouse.move(2, 2);
+  await page.keyboard.press('h'); await sleep(600);
+  const h1 = await clear();
+  expect('H opens the history voluntarily, nothing covered', [h1.open, h1.tab, h1.covered], [true, 'history', []]);
+  const hist = await app(page, () => ({ ticks: [...document.querySelectorAll('#orders .hist-nav option')].map((o) => o.textContent), sum: document.querySelector('#orders .hist-sum')?.textContent ?? '' }));
+  ok('history browses completed Ticks (not the current draft)', hist.ticks.length >= 1 && !hist.ticks.some((t) => /Tick 2$/.test(t)), JSON.stringify(hist));
+  await app(page, () => window.__versus.cam.rotate(45)); await sleep(900);
+  const h2 = await clear();
+  expect('after one orbit step the drawer still covers nothing essential', h2.covered, []);
+  await shot(page, 'history-with-inspection');
+  await page.keyboard.press('h'); await sleep(500);
+  const end = await app(page, () => { const a = window.__versus; return { open: !a.el.orders.hidden, selected: a.selected?.id, orders: a.plans.A.map((c) => JSON.stringify(c)), inspecting: a.inspectParty?.partyId, cmdbar: !a.el.cmdbar.hidden }; });
+  expect('closing history keeps the command selection, its orders and the inspection', [end.open, end.selected, end.orders, end.inspecting, end.cmdbar], [false, 'A.mount.C1', orders, 'A.pawn.C3', true]);
+  await page.close();
 });
 
 // --- C13: performance context (measured, not a pass/fail target) ----------------------------------

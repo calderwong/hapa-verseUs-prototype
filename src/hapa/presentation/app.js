@@ -520,7 +520,6 @@ export class VersusApp {
     const opp = other(seat);
     if (this.seats.A === 'human' && this.seats.B === 'human' && !this._readyValid(opp)) {
       this.viewSeat = opp;
-      this.cam.setHome(opp);
       this._toast(this.agreement.ready[opp]
         ? `${seat} changed its plan after ${opp}'s Ready. ${opp}: your plan is frozen — Acknowledge the updated pair (legacy profile).`
         : `${seat} committed its plan. ${opp} plans now (hotseat).`);
@@ -709,7 +708,7 @@ export class VersusApp {
       if (e.code === 'Escape' && this.inspect.dismissTop()) return; // the top contextual view first
       if (e.code === 'Escape' && this.ordersOpen) { this._toggleOrders(false); return; }
       if (e.code === 'Escape' && this.tool) { this.tool = null; this._renderAll(); return; } // tool cancel, orders kept
-      if (e.code === 'Escape' && this.inspectParty && this.expandedPin) { this.expandedPin = null; this._renderInspectBar(); return; } // the explanation first
+      if (e.code === 'Escape' && this.inspectParty && this.expandedPin) { const m = this.expandedPin, inBar = document.activeElement?.closest?.('.inspect-bar'); this.expandedPin = null; this._renderInspectBar(); if (inBar) this.el.inspectBar?.querySelector(`[data-member="${CSS.escape(m)}"]`)?.focus({ preventScroll: true }); return; } // the explanation first
       if (e.code === 'Escape' && this.inspectParty) { const back = document.activeElement?.closest?.('.inspect-bar'); this.inspectParty = null; this.expandedMember = null; this._renderInspectBar(); if (back) this._inspectorEl()?.querySelector?.('summary:not(.off), button')?.focus({ preventScroll: true }); return; } // labels off, camera stays
       if (e.code === 'Escape') { if (this.tool) { this.tool = null; this._renderAll(); } else { this.selected = null; this.view?.select(this.state, null); this._renderAll(); } return; }
       if (k === 'q') this.cam.rotate(45);
@@ -2005,8 +2004,11 @@ export class VersusApp {
   _historyPanel() {
     const s = this.state, ticks = this._historyTicks();
     if (!ticks.length) return h('div', { class: 'history dim' }, 'No completed Tick yet.');
+    // default: the latest completed Tick (the open Tick holds only its minting until it resolves)
+    const live = this.playback || this.resolving;
     const at = ticks.findIndex(([t]) => t === this.historyTick);
-    const i = at >= 0 ? at : 0;
+    const done = ticks.findIndex(([t]) => t < s.tick || live);
+    const i = at >= 0 ? at : Math.max(0, done);
     const [tick, evs] = ticks[i];
     const GROUPS = [
       ['Movement', ['destination_set', 'region_entered', 'destination_reached', 'travel_blocked', 'travel_paused', 'parties_merged', 'elevation_changed', 'retreat_started', 'formation_change_started', 'formation_changed']],
@@ -2025,7 +2027,7 @@ export class VersusApp {
     return h('div', { class: 'history' },
       h('div', { class: 'hist-nav' },
         h('button', { 'aria-label': 'Earlier Tick', disabled: i >= ticks.length - 1, onclick: () => go(i + 1) }, '◀'),
-        h('select', { 'aria-label': 'Tick', onchange: (e) => { this.historyTick = Number(e.target.value); this._renderAll(); } }, ...ticks.map(([t]) => h('option', { value: t, selected: t === tick }, `Tick ${t}${t === s.tick && (this.playback || this.resolving) ? ' (playing)' : ''}`))),
+        h('select', { 'aria-label': 'Tick', onchange: (e) => { this.historyTick = Number(e.target.value); this._renderAll(); } }, ...ticks.map(([t]) => h('option', { value: t, selected: t === tick }, `Tick ${t}${t === s.tick ? (live ? ' (playing)' : ' (open: minted so far)') : ''}`))),
         h('button', { 'aria-label': 'Later Tick', disabled: i <= 0, onclick: () => go(i - 1) }, '▶')),
       h('p', { class: 'hist-sum' }, h('b', {}, `Tick ${tick}: `), summary),
       ...groups.filter(([, l]) => l.length).map(([label, l]) => h('details', { class: 'hist-group', open: l.length <= 6 ? true : null },

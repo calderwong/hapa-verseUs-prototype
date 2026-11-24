@@ -145,6 +145,7 @@ export function factChips(f, o) {
     const scope = line ? `${CH[g.channel]} line contribution ${g.total}` : `${CH[g.channel]} protection ${g.total}`;
     add(`shield:${gi++}`, 'shield', shieldGlyph(g.channel) + faceDiagram(g.faces), String(g.total), `sh ch-${g.channel}`, line ? `${CH[g.channel]} contribution` : `${CH[g.channel]} protection`,
       `${scope} on ${faceWords(g.faces)}${g.faces.length < 6 ? '; other faces meet 0' : ''}.${from.length ? ` Sources: ${from.join(' + ')}.` : ''}${g.total !== g.base ? ` Its own value is ${g.base}; applied effects raise it to ${g.total}.` : ''}${line ? ' In this profile a hit meets the shared value of the line it reaches; this is the member\'s part of it.' : ''}`);
+    out.at(-1).said = `${out.at(-1).title} ${g.total} on ${faceWords(g.faces)}`;
   }
   // conditions
   for (const c of f.conditions) {
@@ -158,4 +159,4 @@ export function factChips(f, o) {
 }
 
 /** A compact text equivalent of the chips (the inspection bar when bodies cannot carry them). */
-export const chipsText = (chips) => chips.filter((c) => c.kind !== 'role').map((c) => (c.kind === 'cond' ? c.title : `${c.title} ${c.value}`)).join(' · ');
+export const chipsText = (chips) => chips.filter((c) => c.kind !== 'role').map((c) => c.said ?? (c.value ? `${c.title} ${c.value}` : c.title)).join(' · ');

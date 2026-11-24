@@ -569,7 +569,7 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .mlabel { --ch-physical: #d6dde6; --ch-magic: #c9a2ff; }
 .mlabel .mrow { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1px 5px; line-height: 1.1; }
 .mlabel .mrow + .mrow { margin-top: 1px; }
-.mfact { position: relative; display: inline-flex; align-items: center; gap: 1px; padding: 1px 2px; border-radius: 3px; pointer-events: auto; cursor: help; font: 700 0.8125rem/1.1 var(--sans); color: var(--ivory); }
+.mfact { position: relative; display: inline-flex; align-items: center; gap: 1px; padding: 1px 2px; border-radius: 3px; pointer-events: auto; cursor: help; font: 700 0.875rem/1.1 var(--sans); color: var(--ivory); }
 .mfact:hover, .mfact.asked { background: rgba(217,184,106,.22); box-shadow: inset 0 0 0 1px rgba(217,184,106,.7); }
 .mfact b { font-weight: 700; }
 .mg { width: 0.95rem; height: 0.95rem; flex: none; }
