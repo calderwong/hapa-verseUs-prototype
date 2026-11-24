@@ -1,0 +1,22 @@
+✔ successive partial Pawns: both pickups keep every survivor in a distinct slot (241.990146ms)
+✔ casualty vacancies are refilled: five survivors absorb a four-member Pawn (45.069611ms)
+✔ a Pawn that cannot be absorbed is never co-located: the mover is stopped instead (58.922703ms)
+✔ ordinary opening control: the Queen reaches R2C7, absorbs its Pawn and keeps exact Supply (243.989699ms)
+✔ v3_06 keeps its recorded slot-order allocator (historical replays are not reinterpreted) (77.054762ms)
+✔ the bot may send a funded Knight through friendly territory to a legal endpoint (R8-02) (11.30943ms)
+✔ v3_04 validates; the default v3_07 keeps its travel rules (2.314099ms)
+✔ the opening Bishop steps center to center past its own Pawn and absorbs the Pawn in front of the King (491.590532ms)
+✔ the Knight takes either L and absorbs the Pawn its path reaches (Tick 2 opening cases) (651.545998ms)
+✔ v3_05 replaces each side's King with a second Queen; victory stays on the Commander (12.111854ms)
+✔ both L paths are offered, quoted alike, and checked for clearance; the short L is refused before v3_04 (19.830054ms)
+✔ a line Mount cannot stop on or pass a friendly-held territory; a destination held by a non-Pawn is refused (4.373238ms)
+✔ enemies still meet on body contact under center-to-center travel (same outcome as v3_03) (52.908151ms)
+✔ v3_06 Knights turn for free: no Tick, no Supply; they face each leg and the chosen arrival facing (213.347021ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1740.134341

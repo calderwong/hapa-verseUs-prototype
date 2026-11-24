@@ -1,0 +1,12 @@
+{
+  "snapshot": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+  "methodOnly": true,
+  "checks": [
+    "Unavailable body: supplied health is registered and its actual tooltip opens",
+    "Open pinned definition refreshes to changed current health while body remains unavailable",
+    "Removed fact is unregistered and an open definition is dismissed",
+    "Pointer departure returns to the keyboard-focused symbol, instead of hiding its explanation",
+    "With no focused symbol, pointer departure dismisses the transient definition"
+  ],
+  "passed": 5
+}

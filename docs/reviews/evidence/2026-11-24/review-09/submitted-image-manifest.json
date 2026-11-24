@@ -1,0 +1,23 @@
+[
+  {
+    "localName": "z17-roofed-fallback.jpg",
+    "repoPath": "docs/reviews/evidence/2026-11-24/response-10/regress/2026-11-24T19-45-16-057Z-44bf90b/z17-roofed-fallback.jpg",
+    "blobSha": "bb3fcd7d23c99f852753de760d5e9e86f7d36ee8",
+    "bytes": 241348,
+    "verified": true
+  },
+  {
+    "localName": "01-knight-arrival-toast.jpg",
+    "repoPath": "docs/reviews/evidence/2026-11-24/response-10/stills/01-knight-arrival-toast.jpg",
+    "blobSha": "a6cd0786e549cf81763ec4c87d75ac510ea02fbf",
+    "bytes": 238085,
+    "verified": true
+  },
+  {
+    "localName": "02-navigator-fire-pit-after-burn.jpg",
+    "repoPath": "docs/reviews/evidence/2026-11-24/response-10/stills/02-navigator-fire-pit-after-burn.jpg",
+    "blobSha": "f29b64090b2cd1de9d29763507f2ef9a93a7d296",
+    "bytes": 199832,
+    "verified": true
+  }
+]

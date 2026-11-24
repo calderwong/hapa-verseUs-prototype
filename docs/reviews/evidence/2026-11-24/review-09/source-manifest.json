@@ -1,0 +1,591 @@
+{
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "reviewedCommit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+  "rootTree": "faacf59e5a97b757225f8ba83d0fc59aafba576c",
+  "implementationCommit": "44bf90b706a4e55dd740fd3276f077aac3ea5aa1",
+  "profile": "hapa_open_10x9_v3_07",
+  "engineGitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "method": "Each local file matched the Git blob SHA and byte size in the exact remote tree. Listed files form the review snapshot, not the entire repository.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha": "7ca4262277cc1f89a9b6cb6391581d3b882cdffb",
+      "bytes": 5920
+    },
+    {
+      "path": "README.md",
+      "sha": "5ff46c79de58b29a1ea1fd3894d936be08ddbc9c",
+      "bytes": 9719
+    },
+    {
+      "path": "docs/requirements/2026-11-23-human-feedback-addendum-03.md",
+      "sha": "6ca8a6067cc5b5d8668cd85455bc226afcc11f93",
+      "bytes": 19015
+    },
+    {
+      "path": "docs/requirements/2026-11-23-human-feedback-addendum-04.md",
+      "sha": "da1f5808e91c1c089dfb37c31274cf7415914d0f",
+      "bytes": 6655
+    },
+    {
+      "path": "docs/requirements/master-requirements-v3.txt",
+      "sha": "c97ab6851df6552ed3d7104d844c798f699f09b8",
+      "bytes": 232173
+    },
+    {
+      "path": "docs/reviews/2026-11-23-next-agent-assignment-08.md",
+      "sha": "684fc71e6ff525c0750987bb44bafe947da04d59",
+      "bytes": 7952
+    },
+    {
+      "path": "docs/reviews/2026-11-23-next-agent-assignment-10.md",
+      "sha": "c5746f210fee8ac7e0f95a805520b4a52d6d282c",
+      "bytes": 9214
+    },
+    {
+      "path": "docs/reviews/2026-11-23-ui-design-response-08.md",
+      "sha": "03f07310b9f62f94d50aca80e1a46920243a8b75",
+      "bytes": 24484
+    },
+    {
+      "path": "docs/reviews/2026-11-23-ui-design-response-09.md",
+      "sha": "54c826018facebb4eee56eabfaa132237ea21a8e",
+      "bytes": 14573
+    },
+    {
+      "path": "docs/reviews/2026-11-23-ui-design-review-08.md",
+      "sha": "827d1618594bfe4d33f2c62da4bd80bf4bf2e5a5",
+      "bytes": 18303
+    },
+    {
+      "path": "docs/reviews/2026-11-24-ui-design-response-10.md",
+      "sha": "ddbfb9d404a57d16965cf6837212faf1ecd78e0d",
+      "bytes": 10300
+    },
+    {
+      "path": "docs/reviews/README.md",
+      "sha": "f7c7011a174baf7fd727abefe5ab8ec002fa2ea2",
+      "bytes": 18405
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/README.md",
+      "sha": "863bd5c8c822fedd958d6426c8e9c35ee2ae5857",
+      "bytes": 4660
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/fallback-facts-probe.mjs",
+      "sha": "afe9a23605dfdca751a0543a9ec69601a8e003a9",
+      "bytes": 1578
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/fallback-facts-result.json",
+      "sha": "0eb05ee30f8fea2e97c334c53a4cf18864fe2a2b",
+      "bytes": 497
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/launch-profile-probe.mjs",
+      "sha": "ce4ba4625a985b4b6d3edfa41a03fb7db02805e2",
+      "bytes": 1815
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/launch-profile-results.json",
+      "sha": "abddf208f842dac8c379466132c27fd48ff92a16",
+      "bytes": 339
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/live-observations.md",
+      "sha": "9b776a2b902eb33c89e638ee03ad275228be538c",
+      "bytes": 2760
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/movement-probe.mjs",
+      "sha": "1e61759609d6aea881cccc90919eaa42c0a8bb14",
+      "bytes": 6888
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/movement-results.json",
+      "sha": "ce4468ab503d6cb82271796ee54abca960008977",
+      "bytes": 3875
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/peer-revision-probe.mjs",
+      "sha": "73f67fa4f80ed011b7f2cfe2590aa9dd9a0b5afb",
+      "bytes": 4527
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/peer-revision-results.json",
+      "sha": "e79abadaf9afece39897e4d42cf4c85805e0d98f",
+      "bytes": 604
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/source-manifest.json",
+      "sha": "a920a9f48f55ef75e9d5702ef41094218e35875d",
+      "bytes": 16388
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-23/review-08/submitted-image-manifest.json",
+      "sha": "5ea37f8214bc0e0ff56cab05a11f2f5206153224",
+      "bytes": 1056
+    },
+    {
+      "path": "docs/workflows/LOOSE_SCREWS.md",
+      "sha": "949fdd2c37f30fba591ba32535e1f32e66c94ef7",
+      "bytes": 19476
+    },
+    {
+      "path": "fixtures/hapa/content.js",
+      "sha": "6210462fdcb3121da79527149d02a3cfe989f408",
+      "bytes": 9785
+    },
+    {
+      "path": "fixtures/hapa/profiles.js",
+      "sha": "80a566f9e7e76b185756b04cfc58d31348ddd352",
+      "bytes": 13609
+    },
+    {
+      "path": "fixtures/hapa/scenarios.js",
+      "sha": "71e3208c1b2992e3632a758227123370db8c8262",
+      "bytes": 4065
+    },
+    {
+      "path": "fixtures/hapa/ui-fixtures.js",
+      "sha": "aae8aa89c1baced094dde05994d5fdbf751f6d6b",
+      "bytes": 13217
+    },
+    {
+      "path": "index.html",
+      "sha": "fe3a37084749094d5efd0e053000d7bf736aba4c",
+      "bytes": 214
+    },
+    {
+      "path": "package-lock.json",
+      "sha": "ba2ea3c07f08e8aeb59d03ebf39bacbbd77fbcf2",
+      "bytes": 59379
+    },
+    {
+      "path": "package.json",
+      "sha": "7217956c327c97594241b1609233559f2f52b09f",
+      "bytes": 1309
+    },
+    {
+      "path": "src/hapa/adapters/content.js",
+      "sha": "5d5132c773b0440eb0472a06b89d436a1a83ea07",
+      "bytes": 8266
+    },
+    {
+      "path": "src/hapa/adapters/profile-lab.js",
+      "sha": "0882b539020ef123499b9cfddfca628092ae1320",
+      "bytes": 8345
+    },
+    {
+      "path": "src/hapa/controllers/heuristic-bot.js",
+      "sha": "3bd12573bb586388311c1c6fb086893295faa4b3",
+      "bytes": 10553
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "sha": "0292053e6115aa1cb756e4d2576f26bb4a9381e1",
+      "bytes": 213476
+    },
+    {
+      "path": "src/hapa/presentation/board-view.js",
+      "sha": "fce8bdd44e0e1912cd5caa2a377f04eb1069852a",
+      "bytes": 51099
+    },
+    {
+      "path": "src/hapa/presentation/boardframe.js",
+      "sha": "157a61fad9828e22b3e3de87d2538c535f43e8cf",
+      "bytes": 4132
+    },
+    {
+      "path": "src/hapa/presentation/camera.js",
+      "sha": "81a1588688ea61c645a2d0dcb8a813b168eb762b",
+      "bytes": 14033
+    },
+    {
+      "path": "src/hapa/presentation/card-drag.js",
+      "sha": "5476caf2f6dfa0b3c9052e86c76ab459ca411633",
+      "bytes": 11959
+    },
+    {
+      "path": "src/hapa/presentation/dev-preset.js",
+      "sha": "785ca2319358af17d640f6828339e404ace1fa73",
+      "bytes": 5093
+    },
+    {
+      "path": "src/hapa/presentation/dom.js",
+      "sha": "8f19fcae4308487763f80e1247e16c28d43237d3",
+      "bytes": 615
+    },
+    {
+      "path": "src/hapa/presentation/editor.js",
+      "sha": "465e1b533ebdbf3870e90a6449169e031ed32d52",
+      "bytes": 10693
+    },
+    {
+      "path": "src/hapa/presentation/explain.js",
+      "sha": "2da09b7af2b2a1bfb293f813ecd7eb10dd250ed0",
+      "bytes": 7511
+    },
+    {
+      "path": "src/hapa/presentation/firepit.js",
+      "sha": "99eadd54d09ee74f7ebbfa45b2588a6d65af576b",
+      "bytes": 11711
+    },
+    {
+      "path": "src/hapa/presentation/fx.js",
+      "sha": "c7dbd60c9d78c9d846c917308727c6ea7cb9dfa1",
+      "bytes": 10256
+    },
+    {
+      "path": "src/hapa/presentation/gear.js",
+      "sha": "a4670fb329d80836a1b3aef4b4067c2eedff7fc6",
+      "bytes": 4894
+    },
+    {
+      "path": "src/hapa/presentation/glossary.js",
+      "sha": "fba69570a58a2c6eeae8c27e2204dd4e9333db72",
+      "bytes": 14759
+    },
+    {
+      "path": "src/hapa/presentation/ground-painter.js",
+      "sha": "e4dee71893746a61bf0f3ad277e6eeb21f8071e6",
+      "bytes": 11672
+    },
+    {
+      "path": "src/hapa/presentation/inspect.js",
+      "sha": "dde7d87ad7d47b55f020c5aa61c5f4ab36918570",
+      "bytes": 11494
+    },
+    {
+      "path": "src/hapa/presentation/lab.js",
+      "sha": "32572122bd34b430eca24febebf16baabc8e6a4d",
+      "bytes": 9729
+    },
+    {
+      "path": "src/hapa/presentation/local-content.js",
+      "sha": "30fd2c59fd32728bf960c94169832411df061853",
+      "bytes": 2090
+    },
+    {
+      "path": "src/hapa/presentation/member-glyphs.js",
+      "sha": "6a5b2d42ba4c0cb44570a0874a1647cfd4640a60",
+      "bytes": 13807
+    },
+    {
+      "path": "src/hapa/presentation/member-labels.js",
+      "sha": "dd0f73d09e7589df9657df8b888b5bc4e075996e",
+      "bytes": 25685
+    },
+    {
+      "path": "src/hapa/presentation/palette.js",
+      "sha": "08aeac93140ac9b2521a641e0898cf2b37c7d276",
+      "bytes": 5888
+    },
+    {
+      "path": "src/hapa/presentation/pieces.js",
+      "sha": "289194f32586ae90f0e7c086261c5b12d4eba12b",
+      "bytes": 10048
+    },
+    {
+      "path": "src/hapa/presentation/playback.js",
+      "sha": "abf4b70776e7327ff421aae3accfa2ef33e0e926",
+      "bytes": 3892
+    },
+    {
+      "path": "src/hapa/presentation/renditions.js",
+      "sha": "f276803031041390076138a013cc2c19bf3ec392",
+      "bytes": 2209
+    },
+    {
+      "path": "src/hapa/presentation/scenery.js",
+      "sha": "640312e7b36b7219b95ab282573f5da2c10c4570",
+      "bytes": 6940
+    },
+    {
+      "path": "src/hapa/presentation/sound.js",
+      "sha": "be181135d404d31a63962e71f328a97a3caf9df0",
+      "bytes": 2947
+    },
+    {
+      "path": "src/hapa/presentation/terrain-view.js",
+      "sha": "2439ef5bba8c30528f9635de660f3034c2966853",
+      "bytes": 15168
+    },
+    {
+      "path": "src/hapa/presentation/territory-diorama.js",
+      "sha": "617d0a713fd02ca28dca7c0bf753750f91157d24",
+      "bytes": 22943
+    },
+    {
+      "path": "src/hapa/presentation/versus.css",
+      "sha": "12ea1ee80baa413e06c1aff27245bcadbf4fdfc2",
+      "bytes": 53207
+    },
+    {
+      "path": "src/hapa/protocol/agreement.js",
+      "sha": "433a18642d1fdcbc95331e11260d53be806806c7",
+      "bytes": 5870
+    },
+    {
+      "path": "src/hapa/protocol/messages.js",
+      "sha": "016d693e1bd64aeba1ea419b61c8513f8fc54a14",
+      "bytes": 2672
+    },
+    {
+      "path": "src/hapa/protocol/peer.js",
+      "sha": "12574809a85c6b6619a632a30dff93870393d517",
+      "bytes": 9130
+    },
+    {
+      "path": "src/hapa/rules/combat.js",
+      "sha": "616fd71ad996705040273626e8173a9d9cf1ff31",
+      "bytes": 34982
+    },
+    {
+      "path": "src/hapa/rules/context.js",
+      "sha": "1917c727398bb6876076c2b50a4f5a31b710fa37",
+      "bytes": 1279
+    },
+    {
+      "path": "src/hapa/rules/economy.js",
+      "sha": "69bd738628033da81c3567505f323102a6a4ba63",
+      "bytes": 10922
+    },
+    {
+      "path": "src/hapa/rules/effects.js",
+      "sha": "bbe100edf65d7cc39f9635887d4382ebe8febc9c",
+      "bytes": 2611
+    },
+    {
+      "path": "src/hapa/rules/encoding.js",
+      "sha": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+      "bytes": 8381
+    },
+    {
+      "path": "src/hapa/rules/geometry.js",
+      "sha": "af789f61c43b103255cb963e87a2e63fa2968fd4",
+      "bytes": 2964
+    },
+    {
+      "path": "src/hapa/rules/inspection.js",
+      "sha": "c89810284640d3d339ea260ed87403e828220ed8",
+      "bytes": 9980
+    },
+    {
+      "path": "src/hapa/rules/match.js",
+      "sha": "25b0f7ccf494ea19462438f52c429cc65ef934d2",
+      "bytes": 31260
+    },
+    {
+      "path": "src/hapa/rules/movement.js",
+      "sha": "b84811f70e69cbdf692ef7aa24e7a56e88410fc0",
+      "bytes": 43392
+    },
+    {
+      "path": "src/hapa/rules/session.js",
+      "sha": "184e6f3b4c44c0f1554175f81ebe0ada5cb3e7a0",
+      "bytes": 4827
+    },
+    {
+      "path": "src/hapa/rules/state.js",
+      "sha": "a82081f88ef37642dc7215fd84fd1329f55e0978",
+      "bytes": 8073
+    },
+    {
+      "path": "src/hapa/rules/stats.js",
+      "sha": "cadd071551c4d6b8e7ab26e66d450cbd5de50287",
+      "bytes": 10431
+    },
+    {
+      "path": "src/hapa/rules/terrain.js",
+      "sha": "7cbf8196e47dd2d35525af4bd87b7758fcc514d2",
+      "bytes": 12226
+    },
+    {
+      "path": "src/hapa/rules/validate.js",
+      "sha": "c81527d9ab27496bc92c4e64daa153539d20af98",
+      "bytes": 6638
+    },
+    {
+      "path": "src/versus.js",
+      "sha": "4a04ce47c29d1689675b77a5d6953ad5f67915a8",
+      "bytes": 1122
+    },
+    {
+      "path": "tests/hapa/absorption.test.js",
+      "sha": "f461e10ddc62c3f0c9681452fc83b11dc3a4e373",
+      "bytes": 9691
+    },
+    {
+      "path": "tests/hapa/boundaries.test.js",
+      "sha": "0196843970a334df6e5578b70a215ff759c11169",
+      "bytes": 1515
+    },
+    {
+      "path": "tests/hapa/center-travel.test.js",
+      "sha": "36148dbab853114e4620e22ea195828384ffb7d9",
+      "bytes": 11489
+    },
+    {
+      "path": "tests/hapa/content.test.js",
+      "sha": "8925442ebfe85b56487c9258914368fd84d8a17d",
+      "bytes": 7992
+    },
+    {
+      "path": "tests/hapa/contracts.test.js",
+      "sha": "9dd1962c6cea5887966169873b366930e94f4b17",
+      "bytes": 5135
+    },
+    {
+      "path": "tests/hapa/corner.test.js",
+      "sha": "167803e0fab0c13a4bde771500e94660bb449d48",
+      "bytes": 10008
+    },
+    {
+      "path": "tests/hapa/effects.test.js",
+      "sha": "2085538d85b29017a179ab00af8315b452cea6bd",
+      "bytes": 7408
+    },
+    {
+      "path": "tests/hapa/elevation.test.js",
+      "sha": "4600f83aecdc1d249443b5c0654982d609abe1d5",
+      "bytes": 6953
+    },
+    {
+      "path": "tests/hapa/funding.test.js",
+      "sha": "cd011f2b45c786879967e0afe922c97192a8d755",
+      "bytes": 10114
+    },
+    {
+      "path": "tests/hapa/glossary.test.js",
+      "sha": "21b5f30076baa14e61b399d16aabb466b3e9e03b",
+      "bytes": 2278
+    },
+    {
+      "path": "tests/hapa/golden.test.js",
+      "sha": "b51c5bc321bb36d2f3dac7d8f0586365b4d9c4e6",
+      "bytes": 28063
+    },
+    {
+      "path": "tests/hapa/history.test.js",
+      "sha": "231bf2e6cc9cb8955dcb2a70445c14ee0f134221",
+      "bytes": 7467
+    },
+    {
+      "path": "tests/hapa/inspection-moment.test.js",
+      "sha": "9aa5570d84bc39103ad34e784c1366d4e5058d99",
+      "bytes": 7576
+    },
+    {
+      "path": "tests/hapa/inspection.test.js",
+      "sha": "4f2485dd5456e2ffd2ea2fb18b057b0cecf24183",
+      "bytes": 5898
+    },
+    {
+      "path": "tests/hapa/payment.test.js",
+      "sha": "ab08511f32c80078018e22d997e6d251b793c0b9",
+      "bytes": 5602
+    },
+    {
+      "path": "tests/hapa/play-loop.test.js",
+      "sha": "c46876fdafe66f8e961b36d056ae7c4be5cf71fb",
+      "bytes": 16291
+    },
+    {
+      "path": "tests/hapa/play.test.js",
+      "sha": "957118fe1195ef87b98ff2c8dff4ab58c30badb9",
+      "bytes": 2001
+    },
+    {
+      "path": "tests/hapa/playback.test.js",
+      "sha": "cb1d35bbceeffaf59958f2ff3a332bf63a6e5793",
+      "bytes": 5706
+    },
+    {
+      "path": "tests/hapa/presentation-contracts.test.js",
+      "sha": "9275e785bbd96a126d20828186e354c92f773573",
+      "bytes": 2312
+    },
+    {
+      "path": "tests/hapa/profile-lab.test.js",
+      "sha": "a1b7f772ca453d6d15a9dcd37519aa37dc2bae5b",
+      "bytes": 3414
+    },
+    {
+      "path": "tests/hapa/protocol.test.js",
+      "sha": "9cbb120f4ea9921c496f6a5bf0f8a16d2bb7771e",
+      "bytes": 5687
+    },
+    {
+      "path": "tests/hapa/terrain.test.js",
+      "sha": "4626a137602001a724f0c6e5844faf2579cfe63a",
+      "bytes": 6226
+    },
+    {
+      "path": "tests/hapa/ui-fixtures.test.js",
+      "sha": "e69a3e20a873b51551ef10307c0c2dcc07078bc8",
+      "bytes": 3176
+    },
+    {
+      "path": "tools/hapa/check.mjs",
+      "sha": "1c7de4acb5210c595a621d211e7ac80b515b335c",
+      "bytes": 1185
+    },
+    {
+      "path": "tools/hapa/experiment.mjs",
+      "sha": "5705b79fdae4c5dadf64d4365ede1c9021ef6a35",
+      "bytes": 4766
+    },
+    {
+      "path": "tools/hapa/history.mjs",
+      "sha": "943f2f926dd80ba94730c965bb17a26abc92baea",
+      "bytes": 2183
+    },
+    {
+      "path": "tools/hapa/match.mjs",
+      "sha": "b57d7a8c3c4f6ce0be34d9aab10c7eebb6291093",
+      "bytes": 2373
+    },
+    {
+      "path": "tools/hapa/peer.mjs",
+      "sha": "12eddd65457b4fad76c8f987c55cc69dd1aa7900",
+      "bytes": 1634
+    },
+    {
+      "path": "tools/hapa/peers.mjs",
+      "sha": "d4faa5075a7e38b240b45d26b4d467aaa5977216",
+      "bytes": 3317
+    },
+    {
+      "path": "tools/hapa/replay.mjs",
+      "sha": "b89dda5651013eca46ace5b16a959090cc943974",
+      "bytes": 657
+    },
+    {
+      "path": "tools/hapa/sync-tarot-art.mjs",
+      "sha": "da9c1b0cd12d185b83519b3645a5d7ee2ffc04b9",
+      "bytes": 4292
+    },
+    {
+      "path": "tools/hapa/ui-journeys.mjs",
+      "sha": "41a83451feefcb8839d96ebd52783195be41bdcc",
+      "bytes": 43372
+    },
+    {
+      "path": "tools/hapa/ui-regress.mjs",
+      "sha": "972cd5feaa0b51858b728f3d57224aa5c2370d1a",
+      "bytes": 140250
+    },
+    {
+      "path": "versus.html",
+      "sha": "f3b2e423acac300b856091b1bd7a62e31ce0937f",
+      "bytes": 347
+    },
+    {
+      "path": "vite.config.js",
+      "sha": "1906da049ef90f2ed0ba445d2b368fbd7f56c22b",
+      "bytes": 643
+    }
+  ]
+}

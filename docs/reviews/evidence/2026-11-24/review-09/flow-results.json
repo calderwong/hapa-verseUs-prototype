@@ -1,0 +1,67 @@
+{
+  "snapshot": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+  "profile": "hapa_open_10x9_v3_07",
+  "execution": "In-process exact Peer class; real _take/playTick, rules and PhaseAgreement; no Hypercore socket or signature verification",
+  "peer": [
+    {
+      "case": "edited-plan",
+      "passed": true,
+      "ownReadyCount": 1,
+      "agreedReceiptCount": 1,
+      "editedCardBurned": true,
+      "queued": 0
+    },
+    {
+      "case": "duplicate-plan",
+      "passed": true,
+      "ownReadyCount": 1,
+      "agreedReceiptCount": 1,
+      "editedCardBurned": true,
+      "queued": 0
+    },
+    {
+      "case": "wrong-phase",
+      "passed": true,
+      "error": "protocol: record for another phase (1/other-phase)",
+      "noReceiptOrBurn": true
+    },
+    {
+      "case": "wrong-match",
+      "passed": true,
+      "error": "protocol: record for another phase (1/plan)",
+      "noReceiptOrBurn": true
+    },
+    {
+      "case": "wrong-prior-state",
+      "passed": true,
+      "error": "protocol: prior state hash differs",
+      "noReceiptOrBurn": true
+    }
+  ],
+  "agreement": {
+    "passed": true,
+    "ownEditFrozen": true,
+    "opponentEditDoesNotRevoke": true,
+    "duplicateReadyNoEffect": true,
+    "lockedRevisionPair": {
+      "A": 1,
+      "B": 2
+    },
+    "postLockEditRefused": true
+  },
+  "launch": {
+    "passed": true,
+    "expression": "launchURL({ ...c, profileId: c.fixture ? null : (c.profileId ?? this.ctx.profile.id) })",
+    "copiedLink": "/versus.html?autostart=1&a=human&b=bot&seed=1&profile=hapa_open_10x9_v3_07",
+    "withSavedLegacyPreset": {
+      "seats": {
+        "A": "human",
+        "B": "bot"
+      },
+      "seed": 1,
+      "profileId": "hapa_open_10x9_v3_07",
+      "fixture": null
+    },
+    "bareURLRetainsSavedProfile": "hapa_open_10x9_v3_02"
+  }
+}

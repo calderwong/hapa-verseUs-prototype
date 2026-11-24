@@ -1,0 +1,110 @@
+{
+  "snapshot": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+  "source": {
+    "commit": "44bf90b706a4e55dd740fd3276f077aac3ea5aa1",
+    "dirty": false,
+    "diffSha256": null,
+    "untracked": [],
+    "untrackedSha256": null
+  },
+  "browser": "Chrome/158.0.8127.37",
+  "engine": {
+    "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "verified": true,
+    "note": "vendor/lumina is a Git work tree at the recorded commit"
+  },
+  "runId": "2026-11-24T19-45-16-057Z-44bf90b",
+  "summary": {
+    "checks": 4,
+    "assertions": 70,
+    "failed": 0
+  },
+  "z17": {
+    "id": "z17",
+    "title": "Fallback definitions when no body label is drawn: a roofed formation read by keyboard; definitions follow the subject (R8-04)",
+    "config": {
+      "query": "autostart=1&fixture=terrain&a=human&b=human",
+      "viewport": "1280x720@1"
+    },
+    "assertions": [
+      {
+        "name": "the roofed formation shows no body label from the outset",
+        "pass": true,
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "name": "the strip says why",
+        "pass": true,
+        "actual": true,
+        "expected": true,
+        "note": "Roofed tunnel: open its layer to read the members (cutaway)"
+      },
+      {
+        "name": "control present: inspection bar member /^Pikeman/",
+        "pass": true,
+        "actual": true,
+        "expected": true
+      },
+      {
+        "name": "role: the first symbol is focused and defined without any drawn label",
+        "pass": true,
+        "actual": true,
+        "expected": true,
+        "note": {
+          "focus": "Pikeman",
+          "shown": true,
+          "text": "Pikeman Pikeman — a member in slot 2, front row."
+        }
+      },
+      {
+        "name": "health: its current value is defined",
+        "pass": true,
+        "actual": true,
+        "expected": true,
+        "note": {
+          "focus": "Health 3/3",
+          "shown": true,
+          "text": "Health 3/3 3/3 — this member's own hit points. At 0 the member falls."
+        }
+      },
+      {
+        "name": "protection: front-only value and coverage",
+        "pass": true,
+        "actual": true,
+        "expected": true,
+        "note": {
+          "focus": "Physical protection 1",
+          "shown": true,
+          "text": "Physical protection 1 Physical protection 1 on the front face; other faces meet 0. Sources: 1 from its own pike-guard."
+        }
+      },
+      {
+        "name": "a new subject leaves no stale definition open or registered",
+        "pass": true,
+        "actual": [
+          true,
+          false
+        ],
+        "expected": [
+          true,
+          false
+        ]
+      },
+      {
+        "name": "no unexpected application errors",
+        "pass": true,
+        "actual": [],
+        "expected": []
+      }
+    ],
+    "shots": [
+      "z17-roofed-fallback.jpg"
+    ],
+    "setup": [],
+    "allowedErrors": []
+  },
+  "sourceBlob": "121a753c3d73397d8f8d8a1784807938b636fbb7",
+  "reportedNotRerun": true
+}
