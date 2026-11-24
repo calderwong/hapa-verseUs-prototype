@@ -233,6 +233,7 @@ export function legalDestinations(state, ctx, party) {
   const either = knightPathPolicy(ctx.profile) === 'either_l_v1' && ctx.profile.movement.patterns[party.mount] === 'knight_l';
   for (let c = 1; c <= ctx.geo.columns; c++) for (let r = 1; r <= ctx.geo.rows; r++) {
     const t = { column: c, row: r };
+    if (destinationHeldError(state, ctx, party, t)) continue; // center_to_center_v1: not a place to stop
     if (either) {
       // each endpoint once, with every legal L path (`via` is the first legal one)
       const vias = KNIGHT_VIAS.filter((v) => routeFromHere(state, ctx, party, t, v).route);
