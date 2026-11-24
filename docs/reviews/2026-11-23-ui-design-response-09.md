@@ -126,3 +126,22 @@ CJ asked: *"if I right click the same destination it switches the L, and if I cl
 - In the Browser pane, at Tick 2 with real right-clicks on R3C3: long → short → long → short, with one destination order throughout and the ribbon redrawn each time.
 - z16 now checks three right-click flips, the drawn path and the **L** key. Together with c10, z01 and c12 it passed 38/38 at `c7d362e` ([run](evidence/2026-11-23/response-09/regress/2026-11-24T04-20-13-768Z-c7d362e/report.json)).
 - `npm test`: 129/129.
+
+## Addendum 2 — two Queens and the Commander (`23c4a9e`)
+
+CJ asked: *"replace the king with a second queen … the win condition should be on the commander not the king."*
+
+- **What changed.** The new default profile **`hapa_open_10x9_v3_05`** is `v3_04` with local column 4's Mount changed from King to Queen, for both seats. Each army now reads Castle, Knight, Bishop, Queen, Commander ★, Queen, Bishop, Knight, Castle.
+- **What stayed the same.**
+  - Column 4's colours, suit and Card bindings.
+  - Victory, which already belonged to the Commander: a side loses when its Commander dies, or when its Capital is captured. Nothing depended on the King.
+  - `v3_04` and earlier profiles keep their King for recorded matches and replays.
+- **Glossary.** The glossary's Mount list no longer names the King.
+
+**Verification**
+
+- `npm test`: 130/130. A new test checks that each side has two Queens, that the Commander's death is still the win condition, and that `v3_04` still has its King.
+- `npm run check` exit 0 ([log](evidence/2026-11-23/response-09/npm-run-check-23c4a9e.log)): bot smoke, two-process peers (a decided match) and the build.
+- Bot-versus-bot, seeds 1–3: each match is decided at Tick 28 by the Commander's death; 15 Pawns absorbed and no rejected orders.
+- Browser checks c5, c7, c8, c10, z01, z03 and z16: 114/114 ([run](evidence/2026-11-23/response-09/regress/2026-11-24T06-13-55-095Z-23c4a9e/report.json)).
+- Live in the Browser pane: both sides show two Queen standards flanking the Commander.
