@@ -867,6 +867,11 @@ export class VersusApp {
       if (this.tool?.kind === 'ability') { this.tool = null; this._renderAll(); return; }
       if (party && party.owner === seat && pick.territory && this.seats[seat] === 'human') {
         const type = this.tool?.kind === 'retreat' ? 'retreat' : 'set_destination';
+        // a Knight: right-clicking the destination it already has flips its L, every time
+        const drafted = type === 'set_destination' ? this._draftMove(party) : null;
+        if (drafted && drafted.target.column === pick.territory.column && drafted.target.row === pick.territory.row && this._fundedTargets(party).find((x) => x.column === drafted.target.column && x.row === drafted.target.row)?.paths?.length > 1) {
+          this._flipL(party); this.tool = null; return;
+        }
         // the same route, default Knight L and clearance facts as the keyboard list (HF3-01)
         const d = this._fundedTargets(party).find((x) => x.column === pick.territory.column && x.row === pick.territory.row);
         const via = type === 'set_destination' && d?.paths ? d.via : null;
@@ -874,7 +879,8 @@ export class VersusApp {
           const plan = routeFromHere(this.state, this.ctx, party, pick.territory, via);
           if (plan.path) this.view.showRoute(party, plan.path.map((n) => [n.x, n.y]));
           const by = d?.blocked ? this.state.parties[d.clearance.partyId] : null;
-          this._toast(`${type === 'retreat' ? 'Retreat' : 'Destination'}: R${pick.territory.row}C${pick.territory.column} (planned)${by ? ` — warning: your ${partyShort(this.state, by.id)} blocks this route now` : ''}`, !!by);
+          const lnote = via && d.paths.length > 1 ? ` — L via ${d.route.slice(0, 2).map((n) => `R${n.row}C${n.column}`).join(', ')}${d.joins ? ', absorbs your Pawn' : ''}; right-click it again to flip the L` : '';
+          this._toast(`${type === 'retreat' ? 'Retreat' : 'Destination'}: R${pick.territory.row}C${pick.territory.column} (planned)${lnote}${by ? ` — warning: your ${partyShort(this.state, by.id)} blocks this route now` : ''}`, !!by);
         }
         this.tool = null;
       }
@@ -1526,9 +1532,10 @@ export class VersusApp {
       this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? this._fundedTargets(sel).filter((d) => d.funded) : [], this._blockCue(sel));
       // a drafted destination shows its own route (and the chosen Knight L), not the accepted one
       const draft = this._draftMove(sel);
-      if (draft) { const r = routeFromHere(this.state, this.ctx, sel, draft.target, draft.via ?? null); if (r.path) this.view.showRoute(sel, r.path.map((n) => [n.x, n.y])); }
+      if (draft) { const r = routeFromHere(this.state, this.ctx, sel, draft.target, draft.via ?? null); if (r.path) { this.view.showRoute(sel, r.path.map((n) => [n.x, n.y])); this.view.showPath(sel, r.path.map((n) => [n.x, n.y])); } }
+      else this.view.showPath(null);
     }
-    else if (!sel) this.view.select(this.state, null);
+    else { if (!sel) this.view.select(this.state, null); this.view.showPath(null); }
     this._syncIntents();
   }
 
@@ -2343,7 +2350,7 @@ export class VersusApp {
     const d = cmd ? this._fundedTargets(p).find((x) => x.column === cmd.target.column && x.row === cmd.target.row) : null;
     if (!d?.paths || d.paths.length < 2) { this._toast(p ? 'Only a Knight with a planned destination and two legal L paths can flip its L' : 'Select your Knight first'); return; }
     const now = cmd.via ?? d.via, next = d.paths.find((x) => x.via !== now);
-    if (this._addCommand(p.owner, { ...cmd, via: next.via })) this._toast(`L path: via ${next.route.slice(0, 2).map((n) => `R${n.row}C${n.column}`).join(', ')}${next.joins ? ' · absorbs your Pawn' : ''}${next.blocked ? ' · ✕ blocked now' : ''}`, next.blocked);
+    if (this._addCommand(p.owner, { ...cmd, via: next.via })) this._toast(`L path to R${cmd.target.row}C${cmd.target.column}: via ${next.route.slice(0, 2).map((n) => `R${n.row}C${n.column}`).join(', ')}${next.joins ? ' · absorbs your Pawn' : ''}${next.blocked ? ' · ✕ blocked now' : ''} — right-click it again (or L) to flip`, next.blocked);
   }
 
   /** A small L icon: the path from the party's square in the viewer's orientation (forward is up). */

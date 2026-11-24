@@ -296,6 +296,9 @@ export class BoardView {
     this.routeLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xfff2b0 }));
     this.routeLine.renderOrder = 3;
     this.root.add(this.routeLine);
+    // a drafted route drawn as a ribbon with corner markers (readable at overview distance)
+    this.pathGroup = new THREE.Group();
+    this.root.add(this.pathGroup);
     // the selection: the heaviest outline (ivory brackets over a slate keyline, plus a soft footprint)
     this.selectRing = new THREE.Group();
     const keyline = cornerBrackets(2.2 * S, 0.8 * S, 0.26 * S, 0x17212d, 0.9), ivory = cornerBrackets(2.2 * S, 0.8 * S, 0.15 * S, 0xf5f0e3, 0.999);
@@ -533,7 +536,7 @@ export class BoardView {
   /** Highlight a selected party, its legal destinations and current route. */
   select(state, party, dests = [], block = null) {
     this.destGroup.clear();
-    if (!party) { this.selectRing.visible = false; this.routeLine.visible = false; return; }
+    if (!party) { this.selectRing.visible = false; this.routeLine.visible = false; this.showPath(null); return; }
     this._state = state;
     const w = this.toWorld(party.x, party.y);
     this.selectRing.position.set(w.x, this.partyY(party) + 0.05, w.z);
@@ -592,6 +595,36 @@ export class BoardView {
     this.routeLine.geometry.dispose();
     this.routeLine.geometry = new THREE.BufferGeometry().setFromPoints(pts);
     this.routeLine.visible = true;
+  }
+
+  /**
+   * The drafted route as a gold ribbon from the party to its endpoint, a marker on each corner
+   * node and a ring on the endpoint (`nodes`: rules coordinates [x, y]). Null clears it.
+   */
+  showPath(party, nodes = []) {
+    for (const c of this.pathGroup.children) { c.geometry.dispose(); c.material.dispose(); }
+    this.pathGroup.clear();
+    if (!party || !nodes.length) return;
+    const mat = () => new THREE.MeshBasicMaterial({ color: 0xffd36e, transparent: true, opacity: 0.85, depthWrite: false, depthTest: false });
+    const pts = [[party.x, party.y], ...nodes].map(([x, y]) => this.toWorld(x, y));
+    const y = this.partyY(party) + 0.2;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1], len = Math.hypot(b.x - a.x, b.z - a.z);
+      if (len < 1e-6) continue;
+      const strip = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.42 * S), mat());
+      strip.rotation.set(-Math.PI / 2, 0, -Math.atan2(b.z - a.z, b.x - a.x));
+      strip.position.set((a.x + b.x) / 2, y, (a.z + b.z) / 2);
+      strip.renderOrder = 8;
+      this.pathGroup.add(strip);
+    }
+    pts.slice(1).forEach((p, i, all) => {
+      const end = i === all.length - 1;
+      const m = new THREE.Mesh(end ? new THREE.RingGeometry(0.9 * S, 1.25 * S, 32) : new THREE.CircleGeometry(0.42 * S, 20), mat());
+      m.rotation.x = -Math.PI / 2;
+      m.position.set(p.x, y + 0.01, p.z);
+      m.renderOrder = 9;
+      this.pathGroup.add(m);
+    });
   }
 
   hover(territory) {

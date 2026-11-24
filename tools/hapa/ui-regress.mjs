@@ -1129,9 +1129,15 @@ await check('z16', 'Center-to-center opening (v3_04): the Bishop passes its own 
   await clickNamed(page, '.cmdbar .movelist button', /to R3C3:/, 'Move to R3C3 (Knight)');
   const sw = await app(page, () => [...document.querySelectorAll('.cmdbar .lswitch .lsw')].map((b) => `${b.getAttribute('aria-checked')}|${b.innerText.replace(/\s+/g, ' ')}`));
   ok('the switcher shows both L paths with the default chosen', sw.length === 2 && /^true\|via R2C2 → R3C2/.test(sw[0]) && /^false\|via R1C3 → R2C3/.test(sw[1]), sw);
+  // right-clicking the same destination flips the L each time (CJ after response 09)
+  const r3c3 = await app(page, () => { const a = window.__versus, c = a.ctx.geo.center(3, 3), v = a.view.toWorld(c.x, c.y).project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; });
+  const vias = [];
+  for (let i = 0; i < 3; i++) { await page.mouse.move(r3c3.x, r3c3.y); await page.mouse.down({ button: 'right' }); await page.mouse.up({ button: 'right' }); await sleep(350); vias.push(await app(page, () => window.__versus.plans.A.filter((c) => c.type === 'set_destination').map((c) => c.via).join(','))); }
+  expect('right-clicking R3C3 again flips the L, again and again (one order throughout)', vias, ['short', 'long', 'short']);
+  ok('the drafted L is drawn on the board', await app(page, () => window.__versus.view.pathGroup.children.length >= 4));
   await page.mouse.move(2, 2);
-  await page.keyboard.press('l'); await sleep(400);
-  expect('L flips the drafted order to the short L', await app(page, () => window.__versus.plans.A.find((c) => c.type === 'set_destination')?.via), 'short');
+  await page.keyboard.press('l'); await page.keyboard.press('l'); await sleep(400);
+  expect('L flips the drafted order too (twice: back to the short L)', await app(page, () => window.__versus.plans.A.find((c) => c.type === 'set_destination')?.via), 'short');
   await shot(page, 'knight-switcher');
   await advanceTo(page, 5);
   const k = await app(page, () => { const a = window.__versus, p = a.state.parties['A.mount.C2'], c = a.ctx.geo.center(3, 3); return { centered: p.x === c.x && p.y === c.y, members: Object.values(p.slots).filter(Boolean).length, absorbed: ['A.pawn.C2', 'A.pawn.C3'].filter((id) => a.state.parties[id].retired) }; });
