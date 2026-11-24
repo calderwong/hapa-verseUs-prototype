@@ -1,0 +1,425 @@
+{
+  "server": "http://127.0.0.1:5199",
+  "viewport": "1280x720@1",
+  "clips": {
+    "journey-loop": {
+      "frames": 2383,
+      "seconds": 42.359
+    },
+    "journey-mana": {
+      "frames": 763,
+      "seconds": 13.315
+    },
+    "journey-bots": {
+      "frames": 637,
+      "seconds": 10.724
+    }
+  },
+  "log": [
+    {
+      "clip": "journey-loop",
+      "at": 1,
+      "step": "overview: A human, B bot (dev preset default)",
+      "state": {
+        "tick": 1,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 816,
+      "step": "Ready through the prologue (one press per Tick)",
+      "state": {
+        "tick": 6,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 4807,
+      "step": "Tick 6: click the Queen; Supply ▾ loads C6, C5, C4",
+      "state": {
+        "tick": 6,
+        "selected": "A.mount.C6",
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [
+          "load_supply",
+          "load_supply",
+          "load_supply"
+        ],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 9013,
+      "step": "Move ▾: R4C9 is crossed — blocked by your Pawn R2C6",
+      "state": {
+        "tick": 6,
+        "selected": "A.mount.C6",
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [
+          "load_supply",
+          "load_supply",
+          "load_supply"
+        ],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 10816,
+      "step": "Move to R4C9 anyway; one Ready",
+      "state": {
+        "tick": 7,
+        "selected": "A.mount.C6",
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 13730,
+      "step": "H: Tick 6 history names the obstruction",
+      "state": {
+        "tick": 7,
+        "selected": "A.mount.C6",
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 16412,
+      "step": "Ready to Tick 13 (C6 active again)",
+      "state": {
+        "tick": 13,
+        "selected": "A.mount.C6",
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 21154,
+      "step": "the command bar names the blocker; Move ▾ → R1C6 (0.5 Supply)",
+      "state": {
+        "tick": 13,
+        "selected": "A.mount.C6",
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [
+          "set_destination"
+        ],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 25962,
+      "step": "one Ready: the Queen returns to R1C6",
+      "state": {
+        "tick": 14,
+        "selected": "A.mount.C6",
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 27714,
+      "step": "F on the five-member Pawn: symbols with exact values",
+      "state": {
+        "tick": 14,
+        "selected": "A.mount.C6",
+        "inspect": "A.pawn.C3",
+        "open": "A.C3.p9",
+        "level": "combat",
+        "bearing": 0,
+        "plans": [],
+        "labels": 5,
+        "reading": null,
+        "party": "Inspecting your Pawn · R2C3 · commanding your Queen R1C6"
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 30958,
+      "step": "hover a shield symbol: front-only Physical 1",
+      "state": {
+        "tick": 14,
+        "selected": "A.mount.C6",
+        "inspect": "A.pawn.C3",
+        "open": "A.C3.p1",
+        "level": "combat",
+        "bearing": 0,
+        "plans": [],
+        "labels": 5,
+        "reading": null,
+        "party": "Inspecting your Pawn · R2C3 · commanding your Queen R1C6"
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 32958,
+      "step": "keyboard: an Archer, → → to its attack (2 × 1)",
+      "state": {
+        "tick": 14,
+        "selected": "A.mount.C6",
+        "inspect": "A.pawn.C3",
+        "open": "A.C3.p1",
+        "level": "combat",
+        "bearing": 0,
+        "plans": [],
+        "labels": 5,
+        "reading": "Archer 3/3 HP · slot 7 · rear row Sources and exceptions Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky No protection on any face No enga",
+        "party": "Inspecting your Pawn · R2C3 · commanding your Queen R1C6"
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 36388,
+      "step": "H: history opens beside the inspection; Q orbits; H closes",
+      "state": {
+        "tick": 14,
+        "selected": "A.mount.C6",
+        "inspect": "A.pawn.C3",
+        "open": "A.C3.p7",
+        "level": "combat",
+        "bearing": 45,
+        "plans": [],
+        "labels": 5,
+        "reading": "Archer 3/3 HP · slot 7 · rear row Sources and exceptions Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky No protection on any face No enga",
+        "party": "Inspecting your Pawn · R2C3 5/9 · empty center · faces North · Supply 0 · waiting · band +1 · exposed · commanding your Queen R1C6"
+      }
+    },
+    {
+      "clip": "journey-loop",
+      "at": 40248,
+      "step": "R: the Queen is still the command selection",
+      "state": {
+        "tick": 14,
+        "selected": "A.mount.C6",
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-mana",
+      "at": 1,
+      "step": "labelled Mana diagnostic: basin reads Available 0",
+      "state": {
+        "tick": 9,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-mana",
+      "at": 901,
+      "step": "Card view → Burn A.red: Available 2 Red at once, streams into the basin",
+      "state": {
+        "tick": 9,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [
+          "burn"
+        ],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-mana",
+      "at": 3737,
+      "step": "Ember Strike queued this Tick (validated command): Available 0",
+      "state": {
+        "tick": 9,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [
+          "burn",
+          "play_ability"
+        ],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-mana",
+      "at": 5252,
+      "step": "one Ready: the bot counters, A chooses to Pass in the genuine response window, the Tick resolves",
+      "state": {
+        "tick": 10,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-bots",
+      "at": 0,
+      "step": "both bots run without a human Ready",
+      "state": {
+        "tick": 4,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [
+          "load_supply",
+          "set_destination",
+          "load_supply",
+          "load_supply",
+          "set_destination"
+        ],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-bots",
+      "at": 12,
+      "step": "Pause: the current Tick finishes, then holds",
+      "state": {
+        "tick": 5,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [
+          "load_supply"
+        ],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-bots",
+      "at": 4060,
+      "step": "Step: exactly one Tick",
+      "state": {
+        "tick": 6,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [
+          "set_destination",
+          "load_supply",
+          "load_supply"
+        ],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    },
+    {
+      "clip": "journey-bots",
+      "at": 8097,
+      "step": "Stop",
+      "state": {
+        "tick": 6,
+        "selected": null,
+        "inspect": null,
+        "open": null,
+        "level": "none",
+        "bearing": 0,
+        "plans": [
+          "set_destination",
+          "load_supply",
+          "load_supply"
+        ],
+        "labels": 0,
+        "reading": null,
+        "party": null
+      }
+    }
+  ]
+}

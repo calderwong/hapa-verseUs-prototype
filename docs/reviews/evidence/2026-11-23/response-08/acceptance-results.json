@@ -1,0 +1,411 @@
+{
+  "kind": "actual headless rules, response 08 implementation",
+  "profiles": {
+    "hapa_open_10x9_v3_02": {
+      "recovery": "nearest_node_v3 (absent)",
+      "agreement": "pair_acknowledgment_v3",
+      "previewBeforeOrdering": {
+        "clear": false,
+        "friendly": true,
+        "blocker": "A.pawn.C6",
+        "blockerMember": "A.C6.p9",
+        "mover": "A.C6.m4",
+        "region": {
+          "column": 6,
+          "row": 2
+        },
+        "afterSupplyUnits": 2
+      },
+      "afterTick6": {
+        "at": [
+          24,
+          4
+        ],
+        "supply": 5.5,
+        "state": "moving",
+        "destination": {
+          "column": 9,
+          "row": 4
+        },
+        "blockedEvents": []
+      },
+      "recovery13": [
+        {
+          "atTick": 13,
+          "target": {
+            "column": 6,
+            "row": 1
+          },
+          "repeatedBlockedEventsWhileWaiting": 0,
+          "quote": {
+            "required": 1.5,
+            "path": [
+              {
+                "column": 7,
+                "row": 2
+              },
+              {
+                "column": 6,
+                "row": 1
+              }
+            ]
+          },
+          "accepted": true,
+          "before": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 9,
+              "row": 4
+            }
+          },
+          "afterOneTick": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 6,
+              "row": 1
+            }
+          },
+          "replayVerified": true
+        },
+        {
+          "atTick": 15,
+          "target": {
+            "column": 6,
+            "row": 2
+          },
+          "repeatedBlockedEventsWhileWaiting": 0,
+          "quote": {
+            "required": 1.5,
+            "path": [
+              {
+                "column": 7,
+                "row": 2
+              },
+              {
+                "column": 6,
+                "row": 2
+              }
+            ]
+          },
+          "accepted": true,
+          "before": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 9,
+              "row": 4
+            }
+          },
+          "afterOneTick": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 6,
+              "row": 2
+            }
+          },
+          "mergedWithPawn": false,
+          "supplyAfterMerge": 5.5,
+          "replayVerified": true
+        },
+        {
+          "atTick": 13,
+          "target": {
+            "column": 7,
+            "row": 2
+          },
+          "repeatedBlockedEventsWhileWaiting": 0,
+          "quote": {
+            "error": "the party is already there"
+          },
+          "accepted": false,
+          "before": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 9,
+              "row": 4
+            }
+          },
+          "afterOneTick": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 9,
+              "row": 4
+            }
+          },
+          "replayVerified": true
+        }
+      ],
+      "botAtTick13": [
+        {
+          "partyId": "A.mount.C4",
+          "target": {
+            "column": 5,
+            "row": 2
+          },
+          "knownFriendlyBlock": "A.pawn.C4"
+        },
+        {
+          "partyId": "A.mount.C6",
+          "target": {
+            "column": 6,
+            "row": 2
+          },
+          "knownFriendlyBlock": "A.pawn.C6"
+        }
+      ]
+    },
+    "hapa_open_10x9_v3_03": {
+      "recovery": "reachable_segment_v1",
+      "agreement": "own_plan_ready_v1",
+      "previewBeforeOrdering": {
+        "clear": false,
+        "friendly": true,
+        "blocker": "A.pawn.C6",
+        "blockerMember": "A.C6.p9",
+        "mover": "A.C6.m4",
+        "region": {
+          "column": 6,
+          "row": 2
+        },
+        "afterSupplyUnits": 2
+      },
+      "afterTick6": {
+        "at": [
+          24,
+          4
+        ],
+        "supply": 5.5,
+        "state": "moving",
+        "destination": {
+          "column": 9,
+          "row": 4
+        },
+        "blockedEvents": [
+          {
+            "by": "A.pawn.C6",
+            "at": {
+              "column": 6,
+              "row": 2
+            },
+            "quantum": 501
+          }
+        ]
+      },
+      "recovery13": [
+        {
+          "atTick": 13,
+          "target": {
+            "column": 6,
+            "row": 1
+          },
+          "repeatedBlockedEventsWhileWaiting": 0,
+          "quote": {
+            "required": 0.5,
+            "path": [
+              {
+                "column": 6,
+                "row": 1
+              }
+            ]
+          },
+          "accepted": true,
+          "before": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 9,
+              "row": 4
+            }
+          },
+          "afterOneTick": {
+            "at": [
+              22,
+              2
+            ],
+            "supply": 5,
+            "state": "idle",
+            "destination": null
+          },
+          "replayVerified": true
+        },
+        {
+          "atTick": 14,
+          "target": {
+            "column": 6,
+            "row": 2
+          },
+          "repeatedBlockedEventsWhileWaiting": 0,
+          "quote": {
+            "required": 1.5,
+            "path": [
+              {
+                "column": 6,
+                "row": 1
+              },
+              {
+                "column": 6,
+                "row": 2
+              }
+            ]
+          },
+          "accepted": true,
+          "before": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 9,
+              "row": 4
+            }
+          },
+          "afterOneTick": {
+            "at": [
+              22,
+              4
+            ],
+            "supply": 4.5,
+            "state": "moving",
+            "destination": {
+              "column": 6,
+              "row": 2
+            }
+          },
+          "mergedWithPawn": true,
+          "supplyAfterMerge": 4,
+          "replayVerified": true
+        },
+        {
+          "atTick": 13,
+          "target": {
+            "column": 7,
+            "row": 2
+          },
+          "repeatedBlockedEventsWhileWaiting": 0,
+          "quote": {
+            "required": 0.5,
+            "path": [
+              {
+                "column": 7,
+                "row": 2
+              }
+            ]
+          },
+          "accepted": true,
+          "before": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 9,
+              "row": 4
+            }
+          },
+          "afterOneTick": {
+            "at": [
+              24,
+              4
+            ],
+            "supply": 5.5,
+            "state": "moving",
+            "destination": {
+              "column": 7,
+              "row": 2
+            }
+          },
+          "replayVerified": true
+        }
+      ],
+      "botAtTick13": [
+        {
+          "partyId": "A.mount.C4",
+          "target": {
+            "column": 4,
+            "row": 2
+          },
+          "knownFriendlyBlock": null
+        },
+        {
+          "partyId": "A.mount.C6",
+          "target": {
+            "column": 6,
+            "row": 4
+          },
+          "knownFriendlyBlock": null
+        }
+      ]
+    }
+  },
+  "ready": {
+    "pair_acknowledgment_v3": {
+      "lockedAfterOneReadyEach": false,
+      "AStale": true,
+      "lockedRevisions": null
+    },
+    "own_plan_ready_v1": {
+      "lockedAfterOneReadyEach": true,
+      "AStale": false,
+      "lockedRevisions": {
+        "A": 1,
+        "B": 2
+      }
+    }
+  },
+  "mana": {
+    "availableAfterBurn": {
+      "red": 2
+    },
+    "availableAfterQueuedCast": {},
+    "undoBurnLeavesCast": {
+      "ok": false,
+      "errors": [
+        "cannot pay 2 red from the Mana pool"
+      ]
+    },
+    "duplicateBurn": false,
+    "accepted": {
+      "burns": 1,
+      "payments": 1,
+      "damage": 1
+    },
+    "replayVerified": true
+  }
+}

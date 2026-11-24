@@ -1,0 +1,1600 @@
+{
+ "runId": "2026-11-24T02-30-58-049Z-cd69ad3",
+ "startedAt": "2026-11-24T02:30:58.707Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "cd69ad3fff9605b91d315d02c6a324656989543c",
+  "dirty": false,
+  "diffSha256": null,
+  "untracked": [],
+  "untrackedSha256": null
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/158.0.8127.37",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": false,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio. Text size (contract 4): the browser default font size is set through CDP Page.setFontSizes (16 px = 100%, 24 = 150%, 32 = 200%); inspection text, the command and inspection bars use rem and follow it, other HUD parts still use px. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "z09",
+   "title": "Unobstructed reading: four and nine members, 1280×720 and 1600×1000, eight bearings, low pitch, screen edge, 150% and 200% text (R6-01)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1280x720@1, 1600x1000@1",
+    "textScale": "CDP Page.setFontSizes 16/24/32 px"
+   },
+   "assertions": [
+    {
+     "name": "control present: inspection bar member /^Mage/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Mage/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Mage/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Mage/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "every case was measured with an open explanation",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "the explanation never covers an inspected body",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "…nor a member label",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "…nor the command bar, inspection bar, camera pad, layer rail or match bar",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "the explanation and the party facts stay inside the view",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "the party facts never cover a body or the explanation",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "collective facts stay reachable: beside the formation, or (when it steps aside) in the inspection bar",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      [
+       "1280x720 four text 200%",
+       "Inspecting your Bishop · R1C3 4/9 · faces North · Supply 0 · waiting · band +1 · exposed"
+      ],
+      [
+       "1280x720 nine text 200%",
+       "Inspecting your Castle · R2C1 9/9 · faces North · Supply 1 · waiting · band +1 · exposed"
+      ]
+     ]
+    },
+    {
+     "name": "core role and health text is at least 14 px at 100% and scales with the text setting",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four low pitch",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four screen edge",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine low pitch",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine screen edge",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four text 150%",
+       {
+        "root": 24,
+        "role": 21,
+        "hp": 21,
+        "reading": 21,
+        "cmd": 19.5
+       }
+      ],
+      [
+       "1280x720 nine text 150%",
+       {
+        "root": 24,
+        "role": 21,
+        "hp": 21,
+        "reading": 21,
+        "cmd": 19.5
+       }
+      ],
+      [
+       "1280x720 four text 200%",
+       {
+        "root": 32,
+        "role": 28,
+        "hp": 28,
+        "reading": 28,
+        "cmd": 26
+       }
+      ],
+      [
+       "1280x720 nine text 200%",
+       {
+        "root": 32,
+        "role": 28,
+        "hp": 28,
+        "reading": 28,
+        "cmd": 26
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four low pitch",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four screen edge",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine low pitch",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine screen edge",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ]
+     ]
+    },
+    {
+     "name": "compact member labels never overlap each other (beyond a 2 px edge)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "command and inspection bar controls stay on screen at every size",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z09-four-1280-b0.jpg",
+    "z09-four-1280-b90.jpg",
+    "z09-four-1280-b180.jpg",
+    "z09-four-1280-b270.jpg",
+    "z09-four-low-pitch.jpg",
+    "z09-four-edge.jpg",
+    "z09-nine-1280-b360.jpg",
+    "z09-nine-1280-b90.jpg",
+    "z09-nine-1280-b180.jpg",
+    "z09-nine-1280-b270.jpg",
+    "z09-nine-low-pitch.jpg",
+    "z09-nine-edge.jpg",
+    "z09-four-text-150.jpg",
+    "z09-nine-text-150.jpg",
+    "z09-four-text-200.jpg",
+    "z09-nine-text-200.jpg"
+   ],
+   "setup": [
+    "opening merge played with _addCommand/_pressReady (the pointer route is z01/z08)",
+    "opening merge played with _addCommand/_pressReady (the pointer route is z01/z08)"
+   ],
+   "observed": {
+    "cases": 44,
+    "docked": [],
+    "summary": [
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 0,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 45,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 90,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 135,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 180,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 225,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 270,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 315,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four low pitch",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four screen edge",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 45,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 90,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 135,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 180,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 225,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 270,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 315,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine low pitch",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine screen edge",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four text 150%",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 24,
+       "role": 21,
+       "hp": 21,
+       "reading": 21,
+       "cmd": 19.5
+      }
+     },
+     {
+      "tag": "1280x720 nine text 150%",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 24,
+       "role": 21,
+       "hp": 21,
+       "reading": 21,
+       "cmd": 19.5
+      }
+     },
+     {
+      "tag": "1280x720 four text 200%",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 32,
+       "role": 28,
+       "hp": 28,
+       "reading": 28,
+       "cmd": 26
+      }
+     },
+     {
+      "tag": "1280x720 nine text 200%",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 32,
+       "role": 28,
+       "hp": 28,
+       "reading": 28,
+       "cmd": 26
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 0,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 45,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 90,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 135,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 180,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 225,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 270,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 315,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four low pitch",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four screen edge",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 0,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 45,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 90,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 135,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 180,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 225,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 270,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 315,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine low pitch",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine screen edge",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     }
+    ]
+   },
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z12",
+   "title": "Blocked Queen: the route preview names the friendly blocker, travel stops once with Supply kept, recovery to the start is quoted and debited 0.5 (HF3-01, R7-01)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1",
+    "profile": "hapa_open_10x9_v3_03"
+   },
+   "assertions": [
+    {
+     "name": "the move list marks R4C9 as blocked by the Pawn at R2C6 before ordering",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Queen R1C6 to R4C9: needs 3 Supply · ✕ blocked by your Pawn R2C6"
+    },
+    {
+     "name": "blocked destinations are crossed on the board, not only tinted",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 32
+    },
+    {
+     "name": "control present: Move to R4C9 (command bar)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the Queen stops halfway at the friendly body",
+     "pass": true,
+     "actual": [
+      24,
+      4
+     ],
+     "expected": [
+      24,
+      4
+     ]
+    },
+    {
+     "name": "unspent Supply is kept (5.5)",
+     "pass": true,
+     "actual": 5.5,
+     "expected": 5.5
+    },
+    {
+     "name": "the destination is kept",
+     "pass": true,
+     "actual": {
+      "column": 9,
+      "row": 4
+     },
+     "expected": {
+      "column": 9,
+      "row": 4
+     }
+    },
+    {
+     "name": "one named obstruction event",
+     "pass": true,
+     "actual": [
+      "A.pawn.C6"
+     ],
+     "expected": [
+      "A.pawn.C6"
+     ]
+    },
+    {
+     "name": "the command bar names the blocker and keeps the order",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Your Pawn at R2C6 blocks its path — destination and Supply kept. When its column is active, order a clear route (returning to the territory it left is one)."
+    },
+    {
+     "name": "an in-world blocked cue is drawn at the contact",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "sprite"
+    },
+    {
+     "name": "no wall of repeated blocked messages while the Queen waits",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "the start territory R1C6 is a funded destination quoted at 0.5 Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Queen R1C6 to R1C6: needs 0.5 Supply · along its current segment"
+    },
+    {
+     "name": "control present: Move to R1C6 (recovery)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the Queen returned to the center of R1C6",
+     "pass": true,
+     "actual": [
+      22,
+      2
+     ],
+     "expected": [
+      22,
+      2
+     ]
+    },
+    {
+     "name": "the recovery debited exactly 0.5",
+     "pass": true,
+     "actual": 5,
+     "expected": 5
+    },
+    {
+     "name": "it arrived (idle)",
+     "pass": true,
+     "actual": "idle",
+     "expected": "idle"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z12-recovered.jpg"
+   ],
+   "setup": [
+    "Ticks 1–5 pass with Ready only; Tick 6 loads the C6, C5 and C4 Cards into the Queen (validated commands)"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z15",
+   "title": "Symbols and history: exact member values, a symbol defined by pointer and keyboard, history opened, rotated and closed without hiding inspection or losing selection and orders (HF3-03/05/07, R7-04/06)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "close view reaches the symbol level",
+     "pass": true,
+     "actual": "combat",
+     "expected": "combat"
+    },
+    {
+     "name": "Archer: 3/3, two hits of 1, base range 2, no protection shown as 0",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "[\"role= health=3/3 attack:0=2×1 range:0=2 shield:none=0\",\"role= health=3/3 attack:0=2×1 range:0=2 shield:none=0\"]"
+    },
+    {
+     "name": "Swordsman: 3/3, one hit of 3, front-only Physical protection 1",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "[\"role= health=3/3 attack:0=1×3 range:0= shield:0=1\",\"role= health=3/3 attack:0=1×3 range:0= shield:0=1\",\"role= health=3/3 attack:0=1×3 range:0= shield:0=1\"]"
+    },
+    {
+     "name": "hovering the shield explains front-only Physical protection with its value",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Physical protection 1 Physical protection 1 on the front face; other faces meet 0. Sources: 1 from its own shield."
+    },
+    {
+     "name": "the member stays the same while the pointer is on its symbol",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Escape dismisses the definition first",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "choosing a member moves focus to its first symbol",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Archer"
+    },
+    {
+     "name": "arrowing to the attack symbol shows its definition (two separate hits of 1)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Physical volley 2×1 | Physical volley 2×1 Bow: 2 separate hits of 1 Physical each (not one hit of 2). Each hit meets the Physical protection of the face it reaches."
+    },
+    {
+     "name": "H opens the history voluntarily, nothing covered",
+     "pass": true,
+     "actual": [
+      true,
+      "history",
+      []
+     ],
+     "expected": [
+      true,
+      "history",
+      []
+     ]
+    },
+    {
+     "name": "history browses completed Ticks (not the current draft)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "{\"ticks\":[\"Tick 2 (open: minted so far)\",\"Tick 1\"],\"sum\":\"Tick 1: 2 Supply loaded\"}"
+    },
+    {
+     "name": "after one orbit step the drawer still covers nothing essential",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    },
+    {
+     "name": "closing history keeps the command selection, its orders and the inspection",
+     "pass": true,
+     "actual": [
+      false,
+      "A.mount.C1",
+      [
+       "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+      ],
+      "A.pawn.C3",
+      true
+     ],
+     "expected": [
+      false,
+      "A.mount.C1",
+      [
+       "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}"
+      ],
+      "A.pawn.C3",
+      true
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z15-history-with-inspection.jpg"
+   ],
+   "setup": [
+    "A selects its C1 Castle (command) with one Supply order, then inspects its C3 Pawn (five members)"
+   ],
+   "allowedErrors": []
+  }
+ ],
+ "finishedAt": "2026-11-24T02:32:54.461Z",
+ "summary": {
+  "checks": 3,
+  "assertions": 49,
+  "failed": 0
+ }
+}
