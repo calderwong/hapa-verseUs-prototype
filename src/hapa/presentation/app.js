@@ -1411,7 +1411,8 @@ export class VersusApp {
       // the chosen member's symbols as keyboard/touch stops (only this member: a bounded set)
       pinned ? h('div', { class: 'ib-facts', role: 'group', 'aria-label': `${pinned.chips.find((c) => c.kind === 'role')?.title ?? 'Member'} facts` },
         ...pinned.chips.map((c) => { const ref = `${pinned.id}|${c.key}`; return h('button', { class: `ib-fact ${c.cls}`, 'data-fact': ref, 'aria-label': `${c.title}${c.value ? ` ${c.value}` : ''}`, 'aria-describedby': 'member-tip',
-          onfocus: (e) => showTip(ref, e.currentTarget), onblur: () => this.labels.hideTip(), onpointerenter: (e) => showTip(ref, e.currentTarget), onpointerleave: () => this.labels.hideTip(),
+          // the pointer leaving a symbol returns to the keyboard-focused symbol's definition, if any
+          onfocus: (e) => showTip(ref, e.currentTarget), onblur: () => this.labels.hideTip(), onpointerenter: (e) => showTip(ref, e.currentTarget), onpointerleave: () => { const f = document.activeElement; if (f?.classList?.contains('ib-fact') && f.dataset.fact) showTip(f.dataset.fact, f); else this.labels.hideTip(); },
           onclick: (e) => showTip(ref, e.currentTarget) }, icon(c.icon), c.value ? h('b', {}, c.value) : null); })) : '');
     bar.hidden = false;
     // compact: one scrolling row of members when the wrapped bar would take too much height
