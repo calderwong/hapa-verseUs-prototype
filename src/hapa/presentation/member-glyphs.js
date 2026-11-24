@@ -114,8 +114,8 @@ export function factChips(f, o) {
   }
   // health
   const hp = `${pts(f.health.hp)}/${pts(f.health.max)}`;
-  if (f.health.mode === 'party_pool') add('health', 'health', glyph('heart', 'hp'), hp, 'hp pool', 'Shared health', `${hp}: the party's pool. ${FACT_DEFS.pool.text}`);
-  else add('health', 'health', glyph('heart', 'hp'), hp, 'hp', 'Health', `${hp} — this member's own hit points. ${FACT_DEFS.health.text.split('. ')[1]}`);
+  if (f.health.mode === 'party_pool') add('health', 'health', glyph('heart', 'hpv'), hp, 'hpv pool', 'Shared health', `${hp}: the party's pool. ${FACT_DEFS.pool.text}`);
+  else add('health', 'health', glyph('heart', 'hpv'), hp, 'hpv', 'Health', `${hp} — this member's own hit points. ${FACT_DEFS.health.text.split('. ')[1]}`);
   // attacks, each with its reach
   f.attacks.forEach((a, i) => {
     const hits = a.hits ?? 1;

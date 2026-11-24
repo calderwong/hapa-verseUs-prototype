@@ -2357,7 +2357,7 @@ export class VersusApp {
         // who is there already: one of your Pawns means the move merges them
         const there = Object.values(s.parties).find((q) => q.alive && !q.retired && q.id !== p.id && q.region.column === d.column && q.region.row === d.row);
         const by = d.blocked ? s.parties[d.clearance.partyId] : null;
-        const note = (by ? ` · ✕ blocked by your ${partyShort(s, by.id)} after ${pts(d.clearance.along)}` : '') + (there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '') + (d.direct ? ' · along its current segment' : '');
+        const note = (by ? ` · ✕ blocked by your ${partyShort(s, by.id)}` : '') + (there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '') + (d.direct ? ' · along its current segment' : '');
         return h('button', { class: d.blocked ? 'blocked' : null, 'aria-label': `Move ${partyShort(s, p.id)} to R${d.row}C${d.column}: needs ${need(d)}${note}`, onclick: () => {
           if (this._addCommand(p.owner, { type: 'set_destination', partyId: p.id, target: { column: d.column, row: d.row } })) {
             const plan = routeFromHere(s, this.ctx, p, d);

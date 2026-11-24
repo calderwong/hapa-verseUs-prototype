@@ -576,9 +576,9 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .mg.mount { width: 0.95rem; height: 1.1rem; color: var(--ivory); }
 .mfact.role { padding: 1px; }
 .mfact.role .mg { border-radius: 50%; background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); padding: 1px; width: 1.05rem; height: 1.05rem; }
-.mfact.hp .mg { color: #ef8a8a; }
-.mfact.hp { min-width: 2.6rem; }
-.mfact.hp .mbar { position: absolute; left: 1.2rem; right: 2px; bottom: 0; height: 2px; background: #8fd3a0; border-radius: 1px; pointer-events: none; }
+.mfact.hpv .mg, .ib-fact.hpv .mg, .ib-v.hpv .mg { color: #ef8a8a; }
+.mfact.hpv { min-width: 2.6rem; }
+.mfact.hpv .mbar { position: absolute; left: 1.2rem; right: 2px; bottom: 0; height: 2px; background: #8fd3a0; border-radius: 1px; pointer-events: none; }
 .mfact.ch-physical .mg, .ib-v.ch-physical .mg, .ib-fact.ch-physical .mg { color: var(--ch-physical, #d6dde6); }
 .mfact.ch-magic .mg, .ib-v.ch-magic .mg, .ib-fact.ch-magic .mg { color: var(--ch-magic, #c9a2ff); }
 .mfact.rng .mg { color: #e8d9a8; }

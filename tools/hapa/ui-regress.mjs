@@ -791,7 +791,7 @@ const geometry = (page) => app(page, () => {
     readingOverBodies: bodies.filter((b) => ov(reading, b)).map((b) => b.id), readingOverLabels: labels.filter((l) => ov(reading, l)).length, readingOverControls: controls.filter((c) => ov(reading, c)).length, readingInside: !reading || inside(reading),
     partyShown: !!party, partyInside: !party || inside(party), partyOverBodies: bodies.filter((b) => ov(party, b)).length, partyOverReading: ov(party, reading),
     // role and health are read beside the bodies, or (when the labels step back) in the inspection bar
-    font: { root: fs('html'), role: fs('.mlabel:not([hidden]) .mfact b') ?? fs('.inspect-bar .ib-member'), hp: fs('.mlabel:not([hidden]) .mfact.hp b') ?? fs('.inspect-bar .ib-member'), reading: fs('.mreading:not([hidden])'), cmd: fs('.cmdbar button') },
+    font: { root: fs('html'), role: fs('.mlabel:not([hidden]) .mfact b') ?? fs('.inspect-bar .ib-member'), hp: fs('.mlabel:not([hidden]) .mfact.hpv b') ?? fs('.inspect-bar .ib-member'), reading: fs('.mreading:not([hidden])'), cmd: fs('.cmdbar button') },
     // the controls actually rendered (buttons inside a closed menu are not)
     // (a member scrolled out of the compact bar's one scrolling row is reached by arrows: its row must be on screen)
     cmdInside: [...document.querySelectorAll('.cmdbar summary, .cmdbar button, .inspect-bar .ib-head, .inspect-bar .ib-row, .inspect-bar:not(.compact) button')].filter((e) => e.getClientRects().length).every((e) => inside(rect(e) ?? { x: -1, y: -1, w: 0, h: 0 })),
