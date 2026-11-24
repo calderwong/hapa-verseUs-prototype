@@ -53,6 +53,28 @@ const GLYPHS = {
 GLYPHS.commander = (g) => { GLYPHS.king(g); };
 const QUEEN_POINTS = [[82, 30], [62, 22], [38, 22], [18, 30]];
 
+/** The authored outlines as SVG path data (DOM glyphs: member labels and the inspection bar). */
+function svgPath(draw) {
+  const out = [], f = (x, y) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+  const g = {
+    moveTo: (x, y) => out.push(`M${f(x, y)}`),
+    lineTo: (x, y) => out.push(`L${f(x, y)}`),
+    bezierCurveTo: (a, b, c, d, x, y) => out.push(`C${f(a, b)} ${f(c, d)} ${f(x, y)}`),
+    // canvas arc semantics: a span of 2π or more is the whole circle, ending where it started
+    arc: (cx, cy, r, a0, a1, ccw = false) => {
+      let span = ccw ? a0 - a1 : a1 - a0;
+      if (span >= 2 * Math.PI) span = 2 * Math.PI; else span = ((span % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      const dir = ccw ? -1 : 1, steps = Math.max(1, Math.ceil(span / (Math.PI / 2)));
+      out.push(`L${f(cx + r * Math.cos(a0), cy + r * Math.sin(a0))}`);
+      for (let i = 1; i <= steps; i++) { const a = a0 + dir * span * (i / steps); out.push(`A${r} ${r} 0 0 ${ccw ? 0 : 1} ${f(cx + r * Math.cos(a), cy + r * Math.sin(a))}`); }
+    },
+    closePath: () => out.push('Z'),
+  };
+  draw(g);
+  return out.join(' ');
+}
+export const GLYPH_PATHS = Object.fromEntries(Object.keys(GLYPHS).map((k) => [k, svgPath(GLYPHS[k])]));
+
 /** The movement family a party shows. */
 export const pieceOf = (p) => (!p.mount ? 'pawn' : p.commander ? 'commander' : p.mount);
 export const PIECE_NAME = { castle: 'Castle (Rook)', knight: 'Knight', bishop: 'Bishop', king: 'King', queen: 'Queen', commander: 'Commander', pawn: 'Pawn' };

@@ -15,7 +15,7 @@ import { BoardView, COLOR_HEX, OWNER_HEX } from './board-view.js';
 import { eventLine, explainHit, memberName, partyName, fmtMana } from './explain.js';
 import { createSession, createFixtureSession, openTick } from '../rules/session.js';
 import { validatePlan, resolveTick, responseOptions, projectPlan } from '../rules/match.js';
-import { legalDestinations, planPartyRoute, routeOrigin, touchingPairs, contactTolerance, quotedDestinations, quoteRoute, destinationPolicy } from '../rules/movement.js';
+import { legalDestinations, planPartyRoute, routeOrigin, routeFromHere, routeClearance, atNode, touchingPairs, contactTolerance, quotedDestinations, quoteRoute, destinationPolicy } from '../rules/movement.js';
 import { surfaceBand } from '../rules/terrain.js';
 import { pieceOf, PIECE_NAME } from './pieces.js';
 import { mintForecast, nextActivation, roundOf, supplyOf, quotePayment } from '../rules/economy.js';
@@ -43,10 +43,14 @@ import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } 
 import { openEditor } from './editor.js';
 import { InspectController } from './inspect.js';
 import { MemberLabels } from './member-labels.js';
+import { factChips, chipsText, roleGlyph } from './member-glyphs.js';
+import { FACINGS } from '../rules/geometry.js';
 import { memberFacts, partyFacts, rangedTargets, linePreview, momentSlice, stateAt } from '../rules/inspection.js';
 import { term, closeTerms } from './glossary.js';
 import { openLab, anyProfile, labProfiles } from './lab.js';
 import { localCatalog, localDecks } from './local-content.js';
+import { PhaseAgreement, agreementPolicy } from '../protocol/agreement.js';
+import { readPreset, savePreset, clearPreset, resolveLaunch, launchURL, describeConfig, ROLE_NAME as CONTROLLER_NAME } from './dev-preset.js';
 
 const U = 1e6;
 const SUIT = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
@@ -90,8 +94,9 @@ const pts = (u) => { const v = u / U; return Number.isInteger(v) ? String(v) : v
 const manaChips = (m) => Object.entries(m ?? {}).filter(([, n]) => n).map(([c, n]) => h('span', { class: `mchip`, title: `${n} ${COLOR_NAME[c]} Mana`, 'aria-label': `${n} ${COLOR_NAME[c]}` }, h('img', { src: emblemURL(c, 16), alt: '' }), String(n)));
 
 export class VersusApp {
-  constructor(root) {
+  constructor(root, { launch = null } = {}) {
     this.root = root;
+    this.launch = launch;
     this.speed = 1;
     this.keys = new Set();
     this._layout();
@@ -133,13 +138,12 @@ export class VersusApp {
     // one contextual inspection system for Cards, parties, members, basins and events (§3)
     this.inspect = new InspectController({
       host: this.el.world,
-      // open drawers (navigator on the left, Orders / a decision on the right) are kept clear
+      // open drawers (navigator on the left, Orders / a decision on the right) are kept clear:
+      // the one free-space reading shared with the docked bars and the member explanation
       reserved: () => {
-        const w = this.el.world.getBoundingClientRect(), edge = (el) => (el && !el.hidden && getComputedStyle(el).display !== 'none' ? el.getBoundingClientRect() : null);
-        const nav = edge(this.el.roster), right = edge(this.el.decision) ?? edge(this.el.orders);
-        // the height-layer rail (a full-height control on the right) stays usable: views never cover it
-        const rail = edge(this.el.layers);
-        return { left: nav ? nav.right - w.left + 6 : 0, right: Math.max(right ? w.right - right.left + 6 : 0, rail ? w.right - rail.left + 6 : 0) };
+        const f = this._freeSpace(), w = this.el.world.getBoundingClientRect();
+        const rail = this.el.layers && !this.el.layers.hidden ? this.el.layers.getBoundingClientRect() : null;
+        return { left: f.left, right: Math.max(f.right, rail && rail.width ? w.right - rail.left + 6 : 0) };
       },
       generation: () => this.generation ?? 0,
       build: (sub) => (this.session ? this._contentFor(sub) : null),
@@ -200,10 +204,35 @@ export class VersusApp {
   }
 
   // --- setup -------------------------------------------------------------------------------------
+  /** A short message over whatever is shown (setup or match): invalid launch values, etc. */
+  notice(msg) {
+    if (this.session) { this._toast(msg, true); return; }
+    this.el.overlay.querySelector('.launch-notice')?.remove();
+    this.el.overlay.querySelector('.setup')?.prepend(h('p', { class: 'launch-notice warn', role: 'alert' }, msg));
+  }
+
+  /** The effective development configuration now: this match's, else the resolved launch/preset. */
+  _devConfig() {
+    if (this.effective) return this.effective;
+    return (this.launch ?? resolveLaunch('', readPreset())).config;
+  }
+
   showSetup() {
-    const profileSel = h('select', { id: 'set-profile' }, ...PROFILE_IDS.map((id) => h('option', { value: id, selected: id === DEFAULT_PROFILE_ID }, `${id} — ${profileById(id).title}${id === DEFAULT_PROFILE_ID ? ' (default)' : ''}`)), ...labProfiles().map((p) => h('option', { value: p.id }, `${p.id} — lab revision: ${p.changes.join(', ')}`)));
+    // the form starts from the effective configuration (URL > saved preset > A human / B bot)
+    const eff = this._devConfig();
+    const dProfile = eff.profileId ?? DEFAULT_PROFILE_ID;
+    const profileSel = h('select', { id: 'set-profile' }, ...PROFILE_IDS.map((id) => h('option', { value: id, selected: id === dProfile }, `${id} — ${profileById(id).title}${id === DEFAULT_PROFILE_ID ? ' (default)' : ''}`)), ...labProfiles().map((p) => h('option', { value: p.id, selected: p.id === dProfile }, `${p.id} — lab revision: ${p.changes.join(', ')}`)));
     const seatSel = (seat, dflt) => h('select', { id: `set-${seat}` }, h('option', { value: 'human', selected: dflt === 'human' }, 'Human'), h('option', { value: 'bot', selected: dflt === 'bot' }, 'Heuristic bot'));
-    const seed = h('input', { id: 'set-seed', type: 'number', value: '1', min: '1' });
+    const seed = h('input', { id: 'set-seed', type: 'number', value: String(eff.seed ?? 1), min: '1' });
+    const remember = h('input', { id: 'set-remember', type: 'checkbox', checked: true });
+    const read = () => ({ seats: { A: document.getElementById('set-A').value, B: document.getElementById('set-B').value }, seed: Math.max(1, Math.floor(Number(seed.value) || 1)), profileId: profileSel.value });
+    const linkOut = h('code', { class: 'launch-link' });
+    const showLink = () => { const c = read(); linkOut.textContent = launchURL({ ...c, profileId: c.profileId === DEFAULT_PROFILE_ID ? null : c.profileId, fixture: null }); };
+    const start = (over = {}) => {
+      const c = { ...read(), ...over };
+      if (remember.checked && !over.seats) savePreset({ a: c.seats.A, b: c.seats.B, seed: c.seed, profile: c.profileId === DEFAULT_PROFILE_ID ? null : c.profileId });
+      this.startMatch({ profileId: c.profileId, seats: c.seats, seed: c.seed, watch: !!over.watch, policies: { A: document.getElementById('set-pol-A').value, B: document.getElementById('set-pol-B').value } });
+    };
     const policySel = (seat) => h('select', { id: `set-pol-${seat}` }, ...ALLOCATION_POLICIES.map((p) => h('option', { value: p }, { slot_order: 'Slot order (fixture)', center_first: 'Center first (sacrifice the center)', protect_ranged: 'Protect ranged members' }[p])));
     this._overlayDismiss = false;
     this.el.overlay.replaceChildren(h('div', { class: 'card-sheet setup' },
@@ -212,15 +241,19 @@ export class VersusApp {
       h('p', { class: 'lede' }, 'Two armies on a nine-column battlefield. Each Tick the highlighted columns mint public Minor Arcana from the territory you hold: spend a card as Supply to move, burn it for colored Mana, or play its attached ability. Win by moving a party center into the enemy Capital or killing the enemy Commander.'),
       h('div', { class: 'form' },
         h('label', { class: 'wide' }, 'Profile', profileSel),
-        h('label', {}, 'Seat A (low rows)', seatSel('A', 'human')),
-        h('label', {}, 'Seat B (high rows)', seatSel('B', 'bot')),
+        h('label', {}, 'Seat A (low rows)', seatSel('A', eff.seats?.A ?? 'human')),
+        h('label', {}, 'Seat B (high rows)', seatSel('B', eff.seats?.B ?? 'bot')),
         h('label', {}, 'A standing damage allocation', policySel('A')),
         h('label', {}, 'B standing damage allocation', policySel('B')),
         h('label', {}, 'Seed', seed)),
       h('p', { class: 'dim small' }, 'Allocation applies when your seat assigns damage under the profile (attacker or defender allocation). It is public and recorded in the match manifest.'),
       h('div', { class: 'row' },
-        h('button', { class: 'primary', onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: document.getElementById('set-A').value, B: document.getElementById('set-B').value }, seed: Number(seed.value) || 1, policies: { A: document.getElementById('set-pol-A').value, B: document.getElementById('set-pol-B').value } }) }, 'Start match'),
-        h('button', { onclick: () => this.startMatch({ profileId: profileSel.value, seats: { A: 'bot', B: 'bot' }, seed: Number(seed.value) || 1, watch: true }) }, 'Watch bot vs bot')),
+        h('button', { class: 'primary', onclick: () => start() }, 'Start match'),
+        h('button', { onclick: () => start({ seats: { A: 'bot', B: 'bot' }, watch: true }) }, 'Watch bot vs bot')),
+      h('div', { class: 'dev-preset' },
+        h('label', { class: 'inline' }, remember, ' Remember these seats, seed and profile as my development preset'),
+        h('div', { class: 'small' }, h('b', {}, 'Launch link: '), linkOut, ' ', h('button', { class: 'linkish', onclick: () => navigator.clipboard?.writeText(linkOut.textContent).then(() => this.notice?.('Launch link copied')) }, 'Copy')),
+        h('div', { class: 'dim small' }, `URL values override the saved preset; the built-in default is A ${CONTROLLER_NAME.human} / B ${CONTROLLER_NAME.bot}, seed 1. `, h('button', { class: 'linkish', onclick: () => { clearPreset(); this.effective = null; this.launch = null; this.showSetup(); } }, 'Reset preset'))),
       h('div', { class: 'row' }, h('button', { onclick: () => openLab(this) }, 'Rules & experiments…'), h('span', { class: 'dim small' }, 'Edit a copy of a profile, compare profiles, run bot batches.')),
       h('div', { class: 'row' }, h('button', { onclick: () => openEditor(this) }, 'Cards & decks…'), h('span', { class: 'dim small' }, 'Edit Cards, bind them to columns for either seat, exchange bundles.')),
       h('details', {}, h('summary', {}, 'Diagnostic fixtures (labeled, not ordinary play)'),
@@ -231,6 +264,8 @@ export class VersusApp {
         ...[['Left click', 'select a party, member, territory or card'], ['Right click', 'set the selected party\'s one destination'], ['1–9', 'select your hand slot (home column order)'], ['U / B / C', 'Supply, Burn or Ability with the selected card'], ['M', 'show legal destinations of the selected party'], ['G', 'formation facing tools'], ['P', 'plan comparison'], ['Ctrl/⌘ + Enter', 'Ready (freeze your plan for this pair)'], ['Esc', 'cancel the current tool'], ['Left-drag', 'pan the board'], ['Right-drag', 'orbit and tilt'], ['Wheel / pinch', 'zoom toward the cursor'], ['Shift + wheel', 'tilt'], ['W A S D / arrows', 'pan'], ['Q / E', 'rotate the camera 45°'], ['Z / X', 'tilt'], ['V', 'tactical view'], ['Home', 'home view'], ['F', 'focus the selection'], ['Space', 'pause playback']].map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v)))),
     ));
     this.el.overlay.hidden = false;
+    showLink();
+    for (const id of ['set-A', 'set-B', 'set-seed', 'set-profile']) document.getElementById(id)?.addEventListener('input', showLink);
   }
 
   async startMatch({ profileId = DEFAULT_PROFILE_ID, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null }) {
@@ -260,6 +295,8 @@ export class VersusApp {
     activeCatalog = this.ctx.catalog;
     this.seats = seats;
     this.watch = watch || (seats.A === 'bot' && seats.B === 'bot');
+    this.auto = this.watch ? { mode: 'run' } : null;
+    this.effective = { seats: { ...seats }, seed, profileId: fixture ? null : profileId, fixture };
     this.bots = {};
     for (const s of ['A', 'B']) if (seats[s] === 'bot') this.bots[s] = new HeuristicBot({ seat: s, seed: seed * 2 + (s === 'A' ? 1 : 2) });
     this.viewSeat = seats.A === 'human' ? 'A' : seats.B === 'human' ? 'B' : 'A';
@@ -315,14 +352,85 @@ export class VersusApp {
     this.plans = { A: [], B: [] };
     this.rev = { A: 0, B: 0 };
     this.ready = { A: null, B: null };
-    for (const s of ['A', 'B']) if (this.bots[s]) { this.plans[s] = this.bots[s].plan(this.state, this.ctx); this.rev[s] = 1; }
-    for (const s of ['A', 'B']) if (this.bots[s]) this.ready[s] = { ...this.rev };
+    // one agreement per Tick, the same object the peer path uses (addendum 03, HF3-02): the
+    // profile's policy decides whether Ready commits the own plan or acknowledges the pair
+    this.agreement = new PhaseAgreement({ matchId: this.session.manifest.matchId, count: this.state.tick, phaseId: 'plan', priorStateHash: stateFingerprint(this.state), policy: agreementPolicy(this.ctx.profile) });
+    this._seq = { A: 0, B: 0 };
+    this._resolvedTick = null;
+    this._draft = { A: { burns: new Map(), pays: new Map() }, B: { burns: new Map(), pays: new Map() } };
+    for (const s of ['A', 'B']) if (this.bots[s]) { this.plans[s] = this.bots[s].plan(this.state, this.ctx); this.rev[s] = 1; this._publish(s, 'plan'); this._syncDraftMana(s); }
+    for (const s of ['A', 'B']) if (this.bots[s]) { this._publish(s, 'ready'); this.ready[s] = {}; }
     this.view.setActiveColumns(this.state.activeColumns);
     this.view.sync(this.state);
     this.view.syncBanks(this.state, drawCardCanvas);
     this._renderAll();
+    if (this.watch) this._scheduleAuto();
+  }
+
+  /**
+   * Both-bot development runs (addendum 03, HF3-04): the between-Tick scheduler obeys
+   * Pause / Step / Stop. A Tick that is already resolving finishes atomically; the next one starts
+   * only when running (or once for Step). New match clears the timer and the generation check
+   * drops any callback that was already queued.
+   */
+  _scheduleAuto() {
+    clearTimeout(this._autoTimer);
+    this._autoTimer = null;
+    const a = this.auto;
+    if (!this.watch || !a || this.state.outcome) return;
+    if (a.mode === 'step') { a.mode = 'pause'; this._renderMatchBar(); }
+    if (a.mode !== 'run') return;
     const gen = this.generation;
-    if (this.watch) setTimeout(() => { if (gen === this.generation) this._tryResolve(); }, 350 / this.speed);
+    this._autoTimer = setTimeout(() => { this._autoTimer = null; if (gen === this.generation && this.auto?.mode === 'run') this._tryResolve(); }, 350 / this.speed);
+  }
+
+  _autoControl(cmd) {
+    if (!this.watch || !this.auto || this.auto.mode === 'stop') return;
+    if (cmd === 'pause') { this.auto.mode = 'pause'; clearTimeout(this._autoTimer); this._autoTimer = null; }
+    else if (cmd === 'resume') { this.auto.mode = 'run'; if (!this.resolving && !this.playback) this._scheduleAuto(); }
+    else if (cmd === 'step') { if (this.resolving || this.playback) return; this.auto.mode = 'step'; this._tryResolve(); }
+    else if (cmd === 'stop') { this.auto.mode = 'stop'; clearTimeout(this._autoTimer); this._autoTimer = null; }
+    this._renderMatchBar();
+  }
+
+  /**
+   * Current-Tick Mana feedback (addendum 03, HF3-06): the plan's ordered projection names every
+   * burn and payment it makes now. A burn that newly appears flies into the Fire Pit and its colors
+   * stream into the basin at once; a newly reserved ability cost leaves the basin. Undoing a burn
+   * drops it from the draft (its count falls immediately). Accepted events later reconcile with this
+   * record (`_fireEffect`), so nothing is minted or animated twice. Presentation only.
+   */
+  _syncDraftMana(seat) {
+    const d = this._draft?.[seat];
+    if (!d || this.playback || this.resolving) return;
+    const ev = projectPlan(this.state, this.ctx, seat, this.plans[seat]).events;
+    const burns = new Map(ev.filter((e) => e.type === 'card_burned').map((e) => [e.cardId, e.mana]));
+    const pays = new Map(ev.filter((e) => e.type === 'mana_paid').map((e) => [e.cardId, e.assigned]));
+    let gained = false;
+    for (const [id, mana] of burns) if (!d.burns.has(id)) {
+      const c = this.state.cards[id];
+      this.view.sites.burn(seat, c ? drawCardCanvas(c, this.state, 120, 160) : null, mana);
+      if (Object.values(mana ?? {}).some((n) => n > 0)) gained = true;
+    }
+    for (const [id, assigned] of pays) if (!d.pays.has(id)) this.view.sites.pay(seat, assigned);
+    d.burns = burns; d.pays = pays;
+    if (gained) { this._basinFlash = { seat, at: performance.now() }; if (!this.watch) this.sound?.play('chime', { volume: 0.3 }); }
+  }
+
+  /**
+   * Mana a seat can spend now: during planning its plan's ordered projection (burns credited,
+   * queued costs reserved); while a Tick resolves, the actual pool (already holding accepted burns).
+   */
+  _availablePool(seat) {
+    return this.resolving || this.playback || this.pendingChoice ? { ...this.state.players[seat].pool } : this._plannedPool(seat);
+  }
+
+  /** Feed one local plan or Ready record to this Tick's agreement (unsigned: same process). */
+  _publish(seat, type) {
+    const ag = this.agreement;
+    if (!ag) return { ok: false };
+    const payload = type === 'plan' ? { planRevision: this.rev[seat], commands: this.plans[seat] } : ag.readyPayload(seat);
+    return ag.receive(seat, { schemaVersion: 1, type, matchId: ag.matchId, authorId: seat, signingKeyId: 'local', authorSequence: ++this._seq[seat], count: ag.count, phaseId: ag.phaseId, priorStateHash: ag.priorStateHash, payload });
   }
 
   /**
@@ -336,7 +444,7 @@ export class VersusApp {
   _can(seat = this.viewSeat) {
     const human = this.seats?.[seat] === 'human';
     const busy = !!(this.resolving || this.playback || this.pendingChoice || this.state?.outcome);
-    const frozen = !!this.ready?.[seat];
+    const frozen = !!this.agreement?.ready?.[seat];
     const current = this._readyValid(seat);
     // an invalid draft order (e.g. a destination whose funding Card was removed) blocks the first
     // Ready until it is repaired or removed — the plan is never silently shortened (addendum §6)
@@ -360,17 +468,21 @@ export class VersusApp {
     if (this.resolving || this.playback) return 'The Tick is resolving: plans reopen at the next Tick';
     if (this.state.outcome) return 'The match is over';
     return c.stale
-      ? `Your plan is frozen after Ready. Review ${other(seat)}'s changes, then Acknowledge updated plan`
-      : 'Your plan is frozen after Ready (one Ready per phase; there is no Unready)';
+      ? `Your plan is frozen after Ready. Review ${other(seat)}'s changes, then Acknowledge updated plan (legacy pair-acknowledgment profile)`
+      : 'Your plan is committed for this Tick (Ready commits it once; there is no Unready)';
   }
 
   /** Change a seat's public plan: a new revision; any Ready of the old pair becomes stale. */
   _setPlan(seat, cmds) {
     const refusal = this.bots[seat] ? null : this._editRefusal(seat);
     if (refusal) { this._toast(refusal, true); this._renderAll(); return false; }
+    const prev = this.plans[seat];
     this.plans[seat] = cmds;
     this.rev[seat] += 1;
-    for (const s of ['A', 'B']) if (this.bots[s]) this.ready[s] = { ...this.rev }; // bots re-acknowledge the new pair
+    if (!this._publish(seat, 'plan').ok) { this.plans[seat] = prev; this.rev[seat] -= 1; this._toast('That plan revision was refused', true); this._renderAll(); return false; }
+    this._syncDraftMana(seat);
+    // the legacy pair-acknowledgment profile: bots re-acknowledge the new pair (own-plan Ready needs nothing)
+    if (this.agreement.policy === 'pair_acknowledgment_v3') for (const s of ['A', 'B']) if (this.bots[s] && s !== seat) this._publish(s, 'ready');
     this._renderAll();
     return true;
   }
@@ -387,7 +499,7 @@ export class VersusApp {
     return this._setPlan(seat, plan);
   }
 
-  _readyValid(seat) { const r = this.ready[seat]; return !!r && r.A === this.rev.A && r.B === this.rev.B; }
+  _readyValid(seat) { return !!this.agreement?.current(seat); }
 
   /**
    * Ready (first press) freezes the viewing seat's plan and acknowledges the current pair; after the
@@ -397,18 +509,21 @@ export class VersusApp {
   _pressReady() {
     if (!this.session) return;
     const seat = this.viewSeat;
-    if (this._can(seat).invalid) { this._toast(`Ready is blocked: ${this._can(seat).invalid} invalid order${this._can(seat).invalid > 1 ? 's' : ''} — repair or remove them in Orders`, true); this._toggleOrders(true); return; }
-    if (!this._can(seat).ready) return;
+    if (this._can(seat).invalid) { const e = this._planErrors(seat)[0]; this._toast(`Ready is blocked: order ${e.index + 1} (${describeCmd(this.state, this.plans[seat][e.index])}) — ${e.error}`, true); this._toggleOrders(true); return; }
+    if (!this._can(seat).ready) return; // duplicate clicks, a held key or a stale callback: no second effect
+    const r = this._publish(seat, 'ready');
+    if (!r.ok) { this._renderAll(); return; }
     this.sound?.play('confirm', { volume: 0.6 });
-    // remember both plans as acknowledged, to show what the opponent changed afterwards
-    this.ready[seat] = { ...this.rev, seen: { A: this.plans.A.map(cmdKey), B: this.plans.B.map(cmdKey) } };
+    // remember both plans as seen (the legacy profile marks what the opponent changed afterwards)
+    this.ready[seat] = { seen: { A: this.plans.A.map(cmdKey), B: this.plans.B.map(cmdKey) } };
     this._renderAll();
     const opp = other(seat);
     if (this.seats.A === 'human' && this.seats.B === 'human' && !this._readyValid(opp)) {
       this.viewSeat = opp;
-      this._toast(this.ready[opp]
-        ? `${seat} changed its plan after ${opp}'s Ready. ${opp}: your plan is frozen — review ${seat}'s changes, then Acknowledge updated plan.`
-        : `${seat} is Ready and its plan is frozen. ${opp} plans now (hotseat).`);
+      this.cam.setHome(opp);
+      this._toast(this.agreement.ready[opp]
+        ? `${seat} changed its plan after ${opp}'s Ready. ${opp}: your plan is frozen — Acknowledge the updated pair (legacy profile).`
+        : `${seat} committed its plan. ${opp} plans now (hotseat).`);
       this._renderAll();
       return;
     }
@@ -417,9 +532,10 @@ export class VersusApp {
 
   /** Resolve once both acknowledgments name the current pair; a latch makes it single-entry. */
   async _tryResolve() {
-    if (this.resolving) return;
-    if (!(this._readyValid('A') && this._readyValid('B'))) return this._renderAll();
+    if (this.resolving || this._resolvedTick === this.state.tick) return; // one resolution per Tick
+    if (!this.agreement?.locked) return this._renderAll();
     const gen = this.generation;
+    this._resolvedTick = this.state.tick;
     this.resolving = true;
     let done = false;
     try { done = await this._resolveAgreed(); } finally { if (gen === this.generation) this.resolving = false; }
@@ -438,7 +554,8 @@ export class VersusApp {
     const owner = this.generation;
     const before = clone(state);
     const accepted = {};
-    for (const s of ['A', 'B']) accepted[s] = validatePlan(state, ctx, s, this.plans[s]).accepted;
+    // the exact locked pair, not whatever the drafts hold now
+    for (const s of ['A', 'B']) accepted[s] = validatePlan(state, ctx, s, this.agreement.locked[s]).accepted;
     // trace member positions during simulation (presentation only)
     const frames = [];
     const snap = (q, evLen) => frames.push({ q, pos: snapshot(state), evLen });
@@ -472,6 +589,8 @@ export class VersusApp {
 
   /** Release the current match's unfinished work (pending choice, playback) without continuing it. */
   _detachMatch() {
+    clearTimeout(this._autoTimer);
+    this._autoTimer = null;
     const pc = this.pendingChoice, pb = this.playback;
     this.pendingChoice = null;
     this.playback = null;
@@ -507,6 +626,10 @@ export class VersusApp {
     if (this._shownEvents?.has(key)) return true;
     (this._shownEvents ??= new Set()).add(key);
     const sites = this.view.sites;
+    // a burn or payment the player already saw when it was planned is reconciled, not shown twice
+    const d = this._draft?.[e.seat];
+    if (e.type === 'card_burned' && d?.burns.has(e.cardId)) { d.burns.delete(e.cardId); return true; }
+    if (e.type === 'mana_paid' && d?.pays.has(e.cardId)) { d.pays.delete(e.cardId); return true; }
     if (e.type === 'card_burned') { const c = this.state.cards[e.cardId]; sites.burn(e.seat, c ? drawCardCanvas(c, this.state, 120, 160) : null, e.mana); }
     else if (e.type === 'mana_paid') sites.pay(e.seat, e.assigned);
     else sites.expire(e.seat);
@@ -580,10 +703,11 @@ export class VersusApp {
       if (!this.session) return;
       const k = e.key.toLowerCase();
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (!e.repeat) this._pressReady(); return; }
+      if (e.code === 'Escape' && this.labels.hideTip()) return; // a symbol's definition first
       if (e.code === 'Escape' && this.el.pickList) { this._closePickList(); return; }
       if (e.code === 'Escape' && document.body.classList.contains('roster-open')) { this._toggleRoster(false); return; }
       if (e.code === 'Escape' && this.inspect.dismissTop()) return; // the top contextual view first
-      if (e.code === 'Escape' && this.ordersOpen && !this._can(this.viewSeat).stale) { this._toggleOrders(false); return; }
+      if (e.code === 'Escape' && this.ordersOpen) { this._toggleOrders(false); return; }
       if (e.code === 'Escape' && this.tool) { this.tool = null; this._renderAll(); return; } // tool cancel, orders kept
       if (e.code === 'Escape' && this.inspectParty && this.expandedPin) { this.expandedPin = null; this._renderInspectBar(); return; } // the explanation first
       if (e.code === 'Escape' && this.inspectParty) { const back = document.activeElement?.closest?.('.inspect-bar'); this.inspectParty = null; this.expandedMember = null; this._renderInspectBar(); if (back) this._inspectorEl()?.querySelector?.('summary:not(.off), button')?.focus({ preventScroll: true }); return; } // labels off, camera stays
@@ -602,7 +726,8 @@ export class VersusApp {
       else if (k === 'b') this._cardTool('burn');
       else if (k === 'c') this._cardTool('ability');
       else if (k === 'm') this._showDestinations();
-      else if (k === 'p') this._toggleOrders();
+      else if (k === 'p') this._toggleOrders(this.ordersOpen && this.ordersTab !== 'history' ? false : true, 'plan');
+      else if (k === 'h') this._toggleOrders(this.ordersOpen && this.ordersTab === 'history' ? false : true, 'history');
       else if (k === 'n') this._toggleRoster();
       else if (['[', ']'].includes(e.key) || ['BracketLeft', 'BracketRight'].includes(e.code)) { const b = this.view.stepLayer(e.key === ']' || e.code === 'BracketRight' ? 1 : -1); this.view.sync(this.state); this._toast(b === null ? 'All layers (surface opaque)' : `Layer ${b > 0 ? '+' : ''}${b}${b < 1 ? ' — cutaway: the surface is see-through' : ''}`); this._renderAll(); }
     });
@@ -739,9 +864,12 @@ export class VersusApp {
       if (party && party.owner === seat && pick.territory && this.seats[seat] === 'human') {
         const type = this.tool?.kind === 'retreat' ? 'retreat' : 'set_destination';
         if (this._addCommand(seat, { type, partyId: party.id, target: pick.territory })) {
-          const plan = planPartyRoute(this.state, this.ctx, party, routeOrigin(this.state, this.ctx, party), pick.territory);
-          if (plan.route) this.view.showRoute(party, plan.route.map((n) => { const c = this.ctx.geo.center(n.column, n.row); return [c.x, c.y]; }));
-          this._toast(`${type === 'retreat' ? 'Retreat' : 'Destination'}: R${pick.territory.row}C${pick.territory.column} (planned)`);
+          // the same route and clearance facts as the keyboard list (HF3-01)
+          const d = this._fundedTargets(party).find((x) => x.column === pick.territory.column && x.row === pick.territory.row);
+          const plan = routeFromHere(this.state, this.ctx, party, pick.territory);
+          if (plan.path) this.view.showRoute(party, plan.path.map((n) => [n.x, n.y]));
+          const by = d?.blocked ? this.state.parties[d.clearance.partyId] : null;
+          this._toast(`${type === 'retreat' ? 'Retreat' : 'Destination'}: R${pick.territory.row}C${pick.territory.column} (planned)${by ? ` — warning: your ${partyShort(this.state, by.id)} blocks this route now` : ''}`, !!by);
         }
         this.tool = null;
       }
@@ -834,7 +962,7 @@ export class VersusApp {
 
   /** Burns that pay an ordinary ability on top of the plan so far (the rules' own allocation). */
   _autoBurns(seat, def, sourceId) {
-    return quotePayment(this._plannedPool(seat), def.cost?.mana ?? {}, this._paymentCandidates(seat, sourceId)).burns;
+    return quotePayment(this._availablePool(seat), def.cost?.mana ?? {}, this._paymentCandidates(seat, sourceId)).burns;
   }
 
 
@@ -900,7 +1028,7 @@ export class VersusApp {
     if (card.owner !== this.viewSeat) return this._toast('That card belongs to the opponent');
     const refusal = this._editRefusal(card.owner);
     if (refusal) return this._toast(refusal, true);
-    if (kind === 'burn') { if (this._addCommand(this.viewSeat, { type: 'burn', cardId: card.id })) this._toast(`Burn planned: +${fmtMana(card.mana)}`); return; }
+    if (kind === 'burn') { if (this._addCommand(this.viewSeat, { type: 'burn', cardId: card.id })) this._toast(Object.keys(card.mana ?? {}).length ? `Burned: +${fmtMana(card.mana)} available this Tick` : '0 Mana — the Card is consumed'); return; }
     if (kind === 'supply') { this.tool = { kind: 'supply', cardId: card.id }; }
     if (kind === 'ability') {
       const def = activeCatalog.cards[card.abilityId];
@@ -1034,6 +1162,19 @@ export class VersusApp {
     return { targets, line };
   }
 
+  /** Ranged target context per member, once per displayed moment (part of each chip's text). */
+  _memberCtxCached(facts, S, f) {
+    facts.ctx ??= {};
+    if (!(f.id in facts.ctx)) facts.ctx[f.id] = this._memberContext(S, f);
+    return facts.ctx[f.id];
+  }
+
+  /** The member's symbols and exact values (member-glyphs.js), once per displayed moment. */
+  _chipsCached(facts, f, text, mctx) {
+    facts.chips ??= {};
+    return (facts.chips[f.id] ??= factChips(f, { pts, sources: text.sourceName, line: f.protectionMode === 'line', targets: mctx?.targets }));
+  }
+
   /** Text for one member's label from the shared read model (HF2-05); detail is built on demand. */
   _memberText(f, S, ctx = null) {
     const ch = { physical: 'Phys', magic: 'Mag' }, CH = { physical: 'Physical', magic: 'Magic' };
@@ -1071,7 +1212,7 @@ export class VersusApp {
       return h('div', {}, ...out);
     };
     const key = `${f.sig}|${ctx ? JSON.stringify(ctx) : ''}`;
-    return { role, health: hpText, healthPct: f.health.mode === 'member' ? hpPct : null, combat, detail, key };
+    return { role, health: hpText, healthPct: f.health.mode === 'member' ? hpPct : null, combat, detail, key, sourceName: name };
   }
 
   /**
@@ -1117,16 +1258,24 @@ export class VersusApp {
     this._updateDiorama(dt, p, pxPerMember);
     const facts = this._labelFacts(p.id);
     const roofed = standingOf(S, this.ctx, p).kind === 'tunnel' && this.view.terrain.cutaway === null;
-    // the open explanation: the member under the pointer, else the one chosen by tap or keyboard
-    const expanded = this.expandedMember ?? (this.expandedPin && facts.members[this.expandedPin] ? this.expandedPin : null);
+    // hovering a body only highlights it; the source breakdown opens for a deliberate tap, click or
+    // keyboard choice (HF3-05: symbols answer first, the deeper view on request)
+    const expanded = this.expandedPin && facts.members[this.expandedPin] ? this.expandedPin : null;
+    const hovered = this.expandedMember;
     const occluded = this._occlusion(facts, cam);
     const members = Object.values(facts.members).map((f) => {
       const sp = this.view.sprites.get(f.id);
       const open = expanded === f.id;
-      const text = this._memberText(f, S, open ? this._memberContext(S, f) : null);
+      const mctx = this._memberCtxCached(facts, S, f);
+      const text = this._memberText(f, S, open ? mctx : null);
       text.where = `slot ${f.slot} · ${f.slot <= 3 ? 'front row' : f.slot <= 6 ? 'middle row' : 'rear row'}`;
-      return { id: f.id, visible: !!sp?.visible && !roofed, occluded: occluded.has(f.id), anchor: sp ? toScreen(sp.position.clone().setY(sp.position.y + 1.35)) : null, foot: sp ? toScreen(sp.position) : null, text };
+      const chips = this._chipsCached(facts, f, text, mctx);
+      return { id: f.id, visible: !!sp?.visible && !roofed, occluded: occluded.has(f.id), anchor: sp ? toScreen(sp.position.clone().setY(sp.position.y + 1.35)) : null, foot: sp ? toScreen(sp.position) : null, text, chips };
     });
+    // the formation's real front on screen, for the covered-face diagrams (never screen-up)
+    const fv = FACINGS[p.facing];
+    const fr = fv ? toScreen(this.view.toWorld(p.x + fv.fx * this.ctx.U, p.y + fv.fy * this.ctx.U).setY(this.view.partyY(p) + 0.4)) : null;
+    const frontDeg = a0 && fr ? (Math.atan2(fr.x - a0.x, -(fr.y - a0.y)) * 180) / Math.PI : null;
     const pf = facts.party, planned = this._plannedSupply(p);
     const party = {
       // just beyond the rightmost visible member on screen, whatever the orbit (never over a body)
@@ -1137,7 +1286,7 @@ export class VersusApp {
       note: roofed ? 'Roofed tunnel: open its layer to read the members (cutaway)' : facts.playing ? 'Playing back: health as of the moment shown' : null,
       key: `${JSON.stringify(pf)}|${planned}|${roofed}|${facts.playing}`,
     };
-    this.labels.update({ partyId: p.id, members, party, pxPerMember, rowPx, expanded, avoid: this._avoidRects() });
+    this.labels.update({ partyId: p.id, members, party, pxPerMember, rowPx, expanded, hovered, frontDeg, avoid: this._avoidRects() });
     this._renderInspectBar(facts, members, expanded); // rebuilds only when its content changes
   }
 
@@ -1149,7 +1298,9 @@ export class VersusApp {
   _avoidRects(now = performance.now()) {
     if (this._avoidCache && now - this._avoidCache.at < 200) return this._avoidCache.rects;
     const world = this.el.world.getBoundingClientRect();
-    const els = [this.el.cmdbar, this.el.inspectBar, this.el.camPad, this.el.world.querySelector('.layer-rail'), this.inspect.shown?.pinned?.el, document.getElementById('matchbar')];
+    // open drawers (Orders & history, the navigator, a required decision) are reserved too (R7-06)
+    const drawers = [this.el.orders, this.el.decision, document.body.classList.contains('roster-open') ? this.el.roster : null];
+    const els = [this.el.cmdbar, this.el.inspectBar, this.el.camPad, this.el.world.querySelector('.layer-rail'), this.inspect.shown?.pinned?.el, document.getElementById('matchbar'), ...drawers];
     const rects = els.filter((el) => el && !el.hidden && el.offsetParent !== null).map((el) => { const r = el.getBoundingClientRect(); return { x: r.left - world.left, y: r.top - world.top, w: r.width, h: r.height }; }).filter((r) => r.w > 0 && r.h > 0);
     this._avoidCache = { at: now, rects };
     return rects;
@@ -1190,7 +1341,8 @@ export class VersusApp {
       this.el.inspectBar = h('section', { class: 'inspect-bar', role: 'region', 'aria-label': 'Inspection' });
       this.el.inspectBar.addEventListener('keydown', (ev) => {
         if (!['ArrowLeft', 'ArrowRight'].includes(ev.code)) return;
-        const bs = [...this.el.inspectBar.querySelectorAll('.ib-member')], i = bs.indexOf(document.activeElement);
+        const cls = document.activeElement?.classList?.contains('ib-fact') ? '.ib-fact' : '.ib-member';
+        const bs = [...this.el.inspectBar.querySelectorAll(cls)], i = bs.indexOf(document.activeElement);
         if (i < 0) return;
         ev.preventDefault(); ev.stopPropagation();
         const next = bs[(i + (ev.code === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length];
@@ -1204,29 +1356,48 @@ export class VersusApp {
     if (!p) { if (!bar.hidden) { bar.hidden = true; this._avoidCache = null; } this._inspectBarKey = null; return; }
     facts ??= this._labelFacts(p.id);
     const S = facts.state, pf = facts.party;
-    const list = members ?? Object.values(facts.members).map((f) => ({ id: f.id, text: this._memberText(f, S) }));
-    const open = expanded ?? this.expandedMember ?? this.expandedPin;
-    const barKey = `${this.generation}|${p.id}|${JSON.stringify(pf)}|${list.map((m) => `${m.id}:${m.text.role}:${m.text.health}`).join(',')}|${open}|${this.expandedPin}|${!!this._returnPose}|${this.selected?.id ?? ''}|${this.viewSeat}|${this.view.terrain.cutaway}`;
+    const list = members ?? Object.values(facts.members).map((f) => { const text = this._memberText(f, S); return { id: f.id, text, chips: this._chipsCached(facts, f, text, this._memberCtxCached(facts, S, f)), visible: false }; });
+    const open = expanded ?? this.expandedPin;
+    // on-body facts readable → the strip carries identity and navigation only; otherwise (scale,
+    // occlusion, a roof, room) the same symbols and values are reachable here (HF3-05)
+    const level = this.labels.level;
+    const readable = (m) => level === 'combat' && m.visible && !m.occluded;
+    const partyShown = !this.labels.layout?.partyCrowded && level !== 'none';
+    const barKey = `${this.generation}|${p.id}|${JSON.stringify(pf)}|${list.map((m) => `${m.id}:${m.text.key}:${readable(m)}`).join(',')}|${open}|${this.expandedPin}|${!!this._returnPose}|${this.selected?.id ?? ''}|${this.viewSeat}|${this.view.terrain.cutaway}|${level}|${partyShown}`;
     if (barKey === this._inspectBarKey && !bar.hidden && !this._focusInspectBarNext) return;
     this._inspectBarKey = barKey;
-    const focused = document.activeElement?.closest?.('.inspect-bar') ? document.activeElement.dataset.member ?? document.activeElement.dataset.act : null;
+    const focused = document.activeElement?.closest?.('.inspect-bar') ? document.activeElement.dataset.member ?? document.activeElement.dataset.act ?? document.activeElement.dataset.fact : null;
     const sel = this.selected?.kind === 'party' && this.selected.id !== p.id ? this.state.parties[this.selected.id] : null;
+    const icon = (html, cls = '') => { const sp = h('span', { class: `ib-ic ${cls}`, 'aria-hidden': 'true' }); sp.innerHTML = html; return sp; };
+    const pinned = list.find((m) => m.id === this.expandedPin);
+    const showTip = (ref, btn) => this.labels.showTip(ref, this.labels.chipEl(ref) ?? btn);
     bar.replaceChildren(
       h('div', { class: 'ib-head' },
         h('b', {}, `Inspecting ${p.owner === this.viewSeat ? 'your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'} · R${p.region.row}C${p.region.column}`),
-        h('span', { class: 'dim' }, ` ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]} · Supply ${pts(pf.supply)} · ${STATE_NAME[pf.state] ?? pf.state}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''} · band ${fmtBand(pf.band)} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`),
+        partyShown ? null : h('span', { class: 'dim' }, ` ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]} · Supply ${pts(pf.supply)} · ${STATE_NAME[pf.state] ?? pf.state}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''} · band ${fmtBand(pf.band)} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`),
         sel ? h('span', { class: 'ib-keep' }, ` · commanding your ${partyShort(this.state, sel.id)}`) : null,
         standingOf(S, this.ctx, p).kind === 'tunnel' && this.view.terrain.cutaway === null ? h('div', { class: 'warn' }, 'Roofed tunnel: open its layer to read the members (cutaway)') : null),
       h('div', { class: 'ib-row' },
-        ...list.map((m) => h('button', { class: `ib-member${open === m.id ? ' on' : ''}`, 'data-member': m.id, 'aria-pressed': String(this.expandedPin === m.id), 'aria-describedby': this.expandedPin === m.id ? 'member-reading' : null, 'aria-label': `${m.text.role}, ${m.text.health}${this.expandedPin === m.id ? ', explanation open' : ''}`,
-          onclick: () => { this.expandedPin = this.expandedPin === m.id ? null : m.id; this._renderInspectBar(); } }, h('b', {}, m.text.role), ' ', h('span', { class: 'dim' }, m.text.health))),
+        ...list.map((m) => {
+          const role = m.chips.find((c) => c.kind === 'role');
+          const said = `${role?.title ?? m.text.role}, slot ${this.state.members[m.id]?.slot ?? ''}: ${chipsText(m.chips)}`;
+          return h('button', { class: `ib-member${open === m.id ? ' on' : ''}${readable(m) ? ' brief' : ''}`, 'data-member': m.id, 'aria-pressed': String(this.expandedPin === m.id), 'aria-describedby': this.expandedPin === m.id ? 'member-reading' : null, 'aria-label': `${said}${this.expandedPin === m.id ? ', sources open' : ''}`, title: readable(m) ? `${role?.title ?? ''} — its facts are on its body; Enter lists them here` : null,
+            onclick: () => { this.expandedPin = this.expandedPin === m.id ? null : m.id; this._focusInspectBarFact = this.expandedPin; this._renderInspectBar(); } },
+            icon(role?.icon ?? '', 'role'), readable(m) ? null : h('span', { class: 'ib-vals' }, ...m.chips.filter((c) => c.kind !== 'role').map((c) => h('span', { class: `ib-v ${c.cls}` }, icon(c.icon), c.value ? h('b', {}, c.value) : null))));
+        }),
         this._returnPose ? h('button', { 'data-act': 'return', onclick: () => this._returnCamera(), title: 'Back to the view before Inspect (R)' }, '↩ Return (R)') : null,
-        h('button', { 'data-act': 'close', onclick: () => { this.inspectParty = null; this.expandedPin = null; this.expandedMember = null; this._renderInspectBar(); }, title: 'Stop inspecting; the camera stays (Esc)' }, 'Close (Esc)')));
+        h('button', { 'data-act': 'close', onclick: () => { this.inspectParty = null; this.expandedPin = null; this.expandedMember = null; this.labels.hideTip(); this._renderInspectBar(); }, title: 'Stop inspecting; the camera stays (Esc)' }, 'Close (Esc)')),
+      // the chosen member's symbols as keyboard/touch stops (only this member: a bounded set)
+      pinned ? h('div', { class: 'ib-facts', role: 'group', 'aria-label': `${pinned.chips.find((c) => c.kind === 'role')?.title ?? 'Member'} facts` },
+        ...pinned.chips.map((c) => { const ref = `${pinned.id}|${c.key}`; return h('button', { class: `ib-fact ${c.cls}`, 'data-fact': ref, 'aria-label': `${c.title}${c.value ? ` ${c.value}` : ''}`, 'aria-describedby': 'member-tip',
+          onfocus: (e) => showTip(ref, e.currentTarget), onblur: () => this.labels.hideTip(), onpointerenter: (e) => showTip(ref, e.currentTarget), onpointerleave: () => this.labels.hideTip(),
+          onclick: (e) => showTip(ref, e.currentTarget) }, icon(c.icon), c.value ? h('b', {}, c.value) : null); })) : '');
     bar.hidden = false;
     // compact: one scrolling row of members when the wrapped bar would take too much height
     bar.classList.remove('compact');
     if (bar.offsetHeight > 0.2 * (this.el.world.clientHeight || 1)) bar.classList.add('compact');
-    if (focused) bar.querySelector(`[data-member="${focused}"], [data-act="${focused}"]`)?.focus({ preventScroll: true });
+    if (this._focusInspectBarFact) { this._focusInspectBarFact = null; bar.querySelector('.ib-fact')?.focus({ preventScroll: true }); }
+    else if (focused) bar.querySelector(`[data-member="${CSS.escape(focused)}"], [data-act="${CSS.escape(focused)}"], [data-fact="${CSS.escape(focused)}"]`)?.focus({ preventScroll: true });
     bar.querySelector('.ib-member.on')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
     if (this._focusInspectBarNext) { this._focusInspectBarNext = false; bar.querySelector('.ib-member')?.focus({ preventScroll: true }); }
     this._avoidCache = null;
@@ -1306,6 +1477,29 @@ export class VersusApp {
     }
   }
 
+  /**
+   * The free horizontal band of the world between open drawers (addendum 03, HF3-07): left/right
+   * reserved px. Written to CSS variables so the command bar, inspection bar, camera pad and layer
+   * rail reflow inside it instead of sliding underneath a drawer.
+   */
+  _freeSpace() {
+    const w = this.el.world.getBoundingClientRect();
+    const edge = (el) => (el && !el.hidden && getComputedStyle(el).display !== 'none' ? el.getBoundingClientRect() : null);
+    const nav = edge(this.el.roster), dec = edge(this.el.decision), ord = edge(this.el.orders);
+    const right = Math.max(dec ? w.right - dec.left + 6 : 0, ord ? w.right - ord.left + 6 : 0);
+    return { left: nav ? Math.max(0, nav.right - w.left + 6) : 0, right };
+  }
+
+  _syncFreeSpace() {
+    const f = this._freeSpace(), st = this.el.world.style;
+    const l = `${Math.round(f.left)}px`, r = `${Math.round(f.right)}px`;
+    if (st.getPropertyValue('--free-l') !== l || st.getPropertyValue('--free-r') !== r) {
+      st.setProperty('--free-l', l); st.setProperty('--free-r', r);
+      this._avoidCache = null;
+      this.labels.readingKey = null; // re-measure the explanation for its new room
+    }
+  }
+
   _renderAllInner() {
     closeTerms();
     this._renderMatchBar();
@@ -1318,11 +1512,12 @@ export class VersusApp {
     this._renderEvents();
     this._renderLayers();
     this._renderToolHint();
+    this._syncFreeSpace();
     if (!this.playback) this.view.syncSupplyTokens(this.state, this._plannedSupplyMap());
     this.view.syncPlanLinks(this.state, this.playback ? [] : ['A', 'B'].flatMap((seat) => this.plans[seat].filter((c) => c.type === 'load_supply')));
     this.view.terrain.syncWork(this.state, this.playback ? [] : ['A', 'B'].flatMap((seat) => this.plans[seat].filter((c) => c.type === 'begin_work')));
     const sel = this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null;
-    if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? this._fundedTargets(sel).filter((d) => d.funded) : []);
+    if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? this._fundedTargets(sel).filter((d) => d.funded) : [], this._blockCue(sel));
     else if (!sel) this.view.select(this.state, null);
     this._syncIntents();
   }
@@ -1340,21 +1535,32 @@ export class VersusApp {
     const n = (seat) => this.plans[seat]?.length ?? 0;
     const bad = this._planErrors(me).length;
     this._renderReadyButton();
-    this.el.ordersBtn = h('button', { class: `strip-btn orders${can.stale ? ' stale' : ''}${bad ? ' bad' : ''}`, 'aria-expanded': String(!!this.ordersOpen), 'aria-controls': 'orders', onclick: () => this._toggleOrders(), title: 'Public plans (P)' },
+    this.el.ordersBtn = h('button', { class: `strip-btn orders${can.stale ? ' stale' : ''}${bad ? ' bad' : ''}`, 'aria-expanded': String(!!this.ordersOpen), 'aria-controls': 'orders', onclick: () => this._toggleOrders(), title: 'Orders and Tick history (P · H)' },
       'Orders ', h('b', {}, `${me} ${n(me)}`), ` · ${other(me)} ${n(other(me))}`, can.stale ? h('span', { class: 'badge warn' }, 'changed') : null, bad ? h('span', { class: 'badge bad' }, `${bad} invalid`) : null);
     this.el.navBtn = h('button', { class: 'strip-btn', 'aria-expanded': String(document.body.classList.contains('roster-open')), 'aria-controls': 'roster', title: 'Parties and Cards (N)', onclick: () => this._toggleRoster() }, '☰ Parties & Cards');
     this.el.matchbar.replaceChildren(...[
       h('div', { class: `crest ${me.toLowerCase()}`, title: `You are seat ${me}` }, me, h('small', {}, this.seats[me] === 'bot' ? 'bot' : 'you')),
       h('div', { class: 'tick' }, this.session.fixture ? h('span', { class: 'fixture-tag', title: 'This state was prepared directly as a diagnostic fixture; it did not emerge from ordinary play.' }, 'FIXTURE') : null, h('b', {}, term('tick', `Tick ${s.tick}`)), ' · ', r.period === 'prologue' ? 'Prologue' : term('round', `Round ${r.round}`)),
       h('div', { class: 'active' }, term('active', 'Active'), ' ', ...s.activeColumns.map((c) => h('span', { class: 'colchip' }, `C${this.ctx.geo.toLocal(me, c, 1).column}`))),
-      h('div', { class: 'phase' }, this.playback ? 'Resolving…' : this.pendingChoice ? `Response · ${this.pendingChoice.req.seat} to act` : s.outcome ? 'Match over' : can.stale ? 'Review the changed plan' : can.current ? 'Ready — waiting' : 'Planning'),
+      h('div', { class: 'phase', role: 'status' }, this.playback ? 'Resolving…' : this.pendingChoice ? `Response · ${this.pendingChoice.req.seat} to act` : s.outcome ? 'Match over' : can.stale ? 'Acknowledge the changed pair' : can.current ? `Committed — ${this._readyValid(other(me)) ? 'resolving' : `waiting for ${other(me)}`}` : this.watch ? `Bots · ${{ run: 'running', pause: 'paused', step: 'stepping', stop: 'stopped' }[this.auto?.mode] ?? ''}` : 'Planning'),
       h('div', { class: 'cmds', title: 'Commander health (the match ends if one falls)' }, ...['A', 'B'].map((seat) => { const c = cmd(seat); return h('span', { class: `cmdhp ${seat.toLowerCase()}` }, `${seat}★ ${c?.alive ? `${pts(c.hp)}/${pts(c.maxHp)}` : 'fallen'}`); })),
-      this.el.navBtn, this.el.ordersBtn, this.el.readyBig,
+      this.el.navBtn, this.el.ordersBtn, this.el.readyBig, this._autoControls(),
       h('div', { class: 'speed' }, h('label', {}, h('span', { class: 'sr' }, 'Playback speed '), h('select', { 'aria-label': 'Playback speed', onchange: (e) => (this.speed = Number(e.target.value)) }, ...[0.5, 1, 2, 4].map((v) => h('option', { value: v, selected: v === this.speed }, `${v}×`))))),
       h('button', { class: 'menu', 'aria-label': 'Help', 'aria-haspopup': 'dialog', onclick: () => this._help() }, '?'),
       this.sound ? h('button', { class: 'menu', 'aria-label': this.sound.muted ? 'Sound off' : 'Sound on', 'aria-pressed': String(!this.sound.muted), onclick: () => { this.sound.toggle(); this._renderMatchBar(); } }, this.sound.muted ? '🔇' : '🔊') : null,
       this.el.menuBtn = h('button', { class: 'menu', 'aria-label': 'Match menu', 'aria-haspopup': 'dialog', onclick: () => this._menu() }, '☰'),
     ].filter(Boolean));
+  }
+
+  /** Both-bot runs: Pause / Step / Stop of the Tick scheduler (shown only when watching bots). */
+  _autoControls() {
+    if (!this.watch || !this.auto) return null;
+    const m = this.auto.mode, busy = this.resolving || this.playback;
+    return h('div', { class: 'auto-ctl', role: 'group', 'aria-label': 'Bot match controls' },
+      m === 'run' ? h('button', { onclick: () => this._autoControl('pause'), title: 'Finish the current Tick, then hold' }, '⏸ Pause')
+        : h('button', { disabled: m === 'stop', onclick: () => this._autoControl('resume') }, '▶ Run'),
+      h('button', { disabled: m === 'run' || m === 'stop' || busy, onclick: () => this._autoControl('step'), title: 'Resolve one Tick' }, 'Step'),
+      h('button', { disabled: m === 'stop', onclick: () => this._autoControl('stop'), title: 'No further automatic Ticks (New match restarts)' }, '■ Stop'));
   }
 
   /** Help on demand (the long teaching text that used to fill the inspector). */
@@ -1445,6 +1651,7 @@ export class VersusApp {
       h('h2', {}, 'Match menu'),
       h('p', {}, `Profile ${this.ctx.profile.id} · match ${this.state.matchId}`),
       h('p', {}, h('code', {}, stateFingerprint(this.state).slice(0, 23) + '…'), ' state fingerprint'),
+      this._devSection(),
       h('div', { class: 'row' },
         h('button', { 'data-autofocus': true, onclick: () => this._closeSheet() }, 'Resume'),
         h('button', { onclick: () => this._downloadReplay() }, 'Download replay'),
@@ -1453,6 +1660,19 @@ export class VersusApp {
         h('h3', {}, `Concede as ${seat}`),
         h('p', { class: 'small', id: 'concede-note' }, con.text),
         con.can ? h('button', { class: 'danger', 'aria-describedby': 'concede-note', onclick: () => this._confirmConcede(seat) }, `Concede as ${seat}…`) : null) : null), this.el.menuBtn);
+  }
+
+  /** Development: the effective controllers and a copyable launch link (changes start a new match). */
+  _devSection() {
+    const c = this.effective;
+    if (!c) return null;
+    const url = launchURL({ ...c, profileId: c.profileId === DEFAULT_PROFILE_ID ? null : c.profileId });
+    const swap = (A, B) => h('button', { disabled: c.seats.A === A && c.seats.B === B, onclick: () => { this._closeSheet({ restore: false }); this.startMatch({ fixture: c.fixture, profileId: c.profileId ?? undefined, seats: { A, B }, seed: c.seed }); } }, `A ${A} · B ${B}`);
+    return h('div', { class: 'dev-preset' },
+      h('h3', {}, 'Development controllers'),
+      h('p', { class: 'small' }, h('b', {}, describeConfig(c)), ' — ', h('code', { class: 'launch-link' }, url), ' ', h('button', { class: 'linkish', onclick: () => navigator.clipboard?.writeText(url) }, 'Copy link')),
+      h('div', { class: 'row' }, swap('human', 'bot'), swap('bot', 'human'), swap('bot', 'bot'), swap('human', 'human')),
+      h('p', { class: 'dim small' }, 'Changing controllers starts a new match with the same seed (never a mid-match transfer).'));
   }
 
   /** The explicit match-ending confirmation; Cancel (or Escape) changes nothing. */
@@ -1627,7 +1847,9 @@ export class VersusApp {
     const cmd = this.plans[seat][i];
     if (!this._setPlan(seat, this.plans[seat].filter((_, j) => j !== i))) return;
     (this._lastRemoved ??= {})[seat] = { cmd, index: i, tick: this.state.tick };
-    this._toast(`Removed: ${describeCmd(this.state, cmd)}`);
+    // a dependent order (e.g. a cast its burn funded) stays visible and invalid; Ready names it
+    const bad = this._planErrors(seat);
+    this._toast(`Removed: ${describeCmd(this.state, cmd)}${bad.length ? ` — ${bad.length} dependent order${bad.length > 1 ? 's are' : ' is'} now invalid: ${bad[0].error}` : ''}`, !!bad.length);
     // keep the keyboard in the list: the next order's Remove, else Restore
     this._focusAfter = () => this.el.plan.querySelectorAll(`.planbox.${seat.toLowerCase()} button.x`)[i] ?? this.el.plan.querySelector('button.restore');
     this._renderAll();
@@ -1681,7 +1903,8 @@ export class VersusApp {
     const minted = this.tickEvents?.filter((e) => e.type === 'card_minted' || e.type === 'tick_started' || e.type === 'mana_expired') ?? [];
     const all = [...(this.playback ? [] : []), ...evs];
     const shown = (all.length ? all : minted).slice(-60);
-    this.el.events.replaceChildren(...shown.map((e) => { const open = () => { this.inspectEvent = e.id; this.pinned = { kind: 'event', id: e.id, event: e }; this._renderAll(); }; return h('span', { class: `ev ev-${e.type}${this.inspectEvent === e.id ? ' sel' : ''}`, onclick: open, ...kbd(open) }, eventLine(s, e)); }));
+    const histBtn = h('button', { class: 'ev-hist', title: 'Browse earlier Ticks (H)', onclick: () => this._toggleOrders(true, 'history') }, 'History');
+    this.el.events.replaceChildren(histBtn, ...shown.map((e) => { const open = () => { this.inspectEvent = e.id; this.pinned = { kind: 'event', id: e.id, event: e }; this._renderAll(); }; return h('span', { class: `ev ev-${e.type}${this.inspectEvent === e.id ? ' sel' : ''}`, onclick: open, ...kbd(open) }, eventLine(s, e)); }));
     this.el.events.scrollLeft = this.el.events.scrollWidth;
   }
 
@@ -1751,24 +1974,71 @@ export class VersusApp {
     else this.el.decision.replaceChildren();
   }
 
-  /** Orders: the public plans, opened on demand and automatically when an acknowledgment goes stale. */
+  /**
+   * Orders & history (addendum 03, HF3-03): a voluntary drawer. "This Tick" holds the current
+   * public plans (drafts, never history); "History" browses completed Ticks from the session's own
+   * event record, grouped by Tick with a short result and expandable details. Nothing opens it
+   * automatically and its Close always works.
+   */
   _renderOrders() {
-    const me = this.viewSeat, can = this._can(me);
-    const staleKey = can.stale ? `${this.state.tick}:${this.rev.A}:${this.rev.B}:${me}` : null;
-    if (staleKey && staleKey !== this._staleKey) this.ordersOpen = true;
-    this._staleKey = staleKey;
     this._renderPlan();
     this.el.orders.hidden = !this.ordersOpen;
     if (!this.ordersOpen) return;
+    const tab = this.ordersTab ?? 'plan';
+    const tabBtn = (id, label) => h('button', { class: `otab${tab === id ? ' on' : ''}`, role: 'tab', 'aria-selected': String(tab === id), onclick: () => { this.ordersTab = id; this._renderAll(); this.inspect.relayout(); } }, label);
     this.el.orders.replaceChildren(
-      h('div', { class: 'orders-head' }, h('h3', {}, 'Orders'), h('button', { class: 'peek-btn', 'aria-label': 'Close Orders', disabled: can.stale, title: can.stale ? 'Review the changed plan, then Acknowledge' : 'Close (Esc)', onclick: () => this._toggleOrders(false) }, '×')),
-      this._nowPanel(), this.el.plan);
+      h('div', { class: 'orders-head' }, h('h3', {}, 'Orders & history'), h('div', { class: 'otabs', role: 'tablist' }, tabBtn('plan', `This Tick (${this.state.tick})`), tabBtn('history', 'History')),
+        h('button', { class: 'peek-btn', 'aria-label': 'Close Orders and history', title: 'Close (Esc)', onclick: () => this._toggleOrders(false) }, '×')),
+      ...(tab === 'history' ? [this._historyPanel()] : [this._nowPanel(), this.el.plan]));
   }
 
-  _toggleOrders(open = !this.ordersOpen) {
+  /** Completed Ticks, newest first, from session.events (during playback only what has been shown). */
+  _historyTicks() {
+    const pb = this.playback;
+    let evs = this.session.events;
+    if (pb) { const hidden = new Set(pb.events.slice(pb.shown).map((e) => e.id)); evs = evs.filter((e) => !hidden.has(e.id)); }
+    const by = new Map();
+    for (const e of evs) { const t = e.tick ?? 0; if (!by.has(t)) by.set(t, []); by.get(t).push(e); }
+    return [...by.entries()].sort((a, b) => b[0] - a[0]);
+  }
+
+  _historyPanel() {
+    const s = this.state, ticks = this._historyTicks();
+    if (!ticks.length) return h('div', { class: 'history dim' }, 'No completed Tick yet.');
+    const at = ticks.findIndex(([t]) => t === this.historyTick);
+    const i = at >= 0 ? at : 0;
+    const [tick, evs] = ticks[i];
+    const GROUPS = [
+      ['Movement', ['destination_set', 'region_entered', 'destination_reached', 'travel_blocked', 'travel_paused', 'parties_merged', 'elevation_changed', 'retreat_started', 'formation_change_started', 'formation_changed']],
+      ['Resources', ['card_minted', 'supply_loaded', 'supply_spent', 'card_burned', 'mana_paid', 'mana_expired']],
+      ['Cards and effects', ['ability_announced', 'ability_resolved', 'ability_countered', 'response_passed', 'effect_started', 'effect_ended', 'terrain_changed']],
+      ['Combat', ['contact', 'engagement_started', 'exchange', 'card_damage', 'member_died', 'party_defeated', 'engagement_ended']],
+    ];
+    const known = new Set(GROUPS.flatMap(([, t]) => t));
+    const lines = (list) => list.filter((e) => eventLine(s, e));
+    const groups = GROUPS.map(([label, types]) => [label, lines(evs.filter((e) => types.includes(e.type)))]);
+    groups.push(['Other', lines(evs.filter((e) => !known.has(e.type)))]);
+    const count = (t) => evs.filter((e) => e.type === t).length;
+    const summary = [count('destination_reached') && `${count('destination_reached')} arrived`, count('travel_blocked') && `${count('travel_blocked')} blocked`, count('card_burned') && `${count('card_burned')} burned`, count('supply_loaded') && `${count('supply_loaded')} Supply loaded`, count('ability_resolved') && `${count('ability_resolved')} abilities`, count('exchange') && `${count('exchange')} exchanges`, count('member_died') && `${count('member_died')} fell`].filter(Boolean).join(' · ') || 'No movement, Cards or combat';
+    const open = (e) => { this.inspectEvent = e.id; this.pinned = { kind: 'event', id: e.id, event: e }; this._renderAll(); };
+    const go = (j) => { this.historyTick = ticks[j][0]; this._renderAll(); this.el.orders.querySelector('.hist-nav button:not([disabled])')?.focus({ preventScroll: true }); };
+    return h('div', { class: 'history' },
+      h('div', { class: 'hist-nav' },
+        h('button', { 'aria-label': 'Earlier Tick', disabled: i >= ticks.length - 1, onclick: () => go(i + 1) }, '◀'),
+        h('select', { 'aria-label': 'Tick', onchange: (e) => { this.historyTick = Number(e.target.value); this._renderAll(); } }, ...ticks.map(([t]) => h('option', { value: t, selected: t === tick }, `Tick ${t}${t === s.tick && (this.playback || this.resolving) ? ' (playing)' : ''}`))),
+        h('button', { 'aria-label': 'Later Tick', disabled: i <= 0, onclick: () => go(i - 1) }, '▶')),
+      h('p', { class: 'hist-sum' }, h('b', {}, `Tick ${tick}: `), summary),
+      ...groups.filter(([, l]) => l.length).map(([label, l]) => h('details', { class: 'hist-group', open: l.length <= 6 ? true : null },
+        h('summary', {}, `${label} (${l.length})`),
+        h('ul', {}, ...l.map((e) => h('li', {}, h('button', { class: 'linkish', onclick: () => open(e) }, eventLine(s, e))))))));
+  }
+
+  _toggleOrders(open = !this.ordersOpen, tab = null) {
     this.ordersOpen = open;
+    if (tab) this.ordersTab = tab;
     this._renderAll();
     this.inspect.relayout();
+    this._avoidCache = null;
     if (open) this.el.orders.querySelector('h3')?.setAttribute('tabindex', '-1'), this.el.orders.querySelector('h3')?.focus();
     else this.el.ordersBtn?.focus();
   }
@@ -1777,18 +2047,21 @@ export class VersusApp {
   _renderBasins() {
     const s = this.state;
     for (const seat of ['A', 'B']) {
-      const pool = s.players[seat].pool, el = this.el.basins[seat];
-      // while a Tick resolves the state already holds its accepted burns: never project them twice
-      const proj = this.resolving || this.playback || this.pendingChoice ? { ...pool } : this._plannedPool(seat);
-      const entries = Object.entries(pool).filter(([, n]) => n > 0);
-      const changed = JSON.stringify(Object.entries(proj).filter(([, n]) => n > 0).sort()) !== JSON.stringify(entries.slice().sort());
-      el.replaceChildren(...[h('span', { class: 'bc-seat' }, seat),
-        ...(entries.length ? entries.map(([c, n]) => h('span', { class: `bc-chip c-${c}` }, h('img', { src: emblemURL(c, 16), alt: '' }), String(n))) : [h('span', { class: 'bc-empty' }, 'Empty')]),
-        changed ? h('span', { class: 'bc-proj', title: 'Projected after this plan' }, '→ plan') : null].filter(Boolean));
-      el.setAttribute('aria-label', `${seat}'s Mana basin: ${entries.length ? fmtMana(pool) : 'empty'}${changed ? `; projected after its plan ${fmtMana(proj)}` : ''}`);
+      const el = this.el.basins[seat];
+      // the primary answer is what can be spent now (HF3-06): this plan's burns credited and its
+      // queued costs reserved; while a Tick resolves the actual pool (never projected twice)
+      const avail = this._availablePool(seat);
+      const entries = Object.entries(avail).filter(([, n]) => n > 0);
+      const planning = !(this.resolving || this.playback || this.pendingChoice);
+      el.replaceChildren(...[h('span', { class: 'bc-seat' }, seat), h('span', { class: 'bc-label' }, planning ? 'Available' : 'Pool'),
+        ...(entries.length ? entries.map(([c, n]) => h('span', { class: `bc-chip c-${c}` }, h('img', { src: emblemURL(c, 16), alt: '' }), String(n))) : [h('span', { class: 'bc-empty' }, '0')])].filter(Boolean));
+      el.title = planning ? `${seat}'s Mana available this Tick (its plan's burns credited, queued costs reserved; the plan stays editable until Ready)` : `${seat}'s Mana pool now`;
+      el.setAttribute('aria-label', `${seat}'s Mana ${planning ? 'available this Tick' : 'pool'}: ${entries.length ? fmtMana(avail) : 'none'}`);
+      const f = this._basinFlash;
+      el.classList.toggle('gain', !!f && f.seat === seat && performance.now() - f.at < 900);
     }
-    const offerings = (seat) => this.plans[seat].flatMap((c) => (c.type === 'burn' ? [c.cardId] : c.burns ?? [])).filter((id) => s.cards[id]).map((id) => drawCardCanvas(s.cards[id], s, 120, 160));
-    for (const seat of ['A', 'B']) this.view.sites.setOfferings(seat, this.playback ? [] : offerings(seat));
+    // burns are shown entering the flame when planned (_syncDraftMana): no ghost offerings linger
+    for (const seat of ['A', 'B']) this.view.sites.setOfferings(seat, []);
   }
 
   /** Per frame: keep each basin counter on its basin, or at the viewport edge as a locator. */
@@ -1805,16 +2078,23 @@ export class VersusApp {
   /** The basin view: actual pool by named color, the plan's projection, and the conversion rules. */
   _basinPanel(seat) {
     const s = this.state, pool = s.players[seat].pool;
-    const proj = this.resolving || this.playback || this.pendingChoice ? { ...pool } : this._plannedPool(seat);
-    const burns = this.plans[seat].filter((c) => c.type === 'burn');
+    const planning = !(this.resolving || this.playback || this.pendingChoice);
+    const avail = this._availablePool(seat);
+    const ev = planning ? projectPlan(s, this.ctx, seat, this.plans[seat]).events : [];
+    const gained = {}, spent = {};
+    for (const e of ev) {
+      if (e.type === 'card_burned') for (const [c, n] of Object.entries(e.mana ?? {})) gained[c] = (gained[c] ?? 0) + n;
+      if (e.type === 'mana_paid') for (const a of e.assigned ?? []) spent[a.color] = (spent[a.color] ?? 0) + (a.amount ?? 1);
+    }
     const all = ['red', 'green', 'purple', 'yellow', 'blue', 'orange', 'black', 'white', 'rainbow'];
-    const row = (c) => h('tr', {}, h('td', {}, h('img', { src: emblemURL(c, 16), alt: '' }), ` ${COLOR_NAME[c]}`), h('td', {}, String(pool[c] ?? 0)), h('td', { class: (proj[c] ?? 0) !== (pool[c] ?? 0) ? 'ok' : 'dim' }, String(proj[c] ?? 0)));
-    const shown = all.filter((c) => pool[c] || proj[c]);
+    const row = (c) => h('tr', {}, h('td', {}, h('img', { src: emblemURL(c, 16), alt: '' }), ` ${COLOR_NAME[c]}`), h('td', { class: 'big' }, String(avail[c] ?? 0)), planning ? h('td', { class: 'dim' }, `${pool[c] ?? 0} start${gained[c] ? ` + ${gained[c]} burned` : ''}${spent[c] ? ` − ${spent[c]} reserved` : ''}`) : null);
+    const shown = all.filter((c) => pool[c] || avail[c] || gained[c] || spent[c]);
+    const burnCmds = ev.filter((e) => e.type === 'card_burned');
     return h('div', { class: 'basin-view' },
-      h('table', { class: 'mana-table' }, h('tr', {}, h('th', {}, term('mana')), h('th', {}, 'Now'), h('th', {}, 'After plan')), ...(shown.length ? shown.map(row) : [h('tr', {}, h('td', { colspan: 3, class: 'dim' }, 'Empty — burn a Card in this Fire Pit to fill it.'))])),
-      h('p', { class: 'small' }, '“After plan” projects ', seat === this.viewSeat ? 'your' : `${seat}'s`, ' public plan in order (its burns and payments). The opponent\'s plan and responses can still change what is available.'),
-      burns.length ? h('div', { class: 'small' }, h('b', {}, 'Planned burns: '), burns.map((c) => cardShort(s, c.cardId)).join(', ')) : null,
-      h('p', { class: 'dim small' }, this.ctx.profile.resources.poolCarryover ? 'Unspent Mana carries over to the next Tick.' : 'Unspent Mana expires at the Tick boundary.'),
+      h('table', { class: 'mana-table' }, h('tr', {}, h('th', {}, term('mana')), h('th', {}, planning ? 'Available this Tick' : 'Pool now'), planning ? h('th', {}, 'From') : null), ...(shown.length ? shown.map(row) : [h('tr', {}, h('td', { colspan: 3, class: 'dim' }, 'None — burn a Mana-bearing Card in this Fire Pit: its colors are available at once, this Tick.'))])),
+      planning ? h('p', { class: 'small' }, 'Burning a Card adds its colors now, so an ability later in ', seat === this.viewSeat ? 'your' : `${seat}'s`, ' plan can spend them this Tick. Queued costs are reserved at once. The plan stays editable until Ready; the opponent\'s responses can still change the outcome.') : null,
+      burnCmds.length ? h('div', { class: 'small' }, h('b', {}, 'Burned this Tick: '), burnCmds.map((e) => `${cardShort(s, e.cardId)} (${Object.keys(e.mana ?? {}).length ? fmtMana(e.mana) : '0 Mana'})`).join(', ')) : null,
+      h('p', { class: 'dim small' }, this.ctx.profile.resources.poolCarryover ? 'Unspent Mana carries over to the next Tick.' : 'Unspent Mana expires at the end of this Tick, before the next Tick\'s spending.'),
       h('p', { class: 'dim small' }, 'A Card does one thing: ', term('supply'), ' for a party, ', term('burn'), ' in the ', term('firepit'), ' for its Mana, or its ', term('ability'), '. ', term('rainbow'), ' pays any one color until a payment assigns it.'));
   }
 
@@ -1872,11 +2152,14 @@ export class VersusApp {
    */
   _moveReason(p) {
     const s = this.state;
+    const blocked = this._blockInfo(p);
+    if (blocked && !s.activeColumns.includes(p.region.column)) return `${blocked.text.split(' — ')[0]}. Next active Tick ${nextActivation(this.ctx.profile, p.region.column, s.tick) ?? '—'}`;
     if (!this._can(p.owner).edit) return this._can(p.owner).frozen ? 'Plan frozen after Ready' : this._editRefusal(p.owner);
     if (!p.mount) return 'Needs a Mount: a Pawn cannot move on its own';
     if (p.mountLost) return 'Mount lost: cannot travel';
     if (!s.activeColumns.includes(p.region.column)) return `C${this.ctx.geo.toLocal(p.owner, p.region.column, 1).column} inactive: next active Tick ${nextActivation(this.ctx.profile, p.region.column, s.tick) ?? '—'}`;
     if (!this._fundedTargets(p).some((d) => d.funded)) return 'No Supply for any route: load a Card first';
+    if (blocked) return blocked.text;
     return null;
   }
 
@@ -1993,10 +2276,27 @@ export class VersusApp {
     const cmds = this.plans[p.owner].filter((c) => !(['set_destination', 'retreat'].includes(c.type) && c.partyId === p.id));
     const proj = projectPlan(this.state, this.ctx, p.owner, [...cmds, ...extraLoads.map((cardId) => ({ type: 'load_supply', cardId, partyId: p.id }))]);
     const q = proj.state.parties[p.id];
-    const list = q && q.mount && !q.mountLost ? quotedDestinations(proj.state, this.ctx, q).filter((d) => d.column !== p.region.column || d.row !== p.region.row) : [];
+    // every legal destination with its quote and known clearance (HF3-01). A party between centers
+    // keeps its starting territory as a destination: only actual arrival makes "already there".
+    const list = q && q.mount && !q.mountLost ? quotedDestinations(proj.state, this.ctx, q).filter((d) => !(atNode(this.ctx, q) && d.column === q.region.column && d.row === q.region.row)).map((d) => {
+      const c = routeClearance(proj.state, this.ctx, q, routeFromHere(proj.state, this.ctx, q, d).path);
+      return { ...d, clearance: c, blocked: !c.clear && c.friendly };
+    }) : [];
     if (!extraLoads.length) this._fundCache = { key, list };
     return list;
   }
+
+  /** The known obstruction of a party's accepted travel, for the in-world cue and the command bar. */
+  _blockInfo(p) {
+    const b = p?.blockedBy;
+    if (!b || !p.destination) return null;
+    const by = this.state.parties[b.partyId];
+    const c = routeClearance(this.state, this.ctx, p, p.route);
+    const who = by ? `${by.owner === p.owner ? 'Your' : `${by.owner}'s`} ${by.mount ? cap(by.mount) : 'Pawn'} at R${by.region.row}C${by.region.column}` : 'A formation';
+    return { at: c.clear ? null : c.at, label: `${by ? (by.mount ? cap(by.mount) : 'Pawn') : 'Body'} R${by?.region.row ?? '?'}C${by?.region.column ?? '?'}`, text: `${who} blocks its path — destination and Supply kept. When its column is active, order a clear route (returning to the territory it left is one).`, who };
+  }
+
+  _blockCue(p) { const b = this._blockInfo(p); return b?.at ? b : null; }
 
   /** How many more destinations a Card would fund if loaded into this party ("if loaded" preview). */
   _rangeIfLoaded(p, cardId) {
@@ -2050,12 +2350,13 @@ export class VersusApp {
       funded.length ? h('div', { class: 'row scrolly' }, ...funded.map((d) => {
         // who is there already: one of your Pawns means the move merges them
         const there = Object.values(s.parties).find((q) => q.alive && !q.retired && q.id !== p.id && q.region.column === d.column && q.region.row === d.row);
-        const note = there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '';
-        return h('button', { 'aria-label': `Move ${partyShort(s, p.id)} to R${d.row}C${d.column}: needs ${need(d)}${note}`, onclick: () => {
+        const by = d.blocked ? s.parties[d.clearance.partyId] : null;
+        const note = (by ? ` · ✕ blocked by your ${partyShort(s, by.id)} after ${pts(d.clearance.along)}` : '') + (there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '') + (d.direct ? ' · along its current segment' : '');
+        return h('button', { class: d.blocked ? 'blocked' : null, 'aria-label': `Move ${partyShort(s, p.id)} to R${d.row}C${d.column}: needs ${need(d)}${note}`, onclick: () => {
           if (this._addCommand(p.owner, { type: 'set_destination', partyId: p.id, target: { column: d.column, row: d.row } })) {
-            const plan = planPartyRoute(s, this.ctx, p, routeOrigin(s, this.ctx, p), d);
-            if (plan.route) this.view.showRoute(p, plan.route.map((n) => { const c = this.ctx.geo.center(n.column, n.row); return [c.x, c.y]; }));
-            this._toast(`Destination: R${d.row}C${d.column} (planned, needs ${need(d)})`);
+            const plan = routeFromHere(s, this.ctx, p, d);
+            if (plan.path) this.view.showRoute(p, plan.path.map((n) => [n.x, n.y]));
+            this._toast(`Destination: R${d.row}C${d.column} (planned, needs ${need(d)})${by ? ` — warning: your ${partyShort(s, by.id)} blocks this route now` : ''}`, !!by);
             this._cmdOpen = null; // the choice is made: the menu closes, the endpoint shows on the board
             // the keyboard follows the decision: the new order when Orders is open, else Ready
             this._focusAfter = () => (this.ordersOpen ? [...this.el.plan.querySelectorAll(`.planbox.${p.owner.toLowerCase()} button.x`)].at(-1) : null) ?? this.el.readyBig;
@@ -2179,7 +2480,7 @@ export class VersusApp {
         h('details', { class: 'supplyto' }, h('summary', {}, `Load Supply ${pts(card.supply)} into…`),
           h('div', { class: 'col' }, ...parties.map((p) => h('button', { 'aria-label': `Load ${pts(card.supply)} Supply from ${cardShort(s, card.id)} into ${partyShort(s, p.id)}`, onclick: () => { if (this._addCommand(seat, { type: 'load_supply', cardId: card.id, partyId: p.id })) { this._toast(`+${pts(card.supply)} Supply planned for ${partyName(s, p.id)} — it arrives when the Tick resolves`); this.selected = { kind: 'party', id: p.id }; this._focusInspectorNext = true; this._renderAll(); } } },
             `${partyShort(s, p.id)}`, h('small', { class: 'dim' }, ` Supply ${pts(supplyOf(p) + this._plannedSupply(p))} → ${pts(supplyOf(p) + this._plannedSupply(p) + card.supply)}`))))),
-        h('button', { class: 'burn', 'aria-label': manaN ? `Burn ${cardShort(s, card.id)} for ${fmtMana(card.mana)}` : `Burn ${cardShort(s, card.id)} for 0 Mana; consumes this Card`, onclick: () => { if (this._addCommand(seat, { type: 'burn', cardId: card.id })) this._toast(manaN ? `Burn planned: +${fmtMana(card.mana)} when the Tick resolves` : 'Burn planned for 0 Mana: the Card is consumed when the Tick resolves'); } },
+        h('button', { class: 'burn', 'aria-label': manaN ? `Burn ${cardShort(s, card.id)} for ${fmtMana(card.mana)}` : `Burn ${cardShort(s, card.id)} for 0 Mana; consumes this Card`, onclick: () => { if (this._addCommand(seat, { type: 'burn', cardId: card.id })) this._toast(manaN ? `Burned: +${fmtMana(card.mana)} available this Tick` : '0 Mana — the Card is consumed'); } },
           manaN ? `Burn for ${fmtMana(card.mana)}` : 'Burn for 0 Mana — consumes this Card'),
         def && def.category !== 'resource' ? h('button', { disabled: def.timing === 'response', title: def.timing === 'response' ? 'A response: offered when the opponent announces a Spell' : '', onclick: () => { this.pinned = { kind: 'card', id: card.id }; this._cardTool('ability'); } }, def.timing === 'response' ? `${def.title} (response only)` : `Use ${def.title}…`) : null,
         this.tool?.cardId === card.id && this.tool.step === 'facing' ? h('div', { class: 'row' }, 'Facing ', ...['N', 'E', 'S', 'W'].map((f) => h('button', { onclick: () => { this._addCommand(seat, { type: 'play_ability', cardId: card.id, actorPartyId: this.tool.actorPartyId, target: { facing: f } }); this.tool = null; this._renderAll(); } }, f))) : null);

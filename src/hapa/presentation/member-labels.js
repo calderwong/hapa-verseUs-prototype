@@ -1,8 +1,12 @@
 /**
  * The actual formation as the composition view (human-feedback addendum 02, HF2-04/HF2-06/HF2-07;
- * reviews 05 and 06, R5-03 and R6-01). For one intentionally inspected party, a passive compact
- * label sits beside each visible member's real body — role, then true health, then a concise
- * combat summary when the on-screen space allows. Opening one member (hover, a tap on its body, or
+ * reviews 05 and 06, R5-03 and R6-01; addendum 03, HF3-05). For one intentionally inspected party,
+ * a compact label sits beside each visible member's real body: symbols and exact values in a fixed
+ * order (member-glyphs.js) — role and health, then attack, range and protection when the on-screen
+ * space allows. Each symbol is a real hit area: hovering it (after a short dwell), or tapping it,
+ * shows that symbol's definition and current value in one small tooltip; Escape dismisses it. The
+ * label body stays pointer-transparent, so board and camera gestures around the symbols keep
+ * working, and wheel events over a symbol still reach the camera. Opening one member (hover, a tap on its body, or
  * its button in the inspection bar) never expands that label over its neighbours: the full
  * explanation goes to one reading panel placed in measured free space beside the formation, joined
  * to its member by a leader line and a highlighted label. The party's collective facts appear once,
@@ -18,9 +22,10 @@
 import { h } from './dom.js';
 
 /** Projected px per member width that enter / leave each level (hysteresis), and the settle time. */
-export const LEVELS = { identity: { enter: 64, exit: 54 }, combat: { enter: 150, exit: 135 } };
+export const LEVELS = { identity: { enter: 64, exit: 54 }, combat: { enter: 112, exit: 100 } };
 /** Projected px between formation rows needed before a level's lines fit without covering a row. */
-export const ROW_PX = { identity: 34, combat: 120 };
+export const ROW_PX = { identity: 34, combat: 80 };
+const TIP_DWELL = 220, TIP_LINGER = 160;
 const SETTLE_MS = 140;
 const GAP = 14, EDGE = 8;
 
@@ -28,12 +33,13 @@ const GAP = 14, EDGE = 8;
  * @param {number} [k] text scale (root font size / 16): larger text needs proportionally more room
  *   per member, so at 200% text the labels wait for twice the projected space (R6-01)
  */
-export function levelFor(prev, pxPerMember, rowPx = Infinity, k = 1, rowNeed = ROW_PX.identity * k) {
+export function levelFor(prev, pxPerMember, rowPx = Infinity, k = 1, rowNeed = ROW_PX.identity * k, combatNeed = ROW_PX.combat * k) {
   const { identity, combat } = LEVELS;
   // the vertical room between rows caps the level: a label must fit between rows (its measured
-  // height, with a little hysteresis), and a summary that would cover the next row waits
+  // height, with a little hysteresis), and a fuller label that would cover the next row waits
   const idRow = prev === 'none' ? rowNeed : rowNeed * 0.92;
-  const cap = rowPx >= ROW_PX.combat * k ? 'combat' : rowPx >= idRow ? 'identity' : 'none';
+  const coRow = prev === 'combat' ? combatNeed * 0.92 : combatNeed;
+  const cap = rowPx >= coRow ? 'combat' : rowPx >= idRow ? 'identity' : 'none';
   pxPerMember /= k;
   const lv = levelFor0(prev, pxPerMember, identity, combat);
   const order = ['none', 'identity', 'combat'];
@@ -145,7 +151,12 @@ export class MemberLabels {
     // describe themselves with it, so keyboard and touch reach the same explanation
     this.reading = h('section', { class: 'mreading', id: 'member-reading', role: 'region', 'aria-label': 'Member explanation' });
     this.reading.hidden = true;
-    host.append(this.root, this.reading);
+    // one definition tooltip for the symbol being asked about (pointer, tap or keyboard focus)
+    this.tip = h('div', { class: 'mtip', id: 'member-tip', role: 'tooltip' });
+    this.tip.hidden = true;
+    this.chips = new Map(); // `${memberId}|${key}` → chip definition
+    host.append(this.root, this.reading, this.tip);
+    this._bindTips();
     this.els = new Map();
     this.sizes = new Map();
     this.level = 'none';
@@ -153,6 +164,59 @@ export class MemberLabels {
     this.keys = new Map();
     this.layout = null;
   }
+
+  _bindTips() {
+    const chipOf = (t) => t?.closest?.('.mfact');
+    this.root.addEventListener('pointerover', (e) => {
+      const c = chipOf(e.target);
+      if (!c) return;
+      clearTimeout(this._tipHide);
+      clearTimeout(this._tipShow);
+      if (this.tipFor === c.dataset.ref) return;
+      this._tipShow = setTimeout(() => this.showTip(c.dataset.ref, c), this.tip.hidden ? TIP_DWELL : 60);
+    });
+    this.root.addEventListener('pointerout', (e) => {
+      const c = chipOf(e.target);
+      if (!c || c.contains(e.relatedTarget)) return;
+      clearTimeout(this._tipShow);
+      if (e.relatedTarget && this.tip.contains(e.relatedTarget)) return;
+      this._tipHide = setTimeout(() => { if (!this.tipPinned) this.hideTip(); }, TIP_LINGER);
+    });
+    // a deliberate tap/click shows the definition at once and keeps it until dismissed
+    this.root.addEventListener('click', (e) => { const c = chipOf(e.target); if (!c) return; e.stopPropagation(); clearTimeout(this._tipShow); this.showTip(c.dataset.ref, c, { pinned: true }); });
+    this.tip.addEventListener('pointerenter', () => clearTimeout(this._tipHide));
+    this.tip.addEventListener('pointerleave', () => { if (!this.tipPinned) this._tipHide = setTimeout(() => this.hideTip(), TIP_LINGER); });
+  }
+
+  /** Show one symbol's definition and current value beside `anchor` (a chip or a bar button). */
+  showTip(ref, anchor, { pinned = false } = {}) {
+    const c = this.chips.get(ref);
+    if (!c || !anchor) return false;
+    this.tipFor = ref; this.tipPinned = pinned;
+    this.tip.replaceChildren(h('div', { class: 'mt-head' }, h('b', {}, c.title), c.value ? h('span', { class: 'mt-val' }, ` ${c.value}`) : null), h('div', {}, c.text));
+    this.tip.hidden = false;
+    const host = this.host.getBoundingClientRect(), a = anchor.getBoundingClientRect();
+    const w = this.tip.offsetWidth, hh = this.tip.offsetHeight, W = this.host.clientWidth, H = this.host.clientHeight;
+    let x = a.left - host.left + a.width / 2 - w / 2, y = a.top - host.top - hh - 6;
+    if (y < EDGE) y = a.bottom - host.top + 6;
+    x = Math.max(EDGE, Math.min(W - EDGE - w, x)); y = Math.max(EDGE, Math.min(H - EDGE - hh, y));
+    this.tip.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+    for (const el of this.root.querySelectorAll('.mfact.asked')) el.classList.remove('asked');
+    if (anchor.classList?.contains('mfact')) anchor.classList.add('asked');
+    else this.root.querySelector(`.mfact[data-ref="${CSS.escape(ref)}"]`)?.classList.add('asked');
+    return true;
+  }
+
+  hideTip() {
+    clearTimeout(this._tipShow); clearTimeout(this._tipHide);
+    if (this.tip.hidden) return false;
+    this.tip.hidden = true; this.tipFor = null; this.tipPinned = false;
+    for (const el of this.root.querySelectorAll('.mfact.asked')) el.classList.remove('asked');
+    return true;
+  }
+
+  /** The on-body chip element for a fact, when that member's label shows it now. */
+  chipEl(ref) { return this.root.querySelector(`.mlabel:not([hidden]) .mfact[data-ref="${CSS.escape(ref)}"]`); }
 
   /** Remove every label (no subject, new match, playback start). */
   clear() {
@@ -163,7 +227,8 @@ export class MemberLabels {
     this.leader.setAttribute('visibility', 'hidden');
     this.level = 'none'; this.pending = null;
     this.subject = null; this.partyKey = null; this.partySide = null;
-    this.layout = null; this.labelH = null;
+    this.layout = null; this.labelH = null; this.combatH = null;
+    this.chips.clear(); this.hideTip();
   }
 
   _size(id, el, key) {
@@ -177,7 +242,7 @@ export class MemberLabels {
   /** Measured sizes depend on the text size: drop them when the root font size changes. */
   _checkTextScale() {
     const fs = getComputedStyle(document.documentElement).fontSize;
-    if (fs !== this.fontSize) { this.fontSize = fs; this.sizes.clear(); this.readingKey = null; this.partyKey = null; this.keys.clear(); this.labelH = null; }
+    if (fs !== this.fontSize) { this.fontSize = fs; this.sizes.clear(); this.readingKey = null; this.partyKey = null; this.keys.clear(); this.labelH = null; this.combatH = null; }
   }
 
   /**
@@ -194,7 +259,8 @@ export class MemberLabels {
     if (!this._scaleCheckAt || now - this._scaleCheckAt > 500) { this._scaleCheckAt = now; this._checkTextScale(); }
     // detail level from measured space, with hysteresis and a short settling interval
     const k = (parseFloat(this.fontSize) || 16) / 16;
-    const want = levelFor(this.level, m.pxPerMember, m.rowPx, k, (this.labelH ?? 36 * k) + 2);
+    const want = levelFor(this.level, m.pxPerMember, m.rowPx, k, (this.labelH ?? 36 * k) + 2, Math.max(ROW_PX.combat * k, (this.combatH ?? 0) + 2));
+    if (m.frontDeg != null) this.root.style.setProperty('--front-rot', `${Math.round(m.frontDeg)}deg`);
     if (want !== this.level) {
       if (!this.pending || this.pending.level !== want) this.pending = { level: want, since: now };
       else if (now - this.pending.since >= SETTLE_MS) { this.level = want; this.pending = null; }
@@ -213,23 +279,28 @@ export class MemberLabels {
       if (!show) { if (el) el.hidden = true; continue; }
       seen.add(mm.id);
       if (!el) { el = h('div', { class: 'mlabel' }); this.els.set(mm.id, el); this.root.append(el); }
-      const expanded = m.expanded === mm.id;
-      // never wider than the space to the neighbouring member: labels sit side by side, and a long
-      // role is cut with an ellipsis (its full name is in the inspection bar and the explanation)
+      const expanded = m.expanded === mm.id, hovered = m.hovered === mm.id;
+      // never wider than the space to the neighbouring member: labels sit side by side
       const maxW = `${Math.max(Math.round(58 * k), Math.round(m.pxPerMember - 4))}px`;
-      const key = `${this.level}|${expanded}|${mm.occluded ? 1 : 0}|${mm.text.role}|${mm.text.health}|${mm.text.healthPct}|${mm.text.combat}|${maxW}`;
+      const chips = mm.chips ?? [];
+      const key = `${this.level}|${expanded}|${hovered}|${mm.occluded ? 1 : 0}|${mm.text.key}|${mm.text.healthPct}|${maxW}`;
       el.hidden = false;
       if (this.keys.get(mm.id) !== key) {
         this.keys.set(mm.id, key);
-        el.className = `mlabel${expanded ? ' expanded' : ''}${mm.occluded ? ' occluded' : ''}`;
+        el.className = `mlabel${expanded ? ' expanded' : ''}${hovered ? ' hovered' : ''}${mm.occluded ? ' occluded' : ''}`;
+        for (const c of chips) this.chips.set(`${mm.id}|${c.key}`, c);
+        const chip = (c) => { const sp = h('span', { class: `mfact ${c.cls}`, 'data-ref': `${mm.id}|${c.key}` }); sp.innerHTML = `${c.icon}${c.value ? `<b>${c.value}</b>` : ''}`; return sp; };
         const hp = mm.text.healthPct;
+        const of = (kinds) => chips.filter((c) => kinds.includes(c.kind));
+        const id = h('div', { class: 'mrow' }, ...of(['role']).map(chip), ...of(['health']).map((c) => { const sp = chip(c); if (hp != null) sp.append(h('i', { class: 'mbar', style: `width:${Math.round(hp * 100)}%` })); return sp; }));
         el.replaceChildren(...[
-          h('b', {}, mm.text.role),
-          h('div', { class: 'mhp' }, hp != null ? h('i', { style: `width:${Math.round(hp * 100)}%` }) : null, h('span', {}, mm.text.health)),
-          this.level === 'combat' ? h('div', { class: 'mcombat' }, mm.text.combat) : null,
+          id,
+          this.level === 'combat' ? h('div', { class: 'mrow' }, ...of(['attack', 'range', 'melee']).map(chip)) : null,
+          this.level === 'combat' ? h('div', { class: 'mrow' }, ...of(['shield', 'noshield', 'cond']).map(chip)) : null,
           mm.occluded ? h('div', { class: 'mocc' }, 'behind terrain') : null,
         ].filter(Boolean));
         el.style.maxWidth = maxW;
+        if (this.tipFor?.startsWith(`${mm.id}|`)) this.hideTip(); // its chip was rebuilt
       }
       shown.push({ mm, el, key, expanded });
     }
@@ -237,6 +308,7 @@ export class MemberLabels {
     for (const x of shown) x.size = this._size(x.mm.id, x.el, x.key);
     for (const { mm, el, size, expanded } of shown) {
       if (this.level === 'identity') this.labelH = Math.max(this.labelH ?? 0, size.h); // the real compact label height
+      if (this.level === 'combat') this.combatH = Math.max(this.combatH ?? 0, size.h);
       // stable side: above the head, centered on the body
       el.style.transform = `translate(${Math.round(mm.anchor.x)}px, ${Math.round(mm.anchor.y)}px) translate(-50%, -100%)`;
       el.style.zIndex = expanded ? 3 : 2;
@@ -253,7 +325,7 @@ export class MemberLabels {
       if (this.readingKey !== rkey) {
         this.readingKey = rkey;
         const d = typeof open.text.detail === 'function' ? open.text.detail() : open.text.detail;
-        this.reading.replaceChildren(h('div', { class: 'mr-head' }, h('b', {}, open.text.role), h('span', {}, ` ${open.text.health}`), open.text.where ? h('span', { class: 'dim' }, ` · ${open.text.where}`) : null), d ?? h('div', { class: 'dim' }, 'No further facts'));
+        this.reading.replaceChildren(h('div', { class: 'mr-head' }, h('b', {}, open.text.role), h('span', {}, ` ${open.text.health}`), open.text.where ? h('span', { class: 'dim' }, ` · ${open.text.where}`) : null), h('div', { class: 'dim small' }, 'Sources and exceptions'), d ?? h('div', { class: 'dim' }, 'No further facts'));
         this.reading.hidden = false;
         this.reading.style.width = ''; this.reading.style.height = ''; this.reading.classList.remove('fitted');
         this.readingSize = { w: this.reading.offsetWidth, h: this.reading.offsetHeight };
@@ -296,7 +368,7 @@ export class MemberLabels {
       if (this.partyKey !== pkey) {
         this.partyKey = pkey;
         this.partyEl.classList.remove('crowded'); // measure it shown
-        this.partyEl.replaceChildren(...[...m.party.lines.map((t, i) => h(i ? 'div' : 'b', {}, t)), m.party.note ? h('div', { class: 'warn' }, m.party.note) : null, this.level === 'none' ? h('div', { class: 'dim' }, 'Closer to read each member') : this.level === 'identity' ? h('div', { class: 'dim' }, 'Hover or tap a member for its facts') : null].filter(Boolean));
+        this.partyEl.replaceChildren(...[...m.party.lines.map((t, i) => h(i ? 'div' : 'b', {}, t)), m.party.note ? h('div', { class: 'warn' }, m.party.note) : null, this.level === 'none' ? h('div', { class: 'dim' }, 'Closer to read each member') : this.level === 'identity' ? h('div', { class: 'dim' }, 'Closer for attack and protection · hover a symbol') : null].filter(Boolean));
         this.partySize = { w: this.partyEl.offsetWidth, h: this.partyEl.offsetHeight };
       }
       const { w, h: hh } = this.partySize;

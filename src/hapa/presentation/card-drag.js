@@ -7,8 +7,9 @@
  *   - over your Fire Pit on the board frame: Burn for its Mana (a zero-Mana Card says so plainly:
  *     "Burn for 0 Mana — consumes this Card"); the opponent's pit refuses;
  *   - anywhere else: the card slides back to its slot.
- * A drop only plans the command (the same validated command as the buttons); the rules apply it
- * when the Tick resolves. A short pick-up threshold keeps a plain click as "select".
+ * A drop plans the command (the same validated command as the buttons). A burn's Mana is
+ * available at once to later orders of the same plan (addendum 03, HF3-06); the rules apply the
+ * accepted commands when the Tick resolves. A short pick-up threshold keeps a plain click as "select".
  */
 import * as THREE from 'three';
 
@@ -131,7 +132,7 @@ export class CardDrag {
     const card = d.card;
     if (t.kind === 'burn') {
       line('tip-head', t.zero ? 'Burn for 0 Mana — consumes this Card' : `Burn for ${this.h.fmtMana(card.mana)}`);
-      line('tip-dim', t.zero ? 'It gives no Mana; the Card is gone when the Tick resolves.' : 'Mana goes to your basin when the Tick resolves and expires at that Tick\'s end.');
+      line('tip-dim', t.zero ? 'It gives no Mana. The Card is used up.' : 'Available at once: an ability later in this plan can spend it this Tick. Unspent Mana expires at the end of the Tick.');
       line('tip-dim', `Gives up: Supply ${pts(card.supply)} and its ability.`);
       return;
     }
@@ -192,7 +193,7 @@ export class CardDrag {
         a._toast(`+${pts(d.card.supply)} Supply planned for ${this.h.partyName(a.state, t.party.id)} — it lands when the Tick resolves`);
       } else {
         a.sound?.play('blip', { volume: 0.45 });
-        a._toast(t.zero ? 'Burn planned for 0 Mana: the Card is consumed when the Tick resolves' : `Burn planned: +${this.h.fmtMana(d.card.mana)} when the Tick resolves`);
+        a._toast(t.zero ? '0 Mana — the Card is consumed' : `Burned: +${this.h.fmtMana(d.card.mana)} available this Tick`);
       }
       a._renderAll();
       this.drag = null;

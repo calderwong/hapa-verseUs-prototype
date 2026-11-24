@@ -531,7 +531,7 @@ export class BoardView {
   }
 
   /** Highlight a selected party, its legal destinations and current route. */
-  select(state, party, dests = []) {
+  select(state, party, dests = [], block = null) {
     this.destGroup.clear();
     if (!party) { this.selectRing.visible = false; this.routeLine.visible = false; return; }
     this._state = state;
@@ -548,8 +548,35 @@ export class BoardView {
       m.position.set(p.x, this.travelY(party, d.column, d.row) + 0.03, p.z);
       m.renderOrder = 2;
       this.destGroup.add(m);
+      // a destination whose route a friendly body physically blocks now: crossed, not only tinted
+      if (d.blocked) for (const r of [Math.PI / 4, -Math.PI / 4]) {
+        const bar = new THREE.Mesh(new THREE.PlaneGeometry(2.6 * S, 0.22 * S), new THREE.MeshBasicMaterial({ color: 0xe6a05d, transparent: true, opacity: 0.85, depthWrite: false }));
+        bar.rotation.set(-Math.PI / 2, 0, r);
+        bar.position.set(p.x, m.position.y + 0.01, p.z);
+        bar.renderOrder = 3;
+        this.destGroup.add(bar);
+      }
     }
     this.showRoute(party, party.route.map((n) => [n.x, n.y]));
+    // the known obstruction of the party's current travel, at the point of contact
+    if (block?.at) this.markBlock(party, block.at, block.label ?? 'BLOCKED');
+  }
+
+  /** A small in-world "blocked" cue at a contact point (rules coordinates), with a short label. */
+  markBlock(party, at, label) {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+    const g = c.getContext('2d');
+    g.fillStyle = 'rgba(20,24,32,0.92)'; g.fillRect(0, 8, 256, 48);
+    g.strokeStyle = '#e6a05d'; g.lineWidth = 4; g.strokeRect(2, 10, 252, 44);
+    g.fillStyle = '#ffd9a8'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(`✕ ${label}`.slice(0, 22), 128, 33);
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+    sp.scale.set(3.2 * S, 0.8 * S, 1);
+    const w = this.toWorld(at.x, at.y);
+    sp.position.set(w.x, this.partyY(party) + 2.4 * S, w.z);
+    sp.renderOrder = 9;
+    this.destGroup.add(sp);
   }
 
   showRoute(party, nodes) {

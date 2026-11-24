@@ -51,7 +51,8 @@ export function eventLine(state, e) {
     case 'mana_expired': return `${e.seat}'s unspent ${fmtMana(e.mana)} expired at the Tick boundary`;
     case 'supply_loaded': return `${e.seat} loaded ${pts(e.units)} Supply from ${cardName(state, e.cardId)} into ${partyName(state, e.partyId)} (now ${pts(e.total)})`;
     case 'card_burned': return `${e.seat} burned ${cardName(state, e.cardId)} for ${fmtMana(e.mana)}`;
-    case 'destination_set': return `${partyName(state, e.partyId)} → R${e.target.row}C${e.target.column} (${e.cost} Supply${e.turn ? `, turns ${e.turn} first` : ''})`;
+    case 'destination_set': return `${partyName(state, e.partyId)} → R${e.target.row}C${e.target.column} (${e.cost ? `${e.cost} Supply` : 'along its current segment'}${e.turn ? `, turns ${e.turn} first` : ''})`;
+    case 'travel_blocked': return `${partyName(state, e.partyId)} stopped: ${partyName(state, e.by)} blocks its path (destination and Supply kept)`;
     case 'parties_merged': return `${partyName(state, e.partyId)} merged with ${state.parties[e.retired] ? `its ${state.parties[e.retired].mount ? cap(state.parties[e.retired].mount) : 'Pawn'}` : e.retired}: ${e.members.length} members, Supply ${pts(e.supply)}`;
     case 'destination_reached': return `${partyName(state, e.partyId)} arrived`;
     case 'travel_paused': return `${partyName(state, e.partyId)} paused: ${e.reason}`;
