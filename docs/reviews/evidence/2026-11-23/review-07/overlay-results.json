@@ -1,0 +1,15 @@
+{
+  "kind": "isolated actual-source method with synthetic rectangles; not live browser",
+  "source": "app.js::_avoidRects",
+  "returnedCount": 5,
+  "includes": {
+    "command": true,
+    "inspection": true,
+    "camera": true,
+    "rail": true,
+    "orders": false,
+    "navigator": false,
+    "decision": false,
+    "matchbar": true
+  }
+}

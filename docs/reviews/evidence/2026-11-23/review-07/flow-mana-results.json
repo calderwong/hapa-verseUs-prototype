@@ -1,0 +1,174 @@
+{
+  "source": "4fd5eaf9c0f9750242d9d3d013ac36801d96a92f",
+  "kind": "actual-source diagnostic, not browser play",
+  "cases": [
+    {
+      "name": "same_tick_burn_then_cast",
+      "tick": 9,
+      "burnPreviewPool": {
+        "red": 2
+      },
+      "authoritativeBeforeResolution": {},
+      "projectedAfterPayment": {},
+      "accepted": true,
+      "events": [
+        {
+          "id": "fixture-response:7",
+          "seq": 7,
+          "tick": 9,
+          "phase": "resolving",
+          "type": "card_burned",
+          "seat": "A",
+          "cardId": "A.red",
+          "mana": {
+            "red": 2
+          },
+          "pool": {
+            "red": 2
+          },
+          "cause": "burn"
+        },
+        {
+          "id": "fixture-response:8",
+          "seq": 8,
+          "tick": 9,
+          "phase": "resolving",
+          "type": "mana_paid",
+          "seat": "A",
+          "cardId": "A.ember",
+          "cost": {
+            "red": 2
+          },
+          "assigned": [
+            {
+              "requirement": "red",
+              "color": "red",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "fixture-response:9",
+          "seq": 9,
+          "tick": 9,
+          "phase": "resolving",
+          "type": "ability_announced",
+          "seat": "A",
+          "stackId": "S9.1",
+          "cardId": "A.ember",
+          "title": "Ember Strike",
+          "definition": "fixture.ember_strike@1",
+          "creator": "hapa-versus:fixture-author",
+          "category": "spell",
+          "target": {
+            "memberId": "B.c.s2"
+          },
+          "actorPartyId": "A.c",
+          "dryRun": false
+        },
+        {
+          "id": "fixture-response:12",
+          "seq": 12,
+          "tick": 9,
+          "phase": "responding",
+          "type": "card_damage",
+          "kind": "card",
+          "source": "A.c",
+          "cardId": "A.ember",
+          "recipient": "B.c.s2",
+          "channel": "magic",
+          "face": "front",
+          "power": 2,
+          "ratio": [
+            1,
+            1
+          ],
+          "protection": 0,
+          "sources": [],
+          "damage": 2000000
+        },
+        {
+          "id": "fixture-response:13",
+          "seq": 13,
+          "tick": 9,
+          "phase": "responding",
+          "type": "ability_resolved",
+          "stackId": "S9.1",
+          "cardId": "A.ember",
+          "title": "Ember Strike"
+        }
+      ],
+      "replay": {
+        "ok": true,
+        "ticks": 1,
+        "finalFingerprint": "sha256:4c2df0026d25a9099074dacccb9617eb99ee34824d832b536bfbfd418caa5760",
+        "outcome": null
+      }
+    },
+    {
+      "name": "unspent_mana_expires_next_boundary",
+      "resolvedTick": 9,
+      "availableThroughResolvedTick": {
+        "red": 2
+      },
+      "nextTick": 10,
+      "nextTickPool": {},
+      "expiry": [
+        {
+          "id": "fixture-response:10",
+          "seq": 10,
+          "tick": 10,
+          "phase": "minting",
+          "type": "mana_expired",
+          "seat": "A",
+          "mana": {
+            "red": 2
+          }
+        }
+      ],
+      "burnCount": 1
+    },
+    {
+      "name": "dependencies_and_exclusivity",
+      "removedFunding": [
+        {
+          "index": 0,
+          "type": "play_ability",
+          "error": "cannot pay 2 red from the Mana pool"
+        }
+      ],
+      "castBeforeBurn": [
+        {
+          "index": 0,
+          "type": "play_ability",
+          "error": "cannot pay 2 red from the Mana pool"
+        }
+      ],
+      "duplicateBurn": [
+        {
+          "index": 1,
+          "type": "burn",
+          "error": "that card is no longer available (burned)"
+        }
+      ]
+    },
+    {
+      "name": "existing_agreement_demands_second_A_ready",
+      "AReadyStaleAfterBOwnReady": true,
+      "lockedAfterEachPlayerOnce": null,
+      "lockedAfterAAgain": {
+        "A": [],
+        "B": [
+          {
+            "type": "burn",
+            "cardId": "fixture-card"
+          }
+        ],
+        "revisions": {
+          "A": 1,
+          "B": 2
+        }
+      }
+    }
+  ]
+}

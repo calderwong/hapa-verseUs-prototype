@@ -1,0 +1,534 @@
+{
+  "reviewedRevision": "4fd5eaf9c0f9750242d9d3d013ac36801d96a92f",
+  "mode": "actual headless rules; no browser claim",
+  "opening": {
+    "afterTick6": {
+      "x": 24,
+      "y": 4,
+      "region": {
+        "column": 6,
+        "row": 1
+      },
+      "state": "moving",
+      "destination": {
+        "column": 9,
+        "row": 4
+      },
+      "supply": 5.5,
+      "blockedTick": 6,
+      "nextNode": {
+        "column": 7,
+        "row": 2,
+        "x": 26000000,
+        "y": 6000000
+      }
+    },
+    "events": [
+      {
+        "id": "review07-opening-queen:40",
+        "seq": 40,
+        "tick": 6,
+        "phase": "resolving",
+        "type": "supply_loaded",
+        "seat": "A",
+        "cardId": "A.C6.T6.0",
+        "partyId": "A.mount.C6",
+        "units": 2000000,
+        "total": 2000000,
+        "partyState": "idle"
+      },
+      {
+        "id": "review07-opening-queen:41",
+        "seq": 41,
+        "tick": 6,
+        "phase": "resolving",
+        "type": "supply_loaded",
+        "seat": "A",
+        "cardId": "A.C5.T5.0",
+        "partyId": "A.mount.C6",
+        "units": 2000000,
+        "total": 4000000,
+        "partyState": "idle"
+      },
+      {
+        "id": "review07-opening-queen:42",
+        "seq": 42,
+        "tick": 6,
+        "phase": "resolving",
+        "type": "supply_loaded",
+        "seat": "A",
+        "cardId": "A.C4.T6.0",
+        "partyId": "A.mount.C6",
+        "units": 2000000,
+        "total": 6000000,
+        "partyState": "idle"
+      },
+      {
+        "id": "review07-opening-queen:43",
+        "seq": 43,
+        "tick": 6,
+        "phase": "resolving",
+        "type": "destination_set",
+        "partyId": "A.mount.C6",
+        "target": {
+          "column": 9,
+          "row": 4
+        },
+        "route": [
+          {
+            "column": 7,
+            "row": 2
+          },
+          {
+            "column": 8,
+            "row": 3
+          },
+          {
+            "column": 9,
+            "row": 4
+          }
+        ],
+        "cost": 3,
+        "turn": null,
+        "cause": {
+          "seat": "A",
+          "command": "set_destination"
+        }
+      },
+      {
+        "id": "review07-opening-queen:44",
+        "seq": 44,
+        "tick": 6,
+        "phase": "simulating",
+        "type": "supply_spent",
+        "partyId": "A.mount.C6",
+        "units": 500000,
+        "portions": {
+          "A.C6.T6.0": 500000
+        },
+        "remaining": 5500000
+      }
+    ],
+    "replayVerified": true,
+    "nextQuantumBodyOverlap": [
+      {
+        "movingMember": "A.C6.m4",
+        "movingRole": "pikeman",
+        "blockerParty": "A.pawn.C6",
+        "blockerMember": "A.C6.p9",
+        "blockerRole": "archer",
+        "prospectivePosition": [
+          23.004,
+          4.004
+        ],
+        "blockerPosition": [
+          23,
+          5
+        ]
+      }
+    ],
+    "afterTick7": {
+      "x": 24,
+      "y": 4,
+      "region": {
+        "column": 6,
+        "row": 1
+      },
+      "state": "moving",
+      "destination": {
+        "column": 9,
+        "row": 4
+      },
+      "supply": 5.5,
+      "blockedTick": 7,
+      "nextNode": {
+        "column": 7,
+        "row": 2,
+        "x": 26000000,
+        "y": 6000000
+      }
+    },
+    "tick7RelevantEvents": []
+  },
+  "clear": [
+    {
+      "mount": "queen",
+      "before": {
+        "x": 10,
+        "y": 14,
+        "region": {
+          "column": 3,
+          "row": 4
+        },
+        "state": "idle",
+        "destination": null,
+        "supply": 1,
+        "blockedTick": null,
+        "nextNode": null
+      },
+      "quote": {
+        "route": [
+          {
+            "column": 4,
+            "row": 5
+          }
+        ],
+        "distance": 4000000,
+        "required": 1000000,
+        "held": 1000000,
+        "funded": true,
+        "shortfall": 0
+      },
+      "after": {
+        "x": 14,
+        "y": 18,
+        "region": {
+          "column": 4,
+          "row": 5
+        },
+        "state": "idle",
+        "destination": null,
+        "supply": 0,
+        "blockedTick": null,
+        "nextNode": null
+      },
+      "replayVerified": true
+    },
+    {
+      "mount": "bishop",
+      "before": {
+        "x": 10,
+        "y": 14,
+        "region": {
+          "column": 3,
+          "row": 4
+        },
+        "state": "idle",
+        "destination": null,
+        "supply": 1,
+        "blockedTick": null,
+        "nextNode": null
+      },
+      "quote": {
+        "route": [
+          {
+            "column": 4,
+            "row": 5
+          }
+        ],
+        "distance": 4000000,
+        "required": 1000000,
+        "held": 1000000,
+        "funded": true,
+        "shortfall": 0
+      },
+      "after": {
+        "x": 14,
+        "y": 18,
+        "region": {
+          "column": 4,
+          "row": 5
+        },
+        "state": "idle",
+        "destination": null,
+        "supply": 0,
+        "blockedTick": null,
+        "nextNode": null
+      },
+      "replayVerified": true
+    }
+  ],
+  "recovery": [
+    {
+      "atTick": 13,
+      "target": {
+        "column": 6,
+        "row": 1
+      },
+      "before": {
+        "x": 24,
+        "y": 4,
+        "region": {
+          "column": 6,
+          "row": 1
+        },
+        "state": "moving",
+        "destination": {
+          "column": 9,
+          "row": 4
+        },
+        "supply": 5.5,
+        "blockedTick": 12,
+        "nextNode": {
+          "column": 7,
+          "row": 2,
+          "x": 26000000,
+          "y": 6000000
+        }
+      },
+      "origin": {
+        "column": 7,
+        "row": 2,
+        "midEdge": true,
+        "back": true
+      },
+      "nearest": {
+        "column": 7,
+        "row": 2,
+        "x": 26000000,
+        "y": 6000000
+      },
+      "quote": {
+        "route": [
+          {
+            "column": 6,
+            "row": 1
+          }
+        ],
+        "distance": 6000000,
+        "required": 1500000,
+        "held": 5500000,
+        "funded": true,
+        "shortfall": 0
+      },
+      "rejected": {
+        "A": [],
+        "B": []
+      },
+      "after": {
+        "x": 24,
+        "y": 4,
+        "region": {
+          "column": 6,
+          "row": 1
+        },
+        "state": "moving",
+        "destination": {
+          "column": 6,
+          "row": 1
+        },
+        "supply": 5.5,
+        "blockedTick": 13,
+        "nextNode": {
+          "column": 7,
+          "row": 2,
+          "x": 26000000,
+          "y": 6000000
+        }
+      },
+      "events": [
+        {
+          "id": "review07-opening-queen:94",
+          "seq": 94,
+          "tick": 13,
+          "phase": "resolving",
+          "type": "destination_set",
+          "partyId": "A.mount.C6",
+          "target": {
+            "column": 6,
+            "row": 1
+          },
+          "route": [
+            {
+              "column": 7,
+              "row": 2
+            },
+            {
+              "column": 6,
+              "row": 1
+            }
+          ],
+          "cost": 1,
+          "turn": null,
+          "cause": {
+            "seat": "A",
+            "command": "set_destination"
+          }
+        }
+      ]
+    },
+    {
+      "atTick": 13,
+      "target": {
+        "column": 6,
+        "row": 2
+      },
+      "before": {
+        "x": 24,
+        "y": 4,
+        "region": {
+          "column": 6,
+          "row": 1
+        },
+        "state": "moving",
+        "destination": {
+          "column": 9,
+          "row": 4
+        },
+        "supply": 5.5,
+        "blockedTick": 12,
+        "nextNode": {
+          "column": 7,
+          "row": 2,
+          "x": 26000000,
+          "y": 6000000
+        }
+      },
+      "origin": {
+        "column": 7,
+        "row": 2,
+        "midEdge": true,
+        "back": true
+      },
+      "nearest": {
+        "column": 7,
+        "row": 2,
+        "x": 26000000,
+        "y": 6000000
+      },
+      "quote": {
+        "route": [
+          {
+            "column": 6,
+            "row": 2
+          }
+        ],
+        "distance": 6000000,
+        "required": 1500000,
+        "held": 5500000,
+        "funded": true,
+        "shortfall": 0
+      },
+      "rejected": {
+        "A": [],
+        "B": []
+      },
+      "after": {
+        "x": 24,
+        "y": 4,
+        "region": {
+          "column": 6,
+          "row": 1
+        },
+        "state": "moving",
+        "destination": {
+          "column": 6,
+          "row": 2
+        },
+        "supply": 5.5,
+        "blockedTick": 13,
+        "nextNode": {
+          "column": 7,
+          "row": 2,
+          "x": 26000000,
+          "y": 6000000
+        }
+      },
+      "events": [
+        {
+          "id": "review07-opening-queen:94",
+          "seq": 94,
+          "tick": 13,
+          "phase": "resolving",
+          "type": "destination_set",
+          "partyId": "A.mount.C6",
+          "target": {
+            "column": 6,
+            "row": 2
+          },
+          "route": [
+            {
+              "column": 7,
+              "row": 2
+            },
+            {
+              "column": 6,
+              "row": 2
+            }
+          ],
+          "cost": 1,
+          "turn": null,
+          "cause": {
+            "seat": "A",
+            "command": "set_destination"
+          }
+        }
+      ]
+    },
+    {
+      "atTick": 13,
+      "target": {
+        "column": 7,
+        "row": 2
+      },
+      "before": {
+        "x": 24,
+        "y": 4,
+        "region": {
+          "column": 6,
+          "row": 1
+        },
+        "state": "moving",
+        "destination": {
+          "column": 9,
+          "row": 4
+        },
+        "supply": 5.5,
+        "blockedTick": 12,
+        "nextNode": {
+          "column": 7,
+          "row": 2,
+          "x": 26000000,
+          "y": 6000000
+        }
+      },
+      "origin": {
+        "column": 7,
+        "row": 2,
+        "midEdge": true,
+        "back": true
+      },
+      "nearest": {
+        "column": 7,
+        "row": 2,
+        "x": 26000000,
+        "y": 6000000
+      },
+      "quote": {
+        "error": "the party is already there"
+      },
+      "rejected": {
+        "A": [
+          {
+            "index": 0,
+            "type": "set_destination",
+            "error": "the party is already there"
+          }
+        ],
+        "B": []
+      },
+      "after": {
+        "x": 24,
+        "y": 4,
+        "region": {
+          "column": 6,
+          "row": 1
+        },
+        "state": "moving",
+        "destination": {
+          "column": 9,
+          "row": 4
+        },
+        "supply": 5.5,
+        "blockedTick": 13,
+        "nextNode": {
+          "column": 7,
+          "row": 2,
+          "x": 26000000,
+          "y": 6000000
+        }
+      },
+      "events": []
+    }
+  ]
+}

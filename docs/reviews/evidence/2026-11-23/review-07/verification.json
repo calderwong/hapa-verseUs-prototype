@@ -1,0 +1,25 @@
+{
+  "reviewedRevision": "4fd5eaf9c0f9750242d9d3d013ac36801d96a92f",
+  "implementationRevision": "b3a44af90704bc0a0871cdecd56a9533e8894006",
+  "enginePin": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "exactSourceFiles": 94,
+  "independentTest": {
+    "command": "node --test tests/hapa/inspection-moment.test.js tests/hapa/inspection.test.js",
+    "tests": 13,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "exitCode": 0
+  },
+  "diagnostics": {
+    "movementCases": 6,
+    "flowManaCases": 4,
+    "overlayMethodCases": 1
+  },
+  "freshLiveBrowser": false,
+  "fullCheckIndependentlyRun": false,
+  "currentOverwatchRead": false,
+  "unpublishedLocalWorkRead": false,
+  "cjAcceptance": "not recorded",
+  "repositoryPublicationScope": "review/requirements/workflow/evidence only; game implementation unchanged"
+}

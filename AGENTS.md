@@ -18,6 +18,12 @@ Calder accepts them to Done.
    gameplay. Its Appendix A profile and Appendix B contracts are the semantic source.
 2. `docs/requirements/design-companion-v1.txt` proposes presentation.
 3. `docs/requirements/references-master-v1.txt` supplies implementation advice.
+
+Later dated human-feedback addenda in `docs/requirements/` record CJ's selected changes;
+follow the current pointer in `docs/reviews/README.md`. Addendum 03 replaces repeated human
+Ready acknowledgment for new default matches and defines the current play-loop work. Preserve
+archived profile/protocol semantics as specified; do not silently reinterpret old records.
+
 The `.docx` originals stay local in `reference_documents/` (ignored: large binaries).
 
 ## Check for recent work first
@@ -51,19 +57,38 @@ sessions, `HANDOFF.md` files and the boards.
 - Profiles and content live in `fixtures/hapa`; values there are engineering fixtures.
 - The dev server binds 127.0.0.1 only.
 
-## Verification
+## Assembly and verification — Loose Screws
+
+Large work defaults to [Loose Screws v1.0.0](docs/workflows/LOOSE_SCREWS.md): frame the agreed
+whole, assemble real dependency-ready connections, fit the required end-to-end journeys, then
+tighten and qualify the integrated candidate. Continue through ready phases without repeated
+approval. Missing required behavior is not polish, and a stub is not an attachment proof.
+
+During assembly use the smallest adequate check for a needed contract, decision-changing
+uncertainty, observed failure or changed critical boundary. Batch related implementation;
+defer exhaustive regression, broad review, benchmarks and polish until whole-system fit.
+A file edit, commit or compaction is not itself a full-suite trigger. Keep one short current
+checkpoint and grouped tightening list; reuse evidence until relevant dependencies change.
+Do not repeat unchanged failed experiments or expand scope to keep working.
+
+Final qualification still includes:
 
 ```bash
 npm run check
 ```
 
-Then play the changed journey at `http://127.0.0.1:5199/`. A passing check is not proof of
-gameplay, visual quality or human acceptance; record what was observed on the board card.
+Then play the changed connected journey at `http://127.0.0.1:5199/`. A passing check is not
+proof of gameplay, visual quality or human acceptance. Fix related failures in batches;
+rerun affected checks and broaden for concrete remaining risk or a required gate. Report
+implementation, observed verification, unresolved gates and CJ acceptance separately.
 
-## Commits
+## Commits and handoff
 
-After a coherent change: verify, review the staged boundary, scan for secrets, commit. Do not
-change Git identity configuration.
+Keep coherent source checkpoints, review the staged boundary and scan for secrets before
+committing; do not change Git identity configuration. A checkpoint does not require release
+qualification or a publication/board cycle. Batch those at integrated milestones or actual
+consumer need. Preserve binding checks; do not bypass protections. At handoff, reconcile
+source, evidence and operating state, and append material progress to the existing board.
 
 ## Design review handoffs
 
