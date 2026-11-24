@@ -609,3 +609,14 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .mlabel .mfact b { display: inline; overflow: visible; font-weight: 700; }
 .mlabel .mfact { height: auto; min-height: 1.1rem; }
 .mlabel .mfact .mg, .mlabel .mfact .mface { display: block; }
+
+/* Knight L switcher (either_l_v1): the drafted destination with its two L paths */
+.cmdbar .lswitch { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 5px; padding-top: 5px; border-top: 1px solid #3a4655; }
+.cmdbar .lswitch .lsw-label { font-weight: 600; color: var(--dim); }
+.cmdbar .lswitch .lsw { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 14px; }
+.cmdbar .lswitch .lsw.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); background: rgba(217,184,106,.14); }
+.cmdbar .lswitch .lsw.blocked { border-style: dashed; }
+.cmdbar .lswitch .licon { display: inline-flex; color: #e8d9a8; }
+.cmdbar .lswitch .lsw.on .licon { color: var(--gold); }
+.cmdbar .lswitch .lsw-join { color: var(--ok); font-weight: 600; } .cmdbar .lswitch .lsw-block { color: var(--warn); }
+.cmdbar .lswitch kbd { font-size: 11px; }

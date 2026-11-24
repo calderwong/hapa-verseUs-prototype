@@ -729,6 +729,7 @@ export class VersusApp {
       else if (k === 'b') this._cardTool('burn');
       else if (k === 'c') this._cardTool('ability');
       else if (k === 'm') this._showDestinations();
+      else if (k === 'l') this._flipL(this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null);
       else if (k === 'p') this._toggleOrders(this.ordersOpen && this.ordersTab !== 'history' ? false : true, 'plan');
       else if (k === 'h') this._toggleOrders(this.ordersOpen && this.ordersTab === 'history' ? false : true, 'history');
       else if (k === 'n') this._toggleRoster();
@@ -866,10 +867,11 @@ export class VersusApp {
       if (this.tool?.kind === 'ability') { this.tool = null; this._renderAll(); return; }
       if (party && party.owner === seat && pick.territory && this.seats[seat] === 'human') {
         const type = this.tool?.kind === 'retreat' ? 'retreat' : 'set_destination';
-        if (this._addCommand(seat, { type, partyId: party.id, target: pick.territory })) {
-          // the same route and clearance facts as the keyboard list (HF3-01)
-          const d = this._fundedTargets(party).find((x) => x.column === pick.territory.column && x.row === pick.territory.row);
-          const plan = routeFromHere(this.state, this.ctx, party, pick.territory);
+        // the same route, default Knight L and clearance facts as the keyboard list (HF3-01)
+        const d = this._fundedTargets(party).find((x) => x.column === pick.territory.column && x.row === pick.territory.row);
+        const via = type === 'set_destination' && d?.paths ? d.via : null;
+        if (this._addCommand(seat, { type, partyId: party.id, target: pick.territory, ...(via ? { via } : {}) })) {
+          const plan = routeFromHere(this.state, this.ctx, party, pick.territory, via);
           if (plan.path) this.view.showRoute(party, plan.path.map((n) => [n.x, n.y]));
           const by = d?.blocked ? this.state.parties[d.clearance.partyId] : null;
           this._toast(`${type === 'retreat' ? 'Retreat' : 'Destination'}: R${pick.territory.row}C${pick.territory.column} (planned)${by ? ` — warning: your ${partyShort(this.state, by.id)} blocks this route now` : ''}`, !!by);
@@ -1520,7 +1522,12 @@ export class VersusApp {
     this.view.syncPlanLinks(this.state, this.playback ? [] : ['A', 'B'].flatMap((seat) => this.plans[seat].filter((c) => c.type === 'load_supply')));
     this.view.terrain.syncWork(this.state, this.playback ? [] : ['A', 'B'].flatMap((seat) => this.plans[seat].filter((c) => c.type === 'begin_work')));
     const sel = this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null;
-    if (sel && !this.playback) this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? this._fundedTargets(sel).filter((d) => d.funded) : [], this._blockCue(sel));
+    if (sel && !this.playback) {
+      this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? this._fundedTargets(sel).filter((d) => d.funded) : [], this._blockCue(sel));
+      // a drafted destination shows its own route (and the chosen Knight L), not the accepted one
+      const draft = this._draftMove(sel);
+      if (draft) { const r = routeFromHere(this.state, this.ctx, sel, draft.target, draft.via ?? null); if (r.path) this.view.showRoute(sel, r.path.map((n) => [n.x, n.y])); }
+    }
     else if (!sel) this.view.select(this.state, null);
     this._syncIntents();
   }
@@ -2214,6 +2221,8 @@ export class VersusApp {
         h('button', { class: 'linkish', onclick: () => { this.pinned = { kind: 'party', id: p.id }; this._renderAll(); } }, 'Details')) :
         h('div', { class: 'cmd-row' }, h('button', { onclick: () => this._focusInspect(p.id) }, 'Inspect (F)'), this._returnPose ? h('button', { onclick: () => this._returnCamera() }, '↩ Return (R)') : null, h('button', { class: 'linkish', onclick: () => { this.pinned = { kind: 'party', id: p.id }; this._renderAll(); } }, 'Details')),
     ].filter(Boolean));
+    const lsw = own && p.mount === 'knight' ? this._lSwitcher(p) : null;
+    if (lsw) bar.append(lsw);
     // the Move list inside the bar is open by default in its popover (no nested disclosure)
     const ml = bar.querySelector('details.movelist'); if (ml) ml.open = true;
   }
@@ -2284,9 +2293,18 @@ export class VersusApp {
     const q = proj.state.parties[p.id];
     // every legal destination with its quote and known clearance (HF3-01). A party between centers
     // keeps its starting territory as a destination: only actual arrival makes "already there".
+    // A Knight (either_l_v1) gets both L paths with what each passes; the default is the L that
+    // absorbs a Pawn on the way, else a clear one, else the first legal one.
+    const pathInfo = (d, via) => {
+      const r = routeFromHere(proj.state, this.ctx, q, d, via);
+      const c = routeClearance(proj.state, this.ctx, q, r.path);
+      const joins = r.path ? this._pawnOnPath(proj.state, q, r.path, c) : null;
+      return { via, route: r.route, path: r.path, clearance: c, blocked: !c.clear && c.friendly, joins };
+    };
     const list = q && q.mount && !q.mountLost ? quotedDestinations(proj.state, this.ctx, q).filter((d) => !(atNode(this.ctx, q) && d.column === q.region.column && d.row === q.region.row)).map((d) => {
-      const c = routeClearance(proj.state, this.ctx, q, routeFromHere(proj.state, this.ctx, q, d).path);
-      return { ...d, clearance: c, blocked: !c.clear && c.friendly };
+      const paths = (d.vias ?? [d.via ?? null]).map((v) => pathInfo(d, v));
+      const best = paths.find((x) => x.joins && !x.blocked) ?? paths.find((x) => !x.blocked) ?? paths[0];
+      return { ...d, via: best.via ?? undefined, paths: d.vias ? paths : null, route: best.route, clearance: best.clearance, blocked: best.blocked, joins: best.joins };
     }) : [];
     if (!extraLoads.length) this._fundCache = { key, list };
     return list;
@@ -2303,6 +2321,58 @@ export class VersusApp {
   }
 
   _blockCue(p) { const b = this._blockInfo(p); return b?.at ? b : null; }
+
+  /** The first friendly Pawn a path absorbs (a node it reaches before any obstruction), or null. */
+  _pawnOnPath(state, party, path, clearance) {
+    let size = Object.values(party.slots).filter((id) => id && state.members[id]?.alive).length;
+    for (let i = 0; i < path.length; i++) {
+      if (!clearance.clear && clearance.segment <= i) return null;
+      const n = path[i];
+      const pawn = Object.values(state.parties).find((o) => o.alive && !o.retired && o.owner === party.owner && !o.mount && o.x === n.x && o.y === n.y);
+      if (pawn) { const k = Object.values(pawn.slots).filter((id) => id && state.members[id]?.alive).length; if (size + k <= 9) return pawn; }
+    }
+    return null;
+  }
+
+  /** The planned destination command of a party in its owner's draft, if any. */
+  _draftMove(p) { return this.plans?.[p.owner]?.find((c) => c.type === 'set_destination' && c.partyId === p.id) ?? null; }
+
+  /** Flip a Knight's drafted L path (L key or the switcher); the same validated command. */
+  _flipL(p) {
+    const cmd = p ? this._draftMove(p) : null;
+    const d = cmd ? this._fundedTargets(p).find((x) => x.column === cmd.target.column && x.row === cmd.target.row) : null;
+    if (!d?.paths || d.paths.length < 2) { this._toast(p ? 'Only a Knight with a planned destination and two legal L paths can flip its L' : 'Select your Knight first'); return; }
+    const now = cmd.via ?? d.via, next = d.paths.find((x) => x.via !== now);
+    if (this._addCommand(p.owner, { ...cmd, via: next.via })) this._toast(`L path: via ${next.route.slice(0, 2).map((n) => `R${n.row}C${n.column}`).join(', ')}${next.joins ? ' · absorbs your Pawn' : ''}${next.blocked ? ' · ✕ blocked now' : ''}`, next.blocked);
+  }
+
+  /** A small L icon: the path from the party's square in the viewer's orientation (forward is up). */
+  _lIcon(p, route) {
+    const geo = this.ctx.geo, me = this.viewSeat;
+    const o = geo.toLocal(me, p.region.column, p.region.row);
+    const pts = [[0, 0], ...route.map((n) => { const l = geo.toLocal(me, n.column, n.row); return [l.column - o.column, l.row - o.row]; })];
+    const xs = pts.map(([x]) => x), ys = pts.map(([, y]) => y);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const P = pts.map(([x, y]) => [12 + (x - cx) * 6, 12 - (y - cy) * 6]);
+    const sp = h('span', { class: 'licon', 'aria-hidden': 'true' });
+    sp.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22"><polyline points="${P.map((q) => q.join(',')).join(' ')}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><circle cx="${P[0][0]}" cy="${P[0][1]}" r="2.2" fill="currentColor" opacity=".6"/><path d="M${P.at(-1)[0] - 3} ${P.at(-1)[1] - 3}h6v6h-6z" fill="currentColor"/></svg>`;
+    return sp;
+  }
+
+  /** The Knight L switcher shown in the command bar while a Knight destination is drafted. */
+  _lSwitcher(p) {
+    const cmd = this._draftMove(p);
+    if (!cmd) return null;
+    const d = this._fundedTargets(p).find((x) => x.column === cmd.target.column && x.row === cmd.target.row);
+    if (!d?.paths || d.paths.length < 2) return null;
+    const now = cmd.via ?? d.via;
+    return h('div', { class: 'lswitch', role: 'radiogroup', 'aria-label': `Knight path to R${d.row}C${d.column} (L flips)` },
+      h('span', { class: 'lsw-label' }, `To R${d.row}C${d.column}:`),
+      ...d.paths.map((x) => h('button', { role: 'radio', 'aria-checked': String(x.via === now), class: `lsw${x.via === now ? ' on' : ''}${x.blocked ? ' blocked' : ''}`, title: `${x.via === 'long' ? 'Two steps on the long axis first' : 'The short step first'}${x.blocked ? ' — blocked now' : ''}`,
+        onclick: () => { if (x.via !== now) this._flipL(p); } },
+        this._lIcon(p, x.route), h('span', {}, `via ${x.route.slice(0, 2).map((n) => `R${n.row}C${n.column}`).join(' → ')}`), x.joins ? h('b', { class: 'lsw-join' }, ' · absorbs Pawn') : null, x.blocked ? h('b', { class: 'lsw-block' }, ' · ✕ blocked') : null)),
+      h('kbd', { title: 'Flip the L path' }, 'L'));
+  }
 
   /** How many more destinations a Card would fund if loaded into this party ("if loaded" preview). */
   _rangeIfLoaded(p, cardId) {
@@ -2357,10 +2427,11 @@ export class VersusApp {
         // who is there already: one of your Pawns means the move merges them
         const there = Object.values(s.parties).find((q) => q.alive && !q.retired && q.id !== p.id && q.region.column === d.column && q.region.row === d.row);
         const by = d.blocked ? s.parties[d.clearance.partyId] : null;
-        const note = (by ? ` · ✕ blocked by your ${partyShort(s, by.id)}` : '') + (there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '') + (d.direct ? ' · along its current segment' : '');
+        const lnote = d.paths ? ` · L via ${d.route.slice(0, 2).map((n) => `R${n.row}C${n.column}`).join(', ')}${d.paths.length > 1 ? ' (L flips)' : ''}` : '';
+        const note = (by ? ` · ✕ blocked by your ${partyShort(s, by.id)}` : '') + (there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '') + (d.direct ? ' · along its current segment' : '') + lnote + (d.joins && !(there && there.id === d.joins.id) ? ' · absorbs your Pawn on the way' : '');
         return h('button', { class: d.blocked ? 'blocked' : null, 'aria-label': `Move ${partyShort(s, p.id)} to R${d.row}C${d.column}: needs ${need(d)}${note}`, onclick: () => {
-          if (this._addCommand(p.owner, { type: 'set_destination', partyId: p.id, target: { column: d.column, row: d.row } })) {
-            const plan = routeFromHere(s, this.ctx, p, d);
+          if (this._addCommand(p.owner, { type: 'set_destination', partyId: p.id, target: { column: d.column, row: d.row }, ...(d.paths ? { via: d.via } : {}) })) {
+            const plan = routeFromHere(s, this.ctx, p, d, d.paths ? d.via : null);
             if (plan.path) this.view.showRoute(p, plan.path.map((n) => [n.x, n.y]));
             this._toast(`Destination: R${d.row}C${d.column} (planned, needs ${need(d)})${by ? ` — warning: your ${partyShort(s, by.id)} blocks this route now` : ''}`, !!by);
             this._cmdOpen = null; // the choice is made: the menu closes, the endpoint shows on the board
@@ -2591,7 +2662,7 @@ function describeCmd(state, c) {
     // plain words first; exact ids stay in the event log and the card / party inspectors (UX-13)
     case 'load_supply': return `+${pts(state.cards[c.cardId]?.supply ?? 0)} Supply from ${cardShort(state, c.cardId)} → ${partyShort(state, c.partyId)}`;
     case 'burn': { const m = state.cards[c.cardId]?.mana; return `Burn ${cardShort(state, c.cardId)} for ${m && Object.keys(m).length ? fmtMana(m) : 'no Mana'}`; }
-    case 'set_destination': return `Move ${partyShort(state, c.partyId)} → R${c.target.row}C${c.target.column}`;
+    case 'set_destination': return `Move ${partyShort(state, c.partyId)} → R${c.target.row}C${c.target.column}${c.via ? ` (${c.via === 'short' ? 'short step first' : 'long axis first'} L)` : ''}`;
     case 'change_formation': return `Turn ${partyShort(state, c.partyId)} to face ${FACING_NAME[c.facing] ?? c.facing}`;
     case 'retreat': return `Retreat ${partyShort(state, c.partyId)} → R${c.target.row}C${c.target.column}`;
     case 'play_ability': { const d = activeCatalog.cards[state.cards[c.cardId]?.abilityId]; const t = c.target?.memberId ? ` at ${memberName(state, c.target.memberId)}` : c.target?.row ? ` on row ${c.target.row}` : ''; return `Cast ${d?.title ?? 'ability'} from ${cardShort(state, c.cardId)}${c.actorPartyId ? ` by ${partyShort(state, c.actorPartyId)}` : ''}${t}${c.burns?.length ? `, burning ${c.burns.map((b) => cardShort(state, b)).join(', ')}` : ''}`; }

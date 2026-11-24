@@ -148,7 +148,7 @@ export const PROFILE_VARIANTS = Object.freeze({
     movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1' },
   },
   /**
-   * The default for new matches (human-feedback addendum 03, HF3-01/HF3-02). v3_02 plus:
+   * The default for new matches from addendum 03 until CJ's post-response-08 direction (HF3-01/HF3-02). v3_02 plus:
    *  - reachable-segment recovery: a party stopped between centers can retrace its clear segment to
    *    the territory it left (or finish the segment) as a direct route, a blocked party reroutes from
    *    that previous node instead of the obstructed next one, and the first friendly obstruction is
@@ -162,6 +162,21 @@ export const PROFILE_VARIANTS = Object.freeze({
     revision: 1,
     rulesVersion: 'hapa-versus-rules/0.3.0',
     movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1', recovery: 'reachable_segment_v1' },
+    planning: { agreement: 'own_plan_ready_v1' },
+  },
+  /**
+   * The default for new matches (CJ's direction after response 08). v3_03 plus:
+   *  - center-to-center traversal: a step is obstructed only by a friendly formation holding the
+   *    territory entered; arriving on an unmounted friendly Pawn's center absorbs it; Knights pass
+   *    through friendly-held territories; enemies still meet on body contact;
+   *  - either Knight L: an order may take the short-axis step first (`via: 'short'`).
+   * v3_03 keeps the full body sweep and the single long-axis-first L for its matches and replays.
+   */
+  hapa_open_10x9_v3_04: {
+    title: 'Open 10×9, v3 fixture 04 — center-to-center travel, either Knight L',
+    revision: 1,
+    rulesVersion: 'hapa-versus-rules/0.4.0',
+    movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1', recovery: 'reachable_segment_v1', traversal: 'center_to_center_v1', knightPaths: 'either_l_v1' },
     planning: { agreement: 'own_plan_ready_v1' },
   },
   hapa_open_9x9_v3_01: {
@@ -212,4 +227,4 @@ export function profileById(id) {
 export const PROFILE_IDS = [BASE_PROFILE.id, ...Object.keys(PROFILE_VARIANTS)];
 
 /** The profile new local matches, bots and peer tools start with. */
-export const DEFAULT_PROFILE_ID = 'hapa_open_10x9_v3_03';
+export const DEFAULT_PROFILE_ID = 'hapa_open_10x9_v3_04';

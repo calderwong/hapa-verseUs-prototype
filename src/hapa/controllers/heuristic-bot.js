@@ -11,7 +11,7 @@
  *  4. Counter an opposing Spell with Blue Denial when Blue can be paid.
  */
 import { xorshift32 } from '../rules/encoding.js';
-import { legalDestinations, routeFromHere, routeClearance, recoveryPolicy, quoteRoute, destinationPolicy } from '../rules/movement.js';
+import { legalDestinations, routeFromHere, routeClearance, recoveryPolicy, quoteRoute, destinationPolicy, destinationHeldError } from '../rules/movement.js';
 import { supplyOf, planPayment } from '../rules/economy.js';
 import { other } from '../rules/state.js';
 
@@ -45,8 +45,8 @@ export class HeuristicBot {
     // full_route_funded_v1 (addendum HF-04): a new destination must be funded by held Supply plus
     // loads that come before it in this plan, so the bot picks the Cards first and emits them first
     const funded = destinationPolicy(profile) === 'full_route_funded_v1';
-    const fundWith = (p, target) => {
-      const q = quoteRoute(state, ctx, p, target);
+    const fundWith = (p, target, via = null) => {
+      const q = quoteRoute(state, ctx, p, target, via);
       if (q.error) return null;
       let need = q.required - q.held;
       const picks = [];
@@ -74,10 +74,12 @@ export class HeuristicBot {
       // shows — a route a friendly formation physically blocks now is not chosen again and again
       const clearance = recoveryPolicy(profile) === 'reachable_segment_v1';
       let best = null;
-      for (const o of options) {
+      // a Knight under either_l_v1 weighs each of its L paths (a Pawn on the way is absorbed)
+      for (const o of options.flatMap((d) => (d.vias ?? [null]).map((via) => ({ ...d, via })))) {
+        if (destinationHeldError(state, ctx, p, o)) continue; // the validator's own rule
         const occupant = at(o.column, o.row);
         if (occupant && occupant.owner === seat && (occupant.mount || !pawns.includes(occupant))) continue; // friendly obstruction
-        const plan = routeFromHere(state, ctx, p, o);
+        const plan = routeFromHere(state, ctx, p, o, o.via);
         const route = plan.route ?? [];
         if (clearance) { const c = routeClearance(state, ctx, p, plan.path); if (!c.clear && c.friendly) continue; }
         // a friendly party blocking an intermediate node (other than a Pawn to join) makes it a poor route
@@ -93,13 +95,13 @@ export class HeuristicBot {
         if (occupant && occupant.owner !== seat) score += 25; // attack
         score -= o.cost * 2;
         score += this.rand();
-        const picks = funded ? fundWith(p, o) : [];
+        const picks = funded ? fundWith(p, o, o.via) : [];
         if (!picks) continue; // cannot fund the whole route this Tick
         if (!best || score > best.score) best = { o, score, picks };
       }
       if (best && best.score > 0) {
         for (const c of best.picks) { cmds.push({ type: 'load_supply', cardId: c.id, partyId: p.id }); used.add(c.id); }
-        cmds.push({ type: 'set_destination', partyId: p.id, target: { column: best.o.column, row: best.o.row } });
+        cmds.push({ type: 'set_destination', partyId: p.id, target: { column: best.o.column, row: best.o.row }, ...(best.o.via ? { via: best.o.via } : {}) });
         routed.add(p.id);
       }
     }

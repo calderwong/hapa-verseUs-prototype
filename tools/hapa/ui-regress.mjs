@@ -1079,8 +1079,8 @@ const advanceTo = async (page, tick) => { while ((await app(page, () => window._
 const selectParty = (page, id) => app(page, (id) => { const a = window.__versus; a.selected = { kind: 'party', id }; a._renderAll(); }, id);
 const openMoves = (page) => app(page, () => { const a = window.__versus; a._cmdOpen = 'move'; a._renderCommandBar(); });
 
-await check('z12', 'Blocked Queen: the route preview names the friendly blocker, travel stops once with Supply kept, recovery to the start is quoted and debited 0.5 (HF3-01, R7-01)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1', profile: 'hapa_open_10x9_v3_03' }, async () => {
-  const page = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
+await check('z12', 'Blocked Queen (v3_03 body sweep): the route preview names the friendly blocker, travel stops once with Supply kept, recovery to the start is quoted and debited 0.5 (HF3-01, R7-01)', { query: 'autostart=1&a=human&b=bot&seed=1&profile=hapa_open_10x9_v3_03', viewport: '1280x720@1', profile: 'hapa_open_10x9_v3_03' }, async () => {
+  const page = await open('autostart=1&a=human&b=bot&seed=1&profile=hapa_open_10x9_v3_03', { width: 1280, height: 720 });
   await app(page, () => { window.__versus.speed = 4; });
   setup('Ticks 1–5 pass with Ready only; Tick 6 loads the C6, C5 and C4 Cards into the Queen (validated commands)');
   await advanceTo(page, 6);
@@ -1114,6 +1114,42 @@ await check('z12', 'Blocked Queen: the route preview names the friendly blocker,
   expect('it arrived (idle)', q13.state, 'idle');
   await shot(page, 'recovered');
   await page.close();
+});
+
+await check('z16', 'Center-to-center opening (v3_04): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1', profile: 'hapa_open_10x9_v3_04' }, async () => {
+  const page = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
+  expect('the default profile travels center to center', await app(page, () => [window.__versus.ctx.profile.id, window.__versus.ctx.profile.movement.traversal]), ['hapa_open_10x9_v3_04', 'center_to_center_v1']);
+  await app(page, () => { window.__versus.speed = 4; });
+  await advanceTo(page, 2);
+  await app(page, () => { const a = window.__versus; for (const id of Object.values(a.state.players.A.bank.minor).filter(Boolean).slice(0, 2)) a._addCommand('A', { type: 'load_supply', cardId: id, partyId: 'A.mount.C2' }); });
+  await selectParty(page, 'A.mount.C2'); await openMoves(page); await sleep(300);
+  const entry = await app(page, () => [...document.querySelectorAll('.cmdbar .movelist button')].map((b) => b.getAttribute('aria-label') ?? '').find((t) => /to R3C3:/.test(t)) ?? '');
+  ok('the Knight entry names its default L and that it flips', /L via R2C2, R3C2 \(L flips\)/.test(entry) && /absorbs your Pawn/.test(entry), entry);
+  await clickNamed(page, '.cmdbar .movelist button', /to R3C3:/, 'Move to R3C3 (Knight)');
+  const sw = await app(page, () => [...document.querySelectorAll('.cmdbar .lswitch .lsw')].map((b) => `${b.getAttribute('aria-checked')}|${b.innerText.replace(/\s+/g, ' ')}`));
+  ok('the switcher shows both L paths with the default chosen', sw.length === 2 && /^true\|via R2C2 → R3C2/.test(sw[0]) && /^false\|via R1C3 → R2C3/.test(sw[1]), sw);
+  await page.mouse.move(2, 2);
+  await page.keyboard.press('l'); await sleep(400);
+  expect('L flips the drafted order to the short L', await app(page, () => window.__versus.plans.A.find((c) => c.type === 'set_destination')?.via), 'short');
+  await shot(page, 'knight-switcher');
+  await advanceTo(page, 5);
+  const k = await app(page, () => { const a = window.__versus, p = a.state.parties['A.mount.C2'], c = a.ctx.geo.center(3, 3); return { centered: p.x === c.x && p.y === c.y, members: Object.values(p.slots).filter(Boolean).length, absorbed: ['A.pawn.C2', 'A.pawn.C3'].filter((id) => a.state.parties[id].retired) }; });
+  expect('the Knight passed the Bishop\'s territory, absorbed R2C3\'s Pawn and stands on R3C3\'s center', [k.centered, k.members, k.absorbed], [true, 9, sabotage ? ['A.pawn.C2'] : ['A.pawn.C3']], sabotage ? 'SABOTAGE: expects the long L despite the flip' : undefined);
+  await page.close();
+  // CJ's Bishop: Tick 3, C7 and C3 Cards, toward R5C7
+  const b = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
+  await app(b, () => { window.__versus.speed = 4; });
+  await advanceTo(b, 3);
+  await app(b, () => { const a = window.__versus; for (const c of ['7', '3']) a._addCommand('A', { type: 'load_supply', cardId: a.state.players.A.bank.minor[c], partyId: 'A.mount.C3' }); });
+  await selectParty(b, 'A.mount.C3'); await openMoves(b); await sleep(300);
+  const r5 = await app(b, () => [...document.querySelectorAll('.cmdbar .movelist button')].map((x) => x.getAttribute('aria-label') ?? '').find((t) => /to R5C7:/.test(t)) ?? '');
+  ok('R5C7 is not marked blocked; the Pawn on R2C4 is absorbed on the way', !/blocked/.test(r5) && /absorbs your Pawn on the way/.test(r5), r5);
+  await clickNamed(b, '.cmdbar .movelist button', /to R5C7:/, 'Move to R5C7 (Bishop)');
+  await pressReady(b); await waitResolved(b, 4);
+  const bi = await app(b, () => { const a = window.__versus, p = a.state.parties['A.mount.C3'], c = a.ctx.geo.center(4, 2); return { centered: p.x === c.x && p.y === c.y, absorbed: !!a.state.parties['A.pawn.C4'].retired, blocked: a.session.events.filter((e) => e.type === 'travel_blocked' && e.partyId === 'A.mount.C3').length, supply: p.supply.reduce((n, x) => n + x.units, 0) / a.ctx.U }; });
+  expect('one Tick, one Supply: on R2C4\'s center, the Pawn absorbed, not blocked, 3 Supply left', [bi.centered, bi.absorbed, bi.blocked, bi.supply], [true, true, 0, 3]);
+  await shot(b, 'bishop-absorbed');
+  await b.close();
 });
 
 await check('z13', 'Development controllers: validated launch, A bot / B human, both bots Pause / Step / Stop, saved preset and launch link (HF3-04, R7-03)', { query: 'several; see setup', viewport: '1280x720@1' }, async () => {

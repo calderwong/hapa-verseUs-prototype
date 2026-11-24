@@ -14,6 +14,20 @@ import { solidAt, cellOf, surfaceBand, routeTerrainError } from './terrain.js';
 
 const sign = (v) => (v > 0 ? 1 : v < 0 ? -1 : 0);
 
+/**
+ * Traversal (human feedback after response 08): `center_to_center_v1` — a step from one territory
+ * center to the next is obstructed only by a friendly formation holding the territory being
+ * entered (a Pawn the mover can absorb there is not an obstruction: it is absorbed on arrival).
+ * Corner brushes from formations in neighbouring territories no longer stop a step. A Knight passes
+ * through friendly-held territories and is stopped by a friendly holder only at its final node.
+ * Enemy bodies still meet on contact for every Mount. Absent = v3 full body sweep (old manifests).
+ */
+export const traversalPolicy = (profile) => profile.movement.traversal ?? 'body_sweep_v3';
+const centerToCenter = (profile) => traversalPolicy(profile) === 'center_to_center_v1';
+/** Knight L paths: `either_l_v1` lets an order choose short-axis-first; absent = long axis first only. */
+export const knightPathPolicy = (profile) => profile.movement.knightPaths ?? 'long_axis_first_v3';
+export const KNIGHT_VIAS = ['long', 'short'];
+
 /** The profile's recovery policy; absent means v3 nearest-node rerouting (old manifests). */
 export const recoveryPolicy = (profile) => profile.movement.recovery ?? 'nearest_node_v3';
 const reachableRecovery = (profile) => recoveryPolicy(profile) === 'reachable_segment_v1';
@@ -70,7 +84,7 @@ export function routeOrigin(state, ctx, party) {
  * territory it left, or finish the segment — "already there" needs actual arrival.
  * @returns {{ error?: string, from?: any, route?: {column:number,row:number}[], path?: any[], cost?: number, direct?: boolean }}
  */
-export function routeFromHere(state, ctx, party, target) {
+export function routeFromHere(state, ctx, party, target, via = null) {
   const { geo } = ctx;
   const from = routeOrigin(state, ctx, party);
   if (from.behind && target) {
@@ -81,7 +95,7 @@ export function routeFromHere(state, ctx, party, target) {
       return { from, route: [{ column: end.column, row: end.row }], path: [{ column: end.column, row: end.row, ...geo.center(end.column, end.row) }], cost: 0, direct: true };
     }
   }
-  const plan = planPartyRoute(state, ctx, party, from, target);
+  const plan = planPartyRoute(state, ctx, party, from, target, via);
   if (plan.error) return plan;
   const nodes = plan.route.map((n) => ({ ...n, ...geo.center(n.column, n.row) }));
   const head = from.midEdge ? [from.back ? { column: from.column, row: from.row, ...geo.center(from.column, from.row) } : party.route[0]] : [];
@@ -107,8 +121,13 @@ export function atNode(ctx, party) {
  * Route (list of territory nodes after the origin) to a target for a Mount pattern, or an error.
  * @returns {{ route?: {column:number,row:number}[], cost?: number, error?: string }}
  */
-export function planRoute(ctx, mount, from, to) {
+export function planRoute(ctx, mount, from, to, via = null) {
   const { geo, profile } = ctx;
+  if (via != null) {
+    if (!KNIGHT_VIAS.includes(via)) return { error: `unknown Knight path "${via}"` };
+    if (profile.movement.patterns[mount] !== 'knight_l') return { error: 'only a Knight chooses between two L paths' };
+    if (via === 'short' && knightPathPolicy(profile) !== 'either_l_v1') return { error: 'this profile has one Knight path: two steps on the long axis, then one' };
+  }
   if (!geo.onBoard(to.column, to.row)) return { error: 'the destination is off the board' };
   const dc = to.column - from.column, dr = to.row - from.row;
   if (!dc && !dr) return { error: 'the party is already there' };
@@ -130,10 +149,15 @@ export function planRoute(ctx, mount, from, to) {
     case 'knight_l': {
       const ok = (Math.abs(dc) === 1 && Math.abs(dr) === 2) || (Math.abs(dc) === 2 && Math.abs(dr) === 1);
       if (!ok) return { error: 'a Knight moves to an L endpoint (two then one)' };
-      // two steps on the long axis, then one on the short axis
-      const route = Math.abs(dr) === 2
-        ? [{ column: from.column, row: from.row + sign(dr) }, { column: from.column, row: to.row }, { column: to.column, row: to.row }]
-        : [{ column: from.column + sign(dc), row: from.row }, { column: to.column, row: from.row }, { column: to.column, row: to.row }];
+      // long: two steps on the long axis, then one on the short axis; short (either_l_v1): the
+      // one short-axis step first, then the two long-axis steps
+      const route = via === 'short'
+        ? (Math.abs(dr) === 2
+          ? [{ column: to.column, row: from.row }, { column: to.column, row: from.row + sign(dr) }, { column: to.column, row: to.row }]
+          : [{ column: from.column, row: to.row }, { column: from.column + sign(dc), row: to.row }, { column: to.column, row: to.row }])
+        : (Math.abs(dr) === 2
+          ? [{ column: from.column, row: from.row + sign(dr) }, { column: from.column, row: to.row }, { column: to.column, row: to.row }]
+          : [{ column: from.column + sign(dc), row: from.row }, { column: to.column, row: from.row }, { column: to.column, row: to.row }]);
       return { route, cost: profile.movement.knightRouteCost };
     }
     default:
@@ -142,8 +166,8 @@ export function planRoute(ctx, mount, from, to) {
 }
 
 /** A route for a party on the current terrain: the Mount pattern, then ground connections. */
-export function planPartyRoute(state, ctx, party, from, to) {
-  const plan = planRoute(ctx, party.mount, from, to);
+export function planPartyRoute(state, ctx, party, from, to, via = null) {
+  const plan = planRoute(ctx, party.mount, from, to, via);
   if (plan.error) return plan;
   const e = routeTerrainError(state, party, from, plan.route);
   return e ? { error: e } : plan;
@@ -177,8 +201,8 @@ export function pricePerUnit(ctx, party) {
  * earlier planned loads).
  * @returns {{ error?: string, route?: {column:number,row:number}[], distance?: number, required?: number, held?: number, funded?: boolean, shortfall?: number }}
  */
-export function quoteRoute(state, ctx, party, target) {
-  const plan = routeFromHere(state, ctx, party, target);
+export function quoteRoute(state, ctx, party, target, via = null) {
+  const plan = routeFromHere(state, ctx, party, target, via);
   if (plan.error) return { error: plan.error };
   let distance = 0, x = party.x, y = party.y;
   for (const p of plan.path) { distance += Math.max(Math.abs(p.x - x), Math.abs(p.y - y)); x = p.x; y = p.y; }
@@ -193,9 +217,9 @@ export function quoteRoute(state, ctx, party, target) {
  * profiles never refuse for Supply (the route may pause and resume). Free pursuit and Card-defined
  * movement do not come through here.
  */
-export function fundingError(state, ctx, party, target) {
+export function fundingError(state, ctx, party, target, via = null) {
   if (destinationPolicy(ctx.profile) !== 'full_route_funded_v1') return null;
-  const q = quoteRoute(state, ctx, party, target);
+  const q = quoteRoute(state, ctx, party, target, via);
   if (q.error) return q.error;
   if (q.funded) return null;
   const f = (u) => { const v = u / ctx.U; return Number.isInteger(v) ? String(v) : v.toFixed(2).replace(/0+$/, '').replace(/[.]$/, ''); };
@@ -206,8 +230,18 @@ export function fundingError(state, ctx, party, target) {
 export function legalDestinations(state, ctx, party) {
   if (!party.mount || !party.alive || party.retired) return [];
   const out = [];
+  const either = knightPathPolicy(ctx.profile) === 'either_l_v1' && ctx.profile.movement.patterns[party.mount] === 'knight_l';
   for (let c = 1; c <= ctx.geo.columns; c++) for (let r = 1; r <= ctx.geo.rows; r++) {
-    const p = routeFromHere(state, ctx, party, { column: c, row: r });
+    const t = { column: c, row: r };
+    if (either) {
+      // each endpoint once, with every legal L path (`via` is the first legal one)
+      const vias = KNIGHT_VIAS.filter((v) => routeFromHere(state, ctx, party, t, v).route);
+      if (!vias.length) continue;
+      const p = routeFromHere(state, ctx, party, t, vias[0]);
+      out.push({ column: c, row: r, cost: p.cost, via: vias[0], vias, ...(p.direct ? { direct: true } : {}) });
+      continue;
+    }
+    const p = routeFromHere(state, ctx, party, t);
     if (p.route) out.push({ column: c, row: r, cost: p.cost, ...(p.direct ? { direct: true } : {}) });
   }
   return out;
@@ -220,7 +254,7 @@ export function legalDestinations(state, ctx, party) {
 export function quotedDestinations(state, ctx, party) {
   const strict = destinationPolicy(ctx.profile) === 'full_route_funded_v1';
   return legalDestinations(state, ctx, party).map((d) => {
-    const q = quoteRoute(state, ctx, party, d);
+    const q = quoteRoute(state, ctx, party, d, d.via ?? null);
     return { ...d, required: q.required, held: q.held, shortfall: q.shortfall, funded: strict ? q.funded : true };
   });
 }
@@ -256,8 +290,8 @@ export function placeMembers(state, ctx, party) {
  * Accept a destination: replaces any previous one (no waypoints). Mid-edge, the current edge is
  * finished first and the new route is validated from that next node.
  */
-export function setDestination(state, ctx, events, party, target, cause) {
-  const plan = routeFromHere(state, ctx, party, target);
+export function setDestination(state, ctx, events, party, target, cause, via = null) {
+  const plan = routeFromHere(state, ctx, party, target, via);
   if (plan.error) return { error: plan.error };
   const { geo } = ctx;
   const { from } = plan;
@@ -277,7 +311,7 @@ export function setDestination(state, ctx, events, party, target, cause) {
       party.state = 'turning';
     }
   }
-  emit(state, events, 'destination_set', { partyId: party.id, target: party.destination, route: party.route.map((n) => ({ column: n.column, row: n.row })), cost: plan.cost, turn: party.turn?.to ?? null, cause });
+  emit(state, events, 'destination_set', { partyId: party.id, target: party.destination, route: party.route.map((n) => ({ column: n.column, row: n.row })), cost: plan.cost, turn: party.turn?.to ?? null, cause, ...(via ? { via } : {}) });
   return { ok: true };
 }
 
@@ -319,6 +353,31 @@ export function mergeParties(state, ctx, events, mounted, pawn) {
   placeMembers(state, ctx, mounted);
   emit(state, events, 'parties_merged', { partyId: mounted.id, retired: pawn.id, members: livingMembers(state, mounted).map((m) => m.id), moved: moved.map(([id, from, to]) => ({ memberId: id, from, to })), supply: supplyOf(mounted) });
   return { ok: true };
+}
+
+/** Does formation `o` hold the territory of node `n` (its anchor is there or its region is that territory)? */
+const holds = (o, n) => (o.x === n.x && o.y === n.y) || (o.region.column === n.column && o.region.row === n.row);
+
+/**
+ * Center-to-center obstruction rule shared by the simulation and the route preview: may friendly
+ * formation `o` stop `p`'s step toward node `n`? Enemies always count (body contact).
+ */
+function friendlyObstacle(ctx, p, o, n, final) {
+  if (o.owner !== p.owner) return true;
+  if (!centerToCenter(ctx.profile)) return true;
+  if (!holds(o, n)) return false;
+  return !(ctx.profile.movement.patterns[p.mount] === 'knight_l' && !final);
+}
+
+/**
+ * center_to_center_v1: a destination held by another friendly formation is refused unless it is a
+ * Pawn this party can absorb there. Null when allowed (or under older traversal policies).
+ */
+export function destinationHeldError(state, ctx, party, target) {
+  if (!centerToCenter(ctx.profile) || !target) return null;
+  const holder = Object.values(state.parties).find((o) => o.id !== party.id && o.alive && !o.retired && o.owner === party.owner && o.region.column === target.column && o.region.row === target.row);
+  if (!holder || mergeCandidate(state, party, holder)) return null;
+  return `your ${holder.mount ?? (holder.commander ? 'Commander' : 'Pawn')} already holds R${target.row}C${target.column}${!holder.mount ? ' and this party cannot absorb it (at most nine members)' : ''}`;
 }
 
 /** Is a friendly Pawn a merge candidate for a mounted party? */
@@ -426,10 +485,13 @@ export function simulateMovement(state, ctx, events, onContact) {
       const mergeTarget = pr.mergeTarget;
       // member bodies can only meet when anchors are within 3 member widths on both axes
       const reach = 3 * U + pr.step + tol;
+      const final = p.route.length === 1;
       const near = others.filter((o) => o.id !== p.id && o !== mergeTarget && Math.abs(o.x - p.x) < reach && Math.abs(o.y - p.y) < reach);
+      // center_to_center_v1: friendly bodies obstruct only when they hold the territory entered
+      const solid = near.filter((o) => friendlyObstacle(ctx, p, o, pr.node, final));
       const hit = (s) => {
         const mine = bodiesAt(state, ctx, p, p.x + sx * s, p.y + sy * s, bodiesOf(p));
-        for (const o of near) for (const b of bodiesOf(o)) for (const a of mine) if (interiorOverlap(a, b, U)) return { o, b, a };
+        for (const o of solid) for (const b of bodiesOf(o)) for (const a of mine) if (interiorOverlap(a, b, U)) return { o, b, a };
         return null;
       };
       const ok = (s) => !hit(s);
@@ -456,6 +518,8 @@ export function simulateMovement(state, ctx, events, onContact) {
       const reach = 3 * U + a.step + b.step;
       if (Math.abs(a.p.x - b.p.x) >= reach || Math.abs(a.p.y - b.p.y) >= reach) continue;
       if (a.mergeTarget === b.p || b.mergeTarget === a.p) continue;
+      // center_to_center_v1: two friendly movers conflict only over the same territory
+      if (centerToCenter(profile) && a.p.owner === b.p.owner && !(a.node.column === b.node.column && a.node.row === b.node.row) && !holds(b.p, a.node) && !holds(a.p, b.node)) continue;
       const ba = bodiesAt(state, ctx, a.p, a.p.x + a.sx * a.step, a.p.y + a.sy * a.step, bodiesOf(a.p));
       const bb = bodiesAt(state, ctx, b.p, b.p.x + b.sx * b.step, b.p.y + b.sy * b.step, bodiesOf(b.p));
       if (ba.some((x) => bb.some((y) => interiorOverlap(x, y, U)))) { a.step = 0; b.step = 0; a.blocked = b.blocked = true; }
@@ -540,14 +604,18 @@ export function routeClearance(state, ctx, party, path) {
   const mine = livingMembers(state, party).filter((m) => !m.helperAway).map((m) => ({ id: m.id, off: slotOffset(m.slot, party.facing) }));
   const others = Object.values(state.parties).filter((o) => o.id !== party.id && o.alive && !o.retired);
   const gone = new Set();
+  let size = livingMembers(state, party).length;
   let x = party.x, y = party.y, along = 0;
   for (let i = 0; i < (path ?? []).length; i++) {
     const n = path[i];
     const dx = n.x - x, dy = n.y - y;
-    const join = others.find((o) => !gone.has(o.id) && o.x === n.x && o.y === n.y && mergeCandidate(state, party, o));
+    // a Pawn joins only while the absorbed total stays within nine members
+    const join = others.find((o) => !gone.has(o.id) && o.x === n.x && o.y === n.y && mergeCandidate(state, party, o) && size + livingMembers(state, o).length <= 9);
     let best = null;
+    const final = i === path.length - 1;
     for (const o of others) {
       if (gone.has(o.id) || o === join) continue;
+      if (!friendlyObstacle(ctx, party, o, n, final)) continue;
       if (Math.min(Math.abs(o.x - x), Math.abs(o.x - n.x)) > 3 * U + Math.abs(dx) || Math.min(Math.abs(o.y - y), Math.abs(o.y - n.y)) > 3 * U + Math.abs(dy)) continue;
       for (const b of livingMembers(state, o)) for (const a of mine) {
         const t = sweepEntry(x + a.off.dx * U, y + a.off.dy * U, dx, dy, b.x, b.y, U);
@@ -561,7 +629,7 @@ export function routeClearance(state, ctx, party, path) {
     }
     along += Math.max(Math.abs(dx), Math.abs(dy));
     x = n.x; y = n.y;
-    if (join) gone.add(join.id);
+    if (join) { gone.add(join.id); size += livingMembers(state, join).length; }
   }
   return { clear: true };
 }

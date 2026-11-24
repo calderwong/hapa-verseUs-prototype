@@ -22,6 +22,8 @@ import { Peer } from '../../src/hapa/protocol/peer.js';
 const pass = () => ({ pass: true });
 const move = (partyId, column, row) => ({ type: 'set_destination', partyId, target: { column, row } });
 const Q = 'A.mount.C6';
+// the reviewed half-step obstruction exists under v3_03's body sweep (v3_04 travels center to center)
+const V303 = 'hapa_open_10x9_v3_03';
 
 /** The review 07 opening: Tick 6 loads C6, C5 and C4 into A's Queen and sends it to R4C9. */
 function blockedOpening(profileId) {
@@ -45,9 +47,11 @@ function atNextActivation(s) {
   return { d, blockedEvents };
 }
 
-test('the default profile is v3_03 and declares reachable recovery and own-plan Ready', () => {
-  const p = profileById(DEFAULT_PROFILE_ID);
-  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_03');
+test('v3_03 declares reachable recovery and own-plan Ready; the default carries both forward', () => {
+  const p = profileById(V303);
+  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_04');
+  assert.equal(profileById(DEFAULT_PROFILE_ID).movement.recovery, 'reachable_segment_v1');
+  assert.equal(agreementPolicy(profileById(DEFAULT_PROFILE_ID)), 'own_plan_ready_v1');
   assert.equal(p.movement.recovery, 'reachable_segment_v1');
   assert.equal(agreementPolicy(p), 'own_plan_ready_v1');
   assert.equal(validateProfile(p, CATALOG).ok, true);
@@ -59,7 +63,7 @@ test('the default profile is v3_03 and declares reachable recovery and own-plan 
 });
 
 test('the blocked Queen names its friendly obstruction once and keeps its destination and Supply', () => {
-  const { s, r } = blockedOpening(DEFAULT_PROFILE_ID);
+  const { s, r } = blockedOpening(V303);
   const q = s.state.parties[Q];
   assert.deepEqual([q.x / s.ctx.U, q.y / s.ctx.U, supplyOf(q) / s.ctx.U], [24, 4, 5.5]);
   assert.deepEqual(q.destination, { column: 9, row: 4 });
@@ -68,7 +72,7 @@ test('the blocked Queen names its friendly obstruction once and keeps its destin
   assert.equal(blocked[0].by, 'A.pawn.C6');
   assert.deepEqual(blocked[0].at, { column: 6, row: 2 });
   // the preview had the same answer before the order was given
-  const fresh = createSession({ matchId: 'pre', profile: profileById(DEFAULT_PROFILE_ID), catalog: CATALOG, seed: 1 });
+  const fresh = createSession({ matchId: 'pre', profile: profileById(V303), catalog: CATALOG, seed: 1 });
   for (let t = 1; t <= 6; t++) { openTick(fresh); if (t < 6) closeTick(fresh, { A: [], B: [] }, pass); }
   const p0 = fresh.state.parties[Q];
   const c = routeClearance(fresh.state, fresh.ctx, p0, routeFromHere(fresh.state, fresh.ctx, p0, { column: 9, row: 4 }).path);
@@ -83,7 +87,7 @@ test('the blocked Queen names its friendly obstruction once and keeps its destin
 });
 
 test('recovery: return to the start, merge with the Pawn, or finish the segment — real fractional quote and debit', () => {
-  const { s } = blockedOpening(DEFAULT_PROFILE_ID);
+  const { s } = blockedOpening(V303);
   // return to R1C6 (the territory it left; its region identity does not hide it)
   {
     const { d } = atNextActivation(s);
@@ -147,7 +151,7 @@ test('a clear Queen or Bishop crosses one diagonal territory in one Tick for one
 });
 
 test('the bot does not order a route a friendly formation physically blocks', () => {
-  const { s } = blockedOpening(DEFAULT_PROFILE_ID);
+  const { s } = blockedOpening(V303);
   const { d } = atNextActivation(s);
   const bot = new HeuristicBot({ seat: 'A', seed: 3 });
   const cmds = bot.plan(d.state, d.ctx);
