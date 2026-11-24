@@ -11,7 +11,7 @@
  *  4. Counter an opposing Spell with Blue Denial when Blue can be paid.
  */
 import { xorshift32 } from '../rules/encoding.js';
-import { legalDestinations, routeOrigin, planPartyRoute, quoteRoute, destinationPolicy } from '../rules/movement.js';
+import { legalDestinations, routeFromHere, routeClearance, recoveryPolicy, quoteRoute, destinationPolicy } from '../rules/movement.js';
 import { supplyOf, planPayment } from '../rules/economy.js';
 import { other } from '../rules/state.js';
 
@@ -62,7 +62,7 @@ export class HeuristicBot {
     for (const p of mine) {
       if (!p.mount || p.mountLost || p.state === 'engaged' || p.state === 'turning') continue;
       if (!state.activeColumns.includes(p.region.column)) continue;
-      const stuck = p.route.length && p.state === 'moving' && (p.lastMovedTick ?? 0) < state.tick - 1;
+      const stuck = p.route.length && p.state === 'moving' && ((p.lastMovedTick ?? 0) < state.tick - 1 || !!p.blockedBy);
       if (p.route.length && p.destination && !stuck) { routed.add(p.id); continue; }
       if (p.commander && enemies.some((e) => Math.max(Math.abs(e.region.column - p.region.column), Math.abs(e.region.row - p.region.row)) > 2)) continue; // the Commander holds the Capital
       const options = legalDestinations(state, ctx, p);
@@ -70,12 +70,16 @@ export class HeuristicBot {
       const size = living(state, p).length;
       const pawns = mine.filter((q) => !q.mount && size + living(state, q).length <= 9);
       const at = (c, r) => Object.values(state.parties).find((q) => q.alive && !q.retired && q.region.column === c && q.region.row === r);
-      const from = routeOrigin(state, ctx, p);
+      // reachable_segment_v1 (addendum 03, HF3-01): the same route and clearance facts the board
+      // shows — a route a friendly formation physically blocks now is not chosen again and again
+      const clearance = recoveryPolicy(profile) === 'reachable_segment_v1';
       let best = null;
       for (const o of options) {
         const occupant = at(o.column, o.row);
         if (occupant && occupant.owner === seat && (occupant.mount || !pawns.includes(occupant))) continue; // friendly obstruction
-        const route = planPartyRoute(state, ctx, p, from, o).route ?? [];
+        const plan = routeFromHere(state, ctx, p, o);
+        const route = plan.route ?? [];
+        if (clearance) { const c = routeClearance(state, ctx, p, plan.path); if (!c.clear && c.friendly) continue; }
         // a friendly party blocking an intermediate node (other than a Pawn to join) makes it a poor route
         const blocker = route.slice(0, -1).map((n) => at(n.column, n.row)).find((q) => q && q.owner === seat && !pawns.includes(q));
         if (blocker) continue;

@@ -135,7 +135,7 @@ export const BASE_PROFILE = Object.freeze({
 /** Named field changes from the base profile. */
 export const PROFILE_VARIANTS = Object.freeze({
   /**
-   * The default for new matches (human-feedback addendum 01, HF-04): a new or replaced voluntary
+   * The default for new matches from addendum 01 until addendum 03 (HF-04): a new or replaced voluntary
    * destination must have its whole remaining route funded by held Supply plus earlier planned
    * loads, and the debit follows each Mount's declared route price (a Knight L costs
    * knightRouteCost over its three pitches). Speed is still the rate; nothing is prepaid. The base
@@ -146,6 +146,23 @@ export const PROFILE_VARIANTS = Object.freeze({
     revision: 1,
     rulesVersion: 'hapa-versus-rules/0.2.0',
     movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1' },
+  },
+  /**
+   * The default for new matches (human-feedback addendum 03, HF3-01/HF3-02). v3_02 plus:
+   *  - reachable-segment recovery: a party stopped between centers can retrace its clear segment to
+   *    the territory it left (or finish the segment) as a direct route, a blocked party reroutes from
+   *    that previous node instead of the obstructed next one, and the first friendly obstruction is
+   *    recorded once per episode (`travel_blocked`);
+   *  - own-plan Ready: Ready commits the player's own exact plan once; the opponent's later edits do
+   *    not revoke it, and the phase locks when both own plans are committed.
+   * v3_02 keeps nearest-node recovery and pair acknowledgment for its matches and replays.
+   */
+  hapa_open_10x9_v3_03: {
+    title: 'Open 10×9, v3 fixture 03 — one Ready, reachable recovery',
+    revision: 1,
+    rulesVersion: 'hapa-versus-rules/0.3.0',
+    movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1', recovery: 'reachable_segment_v1' },
+    planning: { agreement: 'own_plan_ready_v1' },
   },
   hapa_open_9x9_v3_01: {
     title: 'Open 9×9 comparison',
@@ -195,4 +212,4 @@ export function profileById(id) {
 export const PROFILE_IDS = [BASE_PROFILE.id, ...Object.keys(PROFILE_VARIANTS)];
 
 /** The profile new local matches, bots and peer tools start with. */
-export const DEFAULT_PROFILE_ID = 'hapa_open_10x9_v3_02';
+export const DEFAULT_PROFILE_ID = 'hapa_open_10x9_v3_03';

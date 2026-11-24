@@ -15,7 +15,7 @@ import { emit } from './context.js';
 import { clone } from './encoding.js';
 import { SEATS, other, livingMembers } from './state.js';
 import { activeColumnsAt, roundOf, mintAndClear, planPayment, supplyOf } from './economy.js';
-import { setDestination, simulateMovement, placeMembers, planRoute, planPartyRoute, routeOrigin, touchingPairs, contactTolerance, rearrangementError, engagementBetween, fundingError } from './movement.js';
+import { setDestination, simulateMovement, placeMembers, planRoute, planPartyRoute, routeOrigin, touchingPairs, contactTolerance, rearrangementError, engagementBetween, fundingError, routeFromHere } from './movement.js';
 import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember, applyBreaches, applyCornerHelpers, returnHelpers } from './combat.js';
 import { workError, startWork, completeWork } from './terrain.js';
 
@@ -67,7 +67,7 @@ export function commandError(state, ctx, seat, cmd) {
       if (P.mountLost) return 'this party lost its mount and cannot travel';
       if (!state.activeColumns.includes(P.region.column)) return `column C${P.region.column} is not active this Tick`;
       if (!cmd.target) return 'no destination';
-      const plan = planPartyRoute(state, ctx, P, routeOrigin(state, ctx, P), cmd.target);
+      const plan = routeFromHere(state, ctx, P, cmd.target);
       // full_route_funded_v1: the whole remaining route must be funded now (addendum HF-04)
       return plan.error ?? fundingError(state, ctx, P, cmd.target);
     }
@@ -87,7 +87,7 @@ export function commandError(state, ctx, seat, cmd) {
       if (!P.mount || P.mountLost) return 'retreat needs a movement capability';
       if (supplyOf(P) <= 0) return 'retreat needs positive Supply';
       if (!state.activeColumns.includes(P.region.column)) return `column C${P.region.column} is not active this Tick`;
-      const plan = planPartyRoute(state, ctx, P, routeOrigin(state, ctx, P), cmd.target ?? {});
+      const plan = routeFromHere(state, ctx, P, cmd.target ?? {});
       return plan.error ?? fundingError(state, ctx, P, cmd.target);
     }
     case 'play_ability': return abilityError(state, ctx, seat, cmd, 'ordinary_action');

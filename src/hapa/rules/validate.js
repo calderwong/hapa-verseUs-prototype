@@ -22,6 +22,8 @@ const ENUMS = {
 const OPTIONAL_ENUMS = {
   'movement.destinationFunding': ['partial_supply_v3', 'full_route_funded_v1'],
   'movement.debit': ['step_cost_per_pitch_v3', 'route_price_v1'],
+  'movement.recovery': ['nearest_node_v3', 'reachable_segment_v1'],
+  'planning.agreement': ['pair_acknowledgment_v3', 'own_plan_ready_v1'],
 };
 const MOUNTS = ['castle', 'bishop', 'queen', 'king', 'commander', 'knight'];
 const ROLES = ['swordsman', 'pikeman', 'archer', 'mage', 'priest'];

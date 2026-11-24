@@ -14,10 +14,42 @@ import { solidAt, cellOf, surfaceBand, routeTerrainError } from './terrain.js';
 
 const sign = (v) => (v > 0 ? 1 : v < 0 ? -1 : 0);
 
-/** The node (territory) a party's route starts from: the next node when mid-edge. */
+/** The profile's recovery policy; absent means v3 nearest-node rerouting (old manifests). */
+export const recoveryPolicy = (profile) => profile.movement.recovery ?? 'nearest_node_v3';
+const reachableRecovery = (profile) => recoveryPolicy(profile) === 'reachable_segment_v1';
+
+/**
+ * The straight segment a mid-edge party stands on: the node ahead (its route head) and the node
+ * behind (the territory it left along that segment — its bodies just swept it, so it can retrace
+ * it). Null at a node, or when the anchor is not strictly between two adjacent centers.
+ */
+export function currentEdge(ctx, party) {
+  if (!party.route?.length || atNode(ctx, party)) return null;
+  const n = party.route[0], { geo } = ctx;
+  const back = { column: n.column - sign(n.x - party.x), row: n.row - sign(n.y - party.y) };
+  if (!geo.onBoard(back.column, back.row)) return null;
+  const b = geo.center(back.column, back.row);
+  const dx = n.x - b.x, dy = n.y - b.y, px = party.x - b.x, py = party.y - b.y;
+  const dot = px * dx + py * dy;
+  if (px * dy - py * dx !== 0 || dot <= 0 || dot >= dx * dx + dy * dy) return null;
+  return { ahead: { column: n.column, row: n.row }, behind: back };
+}
+
+/**
+ * The node (territory) a party's route starts from: the next node when mid-edge.
+ * Under `reachable_segment_v1` a party blocked on its segment starts from the node behind it (the
+ * one it can actually reach), never from the obstructed node ahead; both ends of the segment stay
+ * direct destinations (`routeFromHere`).
+ */
 export function routeOrigin(state, ctx, party) {
   const { geo } = ctx;
   if (party.route.length && !atNode(ctx, party)) {
+    const edge = reachableRecovery(ctx.profile) ? currentEdge(ctx, party) : null;
+    if (edge) {
+      const blocked = (party.blockedTick ?? -9) >= state.tick - 1;
+      const o = blocked ? edge.behind : edge.ahead;
+      return { column: o.column, row: o.row, midEdge: true, back: blocked, ahead: edge.ahead, behind: edge.behind };
+    }
     // a party stopped mid-edge by an obstruction may reroute from its nearest node instead
     if ((party.blockedTick ?? -9) >= state.tick - 1) {
       const n = nearestNode(ctx, party);
@@ -28,6 +60,32 @@ export function routeOrigin(state, ctx, party) {
   }
   const r = geo.region(party.x, party.y, party.region);
   return { column: r.column, row: r.row, midEdge: false };
+}
+
+/**
+ * The one route from the party's present position to a target, shared by quotes, previews,
+ * keyboard lists, bots, validation and execution: `path` is every node the anchor will pass
+ * through (an unfinished edge first), `route` the Mount pattern's nodes after the origin.
+ * Under `reachable_segment_v1` the two ends of the current segment are direct: retrace to the
+ * territory it left, or finish the segment — "already there" needs actual arrival.
+ * @returns {{ error?: string, from?: any, route?: {column:number,row:number}[], path?: any[], cost?: number, direct?: boolean }}
+ */
+export function routeFromHere(state, ctx, party, target) {
+  const { geo } = ctx;
+  const from = routeOrigin(state, ctx, party);
+  if (from.behind && target) {
+    for (const [end, other] of [[from.behind, from.ahead], [from.ahead, from.behind]]) {
+      if (target.column !== end.column || target.row !== end.row) continue;
+      const e = routeTerrainError(state, party, other, [end]);
+      if (e) return { error: e };
+      return { from, route: [{ column: end.column, row: end.row }], path: [{ column: end.column, row: end.row, ...geo.center(end.column, end.row) }], cost: 0, direct: true };
+    }
+  }
+  const plan = planPartyRoute(state, ctx, party, from, target);
+  if (plan.error) return plan;
+  const nodes = plan.route.map((n) => ({ ...n, ...geo.center(n.column, n.row) }));
+  const head = from.midEdge ? [from.back ? { column: from.column, row: from.row, ...geo.center(from.column, from.row) } : party.route[0]] : [];
+  return { from, route: plan.route, path: [...head, ...nodes], cost: plan.cost };
 }
 
 /** The territory center nearest a party's anchor (ties toward lower coordinates). */
@@ -120,17 +178,14 @@ export function pricePerUnit(ctx, party) {
  * @returns {{ error?: string, route?: {column:number,row:number}[], distance?: number, required?: number, held?: number, funded?: boolean, shortfall?: number }}
  */
 export function quoteRoute(state, ctx, party, target) {
-  const from = routeOrigin(state, ctx, party);
-  const plan = planPartyRoute(state, ctx, party, from, target);
+  const plan = routeFromHere(state, ctx, party, target);
   if (plan.error) return { error: plan.error };
-  const { geo } = ctx;
-  const points = [...(from.midEdge ? [geo.center(from.column, from.row)] : []), ...plan.route.map((n) => geo.center(n.column, n.row))];
   let distance = 0, x = party.x, y = party.y;
-  for (const p of points) { distance += Math.max(Math.abs(p.x - x), Math.abs(p.y - y)); x = p.x; y = p.y; }
+  for (const p of plan.path) { distance += Math.max(Math.abs(p.x - x), Math.abs(p.y - y)); x = p.x; y = p.y; }
   const [num, den] = pricePerUnit(ctx, party);
   const required = Math.floor((distance * num + (party.supplyRemainder ?? 0)) / den);
   const held = supplyOf(party);
-  return { route: plan.route, distance, required, held, funded: held >= required, shortfall: Math.max(0, required - held) };
+  return { route: plan.route, path: plan.path.map((n) => ({ column: n.column, row: n.row })), direct: !!plan.direct, distance, required, held, funded: held >= required, shortfall: Math.max(0, required - held) };
 }
 
 /**
@@ -150,11 +205,10 @@ export function fundingError(state, ctx, party, target) {
 /** Legal destinations of a party (for previews). */
 export function legalDestinations(state, ctx, party) {
   if (!party.mount || !party.alive || party.retired) return [];
-  const from = routeOrigin(state, ctx, party);
   const out = [];
   for (let c = 1; c <= ctx.geo.columns; c++) for (let r = 1; r <= ctx.geo.rows; r++) {
-    const p = planPartyRoute(state, ctx, party, from, { column: c, row: r });
-    if (p.route) out.push({ column: c, row: r, cost: p.cost });
+    const p = routeFromHere(state, ctx, party, { column: c, row: r });
+    if (p.route) out.push({ column: c, row: r, cost: p.cost, ...(p.direct ? { direct: true } : {}) });
   }
   return out;
 }
@@ -203,18 +257,18 @@ export function placeMembers(state, ctx, party) {
  * finished first and the new route is validated from that next node.
  */
 export function setDestination(state, ctx, events, party, target, cause) {
-  const from = routeOrigin(state, ctx, party);
-  const plan = planPartyRoute(state, ctx, party, from, target);
+  const plan = routeFromHere(state, ctx, party, target);
   if (plan.error) return { error: plan.error };
   const { geo } = ctx;
+  const { from } = plan;
   const nodes = plan.route.map((n) => ({ ...n, ...geo.center(n.column, n.row) }));
-  const head = from.midEdge ? [from.back ? { column: from.column, row: from.row, ...geo.center(from.column, from.row) } : party.route[0]] : [];
-  party.route = [...head, ...nodes];
+  party.route = plan.path;
   party.destination = { column: target.column, row: target.row };
+  if (reachableRecovery(ctx.profile)) party.blockedBy = null;
   if (party.state === 'idle' || party.state === 'arrived' || party.state === 'waiting_supply') party.state = 'moving';
   // an orthogonal first leg that differs from the facing takes one Tick to turn first
   const first = nodes[0];
-  const start = from.midEdge ? party.route[0] : geo.center(from.column, from.row);
+  const start = geo.center(from.column, from.row);
   const dx = first.x - start.x, dy = first.y - start.y;
   if (!from.midEdge && (!dx || !dy)) {
     const want = facingOf(dx, dy);
@@ -373,17 +427,26 @@ export function simulateMovement(state, ctx, events, onContact) {
       // member bodies can only meet when anchors are within 3 member widths on both axes
       const reach = 3 * U + pr.step + tol;
       const near = others.filter((o) => o.id !== p.id && o !== mergeTarget && Math.abs(o.x - p.x) < reach && Math.abs(o.y - p.y) < reach);
-      const ok = (s) => {
+      const hit = (s) => {
         const mine = bodiesAt(state, ctx, p, p.x + sx * s, p.y + sy * s, bodiesOf(p));
-        for (const o of near) for (const b of bodiesOf(o)) for (const a of mine) if (interiorOverlap(a, b, U)) return false;
-        return true;
+        for (const o of near) for (const b of bodiesOf(o)) for (const a of mine) if (interiorOverlap(a, b, U)) return { o, b, a };
+        return null;
       };
+      const ok = (s) => !hit(s);
       let lo = 0, hi = pr.step;
       if (!ok(hi)) {
         while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); if (ok(mid)) lo = mid; else hi = mid - 1; }
         pr.step = lo;
         pr.blocked = true;
-        if (!lo) p.blockedTick = state.tick;
+        if (!lo) {
+          p.blockedTick = state.tick;
+          // reachable_segment_v1: name the first obstruction once per episode (not every quantum)
+          const by = reachableRecovery(profile) ? hit(1) : null;
+          if (by && p.blockedBy?.partyId !== by.o.id) {
+            p.blockedBy = { partyId: by.o.id, memberId: by.b.id, moverId: by.a.id, region: { column: by.o.region.column, row: by.o.region.row }, tick: state.tick };
+            emit(state, events, 'travel_blocked', { partyId: p.id, by: by.o.id, byOwner: by.o.owner, blockerMember: by.b.id, member: by.a.id, at: p.blockedBy.region, quantum: q, destination: p.destination });
+          }
+        }
       }
       pr.near = near;
     }
@@ -401,6 +464,7 @@ export function simulateMovement(state, ctx, events, onContact) {
       const { p } = pr;
       if (pr.step > 0) {
         p.lastMovedTick = state.tick;
+        if (p.blockedBy) p.blockedBy = null;
         p.x += pr.sx * pr.step;
         p.y += pr.sy * pr.step;
         const [pn, pd] = debitPolicy(profile) === 'route_price_v1' ? pricePerUnit(ctx, p) : [costPerPitch, pitch];
@@ -461,6 +525,57 @@ export function simulateMovement(state, ctx, events, onContact) {
     // a blocked mover facing a friendly obstruction simply waits this quantum
   }
   for (const [partyId, s] of Object.entries(spentThisTick)) emit(state, events, 'supply_spent', { partyId, units: s.units, portions: s.portions, remaining: supplyOf(state.parties[partyId]) });
+}
+
+/**
+ * Known clearance of a route (reachable recovery previews, keyboard lists and bots — never an
+ * authoritative outcome): the party's bodies swept along `path` from its present anchor against
+ * every other formation where it stands now. The first body met is reported with the segment, the
+ * point and the distance travelled before it; a friendly Pawn the party would join at a node is not
+ * an obstruction (it merges there). Others may move during the Tick, so this is "known now".
+ * @returns {{ clear: true } | { clear: false, friendly: boolean, partyId: string, memberId: string, moverId: string, region: {column:number,row:number}, at: {x:number,y:number}, along: number, segment: number }}
+ */
+export function routeClearance(state, ctx, party, path) {
+  const U = ctx.U;
+  const mine = livingMembers(state, party).filter((m) => !m.helperAway).map((m) => ({ id: m.id, off: slotOffset(m.slot, party.facing) }));
+  const others = Object.values(state.parties).filter((o) => o.id !== party.id && o.alive && !o.retired);
+  const gone = new Set();
+  let x = party.x, y = party.y, along = 0;
+  for (let i = 0; i < (path ?? []).length; i++) {
+    const n = path[i];
+    const dx = n.x - x, dy = n.y - y;
+    const join = others.find((o) => !gone.has(o.id) && o.x === n.x && o.y === n.y && mergeCandidate(state, party, o));
+    let best = null;
+    for (const o of others) {
+      if (gone.has(o.id) || o === join) continue;
+      if (Math.min(Math.abs(o.x - x), Math.abs(o.x - n.x)) > 3 * U + Math.abs(dx) || Math.min(Math.abs(o.y - y), Math.abs(o.y - n.y)) > 3 * U + Math.abs(dy)) continue;
+      for (const b of livingMembers(state, o)) for (const a of mine) {
+        const t = sweepEntry(x + a.off.dx * U, y + a.off.dy * U, dx, dy, b.x, b.y, U);
+        if (t !== null && (!best || t < best.t)) best = { t, o, b, a };
+      }
+    }
+    if (best) {
+      const len = Math.max(Math.abs(dx), Math.abs(dy));
+      return { clear: false, friendly: best.o.owner === party.owner, partyId: best.o.id, memberId: best.b.id, moverId: best.a.id, owner: best.o.owner,
+        region: { column: best.o.region.column, row: best.o.region.row }, at: { x: x + dx * best.t, y: y + dy * best.t }, along: along + len * best.t, segment: i };
+    }
+    along += Math.max(Math.abs(dx), Math.abs(dy));
+    x = n.x; y = n.y;
+    if (join) gone.add(join.id);
+  }
+  return { clear: true };
+}
+
+/** First fraction t of a straight sweep at which one body enters another's interior, or null. */
+function sweepEntry(ax, ay, dx, dy, bx, by, U) {
+  let lo = 0, hi = 1;
+  for (const [a, d, b] of [[ax, dx, bx], [ay, dy, by]]) {
+    if (d === 0) { if (Math.abs(a - b) >= U) return null; continue; }
+    let t0 = (b - U - a) / d, t1 = (b + U - a) / d;
+    if (t0 > t1) [t0, t1] = [t1, t0];
+    lo = Math.max(lo, t0); hi = Math.min(hi, t1);
+  }
+  return lo < hi ? lo : null;
 }
 
 /** Swept-contact tolerance: conservative clamping may leave bodies up to two Speed-2 quanta apart. */

@@ -12,7 +12,7 @@ import { createContext } from '../rules/context.js';
 import { initializeMatch, stateFingerprint } from '../rules/state.js';
 import { beginCount, validatePlan, resolveTick } from '../rules/match.js';
 import { fingerprint } from '../rules/encoding.js';
-import { PhaseAgreement } from './agreement.js';
+import { PhaseAgreement, agreementPolicy } from './agreement.js';
 import { signRecord, verifyRecord } from './messages.js';
 
 export class Peer {
@@ -113,15 +113,18 @@ export class Peer {
     const count = state.tick;
     this.priorHash = stateFingerprint(state);
     const phaseId = 'plan';
-    const agreement = new PhaseAgreement({ matchId: this.manifest.matchId, count, phaseId, priorStateHash: this.priorHash });
+    const policy = agreementPolicy(this.manifest.profile);
+    const agreement = new PhaseAgreement({ matchId: this.manifest.matchId, count, phaseId, priorStateHash: this.priorHash, policy });
     const mine = this.controller.plan(state, ctx);
     const planBody = await this._publish('plan', count, phaseId, { planRevision: 1, commands: mine });
     agreement.receive(this.seat, planBody);
+    // own_plan_ready_v1: Ready commits this peer's own plan at once — it does not wait for the
+    // opponent's plan, and the opponent's later edits cannot make it stale
+    if (policy === 'own_plan_ready_v1') agreement.receive(this.seat, await this._publish('ready', count, phaseId, agreement.readyPayload(this.seat)));
     const theirs = await this._take((b) => b.count === count && b.type === 'plan');
     const r = agreement.receive(this.other, theirs);
     if (!r.ok) throw new Error(`protocol: ${r.error}`);
-    const readyBody = await this._publish('ready', count, phaseId, agreement.pair());
-    agreement.receive(this.seat, readyBody);
+    if (policy !== 'own_plan_ready_v1') agreement.receive(this.seat, await this._publish('ready', count, phaseId, agreement.readyPayload(this.seat)));
     const theirReady = await this._take((b) => b.count === count && b.type === 'ready');
     const rr = agreement.receive(this.other, theirReady);
     if (!rr.ok || !agreement.locked) throw new Error(`protocol: no matching Ready pair (${rr.error ?? 'stale'})`);
@@ -142,8 +145,11 @@ export class Peer {
       step = gen.next(answer);
     }
     const hash = stateFingerprint(state);
-    await this._publish('receipt', count, 'receipt', { stateHash: hash, outcome: state.outcome ?? null });
+    // the receipt also binds the locked pair (an automatic transport fact, not another human decision)
+    const lockedPair = policy === 'own_plan_ready_v1' ? agreement.locked.hashes : undefined;
+    await this._publish('receipt', count, 'receipt', { stateHash: hash, outcome: state.outcome ?? null, ...(lockedPair ? { lockedPair } : {}) });
     const theirReceipt = await this._take((b) => b.count === count && b.type === 'receipt');
+    if (lockedPair && JSON.stringify(theirReceipt.payload.lockedPair) !== JSON.stringify(lockedPair)) throw new Error(`protocol: Tick ${count} locked plan pairs differ`);
     const agreed = theirReceipt.payload.stateHash === hash;
     this.receipts.push({ count, hash, agreed });
     if (!agreed) throw new Error(`protocol: Tick ${count} receipts differ (${hash} vs ${theirReceipt.payload.stateHash})`);
