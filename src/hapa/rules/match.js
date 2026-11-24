@@ -15,7 +15,7 @@ import { emit } from './context.js';
 import { clone } from './encoding.js';
 import { SEATS, other, livingMembers } from './state.js';
 import { activeColumnsAt, roundOf, mintAndClear, planPayment, supplyOf } from './economy.js';
-import { setDestination, simulateMovement, placeMembers, planRoute, planPartyRoute, routeOrigin, touchingPairs, contactTolerance, rearrangementError, engagementBetween, fundingError, routeFromHere, destinationHeldError } from './movement.js';
+import { setDestination, simulateMovement, placeMembers, planRoute, planPartyRoute, routeOrigin, touchingPairs, contactTolerance, rearrangementError, engagementBetween, fundingError, routeFromHere, destinationHeldError, arrivalFacingError } from './movement.js';
 import { resolveExchange, openEngagements, checkVictory, refreshEngagements, applyCardHit, killMember, applyBreaches, applyCornerHelpers, returnHelpers } from './combat.js';
 import { workError, startWork, completeWork } from './terrain.js';
 
@@ -69,7 +69,7 @@ export function commandError(state, ctx, seat, cmd) {
       if (!cmd.target) return 'no destination';
       const plan = routeFromHere(state, ctx, P, cmd.target, cmd.via ?? null);
       // full_route_funded_v1: the whole remaining route must be funded now (addendum HF-04)
-      return plan.error ?? destinationHeldError(state, ctx, P, cmd.target) ?? fundingError(state, ctx, P, cmd.target, cmd.via ?? null);
+      return plan.error ?? arrivalFacingError(ctx, P, cmd.face ?? null) ?? destinationHeldError(state, ctx, P, cmd.target) ?? fundingError(state, ctx, P, cmd.target, cmd.via ?? null);
     }
     case 'change_formation': {
       const e = needParty(P);
@@ -231,7 +231,7 @@ function execute(state, ctx, events, seat, cmd, opts = {}) {
       burnCard(state, events, seat, card, 'burn');
       return { ok: true };
     case 'set_destination':
-      return setDestination(state, ctx, events, P, cmd.target, { seat, command: 'set_destination' }, cmd.via ?? null);
+      return setDestination(state, ctx, events, P, cmd.target, { seat, command: 'set_destination' }, cmd.via ?? null, cmd.face ?? null);
     case 'change_formation':
       P.formationChange = { facing: cmd.facing, completeTick: state.tick + ctx.profile.movement.turnTicks - 1 };
       P.state = P.state === 'moving' ? 'turning' : P.state;

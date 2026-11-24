@@ -15,7 +15,7 @@ import { BoardView, COLOR_HEX, OWNER_HEX } from './board-view.js';
 import { eventLine, explainHit, memberName, partyName, fmtMana } from './explain.js';
 import { createSession, createFixtureSession, openTick } from '../rules/session.js';
 import { validatePlan, resolveTick, responseOptions, projectPlan } from '../rules/match.js';
-import { legalDestinations, planPartyRoute, routeOrigin, routeFromHere, routeClearance, atNode, touchingPairs, contactTolerance, quotedDestinations, quoteRoute, destinationPolicy } from '../rules/movement.js';
+import { legalDestinations, planPartyRoute, routeOrigin, routeFromHere, routeClearance, atNode, travelTicks, knightTurnPolicy, FACES4, touchingPairs, contactTolerance, quotedDestinations, quoteRoute, destinationPolicy } from '../rules/movement.js';
 import { surfaceBand } from '../rules/terrain.js';
 import { pieceOf, PIECE_NAME } from './pieces.js';
 import { mintForecast, nextActivation, roundOf, supplyOf, quotePayment } from '../rules/economy.js';
@@ -60,6 +60,9 @@ const ROLE_ABBR = { swordsman: 'Sw', pikeman: 'Pk', archer: 'Ar', mage: 'Mg', pr
 const ROLE_NAME = { swordsman: 'Sword', pikeman: 'Pike', archer: 'Archer', mage: 'Mage', priest: 'Priest' };
 const FACING_NAME = { N: 'North', E: 'East', S: 'South', W: 'West' };
 const STATE_NAME = { idle: 'waiting', moving: 'moving', engaged: 'in combat', turning: 'turning', working: 'working', blocked: 'blocked' };
+/** A Mount's Speed in territories per Tick ("2", "1", "½"). */
+const speedText = (ctx, p) => { const sp = p?.mount ? ctx.profile.movement.speeds[p.mount] : null; if (!sp) return null; const v = sp[0] / sp[1]; return v === 0.5 ? '½' : Number.isInteger(v) ? String(v) : v.toFixed(2); };
+const FACE_ARROW = { N: '↑', E: '→', S: '↓', W: '←' };
 /** A party's travel state in words; a known obstruction says so instead of "moving" (HF3-01). */
 const stateWord = (state, p) => (p?.blockedBy && p.destination && state.parties[p.blockedBy.partyId] ? `blocked by ${state.parties[p.blockedBy.partyId].owner === p.owner ? 'your' : `${state.parties[p.blockedBy.partyId].owner}'s`} ${state.parties[p.blockedBy.partyId].mount ? cap(state.parties[p.blockedBy.partyId].mount) : 'Pawn'} R${state.parties[p.blockedBy.partyId].region.row}C${state.parties[p.blockedBy.partyId].region.column}` : STATE_NAME[p?.state] ?? p?.state);
 /** Attributes that make a click-driven element a keyboard button too (Enter / Space; review UX-14). */
@@ -264,7 +267,7 @@ export class VersusApp {
           h('button', { onclick: () => this.startMatch({ fixture: id, seats: { A: 'human', B: 'human' } }) }, f.title),
           h('span', { class: 'dim small' }, f.description)))),
       h('details', {}, h('summary', {}, 'Controls'), h('div', { class: 'keys' },
-        ...[['Left click', 'select a party, member, territory or card'], ['Right click', 'set the selected party\'s one destination'], ['1–9', 'select your hand slot (home column order)'], ['U / B / C', 'Supply, Burn or Ability with the selected card'], ['M', 'show legal destinations of the selected party'], ['G', 'formation facing tools'], ['P', 'plan comparison'], ['Ctrl/⌘ + Enter', 'Ready (freeze your plan for this pair)'], ['Esc', 'cancel the current tool'], ['Left-drag', 'pan the board'], ['Right-drag', 'orbit and tilt'], ['Wheel / pinch', 'zoom toward the cursor'], ['Shift + wheel', 'tilt'], ['W A S D / arrows', 'pan'], ['Q / E', 'rotate the camera 45°'], ['Z / X', 'tilt'], ['V', 'tactical view'], ['Home', 'home view'], ['F', 'focus the selection'], ['Space', 'pause playback']].map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v)))),
+        ...[['Left click', 'select a party, member, territory or card'], ['Right click', 'set the selected party\'s one destination (again on a Knight\'s destination: flip its L)'], ['Shift + right click', 'a Knight\'s destination: change the facing it arrives with'], ['1–9', 'select your hand slot (home column order)'], ['U / B / C', 'Supply, Burn or Ability with the selected card'], ['M', 'show legal destinations of the selected party'], ['G', 'Face menu: turn the selected formation N / E / S / W'], ['L / O', 'Knight: flip the L path / change its arrival facing'], ['P / H', 'this Tick\'s orders / Tick history'], ['Ctrl/⌘ + Enter', 'Ready (commit your plan for this Tick)'], ['Esc', 'cancel the current tool'], ['Left-drag', 'pan the board'], ['Right-drag', 'orbit and tilt'], ['Wheel / pinch', 'zoom toward the cursor'], ['Shift + wheel', 'tilt'], ['W A S D / arrows', 'pan'], ['Q / E', 'rotate the camera 45°'], ['Z / X', 'tilt'], ['V', 'tactical view'], ['Home', 'home view'], ['F', 'focus the selection'], ['Space', 'pause playback']].map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v)))),
     ));
     this.el.overlay.hidden = false;
     showLink();
@@ -730,6 +733,8 @@ export class VersusApp {
       else if (k === 'c') this._cardTool('ability');
       else if (k === 'm') this._showDestinations();
       else if (k === 'l') this._flipL(this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null);
+      else if (k === 'o') this._cycleFace(this.selected?.kind === 'party' ? this.state.parties[this.selected.id] : null);
+      else if (k === 'g') { if (this.selected?.kind === 'party') { this._cmdOpen = 'face'; this._renderCommandBar(); this.el.cmdbar?.querySelector('details.cmd-menu[open] .cmd-pop button:not([disabled])')?.focus(); } else this._toast('Select one of your formations first, then G (or Face ▾) to change its facing'); }
       else if (k === 'p') this._toggleOrders(this.ordersOpen && this.ordersTab !== 'history' ? false : true, 'plan');
       else if (k === 'h') this._toggleOrders(this.ordersOpen && this.ordersTab === 'history' ? false : true, 'history');
       else if (k === 'n') this._toggleRoster();
@@ -869,7 +874,10 @@ export class VersusApp {
         const type = this.tool?.kind === 'retreat' ? 'retreat' : 'set_destination';
         // a Knight: right-clicking the destination it already has flips its L, every time
         const drafted = type === 'set_destination' ? this._draftMove(party) : null;
-        if (drafted && drafted.target.column === pick.territory.column && drafted.target.row === pick.territory.row && this._fundedTargets(party).find((x) => x.column === drafted.target.column && x.row === drafted.target.row)?.paths?.length > 1) {
+        const same = drafted && drafted.target.column === pick.territory.column && drafted.target.row === pick.territory.row;
+        // a Knight: Shift+right-click on its destination cycles the facing it arrives with
+        if (same && e.shiftKey && this._freeKnight(party)) { this._cycleFace(party); this.tool = null; return; }
+        if (same && this._fundedTargets(party).find((x) => x.column === drafted.target.column && x.row === drafted.target.row)?.paths?.length > 1) {
           this._flipL(party); this.tool = null; return;
         }
         // the same route, default Knight L and clearance facts as the keyboard list (HF3-01)
@@ -1291,7 +1299,7 @@ export class VersusApp {
     const party = {
       // just beyond the rightmost visible member on screen, whatever the orbit (never over a body)
       anchor: a0 ? { x: Math.max(a0.x + pxPerMember * 1.2, ...members.filter((m) => m.anchor && m.visible).map((m) => m.anchor.x + pxPerMember * 0.75)), y: a0.y } : null,
-      lines: [`${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'}${pf.commander ? ' ★ Commander' : ''} · ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]}`,
+      lines: [`${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${pf.mount ? cap(pf.mount) : 'Pawn'}${pf.commander ? ' ★ Commander' : ''}${pf.mount ? ` · Speed ${speedText(this.ctx, p)}/Tick` : ''} · ${pf.living}/9${pf.centerEmpty ? ' · empty center' : ''} · faces ${FACING_NAME[pf.facing]}`,
         `Supply ${pts(pf.supply)}${planned ? ` (+${pts(planned)} planned)` : ''} · ${stateWord(S, p)}${pf.destination ? ` → R${pf.destination.row}C${pf.destination.column}` : ''}`,
         `Band ${fmtBand(pf.band)}${standingOf(S, this.ctx, p).kind === 'hilltop' ? ' · hilltop' : ''} · ${pf.exposed ? 'exposed' : 'not exposed'}${pf.pool ? ` · pool ${pts(pf.pool.hp)}/${pts(pf.pool.max)}` : ''}`],
       note: roofed ? 'Roofed tunnel: open its layer to read the members (cutaway)' : facts.playing ? 'Playing back: health as of the moment shown' : null,
@@ -1532,7 +1540,7 @@ export class VersusApp {
       this.view.select(this.state, sel, sel.owner === this.viewSeat && this.state.activeColumns.includes(sel.region.column) && sel.mount ? this._fundedTargets(sel).filter((d) => d.funded) : [], this._blockCue(sel));
       // a drafted destination shows its own route (and the chosen Knight L), not the accepted one
       const draft = this._draftMove(sel);
-      if (draft) { const r = routeFromHere(this.state, this.ctx, sel, draft.target, draft.via ?? null); if (r.path) { this.view.showRoute(sel, r.path.map((n) => [n.x, n.y])); this.view.showPath(sel, r.path.map((n) => [n.x, n.y])); } }
+      if (draft) { const r = routeFromHere(this.state, this.ctx, sel, draft.target, draft.via ?? null); if (r.path) { this.view.showRoute(sel, r.path.map((n) => [n.x, n.y])); this.view.showPath(sel, r.path.map((n) => [n.x, n.y]), this._freeKnight(sel) ? this._arrivalFacing(sel, draft) : null); } }
       else this.view.showPath(null);
     }
     else { if (!sel) this.view.select(this.state, null); this.view.showPath(null); }
@@ -1582,7 +1590,7 @@ export class VersusApp {
 
   /** Help on demand (the long teaching text that used to fill the inspector). */
   _help() {
-    const keys = [['Hover / focus', 'inspect a Card, party or basin where it is'], ['Click / Enter', 'pin that view; Esc closes the top view'], ['N', 'Parties & Cards navigator'], ['P', 'Orders (public plans)'], ['Right click', 'set the selected party\'s destination'], ['1–9', 'inspect your Card in that home column'], ['U / B / C', 'Supply, Burn or Ability with the inspected Card'], ['Ctrl/⌘ + Enter', 'Ready (freezes your plan)'], ['Q / E · Z / X', 'rotate · tilt the camera'], ['V · Home · F', 'tactical · home · focus'], ['[ ]', 'height layers'], ['Space', 'pause playback']];
+    const keys = [['Hover / focus', 'inspect a Card, party or basin where it is'], ['Click / Enter', 'pin that view; Esc closes the top view'], ['N', 'Parties & Cards navigator'], ['P · H', 'this Tick\'s orders · Tick history'], ['Right click', 'set the selected party\'s destination; again on a Knight\'s destination flips its L'], ['Shift + right click', 'a Knight\'s destination: its facing on arrival'], ['G', 'Face menu: turn the selected formation (one Tick)'], ['L · O', 'Knight: flip the L · arrival facing'], ['1–9', 'inspect your Card in that home column'], ['U / B / C', 'Supply, Burn or Ability with the inspected Card'], ['Ctrl/⌘ + Enter', 'Ready (commits your plan)'], ['Q / E · Z / X', 'rotate · tilt the camera'], ['V · Home · F', 'tactical · home · focus'], ['[ ]', 'height layers'], ['Space', 'pause playback']];
     this._sheet(h('div', { class: 'card-sheet help', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Help' },
       h('h2', {}, 'How a Tick goes'),
       h('ol', { class: 'quickstart' },
@@ -1967,7 +1975,7 @@ export class VersusApp {
       const living = Object.values(p.slots).filter((id) => id && s.members[id]?.alive).length, planned = this._plannedSupply(p);
       const why = p.owner === this.viewSeat ? this._moveReason(p) : null;
       return { title: `${p.owner === this.viewSeat ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★' : ''} · R${p.region.row}C${p.region.column}`, tag: 'party', compact: true,
-        node: h('div', { class: 'hint-line' }, `${living}/9 · Supply ${pts(supplyOf(p))}${planned ? ` (+${pts(planned)} planned)` : ''} · ${stateWord(s, p)}${p.destination ? ` → R${p.destination.row}C${p.destination.column}` : ''}`, why ? h('div', { class: 'warn' }, why) : null,
+        node: h('div', { class: 'hint-line' }, `${living}/9${p.mount ? ` · Speed ${speedText(this.ctx, p)}/Tick` : ''} · Supply ${pts(supplyOf(p))}${planned ? ` (+${pts(planned)} planned)` : ''} · ${stateWord(s, p)}${p.destination ? ` → R${p.destination.row}C${p.destination.column}` : ''}`, why ? h('div', { class: 'warn' }, why) : null,
           this.pinned?.kind === 'hint' && this.pinned.id === p.id ? h('div', {}, h('button', { onclick: () => this._focusInspect(p.id) }, 'Inspect up close (F)'), this.selected?.kind === 'party' && this.selected.id !== p.id ? h('span', { class: 'dim' }, ` · your ${partyShort(s, this.selected.id)} stays selected`) : null)
             : h('div', { class: 'dim' }, this._commandable(p) ? 'Click to command · F or zoom in to inspect its members' : 'Click to read · F or zoom in to inspect its members')) };
     }
@@ -2216,7 +2224,8 @@ export class VersusApp {
     const move = own && p.mount ? this._moveList(p) : null;
     bar.replaceChildren(...[
       h('div', { class: 'cmd-id' },
-        h('b', {}, `${own ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★' : ''}`), ` R${p.region.row}C${p.region.column} · `, term('supply', `Supply ${pts(supplyOf(p))}`, { party: p, held: supplyOf(p), planned }), planned ? h('span', { class: 'planned-supply' }, ` +${pts(planned)}`) : null,
+        h('b', {}, `${own ? 'Your' : `${p.owner}'s`} ${p.mount ? cap(p.mount) : 'Pawn'}${p.commander ? ' ★' : ''}`), ` R${p.region.row}C${p.region.column} · `,
+        p.mount ? h('span', { class: 'speed-chip', title: `Speed: ${speedText(this.ctx, p)} territor${speedText(this.ctx, p) === '1' ? 'y' : 'ies'} per Tick on flat ground (uphill legs are slower)` }, term('speed', `Speed ${speedText(this.ctx, p)}`), '/Tick') : null, p.mount ? ' · ' : null, term('supply', `Supply ${pts(supplyOf(p))}`, { party: p, held: supplyOf(p), planned }), planned ? h('span', { class: 'planned-supply' }, ` +${pts(planned)}`) : null,
         reason ? h('span', { class: 'cmd-why', role: 'status' }, reason) : null),
       own ? h('div', { class: 'cmd-row' },
         menu('supply', 'Supply ▾', this._supplyLoader(p) ?? h('p', { class: 'dim small' }, 'No unplanned Cards.'), !this._can(p.owner).edit),
@@ -2366,19 +2375,58 @@ export class VersusApp {
     return sp;
   }
 
-  /** The Knight L switcher shown in the command bar while a Knight destination is drafted. */
+  _freeKnight(p) { return !!p && p.mount === 'knight' && knightTurnPolicy(this.ctx.profile) === 'free_follow_v1'; }
+
+  /** The facing a drafted Knight order arrives with: chosen, else the direction of its last leg. */
+  _arrivalFacing(p, cmd) {
+    if (cmd.face) return { face: cmd.face, chosen: true };
+    const r = routeFromHere(this.state, this.ctx, p, cmd.target, cmd.via ?? null);
+    const pts = [{ x: p.x, y: p.y }, ...(r.path ?? [])];
+    const a = pts.at(-2), b = pts.at(-1);
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const face = Math.abs(dy) >= Math.abs(dx) ? (dy >= 0 ? 'N' : 'S') : (dx >= 0 ? 'E' : 'W');
+    return { face, chosen: false };
+  }
+
+  /** Cycle a drafted Knight's arrival facing: as moving → the other three directions → as moving. */
+  _cycleFace(p) {
+    const cmd = p ? this._draftMove(p) : null;
+    if (!cmd || !this._freeKnight(p)) { this._toast('Select your Knight with a planned destination first'); return; }
+    const moving = this._arrivalFacing(p, { ...cmd, face: null }).face;
+    const order = [null, ...FACES4.filter((f) => f !== moving)];
+    const next = order[(order.indexOf(cmd.face ?? null) + 1) % order.length];
+    const { face, ...rest } = cmd;
+    if (this._addCommand(p.owner, next ? { ...rest, face: next } : rest)) this._toast(`Arrives facing ${next ? `${FACE_ARROW[next]} ${next}` : `${FACE_ARROW[moving]} ${moving} (the way it is moving)`} — Shift+right-click the destination (or O) to change`);
+  }
+
+  /** A facing arrow in the viewer's orientation (forward is up), for the switcher. */
+  _faceIcon(face) {
+    const geo = this.ctx.geo, me = this.viewSeat, f = FACINGS[face];
+    const o = geo.toLocal(me, 5, 5), t = geo.toLocal(me, 5 + Math.sign(f.fx), 5 + Math.sign(f.fy));
+    const ang = Math.atan2(t.column - o.column, t.row - o.row) * 180 / Math.PI;
+    const sp = h('span', { class: 'ficon', 'aria-hidden': 'true' });
+    sp.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20"><g transform="rotate(${ang} 12 12)"><path d="M12 3 19 13h-4.5v8h-5v-8H5Z" fill="currentColor"/></g></svg>`;
+    return sp;
+  }
+
+  /** The Knight order row shown in the command bar while a Knight destination is drafted. */
   _lSwitcher(p) {
     const cmd = this._draftMove(p);
     if (!cmd) return null;
     const d = this._fundedTargets(p).find((x) => x.column === cmd.target.column && x.row === cmd.target.row);
-    if (!d?.paths || d.paths.length < 2) return null;
+    const free = this._freeKnight(p);
+    if (!d || (!(d.paths?.length > 1) && !free)) return null;
     const now = cmd.via ?? d.via;
-    return h('div', { class: 'lswitch', role: 'radiogroup', 'aria-label': `Knight path to R${d.row}C${d.column} (L flips)` },
-      h('span', { class: 'lsw-label' }, `To R${d.row}C${d.column}:`),
-      ...d.paths.map((x) => h('button', { role: 'radio', 'aria-checked': String(x.via === now), class: `lsw${x.via === now ? ' on' : ''}${x.blocked ? ' blocked' : ''}`, title: `${x.via === 'long' ? 'Two steps on the long axis first' : 'The short step first'}${x.blocked ? ' — blocked now' : ''}`,
+    const af = free ? this._arrivalFacing(p, cmd) : null;
+    const faceBtn = free ? h('button', { class: `lsw face${af.chosen ? ' on' : ''}`, title: 'Facing on arrival — click (or Shift+right-click the destination, or O) to change', 'aria-label': `Arrives facing ${af.face}${af.chosen ? '' : ', the way it is moving'}; activate to change`, onclick: () => this._cycleFace(p) },
+      this._faceIcon(af.face), h('span', {}, `arrive facing ${af.face}`), h('small', { class: 'dim' }, af.chosen ? ' (chosen)' : ' (as moving)')) : null;
+    const pathBtns = d.paths?.length > 1 ? d.paths : [];
+    return h('div', { class: 'lswitch', role: 'group', 'aria-label': `Knight order to R${d.row}C${d.column}` },
+      h('span', { class: 'lsw-label' }, `To R${d.row}C${d.column}:`), faceBtn,
+      ...pathBtns.map((x) => h('button', { role: 'radio', 'aria-checked': String(x.via === now), class: `lsw${x.via === now ? ' on' : ''}${x.blocked ? ' blocked' : ''}`, title: `${x.via === 'long' ? 'Two steps on the long axis first' : 'The short step first'}${x.blocked ? ' — blocked now' : ''}`,
         onclick: () => { if (x.via !== now) this._flipL(p); } },
         this._lIcon(p, x.route), h('span', {}, `via ${x.route.slice(0, 2).map((n) => `R${n.row}C${n.column}`).join(' → ')}`), x.joins ? h('b', { class: 'lsw-join' }, ' · absorbs Pawn') : null, x.blocked ? h('b', { class: 'lsw-block' }, ' · ✕ blocked') : null)),
-      h('kbd', { title: 'Flip the L path' }, 'L'));
+      pathBtns.length ? h('kbd', { title: 'Flip the L path (or right-click the destination again)' }, 'L') : null, free ? h('kbd', { title: 'Change the arrival facing (or Shift+right-click the destination)' }, 'O') : null);
   }
 
   /** How many more destinations a Card would fund if loaded into this party ("if loaded" preview). */
@@ -2434,8 +2482,10 @@ export class VersusApp {
         // who is there already: one of your Pawns means the move merges them
         const there = Object.values(s.parties).find((q) => q.alive && !q.retired && q.id !== p.id && q.region.column === d.column && q.region.row === d.row);
         const by = d.blocked ? s.parties[d.clearance.partyId] : null;
+        const eta = travelTicks(s, this.ctx, p, d, d.paths ? d.via : null);
+        const etaNote = eta ? ` · ~${eta.ticks} Tick${eta.ticks === 1 ? '' : 's'}${eta.turn ? ' (incl. 1 to turn)' : ''}` : '';
         const lnote = d.paths ? ` · L via ${d.route.slice(0, 2).map((n) => `R${n.row}C${n.column}`).join(', ')}${d.paths.length > 1 ? ' (L flips)' : ''}` : '';
-        const note = (by ? ` · ✕ blocked by your ${partyShort(s, by.id)}` : '') + (there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '') + (d.direct ? ' · along its current segment' : '') + lnote + (d.joins && !(there && there.id === d.joins.id) ? ' · absorbs your Pawn on the way' : '');
+        const note = (by ? ` · ✕ blocked by your ${partyShort(s, by.id)}` : '') + (there ? (there.owner === p.owner && !there.mount ? ' · joins your Pawn' : there.owner === p.owner ? ` · your ${partyShort(s, there.id)} is there` : ` · ${there.owner}'s party is there`) : '') + (d.direct ? ' · along its current segment' : '') + etaNote + lnote + (d.joins && !(there && there.id === d.joins.id) ? ' · absorbs your Pawn on the way' : '');
         return h('button', { class: d.blocked ? 'blocked' : null, 'aria-label': `Move ${partyShort(s, p.id)} to R${d.row}C${d.column}: needs ${need(d)}${note}`, onclick: () => {
           if (this._addCommand(p.owner, { type: 'set_destination', partyId: p.id, target: { column: d.column, row: d.row }, ...(d.paths ? { via: d.via } : {}) })) {
             const plan = routeFromHere(s, this.ctx, p, d, d.paths ? d.via : null);
@@ -2446,7 +2496,7 @@ export class VersusApp {
             this._focusAfter = () => (this.ordersOpen ? [...this.el.plan.querySelectorAll(`.planbox.${p.owner.toLowerCase()} button.x`)].at(-1) : null) ?? this.el.readyBig;
             this._renderAll();
           }
-        } }, `R${d.row}C${d.column}`, h('small', { class: 'dim' }, ` ${need(d)}${note}`));
+        } }, `R${d.row}C${d.column}`, h('small', { class: 'dim' }, ` ${need(d)}${etaNote}${note.replace(etaNote, '')}`));
       })) : h('p', { class: 'dim small' }, 'No destination is funded yet: load Supply first (above).'),
       unfunded.length ? h('p', { class: 'dim small' }, `${unfunded.length} more legal destination${unfunded.length > 1 ? 's' : ''} need more Supply for the whole route — e.g. R${unfunded[0].row}C${unfunded[0].column} needs ${need(unfunded[0])} (short ${pts(unfunded[0].shortfall)}).`) : null);
   }

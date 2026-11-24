@@ -27,9 +27,11 @@ function play(profileId, upTo, plansAt) {
 }
 const at = (s, id) => { const p = s.state.parties[id]; return [p.region.row, p.region.column, p.x === s.ctx.geo.center(p.region.column, p.region.row).x && p.y === s.ctx.geo.center(p.region.column, p.region.row).y]; };
 
-test('v3_04 validates; the default v3_05 keeps its travel rules', () => {
-  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_05');
-  assert.deepEqual(profileById(DEFAULT_PROFILE_ID).movement, profileById(V304).movement);
+test('v3_04 validates; the default v3_06 keeps its travel rules', () => {
+  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_06');
+  const { knightTurn, ...rest } = profileById(DEFAULT_PROFILE_ID).movement;
+  assert.deepEqual(rest, profileById(V304).movement);
+  assert.equal(knightTurn, 'free_follow_v1');
   const p = profileById(V304);
   assert.deepEqual([p.movement.traversal, p.movement.knightPaths, p.movement.recovery, p.planning.agreement], ['center_to_center_v1', 'either_l_v1', 'reachable_segment_v1', 'own_plan_ready_v1']);
 });
@@ -122,4 +124,35 @@ test('enemies still meet on body contact under center-to-center travel (same out
   const now = run(V304);
   assert.ok(now.some((x) => x.includes(':contact:')), 'an enemy in the neighbouring territory is met by body contact');
   assert.deepEqual(now, run('hapa_open_10x9_v3_03'));
+});
+
+test('v3_06 Knights turn for free: no Tick, no Supply; they face each leg and the chosen arrival facing', () => {
+  const run = (profileId, cmd, ticks) => {
+    const s = createSession({ matchId: `kt-${profileId}`, profile: profileById(profileId), catalog: CATALOG, seed: 1 });
+    const ev = [];
+    for (let t = 1; t <= ticks; t++) {
+      openTick(s);
+      const A = t === 2 ? [...bank(s).slice(0, 2).map((id) => ({ type: 'load_supply', cardId: id, partyId: 'A.mount.C2' })), cmd] : [];
+      assert.deepEqual(validatePlan(s.state, s.ctx, 'A', A).errors, []);
+      ev.push(...closeTick(s, { A, B: [] }, pass).events);
+    }
+    return { s, ev, k: s.state.parties['A.mount.C2'] };
+  };
+  const short = { type: 'set_destination', partyId: 'A.mount.C2', target: { column: 3, row: 3 }, via: 'short' };
+  // v3_05: one Tick turning first; v3_06: it moves in Tick 2 and arrives a Tick earlier
+  const old = run('hapa_open_10x9_v3_05', short, 3);
+  assert.equal(old.ev.filter((e) => e.type === 'region_entered' && e.partyId === 'A.mount.C2' && e.tick === 2).length, 0);
+  const now = run(DEFAULT_PROFILE_ID, short, 3);
+  assert.ok(now.ev.some((e) => e.type === 'region_entered' && e.partyId === 'A.mount.C2' && e.tick === 2), 'moves in its first Tick');
+  assert.deepEqual([now.k.region, now.k.facing, now.k.state], [{ column: 3, row: 3 }, 'N', 'idle']); // default: the way it was moving
+  assert.equal(now.ev.filter((e) => e.type === 'supply_spent' && e.partyId === 'A.mount.C2').reduce((n, e) => n + e.units, 0) / now.s.ctx.U, 3); // the L's price only
+  assert.deepEqual(now.ev.filter((e) => e.type === 'facing_changed').map((e) => `${e.from}>${e.to}:${e.cause}`), ['N>E:knight_leg', 'E>N:knight_leg']);
+  // an ordered arrival facing
+  const faced = run(DEFAULT_PROFILE_ID, { type: 'set_destination', partyId: 'A.mount.C2', target: { column: 3, row: 3 }, via: 'long', face: 'S' }, 3);
+  assert.deepEqual([faced.k.region, faced.k.facing], [{ column: 3, row: 3 }, 'S']);
+  assert.equal(verifyReplay(faced.s.replay).ok, true);
+  // only Knights, and only N/E/S/W
+  const s = createSession({ matchId: 'kf', profile: profileById(DEFAULT_PROFILE_ID), catalog: CATALOG, seed: 1 });
+  openTick(s);
+  assert.match(validatePlan(s.state, s.ctx, 'A', [{ type: 'load_supply', cardId: bank(s)[0], partyId: 'A.mount.C1' }, { type: 'set_destination', partyId: 'A.mount.C1', target: { column: 1, row: 2 }, face: 'E' }]).errors[0]?.error ?? '', /only a Knight/);
 });

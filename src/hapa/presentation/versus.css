@@ -620,3 +620,7 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .cmdbar .lswitch .lsw.on .licon { color: var(--gold); }
 .cmdbar .lswitch .lsw-join { color: var(--ok); font-weight: 600; } .cmdbar .lswitch .lsw-block { color: var(--warn); }
 .cmdbar .lswitch kbd { font-size: 11px; }
+
+.cmdbar .speed-chip { font-weight: 600; color: #e8d9a8; }
+.cmdbar .lswitch .lsw.face .ficon { display: inline-flex; color: #fff2c4; }
+.cmdbar .lswitch .lsw.face.on .ficon { color: #ffb347; }

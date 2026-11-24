@@ -27,6 +27,40 @@ const centerToCenter = (profile) => traversalPolicy(profile) === 'center_to_cent
 /** Knight L paths: `either_l_v1` lets an order choose short-axis-first; absent = long axis first only. */
 export const knightPathPolicy = (profile) => profile.movement.knightPaths ?? 'long_axis_first_v3';
 export const KNIGHT_VIAS = ['long', 'short'];
+/**
+ * Knight turning (CJ after response 09): `free_follow_v1` — a Knight never spends a Tick or Supply
+ * turning to travel. It faces each leg it travels the moment it starts that leg, and on arrival
+ * faces the order's chosen `face` (default: the direction it was moving). Absent = v3 turn rule.
+ */
+export const knightTurnPolicy = (profile) => profile.movement.knightTurn ?? 'turn_tick_v3';
+const freeKnight = (ctx, party) => knightTurnPolicy(ctx.profile) === 'free_follow_v1' && ctx.profile.movement.patterns[party.mount] === 'knight_l';
+export const FACES4 = ['N', 'E', 'S', 'W'];
+
+/** Why an arrival facing cannot be ordered for this party (null when it can, or when none given). */
+export function arrivalFacingError(ctx, party, face) {
+  if (face == null) return null;
+  if (!FACES4.includes(face)) return 'arrival facing must be N, E, S or W';
+  if (!freeKnight(ctx, party)) return 'only a Knight (in this profile) chooses its facing on arrival';
+  return null;
+}
+
+/**
+ * Ticks a destination will take at the party's actual Speed, plus a travel turn when the profile
+ * requires one (an estimate for previews: uphill legs and contacts can lengthen it).
+ */
+export function travelTicks(state, ctx, party, target, via = null) {
+  const q = quoteRoute(state, ctx, party, target, via);
+  if (q.error || !party.mount) return null;
+  const [num, den] = ctx.profile.movement.speeds[party.mount];
+  const plan = routeFromHere(state, ctx, party, target, via);
+  let turn = 0;
+  if (!plan.from.midEdge && !freeKnight(ctx, party) && plan.path.length) {
+    const start = ctx.geo.center(plan.from.column, plan.from.row), first = plan.path[0];
+    const dx = first.x - start.x, dy = first.y - start.y;
+    if ((!dx || !dy) && facingOf(dx, dy) !== party.facing) turn = ctx.profile.movement.turnTicks;
+  }
+  return { ticks: turn + Math.ceil((q.distance * den) / (ctx.geo.pitch * num)), turn, speed: num / den };
+}
 
 /** The profile's recovery policy; absent means v3 nearest-node rerouting (old manifests). */
 export const recoveryPolicy = (profile) => profile.movement.recovery ?? 'nearest_node_v3';
@@ -291,7 +325,7 @@ export function placeMembers(state, ctx, party) {
  * Accept a destination: replaces any previous one (no waypoints). Mid-edge, the current edge is
  * finished first and the new route is validated from that next node.
  */
-export function setDestination(state, ctx, events, party, target, cause, via = null) {
+export function setDestination(state, ctx, events, party, target, cause, via = null, face = null) {
   const plan = routeFromHere(state, ctx, party, target, via);
   if (plan.error) return { error: plan.error };
   const { geo } = ctx;
@@ -305,14 +339,15 @@ export function setDestination(state, ctx, events, party, target, cause, via = n
   const first = nodes[0];
   const start = geo.center(from.column, from.row);
   const dx = first.x - start.x, dy = first.y - start.y;
-  if (!from.midEdge && (!dx || !dy)) {
+  if (freeKnight(ctx, party)) party.arriveFacing = face ?? null; // free_follow_v1: no travel turn Tick
+  else if (!from.midEdge && (!dx || !dy)) {
     const want = facingOf(dx, dy);
     if (want !== party.facing) {
       party.turn = { to: want, completeTick: state.tick + ctx.profile.movement.turnTicks - 1, reason: 'travel' };
       party.state = 'turning';
     }
   }
-  emit(state, events, 'destination_set', { partyId: party.id, target: party.destination, route: party.route.map((n) => ({ column: n.column, row: n.row })), cost: plan.cost, turn: party.turn?.to ?? null, cause, ...(via ? { via } : {}) });
+  emit(state, events, 'destination_set', { partyId: party.id, target: party.destination, route: party.route.map((n) => ({ column: n.column, row: n.row })), cost: plan.cost, turn: party.turn?.to ?? null, cause, ...(via ? { via } : {}), ...(face ? { face } : {}) });
   return { ok: true };
 }
 
@@ -437,6 +472,14 @@ export function simulateMovement(state, ctx, events, onContact) {
         continue;
       }
       const node = p.route[0];
+      // free_follow_v1: a Knight faces the leg it travels, at once (no Tick, no Supply)
+      if (freeKnight(ctx, p) && p.movementMode !== 'air') {
+        const ddx = node.x - p.x, ddy = node.y - p.y;
+        if ((ddx || ddy) && (!ddx || !ddy)) {
+          const want = facingOf(ddx, ddy);
+          if (want !== p.facing) { const was = p.facing; p.facing = want; placeMembers(state, ctx, p); emit(state, events, 'facing_changed', { partyId: p.id, from: was, to: want, cause: 'knight_leg', quantum: q }); }
+        }
+      }
       const [num, den] = speedOf(ctx, p, state);
       const total = pitch * num + (p.moveRemainder ?? 0);
       let step = Math.floor(total / (Q * den));
@@ -564,6 +607,11 @@ export function simulateMovement(state, ctx, events, onContact) {
         if (!p.route.length) {
           p.freeFollow = null;
           p.state = 'idle';
+          // free_follow_v1: the ordered arrival facing (default: the way it was moving)
+          if (p.arriveFacing) {
+            if (p.arriveFacing !== p.facing) { const was = p.facing; p.facing = p.arriveFacing; placeMembers(state, ctx, p); emit(state, events, 'facing_changed', { partyId: p.id, from: was, to: p.facing, cause: 'arrival', quantum: q }); }
+            p.arriveFacing = null;
+          }
           emit(state, events, 'destination_reached', { partyId: p.id, at: p.destination, quantum: q });
           p.destination = null;
         }

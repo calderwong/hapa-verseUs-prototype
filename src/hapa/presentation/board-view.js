@@ -601,7 +601,7 @@ export class BoardView {
    * The drafted route as a gold ribbon from the party to its endpoint, a marker on each corner
    * node and a ring on the endpoint (`nodes`: rules coordinates [x, y]). Null clears it.
    */
-  showPath(party, nodes = []) {
+  showPath(party, nodes = [], arrival = null) {
     for (const c of this.pathGroup.children) { c.geometry.dispose(); c.material.dispose(); }
     this.pathGroup.clear();
     if (!party || !nodes.length) return;
@@ -625,6 +625,19 @@ export class BoardView {
       m.renderOrder = 9;
       this.pathGroup.add(m);
     });
+    // the facing it will arrive with: an arrow from the endpoint (gold when chosen, pale when as-moving)
+    if (arrival?.face) {
+      const f = { N: [0, 1], E: [1, 0], S: [0, -1], W: [-1, 0] }[arrival.face], end = nodes.at(-1), U = this.ctx.U;
+      const a = this.toWorld(end[0], end[1]), b = this.toWorld(end[0] + f[0] * 2.2 * U, end[1] + f[1] * 2.2 * U);
+      const ang = Math.atan2(b.z - a.z, b.x - a.x);
+      const shape = new THREE.Shape();
+      shape.moveTo(0.95 * S, 0); shape.lineTo(-0.15 * S, 0.6 * S); shape.lineTo(-0.15 * S, 0.22 * S); shape.lineTo(-0.9 * S, 0.22 * S); shape.lineTo(-0.9 * S, -0.22 * S); shape.lineTo(-0.15 * S, -0.22 * S); shape.lineTo(-0.15 * S, -0.6 * S); shape.closePath();
+      const arrow = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshBasicMaterial({ color: arrival.chosen ? 0xffb347 : 0xfff2c4, transparent: true, opacity: 0.95, depthWrite: false, depthTest: false, side: THREE.DoubleSide }));
+      arrow.rotation.set(-Math.PI / 2, 0, -ang);
+      arrow.position.set((a.x + b.x) / 2, y + 0.03, (a.z + b.z) / 2);
+      arrow.renderOrder = 10;
+      this.pathGroup.add(arrow);
+    }
   }
 
   hover(territory) {

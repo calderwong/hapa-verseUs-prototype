@@ -25,6 +25,7 @@ const OPTIONAL_ENUMS = {
   'movement.recovery': ['nearest_node_v3', 'reachable_segment_v1'],
   'movement.traversal': ['body_sweep_v3', 'center_to_center_v1'],
   'movement.knightPaths': ['long_axis_first_v3', 'either_l_v1'],
+  'movement.knightTurn': ['turn_tick_v3', 'free_follow_v1'],
   'planning.agreement': ['pair_acknowledgment_v3', 'own_plan_ready_v1'],
 };
 const MOUNTS = ['castle', 'bishop', 'queen', 'king', 'commander', 'knight'];

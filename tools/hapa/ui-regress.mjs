@@ -1117,9 +1117,9 @@ await check('z12', 'Blocked Queen (v3_03 body sweep): the route preview names th
   await page.close();
 });
 
-await check('z16', 'Center-to-center opening (v3_04 rules, default v3_05): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1', profile: 'hapa_open_10x9_v3_04' }, async () => {
+await check('z16', 'Center-to-center opening (default v3_06: free Knight turns, arrival facing): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1', profile: 'hapa_open_10x9_v3_04' }, async () => {
   const page = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
-  expect('the default profile travels center to center', await app(page, () => [window.__versus.ctx.profile.id, window.__versus.ctx.profile.movement.traversal]), ['hapa_open_10x9_v3_05', 'center_to_center_v1']);
+  expect('the default profile travels center to center', await app(page, () => [window.__versus.ctx.profile.id, window.__versus.ctx.profile.movement.traversal]), ['hapa_open_10x9_v3_06', 'center_to_center_v1']);
   await app(page, () => { window.__versus.speed = 4; });
   await advanceTo(page, 2);
   await app(page, () => { const a = window.__versus; for (const id of Object.values(a.state.players.A.bank.minor).filter(Boolean).slice(0, 2)) a._addCommand('A', { type: 'load_supply', cardId: id, partyId: 'A.mount.C2' }); });
@@ -1138,10 +1138,18 @@ await check('z16', 'Center-to-center opening (v3_04 rules, default v3_05): the B
   await page.mouse.move(2, 2);
   await page.keyboard.press('l'); await page.keyboard.press('l'); await sleep(400);
   expect('L flips the drafted order too (twice: back to the short L)', await app(page, () => window.__versus.plans.A.find((c) => c.type === 'set_destination')?.via), 'short');
+  // v3_06: the arrival facing — default as moving (north on the short L); Shift+right-click cycles it
+  ok('the command bar shows the Knight\'s Speed', /Speed 2\/Tick/.test(await app(page, () => document.querySelector('.cmdbar .cmd-id')?.innerText ?? '')));
+  expect('default arrival facing is the way it is moving', await app(page, () => { const a = window.__versus, c = a._draftMove(a.state.parties['A.mount.C2']); return [c.face ?? null, a._arrivalFacing(a.state.parties['A.mount.C2'], c).face]; }), [null, 'N']);
+  await page.mouse.move(r3c3.x, r3c3.y); await page.keyboard.down('Shift'); await page.mouse.down({ button: 'right' }); await page.mouse.up({ button: 'right' }); await page.keyboard.up('Shift'); await sleep(350);
+  expect('Shift+right-click on the destination sets the next arrival facing (E), and the board shows its arrow', await app(page, () => [window.__versus._draftMove(window.__versus.state.parties['A.mount.C2']).face, window.__versus.view.pathGroup.children.length >= 7]), ['E', true]);
+  await page.keyboard.press('o'); await page.keyboard.press('o'); await page.keyboard.press('o'); await sleep(300);
+  expect('O cycles on and back to "as moving"', await app(page, () => window.__versus._draftMove(window.__versus.state.parties['A.mount.C2']).face ?? null), null);
   await shot(page, 'knight-switcher');
   await advanceTo(page, 5);
   const k = await app(page, () => { const a = window.__versus, p = a.state.parties['A.mount.C2'], c = a.ctx.geo.center(3, 3); return { centered: p.x === c.x && p.y === c.y, members: Object.values(p.slots).filter(Boolean).length, absorbed: ['A.pawn.C2', 'A.pawn.C3'].filter((id) => a.state.parties[id].retired) }; });
   expect('the Knight passed the Bishop\'s territory, absorbed R2C3\'s Pawn and stands on R3C3\'s center', [k.centered, k.members, k.absorbed], [true, 9, sabotage ? ['A.pawn.C2'] : ['A.pawn.C3']], sabotage ? 'SABOTAGE: expects the long L despite the flip' : undefined);
+  expect('no Tick was spent turning: it set off in Tick 2', await app(page, () => window.__versus.session.events.some((e) => e.type === 'region_entered' && e.partyId === 'A.mount.C2' && e.tick === 2)), true);
   await page.close();
   // CJ's Bishop: Tick 3, C7 and C3 Cards, toward R5C7
   const b = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
