@@ -1,0 +1,2361 @@
+{
+ "runId": "2026-11-24T06-32-30-518Z-2286e17",
+ "startedAt": "2026-11-24T06:32:31.194Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "2286e17bc842947c72e3a3ec5ea4dfdd9b3ff32e",
+  "dirty": false,
+  "diffSha256": null,
+  "untracked": [],
+  "untrackedSha256": null
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/158.0.8127.37",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": false,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio. Text size (contract 4): the browser default font size is set through CDP Page.setFontSizes (16 px = 100%, 24 = 150%, 32 = 200%); inspection text, the command and inspection bars use rem and follow it, other HUD parts still use px. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "c7",
+   "title": "Opening by keyboard alone through the navigator and pinned views (HF-02, §3 keyboard)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "reach by Tab: Parties & Cards",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "☰ Parties & Cards",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 3
+     }
+    },
+    {
+     "name": "focus is visible on Parties & Cards",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "☰ Parties & Cards",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 3
+     }
+    },
+    {
+     "name": "reach by Tab: navigator: your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Select Your Castle at R1C1, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "focus is visible on navigator: your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Select Your Castle at R1C1, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "1 · the C1 Castle is selected for commands (no party document pinned)",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      false
+     ],
+     "expected": [
+      "A.mount.C1",
+      false
+     ]
+    },
+    {
+     "name": "1 · focus moved into the command bar",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Supply ▾",
+      "visible": true,
+      "tag": "SUMMARY"
+     }
+    },
+    {
+     "name": "reach by Tab: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Supply ▾",
+      "visible": true,
+      "tag": "SUMMARY",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "focus is visible on Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Supply ▾",
+      "visible": true,
+      "tag": "SUMMARY",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "reach by Tab: Load Supply from 2♣ (C1)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Load 2 Supply from 2♣ (C1) into Castle R1C1 (gives up its ability)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "focus is visible on Load Supply from 2♣ (C1)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Load 2 Supply from 2♣ (C1) into Castle R1C1 (gives up its ability)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "2 · focus moves into the opened Move menu",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn · ~1 Tick",
+      "visible": true,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "reach by Tab: Move Castle to R2C1 (funded, joins your Pawn)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn · ~1 Tick",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "focus is visible on Move Castle to R2C1 (funded, joins your Pawn)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn · ~1 Tick",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "3 · the plan holds Supply then the move",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "3 · focus lands on Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Ready ▶",
+      "visible": true,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "reach by Tab: result: Supply landed (in Orders)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "A loaded 2 Supply from A's 2♣ (C1) into A's Castle at R2C1 (now 2)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 4
+     }
+    },
+    {
+     "name": "focus is visible on result: Supply landed (in Orders)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "A loaded 2 Supply from A's 2♣ (C1) into A's Castle at R2C1 (now 2)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 4
+     }
+    },
+    {
+     "name": "4 · the supply_loaded event is pinned",
+     "pass": true,
+     "actual": "supply_loaded",
+     "expected": "supply_loaded"
+    },
+    {
+     "name": "reach by Tab: Inspect the Card",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Inspect the Card: 2♣ (C1) (Supply 2, no Mana)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "focus is visible on Inspect the Card",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Inspect the Card: 2♣ (C1) (Supply 2, no Mana)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "4 · its Card is pinned",
+     "pass": true,
+     "actual": "A.C1.T1.0",
+     "expected": "A.C1.T1.0"
+    },
+    {
+     "name": "result agrees with the rules: R2C1, Supply 1, nine members",
+     "pass": true,
+     "actual": {
+      "region": {
+       "column": 1,
+       "row": 2
+      },
+      "supply": 1,
+      "members": 9
+     },
+     "expected": {
+      "region": {
+       "column": 1,
+       "row": 2
+      },
+      "supply": 1,
+      "members": 9
+     }
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c7-keyboard-result.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "tabs": [
+     {
+      "name": "Parties & Cards",
+      "tabs": 3
+     },
+     {
+      "name": "navigator: your C1 Castle",
+      "tabs": 2
+     },
+     {
+      "name": "Supply menu",
+      "tabs": 0
+     },
+     {
+      "name": "Load Supply from 2♣ (C1)",
+      "tabs": 0
+     },
+     {
+      "name": "Move Castle to R2C1 (funded, joins your Pawn)",
+      "tabs": 0
+     },
+     {
+      "name": "result: Supply landed (in Orders)",
+      "tabs": 4
+     },
+     {
+      "name": "Inspect the Card",
+      "tabs": 2
+     }
+    ]
+   },
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c8",
+   "title": "Funded destinations: range, refusal with shortfall, invalidated funding blocks Ready (HF-04)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1",
+    "profile": "hapa_open_10x9_v3_02"
+   },
+   "assertions": [
+    {
+     "name": "control present: navigator: C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "with 0 Supply the bar says no route is funded",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "No Supply for any route: load a Card first"
+    },
+    {
+     "name": "control present: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "2 Supply funds exactly the unheld targets within two steps of R1C1",
+     "pass": true,
+     "actual": [
+      "R2C1",
+      "R3C1"
+     ],
+     "expected": [
+      "R2C1",
+      "R3C1"
+     ]
+    },
+    {
+     "name": "control present: close the navigator",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "an unfunded legal target is visible to right-click",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 496.3227781481258,
+      "y": 558.8758760249704,
+      "target": "R4C1",
+      "need": 3
+     }
+    },
+    {
+     "name": "an unfunded target (R4C1) is refused with its shortfall",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Not added: not enough Supply for the whole route: it needs 3, the party has 2 (counting earlier planned loads)"
+    },
+    {
+     "name": "…and no destination was added",
+     "pass": true,
+     "actual": [
+      "load_supply"
+     ],
+     "expected": [
+      "load_supply"
+     ]
+    },
+    {
+     "name": "control present: Move to R3C1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the funded move is planned after its load",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "control present: Remove the funding load",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the dependent destination is kept, not shortened or dropped",
+     "pass": true,
+     "actual": [
+      "set_destination"
+     ],
+     "expected": [
+      "set_destination"
+     ]
+    },
+    {
+     "name": "it is explicitly invalid for lack of funding",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "not enough Supply for the whole route: it needs 2, the party has 0 (counting earlier planned loads)"
+     ]
+    },
+    {
+     "name": "Ready says to fix the order",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Fix 1 order"
+    },
+    {
+     "name": "control present: blocked Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "pressing it opens Orders to repair; nothing is frozen",
+     "pass": true,
+     "actual": [
+      true,
+      false
+     ],
+     "expected": [
+      true,
+      false
+     ]
+    },
+    {
+     "name": "control present: Restore the load",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "restoring the load re-funds the destination",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c8-unfunded-draft.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "moveLabels": [
+     "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn · ~1 Tick",
+     "Move Castle R1C1 to R3C1: needs 2 Supply · ~2 Ticks · absorbs your Pawn on the way",
+     "Fill 2,3 · +1",
+     "Fill 2,2 · +2"
+    ]
+   },
+   "allowedErrors": []
+  },
+  {
+   "id": "c10",
+   "title": "Endpoint intent: one marker per destination, drafts replace accepted, never occupants (HF-03)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "one endpoint per planned destination",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ]
+    },
+    {
+     "name": "endpoints are not rules occupants",
+     "pass": true,
+     "actual": [
+      0,
+      0
+     ],
+     "expected": [
+      0,
+      0
+     ]
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "accepted, still-travelling destinations keep their markers",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c10-intents.jpg"
+   ],
+   "setup": [
+    "two A loads and destinations are added with _addCommand (pointer routes are covered in c7/c8)"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z01",
+   "title": "Ordinary movement: select, funded Move from the command bar, no party document; reasons stay visible (Z01, Z02)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "a click selects the party for commands",
+     "pass": true,
+     "actual": "A.mount.C1",
+     "expected": "A.mount.C1"
+    },
+    {
+     "name": "no party document opens; the small command bar does",
+     "pass": true,
+     "actual": [
+      false,
+      true
+     ],
+     "expected": [
+      false,
+      true
+     ]
+    },
+    {
+     "name": "selecting does not move the camera",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "the bar says why it cannot move yet",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "No Supply for any route: load a Card first"
+    },
+    {
+     "name": "control present: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the bar lists exactly the funded targets with the rules' Supply quote",
+     "pass": true,
+     "actual": [
+      "R2C1:1",
+      "R3C1:2"
+     ],
+     "expected": [
+      "R2C1:1",
+      "R3C1:2"
+     ]
+    },
+    {
+     "name": "control present: Move to R2C1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the move is planned after its load",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "closing a Card view keeps the selected party and its orders",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      2
+     ],
+     "expected": [
+      "A.mount.C1",
+      2
+     ]
+    },
+    {
+     "name": "an unmounted Pawn shows \"Needs a Mount\"",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "after Ready the bar says the plan is frozen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z01-pawn-reason.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z03",
+   "title": "Approach to inspect: zoom over an enemy keeps the own selection; nine and five member labels; truthful stats (Z03, Z04, Z05)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "zooming over an enemy inspects it; the own command selection stays",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "B.mount.C5"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "B.mount.C5"
+     ]
+    },
+    {
+     "name": "…without issuing an order",
+     "pass": true,
+     "actual": {
+      "A": [],
+      "B": []
+     },
+     "expected": {
+      "A": [],
+      "B": []
+     }
+    },
+    {
+     "name": "member labels appear at a readable size",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "combat"
+    },
+    {
+     "name": "the five-member Pawn shows five labels — no center member invented",
+     "pass": true,
+     "actual": 5,
+     "expected": 5
+    },
+    {
+     "name": "its collective label says the center is empty",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "Return restores the prior pose and releases inspection",
+     "pass": true,
+     "actual": [
+      null,
+      null
+     ],
+     "expected": [
+      null,
+      null
+     ]
+    },
+    {
+     "name": "the merged party shows nine compact labels",
+     "pass": true,
+     "actual": 9,
+     "expected": 9
+    },
+    {
+     "name": "compact labels are role + health, not stat sheets (a full formation)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "3/3 1×3 1 1",
+      "3/3 1×3 1 1",
+      "3/3 1×3 1 1",
+      "3/3 1×3 1 1",
+      "6/6 1×3 1 1",
+      "3/3 1×2 2 1",
+      "3/3 2×1 2 1",
+      "3/3 1×1 2 1",
+      "3/3 2×1 2 1"
+     ]
+    },
+    {
+     "name": "one hovered member is highlighted; no explanation opens on hover",
+     "pass": true,
+     "actual": [
+      1,
+      false
+     ],
+     "expected": [
+      1,
+      false
+     ]
+    },
+    {
+     "name": "a tap on the body opens its source breakdown in the reading panel",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "highlighted": 1,
+      "reading": "Archer 3/3 HP · slot 7 · rear row Sources and exceptions Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1) No engaged target: a volley only reaches a party this formation is engaged with."
+     }
+    },
+    {
+     "name": "…with no engaged party, no ranged target is implied",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Archer 3/3 HP · slot 7 · rear row Sources and exceptions Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1) No engaged target: a volley only reaches a party this formation is engaged with."
+    },
+    {
+     "name": "…and the Mage ward is one grouped row with its source",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Archer 3/3 HP · slot 7 · rear row Sources and exceptions Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1) No engaged target: a volley only reaches a party this formation is engaged with."
+    },
+    {
+     "name": "a wheel over a label (and its symbols) still zooms the camera",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z03-enemy-inspection.jpg",
+    "z03-pawn-five.jpg",
+    "z03-nine-members.jpg",
+    "z03-expanded-member.jpg"
+   ],
+   "setup": [
+    "opening merge played with _addCommand/_pressReady (the pointer route is c7/z01)"
+   ],
+   "allowedErrors": []
+  },
+  {
+   "id": "z09",
+   "title": "Unobstructed reading: four and nine members, 1280×720 and 1600×1000, eight bearings, low pitch, screen edge, 150% and 200% text (R6-01)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1280x720@1, 1600x1000@1",
+    "textScale": "CDP Page.setFontSizes 16/24/32 px"
+   },
+   "assertions": [
+    {
+     "name": "control present: inspection bar member /^Mage/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Mage/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Mage/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Mage/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: inspection bar member /^Archer/",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "every case was measured with an open explanation",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "the explanation never covers an inspected body",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "…nor a member label",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "…nor the command bar, inspection bar, camera pad, layer rail or match bar",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "the explanation and the party facts stay inside the view",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "the party facts never cover a body or the explanation",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "collective facts stay reachable: beside the formation, or (when it steps aside) in the inspection bar",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      [
+       "1280x720 four text 200%",
+       "Inspecting your Bishop · R1C3 4/9 · faces North · Supply 0 · waiting · band +1 · exposed"
+      ],
+      [
+       "1280x720 nine text 200%",
+       "Inspecting your Castle · R2C1 9/9 · faces North · Supply 1 · waiting · band +1 · exposed"
+      ]
+     ]
+    },
+    {
+     "name": "core role and health text is at least 14 px at 100% and scales with the text setting",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four low pitch",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four screen edge",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine low pitch",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 nine screen edge",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1280x720 four text 150%",
+       {
+        "root": 24,
+        "role": 21,
+        "hp": 21,
+        "reading": 21,
+        "cmd": 19.5
+       }
+      ],
+      [
+       "1280x720 nine text 150%",
+       {
+        "root": 24,
+        "role": 21,
+        "hp": 21,
+        "reading": 21,
+        "cmd": 19.5
+       }
+      ],
+      [
+       "1280x720 four text 200%",
+       {
+        "root": 32,
+        "role": 28,
+        "hp": 28,
+        "reading": 28,
+        "cmd": 26
+       }
+      ],
+      [
+       "1280x720 nine text 200%",
+       {
+        "root": 32,
+        "role": 28,
+        "hp": 28,
+        "reading": 28,
+        "cmd": 26
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four low pitch",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 four screen edge",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine bearing",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine low pitch",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ],
+      [
+       "1600x1000 nine screen edge",
+       {
+        "root": 16,
+        "role": 14,
+        "hp": 14,
+        "reading": 14,
+        "cmd": 13
+       }
+      ]
+     ]
+    },
+    {
+     "name": "compact member labels never overlap each other (beyond a 2 px edge)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "command and inspection bar controls stay on screen at every size",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": []
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z09-four-1280-b0.jpg",
+    "z09-four-1280-b90.jpg",
+    "z09-four-1280-b180.jpg",
+    "z09-four-1280-b270.jpg",
+    "z09-four-low-pitch.jpg",
+    "z09-four-edge.jpg",
+    "z09-nine-1280-b360.jpg",
+    "z09-nine-1280-b90.jpg",
+    "z09-nine-1280-b180.jpg",
+    "z09-nine-1280-b270.jpg",
+    "z09-nine-low-pitch.jpg",
+    "z09-nine-edge.jpg",
+    "z09-four-text-150.jpg",
+    "z09-nine-text-150.jpg",
+    "z09-four-text-200.jpg",
+    "z09-nine-text-200.jpg"
+   ],
+   "setup": [
+    "opening merge played with _addCommand/_pressReady (the pointer route is z01/z08)",
+    "opening merge played with _addCommand/_pressReady (the pointer route is z01/z08)"
+   ],
+   "observed": {
+    "cases": 44,
+    "docked": [],
+    "summary": [
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 0,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 45,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 90,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 135,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 180,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 225,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 270,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four bearing",
+      "bearing": 315,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four low pitch",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four screen edge",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 45,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 90,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 135,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 180,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 225,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 270,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine bearing",
+      "bearing": 315,
+      "pitch": 56,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine low pitch",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 nine screen edge",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1280x720 four text 150%",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 24,
+       "role": 21,
+       "hp": 21,
+       "reading": 21,
+       "cmd": 19.5
+      }
+     },
+     {
+      "tag": "1280x720 nine text 150%",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 24,
+       "role": 21,
+       "hp": 21,
+       "reading": 21,
+       "cmd": 19.5
+      }
+     },
+     {
+      "tag": "1280x720 four text 200%",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 32,
+       "role": 28,
+       "hp": 28,
+       "reading": 28,
+       "cmd": 26
+      }
+     },
+     {
+      "tag": "1280x720 nine text 200%",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "none",
+      "labels": 0,
+      "docked": false,
+      "font": {
+       "root": 32,
+       "role": 28,
+       "hp": 28,
+       "reading": 28,
+       "cmd": 26
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 0,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 45,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 90,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 135,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 180,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 225,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 270,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four bearing",
+      "bearing": 315,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four low pitch",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 four screen edge",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "identity",
+      "labels": 4,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 360,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 45,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 90,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 135,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 180,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 225,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 270,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine bearing",
+      "bearing": 315,
+      "pitch": 56,
+      "level": "combat",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine low pitch",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     },
+     {
+      "tag": "1600x1000 nine screen edge",
+      "bearing": 360,
+      "pitch": 26,
+      "level": "identity",
+      "labels": 9,
+      "docked": false,
+      "font": {
+       "root": 16,
+       "role": 14,
+       "hp": 14,
+       "reading": 14,
+       "cmd": 13
+      }
+     }
+    ]
+   },
+   "allowedErrors": []
+  },
+  {
+   "id": "z16",
+   "title": "Center-to-center opening (default v3_06: free Knight turns, arrival facing): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1",
+    "profile": "hapa_open_10x9_v3_04"
+   },
+   "assertions": [
+    {
+     "name": "the default profile travels center to center",
+     "pass": true,
+     "actual": [
+      "hapa_open_10x9_v3_06",
+      "center_to_center_v1"
+     ],
+     "expected": [
+      "hapa_open_10x9_v3_06",
+      "center_to_center_v1"
+     ]
+    },
+    {
+     "name": "the Knight entry names its default L and that it flips",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Knight R1C2 to R3C3: needs 3 Supply · ~2 Ticks · L via R2C2, R3C2 (L flips) · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R3C3 (Knight)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the switcher shows both L paths with the default chosen",
+     "pass": false,
+     "actual": false,
+     "expected": true,
+     "note": [
+      "null|arrive facing E (as moving)",
+      "true|via R2C2 → R3C2 · absorbs Pawn",
+      "false|via R1C3 → R2C3 · absorbs Pawn"
+     ]
+    },
+    {
+     "name": "right-clicking R3C3 again flips the L, again and again (one order throughout)",
+     "pass": true,
+     "actual": [
+      "short",
+      "long",
+      "short"
+     ],
+     "expected": [
+      "short",
+      "long",
+      "short"
+     ]
+    },
+    {
+     "name": "the drafted L is drawn on the board",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "L flips the drafted order too (twice: back to the short L)",
+     "pass": true,
+     "actual": "short",
+     "expected": "short"
+    },
+    {
+     "name": "the command bar shows the Knight's Speed",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "default arrival facing is the way it is moving",
+     "pass": true,
+     "actual": [
+      null,
+      "N"
+     ],
+     "expected": [
+      null,
+      "N"
+     ]
+    },
+    {
+     "name": "Shift+right-click on the destination sets the next arrival facing (E), and the board shows its arrow",
+     "pass": true,
+     "actual": [
+      "E",
+      true
+     ],
+     "expected": [
+      "E",
+      true
+     ]
+    },
+    {
+     "name": "O cycles on and back to \"as moving\"",
+     "pass": true,
+     "actual": null,
+     "expected": null
+    },
+    {
+     "name": "the Knight passed the Bishop's territory, absorbed R2C3's Pawn and stands on R3C3's center",
+     "pass": true,
+     "actual": [
+      true,
+      9,
+      [
+       "A.pawn.C3"
+      ]
+     ],
+     "expected": [
+      true,
+      9,
+      [
+       "A.pawn.C3"
+      ]
+     ]
+    },
+    {
+     "name": "no Tick was spent turning: it set off in Tick 2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "R5C7 is not marked blocked; the Pawn on R2C4 is absorbed on the way",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Bishop R1C3 to R5C7: needs 4 Supply · ~4 Ticks · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R5C7 (Bishop)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "one Tick, one Supply: on R2C4's center, the Pawn absorbed, not blocked, 3 Supply left",
+     "pass": true,
+     "actual": [
+      true,
+      true,
+      0,
+      3
+     ],
+     "expected": [
+      true,
+      true,
+      0,
+      3
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z16-knight-switcher.jpg",
+    "z16-bishop-absorbed.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-11-24T06:35:17.400Z",
+ "summary": {
+  "checks": 7,
+  "assertions": 113,
+  "failed": 1
+ }
+}

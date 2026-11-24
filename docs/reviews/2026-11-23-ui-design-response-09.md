@@ -145,3 +145,41 @@ CJ asked: *"replace the king with a second queen … the win condition should be
 - Bot-versus-bot, seeds 1–3: each match is decided at Tick 28 by the Commander's death; 15 Pawns absorbed and no rejected orders.
 - Browser checks c5, c7, c8, c10, z01, z03 and z16: 114/114 ([run](evidence/2026-11-23/response-09/regress/2026-11-24T06-13-55-095Z-23c4a9e/report.json)).
 - Live in the Browser pane: both sides show two Queen standards flanking the Commander.
+
+## Addendum 3 — free Knight turns, arrival facing, visible Speed (`2286e17`, `80bf3d3`)
+
+CJ found that the Knight's first Tick was spent turning before a sideways first step. That is the v3 travel-turn rule, not a block. CJ asked for:
+
+- Knights to turn without spending a Tick or Supply, "a horse piece trying to simulate higher speed and agility";
+- the facing on arrival to default to the direction of travel, but to be choosable with a quick toggle and a clear indicator;
+- Speed to be more visible;
+- a way to find facing and formation changes.
+
+**Rules** — default profile **`hapa_open_10x9_v3_06`**: `v3_05` plus `movement.knightTurn: free_follow_v1`.
+
+- A Knight never spends a Tick or Supply turning to travel.
+- It faces each leg the moment it starts that leg, and records a `facing_changed` event when it does.
+- It arrives facing the order's `face` (N/E/S/W). With no `face`, it keeps facing the direction it was moving.
+- Only Knights accept `face`.
+- Other Mounts keep the one-Tick travel turn, and `v3_05` and earlier keep it for Knights.
+
+**Interface**
+
+- **Speed:** "Speed 2/Tick" now appears in the command bar, the party hint and the party box. Move-list entries add "~N Ticks", including any turn Tick.
+- **Arrival facing:**
+  - The Knight order row in the command bar starts with an **arrive facing** button: an arrow in your orientation, marked "(as moving)" or "(chosen)".
+  - Click it, **Shift+right-click** the destination, or press **O** to cycle: as moving, then the other three directions, then back to as moving.
+  - The board draws an arrow at the endpoint, pale for as moving and orange when chosen.
+- **Turning other formations:** **G** now opens the **Face ▾** menu, which turns the selected formation N/E/S/W in one Tick. The help had listed **G** for this, but nothing was bound to it. Face works only while the formation's column is active, as for movement.
+- The controls and help lists are updated.
+
+**Verification**
+
+- `npm test`: 131/131. The new test checks four things:
+  - under `v3_06` the short L sets off in Tick 2 (under `v3_05` it does not);
+  - it faces east, then north, along the way;
+  - only the L's 3 Supply is spent;
+  - an ordered arrival facing S is honoured, and a Castle refuses `face`.
+- `npm run check` exit 0 at `2286e17` ([log](evidence/2026-11-23/response-09/npm-run-check-2286e17.log)).
+- Browser checks c7, c8, c10, z01, z03, z09 and z16: 112/113 at `2286e17`. The one failure was z16 counting the new facing button as an L button. After the selector fix, z16 passed 17/17 at `80bf3d3`, including Speed shown, the default "as moving" N, Shift+right-click → E with the board arrow, and **O** cycling back.
+- Live in the Browser pane: Speed 2/Tick in the bar, Shift+right-click on R3C3 → "Arrives facing ↑ N", the orange arrow on the board, and **G** opening Face.
