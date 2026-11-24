@@ -49,7 +49,7 @@ function atNextActivation(s) {
 
 test('v3_03 declares reachable recovery and own-plan Ready; the default carries both forward', () => {
   const p = profileById(V303);
-  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_04');
+  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_05');
   assert.equal(profileById(DEFAULT_PROFILE_ID).movement.recovery, 'reachable_segment_v1');
   assert.equal(agreementPolicy(profileById(DEFAULT_PROFILE_ID)), 'own_plan_ready_v1');
   assert.equal(p.movement.recovery, 'reachable_segment_v1');

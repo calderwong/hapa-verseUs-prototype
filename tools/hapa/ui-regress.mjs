@@ -1117,9 +1117,9 @@ await check('z12', 'Blocked Queen (v3_03 body sweep): the route preview names th
   await page.close();
 });
 
-await check('z16', 'Center-to-center opening (v3_04): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1', profile: 'hapa_open_10x9_v3_04' }, async () => {
+await check('z16', 'Center-to-center opening (v3_04 rules, default v3_05): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)', { query: 'autostart=1&a=human&b=bot&seed=1', viewport: '1280x720@1', profile: 'hapa_open_10x9_v3_04' }, async () => {
   const page = await open('autostart=1&a=human&b=bot&seed=1', { width: 1280, height: 720 });
-  expect('the default profile travels center to center', await app(page, () => [window.__versus.ctx.profile.id, window.__versus.ctx.profile.movement.traversal]), ['hapa_open_10x9_v3_04', 'center_to_center_v1']);
+  expect('the default profile travels center to center', await app(page, () => [window.__versus.ctx.profile.id, window.__versus.ctx.profile.movement.traversal]), ['hapa_open_10x9_v3_05', 'center_to_center_v1']);
   await app(page, () => { window.__versus.speed = 4; });
   await advanceTo(page, 2);
   await app(page, () => { const a = window.__versus; for (const id of Object.values(a.state.players.A.bank.minor).filter(Boolean).slice(0, 2)) a._addCommand('A', { type: 'load_supply', cardId: id, partyId: 'A.mount.C2' }); });

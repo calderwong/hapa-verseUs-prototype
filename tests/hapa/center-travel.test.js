@@ -27,8 +27,9 @@ function play(profileId, upTo, plansAt) {
 }
 const at = (s, id) => { const p = s.state.parties[id]; return [p.region.row, p.region.column, p.x === s.ctx.geo.center(p.region.column, p.region.row).x && p.y === s.ctx.geo.center(p.region.column, p.region.row).y]; };
 
-test('v3_04 is the default and validates', () => {
-  assert.equal(DEFAULT_PROFILE_ID, V304);
+test('v3_04 validates; the default v3_05 keeps its travel rules', () => {
+  assert.equal(DEFAULT_PROFILE_ID, 'hapa_open_10x9_v3_05');
+  assert.deepEqual(profileById(DEFAULT_PROFILE_ID).movement, profileById(V304).movement);
   const p = profileById(V304);
   assert.deepEqual([p.movement.traversal, p.movement.knightPaths, p.movement.recovery, p.planning.agreement], ['center_to_center_v1', 'either_l_v1', 'reachable_segment_v1', 'own_plan_ready_v1']);
 });
@@ -57,6 +58,17 @@ test('the Knight takes either L and absorbs the Pawn its path reaches (Tick 2 op
     assert.deepEqual(at(s, 'A.mount.C2'), [c.target.row, c.target.column, true]);
     assert.equal(verifyReplay(s.replay).ok, true);
   }
+});
+
+test('v3_05 replaces each side\'s King with a second Queen; victory stays on the Commander', () => {
+  for (const seat of ['A', 'B']) {
+    const s = createSession({ matchId: `q-${seat}`, profile: profileById(DEFAULT_PROFILE_ID), catalog: CATALOG, seed: 1 });
+    const mounts = Object.values(s.state.parties).filter((p) => p.owner === seat && p.mount).map((p) => p.mount).sort();
+    assert.deepEqual(mounts, ['bishop', 'bishop', 'castle', 'castle', 'commander', 'knight', 'knight', 'queen', 'queen']);
+  }
+  const p = profileById(DEFAULT_PROFILE_ID);
+  assert.equal(p.victory.commanderDeath, true);
+  assert.equal(profileById(V304).board.columnMap[3].mount, 'king'); // archived profiles keep their King
 });
 
 test('both L paths are offered, quoted alike, and checked for clearance; the short L is refused before v3_04', () => {

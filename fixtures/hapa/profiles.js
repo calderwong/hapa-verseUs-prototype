@@ -165,7 +165,7 @@ export const PROFILE_VARIANTS = Object.freeze({
     planning: { agreement: 'own_plan_ready_v1' },
   },
   /**
-   * The default for new matches (CJ's direction after response 08). v3_03 plus:
+   * The default for new matches from CJ's post-response-08 direction until v3_05. v3_03 plus:
    *  - center-to-center traversal: a step is obstructed only by a friendly formation holding the
    *    territory entered; arriving on an unmounted friendly Pawn's center absorbs it; Knights pass
    *    through friendly-held territories; enemies still meet on body contact;
@@ -176,6 +176,20 @@ export const PROFILE_VARIANTS = Object.freeze({
     title: 'Open 10×9, v3 fixture 04 — center-to-center travel, either Knight L',
     revision: 1,
     rulesVersion: 'hapa-versus-rules/0.4.0',
+    movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1', recovery: 'reachable_segment_v1', traversal: 'center_to_center_v1', knightPaths: 'either_l_v1' },
+    planning: { agreement: 'own_plan_ready_v1' },
+  },
+  /**
+   * The default for new matches (CJ after response 09): v3_04 with a second Queen in place of the
+   * King on local column 4, for both seats (the Commander already carries the King's role: the
+   * match is lost when it dies). Colors, suits and Card bindings of the column are unchanged.
+   * v3_04 and earlier keep the King for their matches and replays.
+   */
+  hapa_open_10x9_v3_05: {
+    title: 'Open 10×9, v3 fixture 05 — two Queens and the Commander',
+    revision: 1,
+    rulesVersion: 'hapa-versus-rules/0.5.0',
+    board: { columnMap: COLUMN_MAP.map((c) => (c.column === 4 ? { ...c, mount: 'queen' } : { ...c })) },
     movement: { destinationFunding: 'full_route_funded_v1', debit: 'route_price_v1', recovery: 'reachable_segment_v1', traversal: 'center_to_center_v1', knightPaths: 'either_l_v1' },
     planning: { agreement: 'own_plan_ready_v1' },
   },
@@ -227,4 +241,4 @@ export function profileById(id) {
 export const PROFILE_IDS = [BASE_PROFILE.id, ...Object.keys(PROFILE_VARIANTS)];
 
 /** The profile new local matches, bots and peer tools start with. */
-export const DEFAULT_PROFILE_ID = 'hapa_open_10x9_v3_04';
+export const DEFAULT_PROFILE_ID = 'hapa_open_10x9_v3_05';

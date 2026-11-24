@@ -36,7 +36,7 @@ export const TERMS = {
   rank: { label: 'rank', short: 'The Card\'s number. In this profile its Supply equals its rank.', source: 'Master v3 ch.5 (supplyCurve rank)' },
   suit: { label: 'suit', short: 'Wands, Pentacles, Cups or Swords (Wildcard in the centre column): the column family that minted the Card.', source: 'Master v3 ch.5' },
   alignment: { label: 'alignment', aliases: ['territory color'], short: 'A territory\'s Mana color. Cards minted from a column carry Mana from the colored Mana rows its frontier reached.', source: 'Master v3 ch.4–5', related: ['mana', 'frontier'] },
-  mount: { label: 'Mount', short: 'A party\'s movement piece (Castle, Knight, Bishop, King, Queen, Commander). It sets the destination pattern and Speed; an unmounted Pawn cannot move on its own.', source: 'Master v3 ch.6', related: ['party', 'speed'] },
+  mount: { label: 'Mount', short: 'A party\'s movement piece (Castle, Knight, Bishop, Queen, Commander). It sets the destination pattern and Speed; an unmounted Pawn cannot move on its own.', source: 'Master v3 ch.6', related: ['party', 'speed'] },
   party: { label: 'party', aliases: ['formation'], short: 'Up to nine members on a 3×3 formation around its centre. It moves, fights and receives Supply as one unit.', source: 'Master v3 ch.6–7', related: ['member', 'facing'] },
   member: { label: 'member', short: 'One body in a party: its role (Swordsman, Pikeman, Archer, Mage, Priest, or the Mount) sets its attacks and Defense.', source: 'Master v3 ch.7–8' },
   capacity: { label: 'capacity', short: 'A party holds at most nine members; merging a Pawn into a Mount fills the formation.', source: 'Master v3 ch.6' },
