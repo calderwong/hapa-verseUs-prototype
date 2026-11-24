@@ -1,0 +1,492 @@
+[
+  {
+    "path": "AGENTS.md",
+    "sha": "097b6e01dfab1e4411edeef6a863fe472ba9b9e3",
+    "expected": "097b6e01dfab1e4411edeef6a863fe472ba9b9e3"
+  },
+  {
+    "path": "README.md",
+    "sha": "5ff46c79de58b29a1ea1fd3894d936be08ddbc9c",
+    "expected": "5ff46c79de58b29a1ea1fd3894d936be08ddbc9c"
+  },
+  {
+    "path": "docs/requirements/2026-11-23-human-feedback-addendum-03.md",
+    "sha": "6ca8a6067cc5b5d8668cd85455bc226afcc11f93",
+    "expected": "6ca8a6067cc5b5d8668cd85455bc226afcc11f93"
+  },
+  {
+    "path": "docs/requirements/master-requirements-v3.txt",
+    "sha": "c97ab6851df6552ed3d7104d844c798f699f09b8",
+    "expected": "c97ab6851df6552ed3d7104d844c798f699f09b8"
+  },
+  {
+    "path": "docs/reviews/2026-11-23-next-agent-assignment-08.md",
+    "sha": "684fc71e6ff525c0750987bb44bafe947da04d59",
+    "expected": "684fc71e6ff525c0750987bb44bafe947da04d59"
+  },
+  {
+    "path": "docs/reviews/2026-11-23-ui-design-response-08.md",
+    "sha": "03f07310b9f62f94d50aca80e1a46920243a8b75",
+    "expected": "03f07310b9f62f94d50aca80e1a46920243a8b75"
+  },
+  {
+    "path": "docs/reviews/2026-11-23-ui-design-response-09.md",
+    "sha": "54c826018facebb4eee56eabfaa132237ea21a8e",
+    "expected": "54c826018facebb4eee56eabfaa132237ea21a8e"
+  },
+  {
+    "path": "docs/reviews/README.md",
+    "sha": "42755aa8cf0ed0c1d8ffdd959956a08250d00850",
+    "expected": "42755aa8cf0ed0c1d8ffdd959956a08250d00850"
+  },
+  {
+    "path": "docs/workflows/LOOSE_SCREWS.md",
+    "sha": "949fdd2c37f30fba591ba32535e1f32e66c94ef7",
+    "expected": "949fdd2c37f30fba591ba32535e1f32e66c94ef7"
+  },
+  {
+    "path": "fixtures/hapa/content.js",
+    "sha": "6210462fdcb3121da79527149d02a3cfe989f408",
+    "expected": "6210462fdcb3121da79527149d02a3cfe989f408"
+  },
+  {
+    "path": "fixtures/hapa/profiles.js",
+    "sha": "a343002b7941c6872b33b3fff3ea4fd7b18692df",
+    "expected": "a343002b7941c6872b33b3fff3ea4fd7b18692df"
+  },
+  {
+    "path": "fixtures/hapa/scenarios.js",
+    "sha": "71e3208c1b2992e3632a758227123370db8c8262",
+    "expected": "71e3208c1b2992e3632a758227123370db8c8262"
+  },
+  {
+    "path": "fixtures/hapa/ui-fixtures.js",
+    "sha": "aae8aa89c1baced094dde05994d5fdbf751f6d6b",
+    "expected": "aae8aa89c1baced094dde05994d5fdbf751f6d6b"
+  },
+  {
+    "path": "index.html",
+    "sha": "fe3a37084749094d5efd0e053000d7bf736aba4c",
+    "expected": "fe3a37084749094d5efd0e053000d7bf736aba4c"
+  },
+  {
+    "path": "package-lock.json",
+    "sha": "ba2ea3c07f08e8aeb59d03ebf39bacbbd77fbcf2",
+    "expected": "ba2ea3c07f08e8aeb59d03ebf39bacbbd77fbcf2"
+  },
+  {
+    "path": "package.json",
+    "sha": "7217956c327c97594241b1609233559f2f52b09f",
+    "expected": "7217956c327c97594241b1609233559f2f52b09f"
+  },
+  {
+    "path": "src/hapa/adapters/content.js",
+    "sha": "5d5132c773b0440eb0472a06b89d436a1a83ea07",
+    "expected": "5d5132c773b0440eb0472a06b89d436a1a83ea07"
+  },
+  {
+    "path": "src/hapa/adapters/profile-lab.js",
+    "sha": "0882b539020ef123499b9cfddfca628092ae1320",
+    "expected": "0882b539020ef123499b9cfddfca628092ae1320"
+  },
+  {
+    "path": "src/hapa/controllers/heuristic-bot.js",
+    "sha": "078befad289ab5b6620eebb875b11654908e5969",
+    "expected": "078befad289ab5b6620eebb875b11654908e5969"
+  },
+  {
+    "path": "src/hapa/presentation/app.js",
+    "sha": "63d0b6542115cf2242835b244421698b874894ce",
+    "expected": "63d0b6542115cf2242835b244421698b874894ce"
+  },
+  {
+    "path": "src/hapa/presentation/board-view.js",
+    "sha": "fce8bdd44e0e1912cd5caa2a377f04eb1069852a",
+    "expected": "fce8bdd44e0e1912cd5caa2a377f04eb1069852a"
+  },
+  {
+    "path": "src/hapa/presentation/boardframe.js",
+    "sha": "157a61fad9828e22b3e3de87d2538c535f43e8cf",
+    "expected": "157a61fad9828e22b3e3de87d2538c535f43e8cf"
+  },
+  {
+    "path": "src/hapa/presentation/camera.js",
+    "sha": "81a1588688ea61c645a2d0dcb8a813b168eb762b",
+    "expected": "81a1588688ea61c645a2d0dcb8a813b168eb762b"
+  },
+  {
+    "path": "src/hapa/presentation/card-drag.js",
+    "sha": "5476caf2f6dfa0b3c9052e86c76ab459ca411633",
+    "expected": "5476caf2f6dfa0b3c9052e86c76ab459ca411633"
+  },
+  {
+    "path": "src/hapa/presentation/dev-preset.js",
+    "sha": "6ac6e74601ba310882afb4695ea3f5214d45bf3b",
+    "expected": "6ac6e74601ba310882afb4695ea3f5214d45bf3b"
+  },
+  {
+    "path": "src/hapa/presentation/dom.js",
+    "sha": "8f19fcae4308487763f80e1247e16c28d43237d3",
+    "expected": "8f19fcae4308487763f80e1247e16c28d43237d3"
+  },
+  {
+    "path": "src/hapa/presentation/editor.js",
+    "sha": "465e1b533ebdbf3870e90a6449169e031ed32d52",
+    "expected": "465e1b533ebdbf3870e90a6449169e031ed32d52"
+  },
+  {
+    "path": "src/hapa/presentation/explain.js",
+    "sha": "2da09b7af2b2a1bfb293f813ecd7eb10dd250ed0",
+    "expected": "2da09b7af2b2a1bfb293f813ecd7eb10dd250ed0"
+  },
+  {
+    "path": "src/hapa/presentation/firepit.js",
+    "sha": "99eadd54d09ee74f7ebbfa45b2588a6d65af576b",
+    "expected": "99eadd54d09ee74f7ebbfa45b2588a6d65af576b"
+  },
+  {
+    "path": "src/hapa/presentation/fx.js",
+    "sha": "c7dbd60c9d78c9d846c917308727c6ea7cb9dfa1",
+    "expected": "c7dbd60c9d78c9d846c917308727c6ea7cb9dfa1"
+  },
+  {
+    "path": "src/hapa/presentation/gear.js",
+    "sha": "a4670fb329d80836a1b3aef4b4067c2eedff7fc6",
+    "expected": "a4670fb329d80836a1b3aef4b4067c2eedff7fc6"
+  },
+  {
+    "path": "src/hapa/presentation/glossary.js",
+    "sha": "fba69570a58a2c6eeae8c27e2204dd4e9333db72",
+    "expected": "fba69570a58a2c6eeae8c27e2204dd4e9333db72"
+  },
+  {
+    "path": "src/hapa/presentation/ground-painter.js",
+    "sha": "e4dee71893746a61bf0f3ad277e6eeb21f8071e6",
+    "expected": "e4dee71893746a61bf0f3ad277e6eeb21f8071e6"
+  },
+  {
+    "path": "src/hapa/presentation/inspect.js",
+    "sha": "dde7d87ad7d47b55f020c5aa61c5f4ab36918570",
+    "expected": "dde7d87ad7d47b55f020c5aa61c5f4ab36918570"
+  },
+  {
+    "path": "src/hapa/presentation/lab.js",
+    "sha": "32572122bd34b430eca24febebf16baabc8e6a4d",
+    "expected": "32572122bd34b430eca24febebf16baabc8e6a4d"
+  },
+  {
+    "path": "src/hapa/presentation/local-content.js",
+    "sha": "30fd2c59fd32728bf960c94169832411df061853",
+    "expected": "30fd2c59fd32728bf960c94169832411df061853"
+  },
+  {
+    "path": "src/hapa/presentation/member-glyphs.js",
+    "sha": "6a5b2d42ba4c0cb44570a0874a1647cfd4640a60",
+    "expected": "6a5b2d42ba4c0cb44570a0874a1647cfd4640a60"
+  },
+  {
+    "path": "src/hapa/presentation/member-labels.js",
+    "sha": "f9853d09b7cbccd1a1f7ab9392b366eba8e56f36",
+    "expected": "f9853d09b7cbccd1a1f7ab9392b366eba8e56f36"
+  },
+  {
+    "path": "src/hapa/presentation/palette.js",
+    "sha": "08aeac93140ac9b2521a641e0898cf2b37c7d276",
+    "expected": "08aeac93140ac9b2521a641e0898cf2b37c7d276"
+  },
+  {
+    "path": "src/hapa/presentation/pieces.js",
+    "sha": "289194f32586ae90f0e7c086261c5b12d4eba12b",
+    "expected": "289194f32586ae90f0e7c086261c5b12d4eba12b"
+  },
+  {
+    "path": "src/hapa/presentation/playback.js",
+    "sha": "abf4b70776e7327ff421aae3accfa2ef33e0e926",
+    "expected": "abf4b70776e7327ff421aae3accfa2ef33e0e926"
+  },
+  {
+    "path": "src/hapa/presentation/renditions.js",
+    "sha": "f276803031041390076138a013cc2c19bf3ec392",
+    "expected": "f276803031041390076138a013cc2c19bf3ec392"
+  },
+  {
+    "path": "src/hapa/presentation/scenery.js",
+    "sha": "640312e7b36b7219b95ab282573f5da2c10c4570",
+    "expected": "640312e7b36b7219b95ab282573f5da2c10c4570"
+  },
+  {
+    "path": "src/hapa/presentation/sound.js",
+    "sha": "be181135d404d31a63962e71f328a97a3caf9df0",
+    "expected": "be181135d404d31a63962e71f328a97a3caf9df0"
+  },
+  {
+    "path": "src/hapa/presentation/terrain-view.js",
+    "sha": "2439ef5bba8c30528f9635de660f3034c2966853",
+    "expected": "2439ef5bba8c30528f9635de660f3034c2966853"
+  },
+  {
+    "path": "src/hapa/presentation/territory-diorama.js",
+    "sha": "617d0a713fd02ca28dca7c0bf753750f91157d24",
+    "expected": "617d0a713fd02ca28dca7c0bf753750f91157d24"
+  },
+  {
+    "path": "src/hapa/presentation/versus.css",
+    "sha": "82c16534039d939d3323f3c541926f04a4e2528a",
+    "expected": "82c16534039d939d3323f3c541926f04a4e2528a"
+  },
+  {
+    "path": "src/hapa/protocol/agreement.js",
+    "sha": "433a18642d1fdcbc95331e11260d53be806806c7",
+    "expected": "433a18642d1fdcbc95331e11260d53be806806c7"
+  },
+  {
+    "path": "src/hapa/protocol/messages.js",
+    "sha": "016d693e1bd64aeba1ea419b61c8513f8fc54a14",
+    "expected": "016d693e1bd64aeba1ea419b61c8513f8fc54a14"
+  },
+  {
+    "path": "src/hapa/protocol/peer.js",
+    "sha": "dc585b6d4f14efdf9571ddef11b0c7cc0bffb89c",
+    "expected": "dc585b6d4f14efdf9571ddef11b0c7cc0bffb89c"
+  },
+  {
+    "path": "src/hapa/rules/combat.js",
+    "sha": "616fd71ad996705040273626e8173a9d9cf1ff31",
+    "expected": "616fd71ad996705040273626e8173a9d9cf1ff31"
+  },
+  {
+    "path": "src/hapa/rules/context.js",
+    "sha": "1917c727398bb6876076c2b50a4f5a31b710fa37",
+    "expected": "1917c727398bb6876076c2b50a4f5a31b710fa37"
+  },
+  {
+    "path": "src/hapa/rules/economy.js",
+    "sha": "69bd738628033da81c3567505f323102a6a4ba63",
+    "expected": "69bd738628033da81c3567505f323102a6a4ba63"
+  },
+  {
+    "path": "src/hapa/rules/effects.js",
+    "sha": "bbe100edf65d7cc39f9635887d4382ebe8febc9c",
+    "expected": "bbe100edf65d7cc39f9635887d4382ebe8febc9c"
+  },
+  {
+    "path": "src/hapa/rules/encoding.js",
+    "sha": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+    "expected": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12"
+  },
+  {
+    "path": "src/hapa/rules/geometry.js",
+    "sha": "af789f61c43b103255cb963e87a2e63fa2968fd4",
+    "expected": "af789f61c43b103255cb963e87a2e63fa2968fd4"
+  },
+  {
+    "path": "src/hapa/rules/inspection.js",
+    "sha": "c89810284640d3d339ea260ed87403e828220ed8",
+    "expected": "c89810284640d3d339ea260ed87403e828220ed8"
+  },
+  {
+    "path": "src/hapa/rules/match.js",
+    "sha": "25b0f7ccf494ea19462438f52c429cc65ef934d2",
+    "expected": "25b0f7ccf494ea19462438f52c429cc65ef934d2"
+  },
+  {
+    "path": "src/hapa/rules/movement.js",
+    "sha": "231140bf35657f155fdb939636f671bf0f69269d",
+    "expected": "231140bf35657f155fdb939636f671bf0f69269d"
+  },
+  {
+    "path": "src/hapa/rules/session.js",
+    "sha": "184e6f3b4c44c0f1554175f81ebe0ada5cb3e7a0",
+    "expected": "184e6f3b4c44c0f1554175f81ebe0ada5cb3e7a0"
+  },
+  {
+    "path": "src/hapa/rules/state.js",
+    "sha": "a82081f88ef37642dc7215fd84fd1329f55e0978",
+    "expected": "a82081f88ef37642dc7215fd84fd1329f55e0978"
+  },
+  {
+    "path": "src/hapa/rules/stats.js",
+    "sha": "cadd071551c4d6b8e7ab26e66d450cbd5de50287",
+    "expected": "cadd071551c4d6b8e7ab26e66d450cbd5de50287"
+  },
+  {
+    "path": "src/hapa/rules/terrain.js",
+    "sha": "7cbf8196e47dd2d35525af4bd87b7758fcc514d2",
+    "expected": "7cbf8196e47dd2d35525af4bd87b7758fcc514d2"
+  },
+  {
+    "path": "src/hapa/rules/validate.js",
+    "sha": "b9cf968427b523e2861e6ff7eab62c33eac96868",
+    "expected": "b9cf968427b523e2861e6ff7eab62c33eac96868"
+  },
+  {
+    "path": "src/versus.js",
+    "sha": "4a04ce47c29d1689675b77a5d6953ad5f67915a8",
+    "expected": "4a04ce47c29d1689675b77a5d6953ad5f67915a8"
+  },
+  {
+    "path": "tests/hapa/boundaries.test.js",
+    "sha": "0196843970a334df6e5578b70a215ff759c11169",
+    "expected": "0196843970a334df6e5578b70a215ff759c11169"
+  },
+  {
+    "path": "tests/hapa/center-travel.test.js",
+    "sha": "cbdbcdc6e41f2c9295006c95c6776f519afa4805",
+    "expected": "cbdbcdc6e41f2c9295006c95c6776f519afa4805"
+  },
+  {
+    "path": "tests/hapa/content.test.js",
+    "sha": "8925442ebfe85b56487c9258914368fd84d8a17d",
+    "expected": "8925442ebfe85b56487c9258914368fd84d8a17d"
+  },
+  {
+    "path": "tests/hapa/contracts.test.js",
+    "sha": "9dd1962c6cea5887966169873b366930e94f4b17",
+    "expected": "9dd1962c6cea5887966169873b366930e94f4b17"
+  },
+  {
+    "path": "tests/hapa/corner.test.js",
+    "sha": "167803e0fab0c13a4bde771500e94660bb449d48",
+    "expected": "167803e0fab0c13a4bde771500e94660bb449d48"
+  },
+  {
+    "path": "tests/hapa/effects.test.js",
+    "sha": "2085538d85b29017a179ab00af8315b452cea6bd",
+    "expected": "2085538d85b29017a179ab00af8315b452cea6bd"
+  },
+  {
+    "path": "tests/hapa/elevation.test.js",
+    "sha": "4600f83aecdc1d249443b5c0654982d609abe1d5",
+    "expected": "4600f83aecdc1d249443b5c0654982d609abe1d5"
+  },
+  {
+    "path": "tests/hapa/funding.test.js",
+    "sha": "cd011f2b45c786879967e0afe922c97192a8d755",
+    "expected": "cd011f2b45c786879967e0afe922c97192a8d755"
+  },
+  {
+    "path": "tests/hapa/glossary.test.js",
+    "sha": "21b5f30076baa14e61b399d16aabb466b3e9e03b",
+    "expected": "21b5f30076baa14e61b399d16aabb466b3e9e03b"
+  },
+  {
+    "path": "tests/hapa/golden.test.js",
+    "sha": "b51c5bc321bb36d2f3dac7d8f0586365b4d9c4e6",
+    "expected": "b51c5bc321bb36d2f3dac7d8f0586365b4d9c4e6"
+  },
+  {
+    "path": "tests/hapa/history.test.js",
+    "sha": "231bf2e6cc9cb8955dcb2a70445c14ee0f134221",
+    "expected": "231bf2e6cc9cb8955dcb2a70445c14ee0f134221"
+  },
+  {
+    "path": "tests/hapa/inspection-moment.test.js",
+    "sha": "9aa5570d84bc39103ad34e784c1366d4e5058d99",
+    "expected": "9aa5570d84bc39103ad34e784c1366d4e5058d99"
+  },
+  {
+    "path": "tests/hapa/inspection.test.js",
+    "sha": "4f2485dd5456e2ffd2ea2fb18b057b0cecf24183",
+    "expected": "4f2485dd5456e2ffd2ea2fb18b057b0cecf24183"
+  },
+  {
+    "path": "tests/hapa/payment.test.js",
+    "sha": "ab08511f32c80078018e22d997e6d251b793c0b9",
+    "expected": "ab08511f32c80078018e22d997e6d251b793c0b9"
+  },
+  {
+    "path": "tests/hapa/play-loop.test.js",
+    "sha": "522990df8b39fc93cf81546aadff2323df272698",
+    "expected": "522990df8b39fc93cf81546aadff2323df272698"
+  },
+  {
+    "path": "tests/hapa/play.test.js",
+    "sha": "957118fe1195ef87b98ff2c8dff4ab58c30badb9",
+    "expected": "957118fe1195ef87b98ff2c8dff4ab58c30badb9"
+  },
+  {
+    "path": "tests/hapa/playback.test.js",
+    "sha": "cb1d35bbceeffaf59958f2ff3a332bf63a6e5793",
+    "expected": "cb1d35bbceeffaf59958f2ff3a332bf63a6e5793"
+  },
+  {
+    "path": "tests/hapa/profile-lab.test.js",
+    "sha": "a1b7f772ca453d6d15a9dcd37519aa37dc2bae5b",
+    "expected": "a1b7f772ca453d6d15a9dcd37519aa37dc2bae5b"
+  },
+  {
+    "path": "tests/hapa/protocol.test.js",
+    "sha": "9cbb120f4ea9921c496f6a5bf0f8a16d2bb7771e",
+    "expected": "9cbb120f4ea9921c496f6a5bf0f8a16d2bb7771e"
+  },
+  {
+    "path": "tests/hapa/terrain.test.js",
+    "sha": "4626a137602001a724f0c6e5844faf2579cfe63a",
+    "expected": "4626a137602001a724f0c6e5844faf2579cfe63a"
+  },
+  {
+    "path": "tests/hapa/ui-fixtures.test.js",
+    "sha": "e69a3e20a873b51551ef10307c0c2dcc07078bc8",
+    "expected": "e69a3e20a873b51551ef10307c0c2dcc07078bc8"
+  },
+  {
+    "path": "tools/hapa/check.mjs",
+    "sha": "1c7de4acb5210c595a621d211e7ac80b515b335c",
+    "expected": "1c7de4acb5210c595a621d211e7ac80b515b335c"
+  },
+  {
+    "path": "tools/hapa/experiment.mjs",
+    "sha": "5705b79fdae4c5dadf64d4365ede1c9021ef6a35",
+    "expected": "5705b79fdae4c5dadf64d4365ede1c9021ef6a35"
+  },
+  {
+    "path": "tools/hapa/history.mjs",
+    "sha": "943f2f926dd80ba94730c965bb17a26abc92baea",
+    "expected": "943f2f926dd80ba94730c965bb17a26abc92baea"
+  },
+  {
+    "path": "tools/hapa/match.mjs",
+    "sha": "b57d7a8c3c4f6ce0be34d9aab10c7eebb6291093",
+    "expected": "b57d7a8c3c4f6ce0be34d9aab10c7eebb6291093"
+  },
+  {
+    "path": "tools/hapa/peer.mjs",
+    "sha": "12eddd65457b4fad76c8f987c55cc69dd1aa7900",
+    "expected": "12eddd65457b4fad76c8f987c55cc69dd1aa7900"
+  },
+  {
+    "path": "tools/hapa/peers.mjs",
+    "sha": "d4faa5075a7e38b240b45d26b4d467aaa5977216",
+    "expected": "d4faa5075a7e38b240b45d26b4d467aaa5977216"
+  },
+  {
+    "path": "tools/hapa/replay.mjs",
+    "sha": "b89dda5651013eca46ace5b16a959090cc943974",
+    "expected": "b89dda5651013eca46ace5b16a959090cc943974"
+  },
+  {
+    "path": "tools/hapa/sync-tarot-art.mjs",
+    "sha": "da9c1b0cd12d185b83519b3645a5d7ee2ffc04b9",
+    "expected": "da9c1b0cd12d185b83519b3645a5d7ee2ffc04b9"
+  },
+  {
+    "path": "tools/hapa/ui-journeys.mjs",
+    "sha": "41a83451feefcb8839d96ebd52783195be41bdcc",
+    "expected": "41a83451feefcb8839d96ebd52783195be41bdcc"
+  },
+  {
+    "path": "tools/hapa/ui-regress.mjs",
+    "sha": "c704ac92b999312844bc422440e66dcece4fa474",
+    "expected": "c704ac92b999312844bc422440e66dcece4fa474"
+  },
+  {
+    "path": "versus.html",
+    "sha": "f3b2e423acac300b856091b1bd7a62e31ce0937f",
+    "expected": "f3b2e423acac300b856091b1bd7a62e31ce0937f"
+  },
+  {
+    "path": "vite.config.js",
+    "sha": "1906da049ef90f2ed0ba445d2b368fbd7f56c22b",
+    "expected": "1906da049ef90f2ed0ba445d2b368fbd7f56c22b"
+  }
+]

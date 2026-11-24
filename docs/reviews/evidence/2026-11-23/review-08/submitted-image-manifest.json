@@ -1,0 +1,30 @@
+[
+  {
+    "repoPath": "docs/reviews/evidence/2026-11-23/response-08/stills/05-shield-definition.jpg",
+    "localName": "05-shield-definition.jpg",
+    "blobSha": "ba9b956152915645d4b3718bb5919c92e95e7a76",
+    "bytes": 171489,
+    "verified": true
+  },
+  {
+    "repoPath": "docs/reviews/evidence/2026-11-23/response-08/stills/07-history-beside-inspection.jpg",
+    "localName": "07-history-beside-inspection.jpg",
+    "blobSha": "7345b975da1cdc115fea9e7760a1086b2a988a0b",
+    "bytes": 169110,
+    "verified": true
+  },
+  {
+    "repoPath": "docs/reviews/evidence/2026-11-23/response-08/stills/08-burn-available-now.jpg",
+    "localName": "08-burn-available-now.jpg",
+    "blobSha": "b119c5e7e6fcd241014758eba8f58e8b63cd692f",
+    "bytes": 185586,
+    "verified": true
+  },
+  {
+    "repoPath": "docs/reviews/evidence/2026-11-23/response-09/regress/2026-11-24T06-35-24-483Z-80bf3d3/z16-knight-switcher.jpg",
+    "localName": "z16-knight-switcher.jpg",
+    "blobSha": "2d39b347096ffd474944e050c693ba6d601169b2",
+    "bytes": 356686,
+    "verified": true
+  }
+]

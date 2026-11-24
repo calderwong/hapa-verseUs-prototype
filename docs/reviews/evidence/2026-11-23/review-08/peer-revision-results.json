@@ -1,0 +1,30 @@
+{
+  "snapshot": "f7c4f0f69afbc22458c400f01521e5b468f5f602",
+  "defaultProfile": "hapa_open_10x9_v3_06",
+  "execution": "Exact Peer class source and real rules/PhaseAgreement; only transport publication/verified inbox replaced",
+  "error": "protocol: no matching Ready pair (B's Ready names its own revision 2, current is 1)",
+  "consumed": [
+    [
+      "plan",
+      1
+    ],
+    [
+      "ready",
+      2
+    ]
+  ],
+  "leftQueued": [
+    [
+      "plan",
+      2
+    ]
+  ],
+  "ownReadyCount": 1,
+  "directAgreementControl": {
+    "locked": true,
+    "revisions": {
+      "A": 1,
+      "B": 2
+    }
+  }
+}

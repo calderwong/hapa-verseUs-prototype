@@ -1,0 +1,201 @@
+{
+  "sha": "f7c4f0f69afbc22458c400f01521e5b468f5f602",
+  "profile": "hapa_open_10x9_v3_06",
+  "evidence": "actual rules; labelled diagnostic fixtures; no browser claim",
+  "merged": {
+    "count": {
+      "referenced": [
+        "A.p1.s1",
+        "A.p1.s2",
+        "A.p2.s2",
+        "A.q.s5"
+      ],
+      "ownedAlive": [
+        "A.q.s5",
+        "A.p1.s1",
+        "A.p1.s2",
+        "A.p2.s1",
+        "A.p2.s2"
+      ],
+      "slots": {
+        "1": "A.p1.s1",
+        "2": "A.p1.s2",
+        "3": "A.p2.s2",
+        "4": null,
+        "5": "A.q.s5",
+        "6": null,
+        "7": null,
+        "8": null,
+        "9": null
+      }
+    },
+    "events": [
+      {
+        "id": "r08-two-pawns:23",
+        "seq": 23,
+        "tick": 3,
+        "phase": "simulating",
+        "type": "parties_merged",
+        "partyId": "A.q",
+        "retired": "A.p1",
+        "members": [
+          "A.p1.s1",
+          "A.p1.s2",
+          "A.q.s5"
+        ],
+        "moved": [
+          {
+            "memberId": "A.p1.s1",
+            "from": 1,
+            "to": 1
+          },
+          {
+            "memberId": "A.p1.s2",
+            "from": 2,
+            "to": 2
+          }
+        ],
+        "supply": 2000000
+      },
+      {
+        "id": "r08-two-pawns:33",
+        "seq": 33,
+        "tick": 4,
+        "phase": "simulating",
+        "type": "parties_merged",
+        "partyId": "A.q",
+        "retired": "A.p2",
+        "members": [
+          "A.p1.s1",
+          "A.p1.s2",
+          "A.p2.s2",
+          "A.q.s5"
+        ],
+        "moved": [
+          {
+            "memberId": "A.p2.s1",
+            "from": 1,
+            "to": 3
+          },
+          {
+            "memberId": "A.p2.s2",
+            "from": 2,
+            "to": 3
+          }
+        ],
+        "supply": 1000000
+      },
+      {
+        "id": "r08-two-pawns:41",
+        "seq": 41,
+        "tick": 5,
+        "phase": "simulating",
+        "type": "destination_reached",
+        "partyId": "A.q",
+        "at": {
+          "column": 3,
+          "row": 7
+        },
+        "quantum": 1000
+      }
+    ],
+    "replay": true
+  },
+  "deadSlots": {
+    "events": [
+      {
+        "id": "r08-dead-slots:27",
+        "seq": 27,
+        "tick": 3,
+        "phase": "simulating",
+        "type": "merge_failed",
+        "partyId": "A.q",
+        "pawnId": "A.p",
+        "reason": "over capacity"
+      },
+      {
+        "id": "r08-dead-slots:28",
+        "seq": 28,
+        "tick": 3,
+        "phase": "simulating",
+        "type": "destination_reached",
+        "partyId": "A.q",
+        "at": {
+          "column": 3,
+          "row": 5
+        },
+        "quantum": 1000
+      }
+    ],
+    "pawnRetired": false,
+    "sameCenter": true,
+    "replay": true
+  },
+  "opening": {
+    "region": {
+      "column": 7,
+      "row": 2
+    },
+    "atCenter": true,
+    "supply": 5,
+    "retiredPawn": true,
+    "replay": true
+  },
+  "bot": {
+    "target": {
+      "column": 4,
+      "row": 6
+    },
+    "path": [
+      {
+        "column": 3,
+        "row": 5
+      },
+      {
+        "column": 3,
+        "row": 6
+      },
+      {
+        "column": 4,
+        "row": 6
+      }
+    ],
+    "clearance": {
+      "clear": true
+    },
+    "affordable": true,
+    "commands": [
+      {
+        "type": "load_supply",
+        "cardId": "A.C3.T3.0",
+        "partyId": "A.h0"
+      },
+      {
+        "type": "set_destination",
+        "partyId": "A.h0",
+        "target": {
+          "column": 4,
+          "row": 5
+        }
+      },
+      {
+        "type": "load_supply",
+        "cardId": "A.C2.T2.0",
+        "partyId": "A.h1"
+      },
+      {
+        "type": "set_destination",
+        "partyId": "A.h1",
+        "target": {
+          "column": 3,
+          "row": 9
+        }
+      },
+      {
+        "type": "load_supply",
+        "cardId": "A.C1.T1.0",
+        "partyId": "A.h0"
+      }
+    ]
+  }
+}

@@ -21,8 +21,10 @@ Calder accepts them to Done.
 
 Later dated human-feedback addenda in `docs/requirements/` record CJ's selected changes;
 follow the current pointer in `docs/reviews/README.md`. Addendum 03 replaces repeated human
-Ready acknowledgment for new default matches and defines the current play-loop work. Preserve
-archived profile/protocol semantics as specified; do not silently reinterpret old records.
+Ready acknowledgment and governs the current play loop. Addendum 04 consolidates CJ's newer
+center-travel, Pawn-absorption, two-Queen and Knight direction recorded in response 09; it
+supersedes conflicting earlier movement guidance. Preserve archived profile/protocol semantics
+as specified; do not silently reinterpret old records.
 
 The `.docx` originals stay local in `reference_documents/` (ignored: large binaries).
 
