@@ -1127,7 +1127,7 @@ await check('z16', 'Center-to-center opening (default v3_06: free Knight turns, 
   const entry = await app(page, () => [...document.querySelectorAll('.cmdbar .movelist button')].map((b) => b.getAttribute('aria-label') ?? '').find((t) => /to R3C3:/.test(t)) ?? '');
   ok('the Knight entry names its default L and that it flips', /L via R2C2, R3C2 \(L flips\)/.test(entry) && /absorbs your Pawn/.test(entry), entry);
   await clickNamed(page, '.cmdbar .movelist button', /to R3C3:/, 'Move to R3C3 (Knight)');
-  const sw = await app(page, () => [...document.querySelectorAll('.cmdbar .lswitch .lsw')].map((b) => `${b.getAttribute('aria-checked')}|${b.innerText.replace(/\s+/g, ' ')}`));
+  const sw = await app(page, () => [...document.querySelectorAll('.cmdbar .lswitch .lsw[role="radio"]')].map((b) => `${b.getAttribute('aria-checked')}|${b.innerText.replace(/\s+/g, ' ')}`));
   ok('the switcher shows both L paths with the default chosen', sw.length === 2 && /^true\|via R2C2 → R3C2/.test(sw[0]) && /^false\|via R1C3 → R2C3/.test(sw[1]), sw);
   // right-clicking the same destination flips the L each time (CJ after response 09)
   const r3c3 = await app(page, () => { const a = window.__versus, c = a.ctx.geo.center(3, 3), v = a.view.toWorld(c.x, c.y).project(a.engine.camera), r = a.engine.renderer.domElement.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; });
