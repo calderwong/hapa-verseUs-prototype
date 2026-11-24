@@ -1,0 +1,1751 @@
+{
+ "runId": "2026-11-24T03-32-46-505Z-e6df0ed",
+ "startedAt": "2026-11-24T03:32:47.114Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "e6df0ed99f5a87087fe050f5d06a460f512969d8",
+  "dirty": false,
+  "diffSha256": null,
+  "untracked": [],
+  "untrackedSha256": null
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/158.0.8127.37",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": false,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio. Text size (contract 4): the browser default font size is set through CDP Page.setFontSizes (16 px = 100%, 24 = 150%, 32 = 200%); inspection text, the command and inspection bars use rem and follow it, other HUD parts still use px. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "c7",
+   "title": "Opening by keyboard alone through the navigator and pinned views (HF-02, §3 keyboard)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "reach by Tab: Parties & Cards",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "☰ Parties & Cards",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 3
+     }
+    },
+    {
+     "name": "focus is visible on Parties & Cards",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "☰ Parties & Cards",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 3
+     }
+    },
+    {
+     "name": "reach by Tab: navigator: your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Select Your Castle at R1C1, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "focus is visible on navigator: your C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Select Your Castle at R1C1, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "1 · the C1 Castle is selected for commands (no party document pinned)",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      false
+     ],
+     "expected": [
+      "A.mount.C1",
+      false
+     ]
+    },
+    {
+     "name": "1 · focus moved into the command bar",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Supply ▾",
+      "visible": true,
+      "tag": "SUMMARY"
+     }
+    },
+    {
+     "name": "reach by Tab: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Supply ▾",
+      "visible": true,
+      "tag": "SUMMARY",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "focus is visible on Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Supply ▾",
+      "visible": true,
+      "tag": "SUMMARY",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "reach by Tab: Load Supply from 2♣ (C1)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Load 2 Supply from 2♣ (C1) into Castle R1C1 (gives up its ability)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "focus is visible on Load Supply from 2♣ (C1)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Load 2 Supply from 2♣ (C1) into Castle R1C1 (gives up its ability)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "2 · focus moves into the opened Move menu",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn",
+      "visible": true,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "reach by Tab: Move Castle to R2C1 (funded, joins your Pawn)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "focus is visible on Move Castle to R2C1 (funded, joins your Pawn)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 0
+     }
+    },
+    {
+     "name": "3 · the plan holds Supply then the move",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "3 · focus lands on Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Ready ▶",
+      "visible": true,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "reach by Tab: result: Supply landed (in Orders)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "A loaded 2 Supply from A's 2♣ (C1) into A's Castle at R2C1 (now 2)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 4
+     }
+    },
+    {
+     "name": "focus is visible on result: Supply landed (in Orders)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "A loaded 2 Supply from A's 2♣ (C1) into A's Castle at R2C1 (now 2)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 4
+     }
+    },
+    {
+     "name": "4 · the supply_loaded event is pinned",
+     "pass": true,
+     "actual": "supply_loaded",
+     "expected": "supply_loaded"
+    },
+    {
+     "name": "reach by Tab: Inspect the Card",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Inspect the Card: 2♣ (C1) (Supply 2, no Mana)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "focus is visible on Inspect the Card",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Inspect the Card: 2♣ (C1) (Supply 2, no Mana)",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 2
+     }
+    },
+    {
+     "name": "4 · its Card is pinned",
+     "pass": true,
+     "actual": "A.C1.T1.0",
+     "expected": "A.C1.T1.0"
+    },
+    {
+     "name": "result agrees with the rules: R2C1, Supply 1, nine members",
+     "pass": true,
+     "actual": {
+      "region": {
+       "column": 1,
+       "row": 2
+      },
+      "supply": 1,
+      "members": 9
+     },
+     "expected": {
+      "region": {
+       "column": 1,
+       "row": 2
+      },
+      "supply": 1,
+      "members": 9
+     }
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c7-keyboard-result.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "tabs": [
+     {
+      "name": "Parties & Cards",
+      "tabs": 3
+     },
+     {
+      "name": "navigator: your C1 Castle",
+      "tabs": 2
+     },
+     {
+      "name": "Supply menu",
+      "tabs": 0
+     },
+     {
+      "name": "Load Supply from 2♣ (C1)",
+      "tabs": 0
+     },
+     {
+      "name": "Move Castle to R2C1 (funded, joins your Pawn)",
+      "tabs": 0
+     },
+     {
+      "name": "result: Supply landed (in Orders)",
+      "tabs": 4
+     },
+     {
+      "name": "Inspect the Card",
+      "tabs": 2
+     }
+    ]
+   },
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "c8",
+   "title": "Funded destinations: range, refusal with shortfall, invalidated funding blocks Ready (HF-04)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1",
+    "profile": "hapa_open_10x9_v3_02"
+   },
+   "assertions": [
+    {
+     "name": "control present: navigator: C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "with 0 Supply the bar says no route is funded",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "No Supply for any route: load a Card first"
+    },
+    {
+     "name": "control present: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "2 Supply funds exactly the targets within two steps of R1C1",
+     "pass": false,
+     "actual": [
+      "R2C1",
+      "R3C1"
+     ],
+     "expected": [
+      "R1C2",
+      "R1C3",
+      "R2C1",
+      "R3C1"
+     ]
+    },
+    {
+     "name": "control present: close the navigator",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "an unfunded legal target is visible to right-click",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 496.3227781481258,
+      "y": 558.8758760249704,
+      "target": "R4C1",
+      "need": 3
+     }
+    },
+    {
+     "name": "an unfunded target (R4C1) is refused with its shortfall",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Not added: not enough Supply for the whole route: it needs 3, the party has 2 (counting earlier planned loads)"
+    },
+    {
+     "name": "…and no destination was added",
+     "pass": true,
+     "actual": [
+      "load_supply"
+     ],
+     "expected": [
+      "load_supply"
+     ]
+    },
+    {
+     "name": "control present: Move to R3C1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the funded move is planned after its load",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "control present: Remove the funding load",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the dependent destination is kept, not shortened or dropped",
+     "pass": true,
+     "actual": [
+      "set_destination"
+     ],
+     "expected": [
+      "set_destination"
+     ]
+    },
+    {
+     "name": "it is explicitly invalid for lack of funding",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "not enough Supply for the whole route: it needs 2, the party has 0 (counting earlier planned loads)"
+     ]
+    },
+    {
+     "name": "Ready says to fix the order",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Fix 1 order"
+    },
+    {
+     "name": "control present: blocked Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "pressing it opens Orders to repair; nothing is frozen",
+     "pass": true,
+     "actual": [
+      true,
+      false
+     ],
+     "expected": [
+      true,
+      false
+     ]
+    },
+    {
+     "name": "control present: Restore the load",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "restoring the load re-funds the destination",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c8-unfunded-draft.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "moveLabels": [
+     "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn",
+     "Move Castle R1C1 to R3C1: needs 2 Supply · absorbs your Pawn on the way",
+     "Fill 2,3 · +1",
+     "Fill 2,2 · +2"
+    ]
+   },
+   "allowedErrors": []
+  },
+  {
+   "id": "c10",
+   "title": "Endpoint intent: one marker per destination, drafts replace accepted, never occupants (HF-03)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "one endpoint per planned destination",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ]
+    },
+    {
+     "name": "endpoints are not rules occupants",
+     "pass": true,
+     "actual": [
+      0,
+      0
+     ],
+     "expected": [
+      0,
+      0
+     ]
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Ready (B)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "accepted, still-travelling destinations keep their markers",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "A.mount.C9"
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c10-intents.jpg"
+   ],
+   "setup": [
+    "two A loads and destinations are added with _addCommand (pointer routes are covered in c7/c8)"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z01",
+   "title": "Ordinary movement: select, funded Move from the command bar, no party document; reasons stay visible (Z01, Z02)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "a click selects the party for commands",
+     "pass": true,
+     "actual": "A.mount.C1",
+     "expected": "A.mount.C1"
+    },
+    {
+     "name": "no party document opens; the small command bar does",
+     "pass": true,
+     "actual": [
+      false,
+      true
+     ],
+     "expected": [
+      false,
+      true
+     ]
+    },
+    {
+     "name": "selecting does not move the camera",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "the bar says why it cannot move yet",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "No Supply for any route: load a Card first"
+    },
+    {
+     "name": "control present: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the bar lists exactly the funded targets with the rules' Supply quote",
+     "pass": true,
+     "actual": [
+      "R2C1:1",
+      "R3C1:2"
+     ],
+     "expected": [
+      "R2C1:1",
+      "R3C1:2"
+     ]
+    },
+    {
+     "name": "control present: Move to R2C1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the move is planned after its load",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "closing a Card view keeps the selected party and its orders",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      2
+     ],
+     "expected": [
+      "A.mount.C1",
+      2
+     ]
+    },
+    {
+     "name": "an unmounted Pawn shows \"Needs a Mount\"",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "control present: Ready (A)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "after Ready the bar says the plan is frozen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z01-pawn-reason.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z03",
+   "title": "Approach to inspect: zoom over an enemy keeps the own selection; nine and five member labels; truthful stats (Z03, Z04, Z05)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1"
+   },
+   "assertions": [
+    {
+     "name": "zooming over an enemy inspects it; the own command selection stays",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "B.mount.C5"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "B.mount.C5"
+     ]
+    },
+    {
+     "name": "…without issuing an order",
+     "pass": true,
+     "actual": {
+      "A": [],
+      "B": []
+     },
+     "expected": {
+      "A": [],
+      "B": []
+     }
+    },
+    {
+     "name": "member labels appear at a readable size",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "combat"
+    },
+    {
+     "name": "the five-member Pawn shows five labels — no center member invented",
+     "pass": true,
+     "actual": 5,
+     "expected": 5
+    },
+    {
+     "name": "its collective label says the center is empty",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "Return restores the prior pose and releases inspection",
+     "pass": true,
+     "actual": [
+      null,
+      null
+     ],
+     "expected": [
+      null,
+      null
+     ]
+    },
+    {
+     "name": "the merged party shows nine compact labels",
+     "pass": true,
+     "actual": 9,
+     "expected": 9
+    },
+    {
+     "name": "compact labels are role + health, not stat sheets (a full formation)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "3/3 1×3 1 1",
+      "3/3 1×3 1 1",
+      "3/3 1×3 1 1",
+      "3/3 1×3 1 1",
+      "6/6 1×3 1 1",
+      "3/3 1×2 2 1",
+      "3/3 2×1 2 1",
+      "3/3 1×1 2 1",
+      "3/3 2×1 2 1"
+     ]
+    },
+    {
+     "name": "one hovered member is highlighted; no explanation opens on hover",
+     "pass": true,
+     "actual": [
+      1,
+      false
+     ],
+     "expected": [
+      1,
+      false
+     ]
+    },
+    {
+     "name": "a tap on the body opens its source breakdown in the reading panel",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "highlighted": 1,
+      "reading": "Archer 3/3 HP · slot 7 · rear row Sources and exceptions Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1) No engaged target: a volley only reaches a party this formation is engaged with."
+     }
+    },
+    {
+     "name": "…with no engaged party, no ranged target is implied",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Archer 3/3 HP · slot 7 · rear row Sources and exceptions Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1) No engaged target: a volley only reaches a party this formation is engaged with."
+    },
+    {
+     "name": "…and the Mage ward is one grouped row with its source",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Archer 3/3 HP · slot 7 · rear row Sources and exceptions Bow: 2 × 1 Physical, base range 2 (height changes it), needs open sky Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1) No engaged target: a volley only reaches a party this formation is engaged with."
+    },
+    {
+     "name": "a wheel over a label (and its symbols) still zooms the camera",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": true
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z03-enemy-inspection.jpg",
+    "z03-pawn-five.jpg",
+    "z03-nine-members.jpg",
+    "z03-expanded-member.jpg"
+   ],
+   "setup": [
+    "opening merge played with _addCommand/_pressReady (the pointer route is c7/z01)"
+   ],
+   "allowedErrors": []
+  },
+  {
+   "id": "z08",
+   "title": "Intent across controls: navigator and board reading keep the friendly selection and orders; one Home transition; zoom anchored at real height (R6-02)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1; fixture=terrain",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "control present: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Move to R2C1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "a legal funded order is queued for the friendly Castle",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "keyboard reaches \"Inspect B's Bishop\" in the navigator",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Inspect B's Bishop at R10C7, 4 of 9 members, Supply 0",
+      "visible": true,
+      "tag": "BUTTON",
+      "tabs": 47
+     }
+    },
+    {
+     "name": "inspecting B keeps A's command selection",
+     "pass": true,
+     "actual": "A.mount.C1",
+     "expected": "A.mount.C1"
+    },
+    {
+     "name": "B's Bishop is the inspected party and a Return pose is saved",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "sel": "A.mount.C1",
+      "sub": "B.mount.C3",
+      "ret": true,
+      "bar": "Inspecting B's Bishop · R10C7 · commanding your Castle R1C1 3/3 1×3 1 1 6/6 1×3 1 1 3/3 1×2 2 1 3/3 1×1 2 1 ↩ Return (R) Close (Esc)"
+     }
+    },
+    {
+     "name": "the inspection bar says which party is commanded",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Inspecting B's Bishop · R10C7 · commanding your Castle R1C1 3/3 1×3 1 1 6/6 1×3 1 1 3/3 1×2 2 1 3/3 1×1 2 1 ↩ Return (R) Close (Esc)"
+    },
+    {
+     "name": "no order changed",
+     "pass": true,
+     "actual": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}",
+      "{\"type\":\"set_destination\",\"partyId\":\"A.mount.C1\",\"target\":{\"column\":1,\"row\":2}}"
+     ],
+     "expected": [
+      "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}",
+      "{\"type\":\"set_destination\",\"partyId\":\"A.mount.C1\",\"target\":{\"column\":1,\"row\":2}}"
+     ]
+    },
+    {
+     "name": "focus lands on a member of the inspection bar (its symbols spoken as values)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "name": "Pikeman, slot 4: Health 3/3 · Physical attack 1×3 · Melee · Physical protection 1 on the f",
+      "visible": true,
+      "tag": "BUTTON"
+     }
+    },
+    {
+     "name": "Enter on a member opens its source breakdown (keyboard route), described by the reading panel",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "pin": "B.C3.m5",
+      "reading": "Bishop 6/6 HP · slot 5 · middle row Sources and exceptions Blade: 1 × 3 Physical, melee, charges Physical protection 1 on the front: 1 from its own center-guard Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1)",
+      "described": "member-reading",
+      "fact": true,
+      "tip": true
+     }
+    },
+    {
+     "name": "…and focus moves to its first symbol, whose definition shows (contract 5)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "pin": "B.C3.m5",
+      "reading": "Bishop 6/6 HP · slot 5 · middle row Sources and exceptions Blade: 1 × 3 Physical, melee, charges Physical protection 1 on the front: 1 from its own center-guard Magic protection 1 on all six faces: 1 from the party Mage (ward) (base 0, applied 1)",
+      "described": "member-reading",
+      "fact": true,
+      "tip": true
+     }
+    },
+    {
+     "name": "Escape closes the symbol definition first",
+     "pass": true,
+     "actual": [
+      true,
+      true
+     ],
+     "expected": [
+      true,
+      true
+     ]
+    },
+    {
+     "name": "Escape then closes the explanation; inspection stays",
+     "pass": true,
+     "actual": [
+      null,
+      true
+     ],
+     "expected": [
+      null,
+      true
+     ]
+    },
+    {
+     "name": "Return restores the pose before Inspect",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "control present: Face menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "a further order for the friendly Castle is queued without reselecting it",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "faced": "+2 C9 2♣ if loaded: +2 destinations",
+      "plans2": [
+       "{\"type\":\"load_supply\",\"cardId\":\"A.C1.T1.0\",\"partyId\":\"A.mount.C1\"}",
+       "{\"type\":\"set_destination\",\"partyId\":\"A.mount.C1\",\"target\":{\"column\":1,\"row\":2}}",
+       "{\"type\":\"load_supply\",\"cardId\":\"A.C9.T1.0\",\"partyId\":\"A.mount.C1\"}"
+      ]
+     }
+    },
+    {
+     "name": "a click on an enemy pins its public summary and keeps the selection",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "sel": "A.mount.C1",
+      "pin": {
+       "kind": "hint",
+       "id": "B.mount.C5"
+      },
+      "view": "B'S COMMANDER ★ · R10C5 party × 4/9 · Supply 0 · waiting Inspect up close (F) · your Castle R1C1 stays selected"
+     }
+    },
+    {
+     "name": "F inspects the party being read; the selection stays",
+     "pass": true,
+     "actual": [
+      "A.mount.C1",
+      "B.mount.C5"
+     ],
+     "expected": [
+      "A.mount.C1",
+      "B.mount.C5"
+     ]
+    },
+    {
+     "name": "the Home button is not covered by any panel",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Home button",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "button Home: inspection and the old Return pose are cleared; the view is home",
+     "pass": true,
+     "actual": [
+      null,
+      null,
+      true
+     ],
+     "expected": [
+      null,
+      null,
+      true
+     ]
+    },
+    {
+     "name": "button Home → Focus → Return comes back to home, not the older pose",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "key Home: inspection and the old Return pose are cleared; the view is home",
+     "pass": true,
+     "actual": [
+      null,
+      null,
+      true
+     ],
+     "expected": [
+      null,
+      null,
+      true
+     ]
+    },
+    {
+     "name": "key Home → Focus → Return comes back to home, not the older pose",
+     "pass": true,
+     "actual": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}",
+     "expected": "{\"yaw\":0,\"pitch\":0.9773843811168246,\"distance\":171.56843914698038,\"focus\":{\"x\":26.999999999999993,\"y\":0,\"z\":-25.945272803071493}}"
+    },
+    {
+     "name": "the friendly selection survived the whole journey",
+     "pass": true,
+     "actual": "A.mount.C1",
+     "expected": "A.mount.C1"
+    },
+    {
+     "name": "control present: layer -2",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: All layers",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "a wheel approach keeps each party under the cursor at its real height (drift ≤ 12 px)",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      {
+       "id": "A.hill",
+       "wantLayer": null,
+       "before": {
+        "x": 534.9355154725359,
+        "y": 353.9378784819001
+       },
+       "after": {
+        "x": 534.93551550332,
+        "y": 353.9378784671487
+       },
+       "px": 0,
+       "sel": "A.hill",
+       "layer": null
+      },
+      {
+       "id": "A.fly",
+       "wantLayer": null,
+       "before": {
+        "x": 747.2700726417818,
+        "y": 398.14023251726627
+       },
+       "after": {
+        "x": 747.1620348243011,
+        "y": 398.1177419442599
+       },
+       "px": 0.1,
+       "sel": "A.hill",
+       "layer": null
+      },
+      {
+       "id": "B.tunnel",
+       "wantLayer": -2,
+       "before": {
+        "x": 741.744337438917,
+        "y": 324.94539006583614
+       },
+       "after": {
+        "x": 741.744339941436,
+        "y": 324.94542386529014
+       },
+       "px": 0,
+       "sel": "A.hill",
+       "layer": -2
+      }
+     ]
+    },
+    {
+     "name": "…without changing the selected party or the chosen layer",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      [
+       "A.hill",
+       null,
+       null
+      ],
+      [
+       "A.hill",
+       null,
+       null
+      ],
+      [
+       "A.hill",
+       -2,
+       -2
+      ]
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z08-enemy-read-friendly-kept.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "drift": [
+     {
+      "id": "A.hill",
+      "wantLayer": null,
+      "before": {
+       "x": 534.9355154725359,
+       "y": 353.9378784819001
+      },
+      "after": {
+       "x": 534.93551550332,
+       "y": 353.9378784671487
+      },
+      "px": 0,
+      "sel": "A.hill",
+      "layer": null
+     },
+     {
+      "id": "A.fly",
+      "wantLayer": null,
+      "before": {
+       "x": 747.2700726417818,
+       "y": 398.14023251726627
+      },
+      "after": {
+       "x": 747.1620348243011,
+       "y": 398.1177419442599
+      },
+      "px": 0.1,
+      "sel": "A.hill",
+      "layer": null
+     },
+     {
+      "id": "B.tunnel",
+      "wantLayer": -2,
+      "before": {
+       "x": 741.744337438917,
+       "y": 324.94539006583614
+      },
+      "after": {
+       "x": 741.744339941436,
+       "y": 324.94542386529014
+      },
+      "px": 0,
+      "sel": "A.hill",
+      "layer": -2
+     }
+    ]
+   },
+   "allowedErrors": []
+  },
+  {
+   "id": "z12",
+   "title": "Blocked Queen (v3_03 body sweep): the route preview names the friendly blocker, travel stops once with Supply kept, recovery to the start is quoted and debited 0.5 (HF3-01, R7-01)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1&profile=hapa_open_10x9_v3_03",
+    "viewport": "1280x720@1",
+    "profile": "hapa_open_10x9_v3_03"
+   },
+   "assertions": [
+    {
+     "name": "the move list marks R4C9 as blocked by the Pawn at R2C6 before ordering",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Queen R1C6 to R4C9: needs 3 Supply · ✕ blocked by your Pawn R2C6"
+    },
+    {
+     "name": "blocked destinations are crossed on the board, not only tinted",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": 32
+    },
+    {
+     "name": "control present: Move to R4C9 (command bar)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the Queen stops halfway at the friendly body",
+     "pass": true,
+     "actual": [
+      24,
+      4
+     ],
+     "expected": [
+      24,
+      4
+     ]
+    },
+    {
+     "name": "unspent Supply is kept (5.5)",
+     "pass": true,
+     "actual": 5.5,
+     "expected": 5.5
+    },
+    {
+     "name": "the destination is kept",
+     "pass": true,
+     "actual": {
+      "column": 9,
+      "row": 4
+     },
+     "expected": {
+      "column": 9,
+      "row": 4
+     }
+    },
+    {
+     "name": "one named obstruction event",
+     "pass": true,
+     "actual": [
+      "A.pawn.C6"
+     ],
+     "expected": [
+      "A.pawn.C6"
+     ]
+    },
+    {
+     "name": "the command bar names the blocker and keeps the order",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Your Pawn at R2C6 blocks its path — destination and Supply kept. When its column is active, order a clear route (returning to the territory it left is one)."
+    },
+    {
+     "name": "an in-world blocked cue is drawn at the contact",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "sprite"
+    },
+    {
+     "name": "no wall of repeated blocked messages while the Queen waits",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "the start territory R1C6 is a funded destination quoted at 0.5 Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Queen R1C6 to R1C6: needs 0.5 Supply · along its current segment"
+    },
+    {
+     "name": "control present: Move to R1C6 (recovery)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the Queen returned to the center of R1C6",
+     "pass": true,
+     "actual": [
+      22,
+      2
+     ],
+     "expected": [
+      22,
+      2
+     ]
+    },
+    {
+     "name": "the recovery debited exactly 0.5",
+     "pass": true,
+     "actual": 5,
+     "expected": 5
+    },
+    {
+     "name": "it arrived (idle)",
+     "pass": true,
+     "actual": "idle",
+     "expected": "idle"
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z12-recovered.jpg"
+   ],
+   "setup": [
+    "Ticks 1–5 pass with Ready only; Tick 6 loads the C6, C5 and C4 Cards into the Queen (validated commands)"
+   ],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z16",
+   "title": "Center-to-center opening (v3_04): the Bishop passes its own Pawn and absorbs the Pawn on R2C4; the Knight L switcher flips to the short L and absorbs R2C3 (CJ after response 08)",
+   "config": {
+    "query": "autostart=1&a=human&b=bot&seed=1",
+    "viewport": "1280x720@1",
+    "profile": "hapa_open_10x9_v3_04"
+   },
+   "assertions": [
+    {
+     "name": "the default profile travels center to center",
+     "pass": true,
+     "actual": [
+      "hapa_open_10x9_v3_04",
+      "center_to_center_v1"
+     ],
+     "expected": [
+      "hapa_open_10x9_v3_04",
+      "center_to_center_v1"
+     ]
+    },
+    {
+     "name": "the Knight entry names its default L and that it flips",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Knight R1C2 to R3C3: needs 3 Supply · L via R2C2, R3C2 (L flips) · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R3C3 (Knight)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the switcher shows both L paths with the default chosen",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "true|via R2C2 → R3C2 · absorbs Pawn",
+      "false|via R1C3 → R2C3 · absorbs Pawn"
+     ]
+    },
+    {
+     "name": "L flips the drafted order to the short L",
+     "pass": true,
+     "actual": "short",
+     "expected": "short"
+    },
+    {
+     "name": "the Knight passed the Bishop's territory, absorbed R2C3's Pawn and stands on R3C3's center",
+     "pass": true,
+     "actual": [
+      true,
+      9,
+      [
+       "A.pawn.C3"
+      ]
+     ],
+     "expected": [
+      true,
+      9,
+      [
+       "A.pawn.C3"
+      ]
+     ]
+    },
+    {
+     "name": "R5C7 is not marked blocked; the Pawn on R2C4 is absorbed on the way",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Move Bishop R1C3 to R5C7: needs 4 Supply · absorbs your Pawn on the way"
+    },
+    {
+     "name": "control present: Move to R5C7 (Bishop)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "one Tick, one Supply: on R2C4's center, the Pawn absorbed, not blocked, 3 Supply left",
+     "pass": true,
+     "actual": [
+      true,
+      true,
+      0,
+      3
+     ],
+     "expected": [
+      true,
+      true,
+      0,
+      3
+     ]
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "z16-knight-switcher.jpg",
+    "z16-bishop-absorbed.jpg"
+   ],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    },
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  },
+  {
+   "id": "z13",
+   "title": "Development controllers: validated launch, A bot / B human, both bots Pause / Step / Stop, saved preset and launch link (HF3-04, R7-03)",
+   "config": {
+    "query": "several; see setup",
+    "viewport": "1280x720@1"
+   },
+   "assertions": [
+    {
+     "name": "an invalid role never creates an uncontrolled seat (A falls back to human)",
+     "pass": true,
+     "actual": {
+      "A": "human",
+      "B": "bot"
+     },
+     "expected": {
+      "A": "human",
+      "B": "bot"
+     }
+    },
+    {
+     "name": "an invalid seed falls back to 1",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "both problems are reported",
+     "pass": true,
+     "actual": 2,
+     "expected": 2
+    },
+    {
+     "name": "the menu shows the effective configuration as a launch link",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "http://127.0.0.1:5199/versus.html?autostart=1&a=human&b=bot&seed=1"
+    },
+    {
+     "name": "A bot / B human: the human views B",
+     "pass": true,
+     "actual": "B",
+     "expected": "B"
+    },
+    {
+     "name": "the bot committed its plan without a human",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "one human Ready resolved the Tick",
+     "pass": true,
+     "actual": 1,
+     "expected": 1
+    },
+    {
+     "name": "control present: Pause (bot match)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "paused: no further Tick starts",
+     "pass": true,
+     "actual": 4,
+     "expected": 4
+    },
+    {
+     "name": "control present: Step",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "Step advanced exactly one Tick and holds again",
+     "pass": true,
+     "actual": [
+      5,
+      "pause"
+     ],
+     "expected": [
+      5,
+      "pause"
+     ]
+    },
+    {
+     "name": "control present: Stop",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "stopped: no automatic Tick and Run is disabled",
+     "pass": true,
+     "actual": [
+      5,
+      true
+     ],
+     "expected": [
+      5,
+      true
+     ]
+    },
+    {
+     "name": "New match restarted cleanly: its own Ticks from 1, the old schedule gone",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "{\"ticks\":[1],\"mode\":\"run\"}"
+    },
+    {
+     "name": "setup shows the launch link for the chosen controllers",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "http://127.0.0.1:5199/versus.html?autostart=1&a=bot&b=human&seed=7"
+    },
+    {
+     "name": "control present: Start match (remember preset)",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "a plain autostart uses the saved preset",
+     "pass": true,
+     "actual": {
+      "A": "bot",
+      "B": "human",
+      "seed": 7
+     },
+     "expected": {
+      "A": "bot",
+      "B": "human",
+      "seed": 7
+     }
+    },
+    {
+     "name": "URL values override the preset (seed still from the preset)",
+     "pass": true,
+     "actual": {
+      "A": "human",
+      "B": "bot",
+      "seed": 7
+     },
+     "expected": {
+      "A": "human",
+      "B": "bot",
+      "seed": 7
+     }
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [],
+   "setup": [],
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-11-24T03:35:15.699Z",
+ "summary": {
+  "checks": 9,
+  "assertions": 153,
+  "failed": 1
+ }
+}

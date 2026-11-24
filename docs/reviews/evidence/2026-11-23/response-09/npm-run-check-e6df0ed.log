@@ -1,0 +1,211 @@
+
+> hapa-versus@0.1.0 check
+> node tools/hapa/check.mjs
+
+✔ the rules import only rules modules and use no DOM, wall clock or Math.random (3.68025ms)
+✔ local card renditions are ignored by git and never part of the content catalog (20.118917ms)
+✔ v3_04 is the default and validates (0.834541ms)
+✔ the opening Bishop steps center to center past its own Pawn and absorbs the Pawn in front of the King (67.407458ms)
+✔ the Knight takes either L and absorbs the Pawn its path reaches (Tick 2 opening cases) (243.103208ms)
+✔ both L paths are offered, quoted alike, and checked for clearance; the short L is refused before v3_04 (10.414333ms)
+✔ a line Mount cannot stop on or pass a friendly-held territory; a destination held by a non-Pawn is refused (2.013333ms)
+✔ enemies still meet on body contact under center-to-center travel (same outcome as v3_03) (26.408625ms)
+✔ a derived Card keeps its creator, its parent and the original; wording is generated from its operations (2.778541ms)
+✔ a bundle crosses to another client byte for byte; the recipient verifies hashes and uses it with attribution (12.32775ms)
+✔ tampered bytes, unsupported operations and revision conflicts are named before play (1.7555ms)
+✔ a match keeps the catalog it agreed at setup when the local catalog later changes (2.604541ms)
+✔ Appendix B test vector: {"a":1,"b":2} (0.690042ms)
+✔ canonical encoding rejects what public_protocol_v1 rejects (0.744291ms)
+✔ xorshift32_v1 rejects zero and is reproducible (0.084625ms)
+✔ every profile validates and variants change only named fields (3.603959ms)
+✔ the profile validator rejects each listed invalid case with a reason (0.443708ms)
+✔ content validator names unsupported operations and duplicate ids (0.308458ms)
+✔ initializeMatch: 36 parties, 162 members, mirrored, reproducible (20.840291ms)
+✔ a neighbouring corner helper steps into the contact strip at zero time and Supply, keeping its identity (15.922875ms)
+✔ when the supported party retreats, the living helper returns home; only the retreating party loses members (28.295333ms)
+✔ when the helper's own party retreats while it touches an enemy, it is sacrificed like any own member (8.062666ms)
+✔ in a party-pool profile a helper's damage debits its own home pool (3.162042ms)
+✔ corner support can be switched off by the profile (1.93475ms)
+✔ a blocked return takes the nearest legal vacant home slot (then lowest number), never overlapping (12.789166ms)
+✔ the labeled corner fixture plays in a session and its replay verifies from the fixture state (10.716417ms)
+✔ layers: base → set → add → multiply → limit, independent of input order (0.913833ms)
+✔ a set-stage protection effect replaces the base; the Bound Standard still adds after it (5.349459ms)
+✔ an engaged party may request a formation change; combat uses the old arrangement until a legal completion (10.507667ms)
+✔ a rearrangement that would move a member out of hostile contact fails and keeps the old formation (6.903083ms)
+✔ Wheel Formation changes duration only: immediate when legal, refused out of contact (11.059042ms)
+✔ Archer elevation: one adjustment by sign — lower +1/+1, higher −1/−1, minimum range 1 and power 0 (6.512833ms)
+✔ a roof obstructs the Archer's Above arc; a direct magic shot is not an arc (1.562042ms)
+✔ ground travel: a ramp climbs at half Speed and half the Supply per quantum; arrival raises the band (32.139167ms)
+✔ a one-band step without a ramp and a two-band step are cliffs with no ordinary connection (2.130958ms)
+✔ charge uses actual Speed: Attack 3 charging uphill at Speed ½ is a 1.5-point impact (4.922833ms)
+✔ the funded profile validates; an unknown funding policy is rejected (0.975667ms)
+✔ Castle with Supply 2: a two-step endpoint is funded, three steps is not (the old profile allows both) (11.905875ms)
+✔ Knight: Supply 2 cannot fund the L (3); Supply 3 can — Speed 2 is the rate, not the range (7.66825ms)
+✔ a two-step Castle route with Supply 2 takes two Ticks and arrives with nothing left (29.35975ms)
+✔ only a valid preceding planned load funds a destination (2.448167ms)
+✔ mid-edge replacement includes the unfinished edge: 2.5 Supply for half an edge plus two steps (13.062291ms)
+✔ nondefault prices: quote, acceptance and actual debit agree (Knight L at 4, Castle step at 2) (15.953125ms)
+✔ bots plan funded destinations in a valid order, and bot-vs-bot replays verify under both profiles (3761.440833ms)
+✔ the glossary covers every required mechanical term with a meaning and a source (0.834916ms)
+✔ aliases resolve to their canonical entry (0.183ms)
+✔ current-state examples come from supplied values, not invented ones (0.159208ms)
+✔ Round boundaries: prologue 1–4, Round 1 = 5–13, Round 2 begins at 14 (6.264583ms)
+✔ Empty opening hand: Tick 1 mints two rank-2 Wands, Supply 2, Mana 0, into C1 and C9 (4.740417ms)
+✔ Clock and storage: 2, 4, 6, 8, 9 slots after five Ticks; a full Round mints 17 per player (8.646542ms)
+✔ Opening merge: Castle loads the 2 of Wands, advances one square, merges with its Pawn (9 members, Supply 1) (25.1235ms)
+✔ Resource curve: R2 → 2 of Wands, no Mana; R6 → rank 6 with 3 Red + 1 Green and per-row provenance (2.324042ms)
+✔ Three board profiles and deployment Mana (3.323583ms)
+✔ Center cutoff: A at R2 and R7, B at R5 and R9 → each side falls back to its own R2 (1.919792ms)
+✔ Replacement and exclusive use (4.22575ms)
+✔ Cross-column payment: 3 Red + 3 Rainbow pays 4 Red leaving 2 Rainbow; Rainbow-only needs Rainbow (0.20125ms)
+✔ Directional hits: front Defense does not cover Above; per-hit floors (1.054625ms)
+✔ Knight travel: the L route costs 3, goes long axis then short, and takes 1.5 Ticks at Speed 2 (6.281791ms)
+✔ Persistent destination: travel continues outside highlighted columns; a new order replaces it (14.10125ms)
+✔ Queen/Knight diagnostic: first touch at quantum 125 with the Queen shifted half a member width (11.581084ms)
+✔ Mirrored Swordsmen, individual Defense: every front Swordsman takes 2 (2.17025ms)
+✔ Mirrored Queen with Archers, individual: six Above arrows finish the 1-HP Swordsmen first (2.293583ms)
+✔ Shared line Defense 3 stops every 3-point sword hit; six arrows deal 6 (attacker allocation) (2.58925ms)
+✔ Defender allocation with a center-first standing policy puts all six arrows on the Queen (1.997709ms)
+✔ Party maintenance: 24-HP pool takes six arrows → 18; two retainers removed without a second debit (2.099417ms)
+✔ Charge impact: Speed-2 approach doubles the first impact; the next exchange uses ordinary Attack (4.314584ms)
+✔ Pike entrenchment transfers a charge multiplier to the stationary Pike (3.310625ms)
+✔ Victory: an enemy center entering the fixed Capital captures it (5.369625ms)
+✔ Victory: simultaneous Commander deaths draw (2.865708ms)
+✔ A counter can be countered; the original Ember Strike then resolves (public_stack_v1) (2.037708ms)
+✔ Bound Standard follows its Bishop; Column Standard stays on its column (0.999375ms)
+✔ Row Mana Double doubles only that row: 3 Red + 1 Green → 3 Red + 2 Green (0.684458ms)
+✔ Determinism: the same opening plans give the same fingerprint twice (10.760667ms)
+✔ Breach: a casualty leaves a gap; its opponent steps one slot in and meets Archer 4 ahead and Swordsman 2 on the flank (2.228459ms)
+✔ Retreat: only touching own members die; the attacker follows into the vacated territory at no Supply (12.738292ms)
+✔ Row Mana Double placed through its Card doubles only R6 at the next mint (end to end) (1.321084ms)
+✔ matches and events import once; reports split by profile, controllers, deck and seed (3619.068583ms)
+✔ combat credit keeps raw, prevented and actual damage apart, by deliverer and by Card (1131.591084ms)
+✔ creator use is separate from combat credit; uses by another identity are counted once (2.245708ms)
+✔ mining and crafting history and a quest are projections: re-import awards nothing twice (1.295042ms)
+✔ the review 06 Mage case: ward, headcount and body agree before and after the displayed death (24.4405ms)
+✔ observing moments changes no rules outcome (fingerprint and events identical) (15.345083ms)
+✔ pooled health: nothing shown keeps the full pool and every retainer; the hit and maintenance follow their events (1.964625ms)
+✔ a party defeated later in the Tick is still alive (and labelled) before its displayed defeat (5.409083ms)
+✔ line defense: a member value is its contribution; the front-line preview equals a real exchange (2.776166ms)
+✔ ranged preview targets only engaged parties, as the rules do (0.986917ms)
+✔ Bound Standard: base front Physical protection 1, applied 2, with named sources (review 05 observation) (8.156625ms)
+✔ a Swordsman shield is directional; Mage ward is party-wide Magic for every member (1.975625ms)
+✔ health follows the profile: member health, or one shared party pool (5.058208ms)
+✔ line defense: the shared front line value is the sum of the line members' line-scope protection (1.329042ms)
+✔ ranged preview is target-dependent and comes from the rules (elevation-aware Archer) (1.84375ms)
+✔ playback-time health applies only the hits already shown (4.596458ms)
+✔ party facts: a five-member Pawn reports an empty center and no Mount (1.05775ms)
+✔ one Rainbow cannot pay Red + Blue; two can; a colored Card plus Rainbow pays only the missing part (0.999792ms)
+✔ mixed-cost counter with 1 Rainbow: offered only when payable, and resolution agrees (11.9475ms)
+✔ mixed-cost counter with 2 Rainbow: offered only when payable, and resolution agrees (3.307041ms)
+✔ the ordinary Blue Denial counter is paid by burning the 2-Blue Card and replays (3.499125ms)
+✔ v3_03 declares reachable recovery and own-plan Ready; the default carries both forward (1.222792ms)
+✔ the blocked Queen names its friendly obstruction once and keeps its destination and Supply (182.332208ms)
+✔ recovery: return to the start, merge with the Pawn, or finish the segment — real fractional quote and debit (369.954167ms)
+✔ v3_02 keeps its recorded nearest-node recovery (legacy dispatch) (89.773208ms)
+✔ a clear Queen or Bishop crosses one diagonal territory in one Tick for one Supply (18.550708ms)
+✔ the bot does not order a route a friendly formation physically blocks (90.332583ms)
+✔ own-plan Ready: A Ready, B edits, B Ready locks the final pair with one commitment per seat (0.46925ms)
+✔ own-plan Ready refuses a Ready naming another revision; unknown policies are refused (0.49275ms)
+✔ two peers on the default profile commit own plans, bind the locked pair in receipts and agree (911.705583ms)
+✔ a bot completes a match against a bot with a rules-defined result; the replay verifies (2701.412083ms)
+✔ a Tick budget yields an unfinished record, not an invented result (136.440584ms)
+✔ a tampered replay reports the first diverging Tick (535.99675ms)
+✔ importing the same events twice does not duplicate history (1088.147958ms)
+✔ stacked fixture: off-layer bodies stay filtered at every playback moment (−2, +3, All) (17.107792ms)
+✔ a member that died in an earlier Tick stays hidden throughout playback (0.249958ms)
+✔ a casualty falls at the frame of its death and does not slide on (0.126958ms)
+✔ ramp: height changes when the rules record elevation_changed, not at the start or end of the Tick (22.953292ms)
+✔ a profile edit creates a new, deterministic, fingerprinted revision that names its parent (17.163708ms)
+✔ field descriptions exist; illegal values and no-op edits are refused with reasons (5.417292ms)
+✔ profiles compare field by field (an earlier match's profile against a variant) (1.388166ms)
+✔ a small batch runs bot matches on an edited profile and every replay verifies (4813.741208ms)
+✔ a stale Ready pair never resolves a newly edited plan (2.103417ms)
+✔ duplicate delivery is a no-op; conflicting content under one identity is an error (0.182667ms)
+✔ signed records verify; tampering or a wrong identity fails (0.743417ms)
+✔ two independent peers with their own logs agree on every Tick and on the result (4565.2815ms)
+✔ terrain_work_v3_01: extract (T9), craft (T10), equip (T18) → front Physical Defense 2 (12.49175ms)
+✔ excavation removes and refills a free face-adjacent cube; an occupied or supporting cube cannot change (2.151833ms)
+✔ exposed ground: an enemy center on an open pit floor blocks income; under a roof or flying it does not (3.144291ms)
+✔ response fixture: Ember Strike opens one response window per seat and resolves once (17.492ms)
+✔ stacked fixture: a flyer above a roofed tunnel party in one territory, replayable (7.783333ms)
+✔ cards fixture: multi-color cards are ordinary bank instances and the match replays (2.627ms)
+✔ dig fixture: the inspector-planned dig is an ordinary begin_work that empties the cube and replays (3.304166ms)
+ℹ tests 129
+ℹ suites 0
+ℹ pass 129
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4928.012417
+✔ rules tests (4960 ms)
+hapa_open_10x9_v3_04 seed 2: win (A) at Tick 23, 747 ms, replay verified
+✔ bot-versus-bot smoke match (1388 ms)
+{
+ "logs": {
+  "A": "11ebe30fc21beaff",
+  "B": "7df51e2bb7514ecd"
+ },
+ "A": {
+  "seat": "A",
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 23,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "commander_died",
+     "memberId": "B.C5.m5"
+    },
+    {
+     "seat": "B",
+     "reason": "capital_captured",
+     "partyId": "A.mount.C4",
+     "capital": {
+      "column": 5,
+      "row": 10
+     }
+    }
+   ]
+  },
+  "ticks": 23,
+  "allAgreed": true,
+  "finalHash": "sha256:7246c24dbb5d19018f0002de56e56f57f6b3c8c792139ed235f8e3a59fc8ac93",
+  "errors": []
+ },
+ "B": {
+  "seat": "B",
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 23,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "commander_died",
+     "memberId": "B.C5.m5"
+    },
+    {
+     "seat": "B",
+     "reason": "capital_captured",
+     "partyId": "A.mount.C4",
+     "capital": {
+      "column": 5,
+      "row": 10
+     }
+    }
+   ]
+  },
+  "ticks": 23,
+  "allAgreed": true,
+  "finalHash": "sha256:7246c24dbb5d19018f0002de56e56f57f6b3c8c792139ed235f8e3a59fc8ac93",
+  "errors": []
+ },
+ "peersAgree": true
+}
+✔ two-process peer-verified match (2754 ms)
+✔ build (540 ms)

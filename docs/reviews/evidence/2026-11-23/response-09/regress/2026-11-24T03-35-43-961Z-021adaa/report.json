@@ -1,0 +1,230 @@
+{
+ "runId": "2026-11-24T03-35-43-961Z-021adaa",
+ "startedAt": "2026-11-24T03:35:44.506Z",
+ "tool": "tools/hapa/ui-regress.mjs",
+ "base": "http://127.0.0.1:5199",
+ "source": {
+  "commit": "021adaa7ae0c935488027ed544de619b224f3c47",
+  "dirty": false,
+  "diffSha256": null,
+  "untracked": [],
+  "untrackedSha256": null
+ },
+ "engine": {
+  "gitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "checkout": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "verified": true,
+  "note": "vendor/lumina is a Git work tree at the recorded commit"
+ },
+ "browser": "Chrome/158.0.8127.37",
+ "os": "Darwin 25.2.0 arm64",
+ "node": "v25.2.1",
+ "sabotage": false,
+ "allowedResourceErrors": [
+  {
+   "pattern": "/\\/favicon\\.ico(\\?|$)/",
+   "reason": "the prototype ships no favicon"
+  },
+  {
+   "pattern": "/\\/renditions\\//",
+   "reason": "optional owner Tarot art in ignored local storage (public/renditions); absent faces fall back to the procedural face"
+  }
+ ],
+ "conventions": "Browser zoom is emulated as a smaller CSS viewport at a higher device pixel ratio. Text size (contract 4): the browser default font size is set through CDP Page.setFontSizes (16 px = 100%, 24 = 150%, 32 = 200%); inspection text, the command and inspection bars use rem and follow it, other HUD parts still use px. Camera: the default fitted Home view unless a check says otherwise.",
+ "checks": [
+  {
+   "id": "c8",
+   "title": "Funded destinations: range, refusal with shortfall, invalidated funding blocks Ready (HF-04)",
+   "config": {
+    "query": "autostart=1&a=human&b=human&seed=1",
+    "viewport": "1600x1000@1",
+    "profile": "hapa_open_10x9_v3_02"
+   },
+   "assertions": [
+    {
+     "name": "control present: navigator: C1 Castle",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "with 0 Supply the bar says no route is funded",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "No Supply for any route: load a Card first"
+    },
+    {
+     "name": "control present: Supply menu",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "control present: Load Supply",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "2 Supply funds exactly the unheld targets within two steps of R1C1",
+     "pass": true,
+     "actual": [
+      "R2C1",
+      "R3C1"
+     ],
+     "expected": [
+      "R2C1",
+      "R3C1"
+     ]
+    },
+    {
+     "name": "control present: close the navigator",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "an unfunded legal target is visible to right-click",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": {
+      "x": 496.3227781481258,
+      "y": 558.8758760249704,
+      "target": "R4C1",
+      "need": 3
+     }
+    },
+    {
+     "name": "an unfunded target (R4C1) is refused with its shortfall",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Not added: not enough Supply for the whole route: it needs 3, the party has 2 (counting earlier planned loads)"
+    },
+    {
+     "name": "…and no destination was added",
+     "pass": true,
+     "actual": [
+      "load_supply"
+     ],
+     "expected": [
+      "load_supply"
+     ]
+    },
+    {
+     "name": "control present: Move to R3C1",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the funded move is planned after its load",
+     "pass": true,
+     "actual": [
+      "load_supply",
+      "set_destination"
+     ],
+     "expected": [
+      "load_supply",
+      "set_destination"
+     ]
+    },
+    {
+     "name": "control present: Remove the funding load",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "the dependent destination is kept, not shortened or dropped",
+     "pass": true,
+     "actual": [
+      "set_destination"
+     ],
+     "expected": [
+      "set_destination"
+     ]
+    },
+    {
+     "name": "it is explicitly invalid for lack of funding",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": [
+      "not enough Supply for the whole route: it needs 2, the party has 0 (counting earlier planned loads)"
+     ]
+    },
+    {
+     "name": "Ready says to fix the order",
+     "pass": true,
+     "actual": true,
+     "expected": true,
+     "note": "Fix 1 order"
+    },
+    {
+     "name": "control present: blocked Ready",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "pressing it opens Orders to repair; nothing is frozen",
+     "pass": true,
+     "actual": [
+      true,
+      false
+     ],
+     "expected": [
+      true,
+      false
+     ]
+    },
+    {
+     "name": "control present: Restore the load",
+     "pass": true,
+     "actual": true,
+     "expected": true
+    },
+    {
+     "name": "restoring the load re-funds the destination",
+     "pass": true,
+     "actual": 0,
+     "expected": 0
+    },
+    {
+     "name": "no unexpected application errors",
+     "pass": true,
+     "actual": [],
+     "expected": []
+    }
+   ],
+   "shots": [
+    "c8-unfunded-draft.jpg"
+   ],
+   "setup": [],
+   "observed": {
+    "moveLabels": [
+     "Move Castle R1C1 to R2C1: needs 1 Supply · joins your Pawn",
+     "Move Castle R1C1 to R3C1: needs 2 Supply · absorbs your Pawn on the way",
+     "Fill 2,3 · +1",
+     "Fill 2,2 · +2"
+    ]
+   },
+   "allowedErrors": [
+    {
+     "kind": "http",
+     "status": 404,
+     "url": "http://127.0.0.1:5199/favicon.ico"
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-11-24T03:35:55.082Z",
+ "summary": {
+  "checks": 1,
+  "assertions": 20,
+  "failed": 0
+ }
+}

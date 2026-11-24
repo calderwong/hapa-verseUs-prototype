@@ -1,0 +1,27 @@
+Bishop R1C3 -> R5C7 at Tick 3 (C7 and C3 cards)
+  t3 parties_merged A.mount.C3 A.pawn.C4
+  A.mount.C3 @(22,14) R4C6 supply 1 moving members 9 pawnC4 retired true replay true
+Knight R1C2 -> R3C3 long
+  t2 parties_merged A.mount.C2 A.pawn.C2
+  t3 destination_reached A.mount.C2 
+  A.mount.C2 @(10,10) R3C3 supply 1 idle members 9 absorbed A.pawn.C2 replay true
+Knight R1C2 -> R3C3 short
+  t3 parties_merged A.mount.C2 A.pawn.C3
+  t4 destination_reached A.mount.C2 
+  A.mount.C2 @(10,10) R3C3 supply 1 idle members 9 absorbed A.pawn.C3 replay true
+Knight R1C2 -> R2C4 long
+  t4 parties_merged A.mount.C2 A.pawn.C4
+  t4 destination_reached A.mount.C2 
+  A.mount.C2 @(14,6) R2C4 supply 1 idle members 9 absorbed A.pawn.C4 replay true
+Knight R1C2 -> R2C4 short
+  t2 parties_merged A.mount.C2 A.pawn.C2
+  t3 travel_blocked A.mount.C2 A.pawn.C4
+  A.mount.C2 @(11,6) R2C3 supply 1.75 moving members 9 absorbed A.pawn.C2 replay true
+Knight R1C2 -> R3C1 short
+  t3 parties_merged A.mount.C2 A.pawn.C1
+  t4 destination_reached A.mount.C2 
+  A.mount.C2 @(2,10) R3C1 supply 1 idle members 9 absorbed A.pawn.C1 replay true
+Knight R1C2 -> R3C1 long
+  t2 parties_merged A.mount.C2 A.pawn.C2
+  t3 destination_reached A.mount.C2 
+  A.mount.C2 @(2,10) R3C1 supply 1 idle members 9 absorbed A.pawn.C2 replay true
