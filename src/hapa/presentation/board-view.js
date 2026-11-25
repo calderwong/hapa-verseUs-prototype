@@ -922,6 +922,9 @@ export class BoardView {
     if (this.disposed) return null;
     this.disposed = true;
     this.scene.remove(this.root);
+    // helpers that own resources independently of what is attached right now release them first
+    // (R14-02: HitFX's reusable textures survive after every effect sprite has expired)
+    const fx = this.fx?.dispose() ?? null;
     const sprites = [];
     this.root.traverse((o) => { if (o instanceof Sprite3D && !o.userData?.owner) sprites.push(o); });
     const internal = new Set(sprites.flatMap((s) => [s.mesh, s.shadowProxy, s.blob].filter(Boolean)));
@@ -932,6 +935,6 @@ export class BoardView {
     const n = release(owned);
     this.sprites.clear(); this.markers.clear(); this.cardTiles.clear(); this.sheets.clear();
     this.supplyTokens?.clear?.();
-    return { ...n, sprites: sprites.length };
+    return { ...n, sprites: sprites.length, fx };
   }
 }

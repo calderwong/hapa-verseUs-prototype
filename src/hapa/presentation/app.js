@@ -162,6 +162,8 @@ export class VersusApp {
 
   _initEngine() {
     if (this.engine) return;
+    // the world's actual size is an input to the panel composition (R14-01)
+    if (typeof ResizeObserver === 'function') new ResizeObserver(() => this._syncFreeSpace()).observe(this.el.world);
     try { this.sound = new VersusSound(); } catch { this.sound = null; }
     // Versus reads its own keys and pointers; the engine's game Input (which claims Enter, Space and
     // Tab on the window for its adventure bindings) listens to a detached target, so keyboard focus
@@ -1636,6 +1638,15 @@ export class VersusApp {
   }
 
   _syncFreeSpace() {
+    // a change of world size or of a fixed reservation (navigator, required decision) re-runs the
+    // panel policy once, coalesced to the next frame (R14-01); panel opens reconcile directly
+    const w = this.el.world, dec = this.el.decision && !this.el.decision.hidden;
+    const sig = `${w.clientWidth}x${w.clientHeight}|${document.body.classList.contains('roster-open')}|${dec}`;
+    if (sig !== this._layoutSig) {
+      const first = this._layoutSig == null;
+      this._layoutSig = sig;
+      if (!first && !this._reconcileQueued) { this._reconcileQueued = true; requestAnimationFrame(() => { this._reconcileQueued = false; this._reconcilePanels(); }); }
+    }
     const f = this._freeSpace(), st = this.el.world.style;
     const l = `${Math.round(f.left)}px`, r = `${Math.round(f.right)}px`, mr = `${Math.round(f.drawers)}px`;
     if (st.getPropertyValue('--music-r') !== mr) st.setProperty('--music-r', mr);
@@ -1875,10 +1886,17 @@ export class VersusApp {
   }
 
   /** Open or close the roster drawer (narrow layouts only; at wide layouts the roster is a column). */
-  _toggleRoster(open = !document.body.classList.contains('roster-open')) {
+  _toggleRoster(open = !document.body.classList.contains('roster-open'), { quiet = false } = {}) {
+    const opening = open && !document.body.classList.contains('roster-open');
+    if (!open) this._rosterScroll = this.el.roster.scrollTop;
     document.body.classList.toggle('roster-open', open);
     this.el.navBtn?.setAttribute('aria-expanded', String(open));
+    if (opening && this._rosterScroll) this.el.roster.scrollTop = this._rosterScroll;
+    // the navigator is a reservation: reconcile the other panels and refresh the free band now
+    // (R14-01), so nothing it covers stays where a pointer cannot reach it
+    if (opening) this._reconcilePanels('roster'); else this._syncFreeSpace();
     this.inspect.relayout();
+    if (quiet) return;
     // the keyboard follows the drawer: into its first entry on open, back to the toggle on close
     if (open) requestAnimationFrame(() => this.el.roster.querySelector('.rrow, button')?.focus());
     else if (this.el.roster.contains(document.activeElement)) this.el.navBtn?.focus();
@@ -2207,25 +2225,49 @@ export class VersusApp {
     else this.el.ordersBtn?.focus();
   }
 
+  /** A panel the player deliberately opened (R13-04 / R14-01): most recent first, then reconcile. */
+  _onePanel(which) { this._reconcilePanels(which); }
+
   /**
-   * One active expanded side panel when they cannot share the world (R13-04). Orders, the Music
-   * drawer and the expanded conversation are compared with the room left beside the navigator
-   * and any required decision; if the board would keep less than a usable band, opening `which`
-   * collapses the others. Each collapsed panel keeps its own state (Orders tab and scroll, Music
-   * tab, filter and list scroll, the conversation draft and history scroll) for reopening, and
-   * focus stays with the panel the player just opened. At wide layouts they coexist as before.
-   * @param {'orders'|'music'|'talk'} which
+   * Reconcile the expanded side panels with the room the world has now (R13-04, R14-01). Runs when a
+   * panel is deliberately opened and, coalesced, when the world's size or a fixed reservation (the
+   * Parties & Cards navigator, a required decision) actually changes — never per frame. Panels are
+   * kept in order of the player's most recent deliberate use while the board keeps a usable band;
+   * the rest collapse quietly, each keeping its own state (Orders tab and scroll, Music tab, filter
+   * and list scroll, the conversation draft, selection and history scroll, the navigator's list).
+   * A required decision is reserved space and is never dismissed. If focus was inside a panel that
+   * collapsed, it moves to the surviving panel the player used most recently. Wide layouts keep
+   * their coexistence; the free band is re-measured after the choice.
+   * @param {'orders'|'music'|'talk'|'roster'|null} [preferred] the panel just opened
    */
-  _onePanel(which) {
-    const W = this.el.world.clientWidth, t = this.table, f = this._freeSpace();
+  _reconcilePanels(preferred = null) {
+    const t = this.table, W = this.el.world.clientWidth;
+    this._recency = (this._recency ?? []).filter((k) => k !== preferred);
+    if (preferred) this._recency.unshift(preferred);
+    const open = { roster: document.body.classList.contains('roster-open'), orders: !!this.ordersOpen, music: !!t?.deck.open, talk: !!t?.opponent.expanded };
+    const width = { roster: (this.el.roster.offsetWidth || 300) + 6, orders: Math.min(400, 0.46 * W) + 6, music: Math.min(440, W - 16) + 8, talk: 300 + 8 };
     const dec = this.el.decision && !this.el.decision.hidden ? this.el.decision.offsetWidth + 6 : 0;
-    const open = { orders: !!this.ordersOpen, music: !!t?.deck.open, talk: !!t?.opponent.expanded };
-    const width = { orders: Math.min(400, 0.46 * W), music: Math.min(440, W - 16), talk: 300 };
-    const used = f.left + dec + Object.keys(open).reduce((n, k) => n + (open[k] ? width[k] + 8 : 0), 8);
-    if (W - used >= 220) return;
-    if (which !== 'orders' && open.orders) this._toggleOrders(false, null, { quiet: true });
-    if (which !== 'music' && open.music) t.deck.toggle(false);
-    if (which !== 'talk' && open.talk) t.opponent.toggleConversation(false, { quiet: true });
+    const fits = (set) => W - 8 - dec - set.reduce((n, k) => n + width[k], 0) >= 220;
+    const rank = (k) => { const i = this._recency.indexOf(k); return i < 0 ? 99 : i; };
+    const order = Object.keys(open).filter((k) => open[k]).sort((a, b) => rank(a) - rank(b));
+    const kept = [];
+    for (const k of order) if (!kept.length || fits([...kept, k])) kept.push(k);
+    const drop = order.filter((k) => !kept.includes(k));
+    if (drop.length) {
+      const panelEl = { roster: this.el.roster, orders: this.el.orders, music: t?.deck.drawer, talk: t?.el };
+      const focusLost = drop.some((k) => panelEl[k]?.contains(document.activeElement));
+      for (const k of drop) {
+        if (k === 'orders') this._toggleOrders(false, null, { quiet: true });
+        else if (k === 'music') t.deck.toggle(false);
+        else if (k === 'talk') t.opponent.toggleConversation(false, { quiet: true });
+        else if (k === 'roster') this._toggleRoster(false, { quiet: true });
+      }
+      if (focusLost) {
+        const k = kept[0];
+        const target = k === 'orders' ? this.el.orders.querySelector('h3') : k === 'music' ? t?.deck.musicBtn : k === 'talk' ? t?.opponent.ui?.input : k === 'roster' ? this.el.roster.querySelector('.rrow, button') : null;
+        target?.focus({ preventScroll: true });
+      }
+    }
     this._syncFreeSpace();
   }
 

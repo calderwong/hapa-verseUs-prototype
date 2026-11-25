@@ -140,7 +140,28 @@ export class HitFX {
     this.items.push({ parts, t: 0, life: still ? 1.0 : 1.3, base: at.clone(), label, mark: null, ring, sparks, kind: 'supply' });
   }
 
+  /**
+   * Release everything this helper owns, once (R14-02): the parts of effects still running and the
+   * three textures it painted for reuse during the match. Those textures stay owned here even after
+   * every sprite that used them has expired and left the scene, so scene traversal alone cannot
+   * find them. Nothing shared is touched (three's Sprite quad is never disposed).
+   * @returns {{ items: number, textures: number } | null} null when already disposed
+   */
+  dispose() {
+    if (this.disposed) return null;
+    this.disposed = true;
+    const items = this.items.length;
+    for (const it of this.items) for (const p of it.parts) { p.material.dispose(); if (p.geometry && !(p instanceof THREE.Sprite)) p.geometry.dispose(); if (p === it.label) p.material.map?.dispose(); }
+    this.items = [];
+    const tex = Object.values(this.tex);
+    for (const t of tex) t.dispose();
+    this.tex = {};
+    this.group.parent?.remove(this.group);
+    return { items, textures: tex.length };
+  }
+
   update(dt) {
+    if (this.disposed) return;
     const still = reduced();
     for (let i = this.items.length - 1; i >= 0; i--) {
       const it = this.items[i];
