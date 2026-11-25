@@ -1,0 +1,48 @@
+{
+  "method": "Fresh browser UI observation; running source commit not exposed",
+  "texts": [
+    {
+      "before": {
+        "bottom": 147.578125,
+        "height": 24,
+        "left": 1540.515625,
+        "right": 1598.65625,
+        "top": 123.578125,
+        "width": 58.140625,
+        "x": 1540.515625,
+        "y": 123.578125
+      }
+    },
+    {
+      "afterDrag": {
+        "bottom": 147.578125,
+        "height": 24,
+        "left": 1540.515625,
+        "right": 1598.65625,
+        "top": 123.578125,
+        "width": 58.140625,
+        "x": 1540.515625,
+        "y": 123.578125
+      },
+      "draft": {
+        "selection": [
+          1,
+          31
+        ],
+        "value": "Review draft: keep the board steady"
+      }
+    },
+    {
+      "afterWheel": {
+        "bottom": 147.578125,
+        "height": 24,
+        "left": 1540.515625,
+        "right": 1598.65625,
+        "top": 123.578125,
+        "width": 58.140625,
+        "x": 1540.515625,
+        "y": 123.578125
+      }
+    }
+  ]
+}

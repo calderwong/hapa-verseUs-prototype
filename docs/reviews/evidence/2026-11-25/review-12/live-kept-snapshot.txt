@@ -1,0 +1,76 @@
+- generic "You are seat A": Ayou
+- term: Tick 1
+- text: · Prologue
+- term: Active
+- text: C1C9
+- status: Planning
+- generic "Commander health (the match ends if one falls)": A★ 6/6B★ 6/6
+- button "☰ Parties & Cards"
+- button "Orders A 0 · B 3"
+- button "Ready ▶":
+  - generic: Ready ▶
+- generic: Playback speed
+- combobox "Playback speed":
+  - option "0.5×"
+  - option "1×" [selected]
+  - option "2×"
+  - option "4×"
+- button "Help": "?"
+- button "Game sounds on" [pressed]: 🔊
+- button "Match menu": ☰
+- generic: ▲ 0° · Angled · home A
+- toolbar "Height layers":
+  - button "+3"
+  - button "+2"
+  - button "+1 36"
+  - generic: GROUND 0
+  - button "-1"
+  - button "-2"
+  - button "-3"
+  - button "All" [pressed]
+- 'button "A''s Mana available this Tick: none"':
+  - generic: A
+  - generic: Available
+  - generic: "0"
+- 'button "B''s Mana available this Tick: none"':
+  - generic: B
+  - generic: Available
+  - generic: "0"
+- toolbar "Camera":
+  - button "Turn left 45° (Q)": ⟲
+  - button "Pan forward (W / ↑ / left-drag)": ▲
+  - button "Turn right 45° (E)": ⟳
+  - button "Pan left (A / ←)": ◀
+  - button "Home view (Home)": ⌂
+  - button "Pan right (D / →)": ▶
+  - button "Tilt up — look more from above (Z)": ⤒
+  - button "Pan back (S / ↓)": ▼
+  - button "Tilt down — look more from the side (X)": ⤓
+  - button "Zoom in (wheel / pinch)": +
+  - button "Zoom out (wheel / pinch)": −
+  - button "Tactical overhead view (V)": V
+- button
+- complementary "Your opponent":
+  - button "Red":
+    - generic: Red
+  - button "🔈 Sound on"
+  - status: Good to see you. I brought a few tracks. Let's play.
+- region "Now playing":
+  - generic: ♪
+  - generic: Music ready
+  - button "Listening"
+  - button "Mute music": ♫
+  - slider "Music volume (this device)": "0.55"
+  - button "Kept" [expanded]
+  - generic: Untitled — “We kept a lantern by the water” (folk ballad, 24 s) · introduced by Red in hapa-versus · Available offline
+  - generic: Untitled — “We kept a lantern by the water” (60 s) · introduced by Red in hapa-versus · Available offline
+  - generic: Untitled — “Hey There, Hermione” (258 s) · introduced by Red in hapa-versus · Available offline
+  - generic: Untitled — “We kept a lantern by the water” (folk ballad, 24 s) · introduced by Red in hapa-versus · Available offline
+  - generic: Untitled — “Hey There, Hermione” (258 s) · introduced by Red in hapa-versus · Available offline
+  - generic: Untitled — “We kept a lantern by the water” (60 s) · introduced by Red in hapa-versus · Available offline
+- button "History"
+- button "Tick 1 · Prologue · active C1 & C9"
+- 'button "A minted 2 of Wands in C1: Supply 2, no Mana"'
+- 'button "B minted 2 of Wands in C1: Supply 2, no Mana"'
+- 'button "A minted 2 of Wands in C9: Supply 2, no Mana"'
+- 'button "B minted 2 of Wands in C9: Supply 2, no Mana"'

@@ -1,17 +1,19 @@
 # Avatar and music integrations
 
-This index distinguishes the initial design, attached prototype and current selected refinement. Game requirements, the current review, Overwatch task state and CJ's acceptance remain authoritative.
+This index distinguishes delivered integration from the new music-and-setting assignment. Current user direction, game requirements, review evidence, Overwatch task state and CJ's acceptance remain authoritative.
 
 | Record | Status | Purpose |
 | --- | --- | --- |
-| [Implementation checkpoint](IMPLEMENTATION_CHECKPOINT.md) | Updated through seated implementation `bafc36f`; Review 11 qualification limits apply | Real Harbor performer/scoped voice, local music playback/Keep and optional Harness decisions |
-| [Implementation response 12](../reviews/2026-11-25-ui-design-response-12.md) | Current implementation report (`4dc271d`) | Conversation gestures and fit, bound music resume, malformed model-wrapper settlement; complete owner digests |
-| [Implementation response 11](../reviews/2026-11-24-ui-design-response-11.md) | Previous implementation report and submitted evidence | Seated scene, prior reliability fixes, owner/source declarations and disclosed limits |
-| [Review 11](../reviews/2026-11-24-ui-design-review-11.md) | Current review, 24 November 2026; source `7d4a96b` | Preserve the delivered seated direction; three bounded interaction/async repairs remain |
-| [Addendum 05 — Seated opponent](../requirements/2026-11-24-human-feedback-addendum-05.md) | CJ's current presentation direction; working defaults labeled | Opponent in the environment across the table, with independent tactical and close views |
-| [Assignment 12](../reviews/2026-11-24-next-agent-assignment-12.md) | Current bounded handoff | Conversation input/placement, music resume supersession, malformed model-wrapper settlement |
-| [Original Avatar/music proposal v1](avatar-opponents-and-music-discovery-v1.md) | Historical design; compact-perch layout superseded by addendum 05 | Original experience, ownership boundaries and phased integration rationale |
-| [Original adapter contract notes](avatar-opponents-and-music-discovery-v1-contracts.md) | Proposed interfaces; consult current source/checkpoint for implemented APIs | Decision admission, visible observations, Avatar performance and music ownership |
-| [Original source register](avatar-opponents-and-music-discovery-v1-sources.json) | Pinned evidence for the original proposal | Repositories, source revisions and evidence limits at that research snapshot |
+| [Review 12](../reviews/2026-11-25-ui-design-review-12.md) | Current review; source `8308ea1` | Scoped closure of prior repairs; evidence and next music/setting priorities |
+| [Addendum 06](../requirements/2026-11-25-human-feedback-addendum-06.md) | CJ's current music/presentation direction | Quiet Keep, replayable history/Kept, redesigned player and music-responsive environment |
+| [Dusk island table and music v1](dusk-island-table-and-music-v1.md) | Current design and implementation companion; proposed work | Controls, replay policy, existing owner contracts, whole-scene art direction, source/time and performance boundaries |
+| [Assignment 13](../reviews/2026-11-25-next-agent-assignment-13.md) | Current bounded handoff | Assemble the player, collection, setting and response together, then qualify and stop |
+| [Implementation response 12](../reviews/2026-11-25-ui-design-response-12.md) | Latest implementation report (`4dc271d`) | Conversation gestures/fit, finite bound resume and malformed model settlement; owner digests and qualification limits |
+| [Implementation checkpoint](IMPLEMENTATION_CHECKPOINT.md) | Existing baseline; read with Response 12 and Review 12 | Harbor performer/scoped voice, current local music playback/Keep and optional Harness decisions |
+| [Addendum 05 — Seated opponent](../requirements/2026-11-24-human-feedback-addendum-05.md) | Still governs the opponent | Scene seat across the table, independent tactical/close views and deliberate conversation |
+| [Review 11](../reviews/2026-11-24-ui-design-review-11.md) / [Assignment 12](../reviews/2026-11-24-next-agent-assignment-12.md) | Historical handoff, answered by Response 12 | Three bounded interaction/async repairs; old atmosphere/library exclusions superseded by Addendum 06 |
+| [Original Avatar/music proposal v1](avatar-opponents-and-music-discovery-v1.md) | Historical design; compact perch superseded | Original experience and ownership rationale |
+| [Original adapter contract notes](avatar-opponents-and-music-discovery-v1-contracts.md) | Proposed interfaces; consult current source | Decision admission, visible observations, Avatar performance and music ownership |
+| [Original source register](avatar-opponents-and-music-discovery-v1-sources.json) | Historical evidence | Original pinned research snapshot |
 
-Follow [the current review index](../reviews/README.md) and [Loose Screws](../workflows/LOOSE_SCREWS.md). Preserve owner boundaries and reuse unchanged evidence. The present soundtrack is local to one browser. Remote synchronized listening and a finished retained-library/export/re-sharing UI remain larger future outcomes outside Assignment 12. The seated composition is delivered; a new art or owner rewrite is not required for this bounded repair.
+Follow [the review index](../reviews/README.md) and [Loose Screws](../workflows/LOOSE_SCREWS.md). The current soundtrack is local to one browser. Assignment 13 adds retained-library playback UI using the inspected owner, but does not claim remote synchronized listening, re-sharing/export or complete cross-session listening history. Preserve the existing seated opponent and source/owner boundaries while changing the authored environment around the match.

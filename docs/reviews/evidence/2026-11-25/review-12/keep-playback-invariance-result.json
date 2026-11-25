@@ -1,0 +1,147 @@
+{
+  "schema": "hapa.versus.review12.keep-playback-invariance.v1",
+  "reviewBaselineCommit": "8308ea15df3ef844ade37b24a0097f915ac7ba6c",
+  "source": {
+    "path": "/workspace/scratch/a3fd4cc6ced6/research/repo_review_12/music/sources/src/hapa/presentation/soundtrack.js",
+    "gitBlobSha": "813ba478622183ea83d4cca66b16297f4f6c199b",
+    "matchesReviewedBlob": true,
+    "domGitBlobSha": "8f19fcae4308487763f80e1247e16c28d43237d3"
+  },
+  "method": "Actual Soundtrack constructor, DOM builder, Keep click handler, keep and poll; audio/DOM/owner fixtures; one manual poll timer.",
+  "limitations": "No real-time playback, browser hit testing, actual owner response or Table voice acknowledgement is simulated. Audio time is deliberately held constant.",
+  "before": {
+    "selected": "A",
+    "queueIndex": 0,
+    "queueRevision": 7,
+    "active": "A",
+    "generation": 0,
+    "src": "blob:fixture-A",
+    "currentTime": 37.25,
+    "paused": false,
+    "volume": 0.55,
+    "listening": true,
+    "playbackStatus": "playing",
+    "savedState": null
+  },
+  "pending": {
+    "selected": "A",
+    "queueIndex": 0,
+    "queueRevision": 7,
+    "active": "A",
+    "generation": 0,
+    "src": "blob:fixture-A",
+    "currentTime": 37.25,
+    "paused": false,
+    "volume": 0.55,
+    "listening": true,
+    "playbackStatus": "playing",
+    "savedState": "saving"
+  },
+  "saved": {
+    "selected": "A",
+    "queueIndex": 0,
+    "queueRevision": 7,
+    "active": "A",
+    "generation": 0,
+    "src": "blob:fixture-A",
+    "currentTime": 37.25,
+    "paused": false,
+    "volume": 0.55,
+    "listening": true,
+    "playbackStatus": "playing",
+    "savedState": "saved-downloading"
+  },
+  "offline": {
+    "selected": "A",
+    "queueIndex": 0,
+    "queueRevision": 7,
+    "active": "A",
+    "generation": 0,
+    "src": "blob:fixture-A",
+    "currentTime": 37.25,
+    "paused": false,
+    "volume": 0.55,
+    "listening": true,
+    "playbackStatus": "playing",
+    "savedState": "available-offline"
+  },
+  "keptEvents": [
+    {
+      "entry": "A",
+      "state": "saved-downloading"
+    }
+  ],
+  "callsDuringKeep": [],
+  "playbackUnchangedAcrossKeep": true,
+  "endedControl": {
+    "after": {
+      "selected": "B",
+      "queueIndex": 1,
+      "queueRevision": 8,
+      "active": null,
+      "generation": 1,
+      "src": "",
+      "currentTime": 0,
+      "paused": true,
+      "volume": 0.55,
+      "listening": true,
+      "playbackStatus": "loading",
+      "savedState": "available-offline"
+    },
+    "reason": "ended",
+    "calls": [
+      {
+        "operation": "pause"
+      },
+      {
+        "operation": "remove-src"
+      },
+      {
+        "operation": "load"
+      },
+      {
+        "operation": "revoke-url",
+        "value": "blob:fixture-A"
+      }
+    ]
+  },
+  "requests": [
+    {
+      "url": "/music/fixture/keep",
+      "method": "POST",
+      "body": {
+        "offer": {
+          "fixture": "A"
+        },
+        "discovery": {
+          "app": "hapa-versus",
+          "sessionId": "fixture-session",
+          "playlistId": "fixture-playlist",
+          "queueRevision": 7,
+          "entryId": "A",
+          "heardAt": "2026-11-25T00:00:00.000Z",
+          "introducer": {
+            "kind": "avatar",
+            "id": "red-reaper",
+            "label": "Red"
+          }
+        }
+      }
+    },
+    {
+      "url": "/music/fixture/keep/acq-fixture",
+      "method": "GET",
+      "body": null
+    },
+    {
+      "url": "/music/fixture/audio",
+      "method": "POST",
+      "body": {
+        "offer": {
+          "fixture": "B"
+        }
+      }
+    }
+  ],
+  "networkRequests": 0
+}

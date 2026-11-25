@@ -1,0 +1,309 @@
+{
+  "reviewDateLocal": "2026-11-25",
+  "githubFiles": [
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c",
+      "path": "AGENTS.md",
+      "gitBlobSha": "13746a958f2cda9fdbe9792dd573fb11f03fd417",
+      "verifiedByteEquivalent": true,
+      "sha256": "ef98ad7762b34dcd350030913ecb1a312011abe103ab454b4339016a66325861",
+      "bytes": 6264,
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c/AGENTS.md"
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c",
+      "path": "src/peer-music.js",
+      "gitBlobSha": "c4aeb505ec8d28ad7ab12afebceec02ae6b5a773",
+      "verifiedByteEquivalent": true,
+      "sha256": "5af73f6ae229782da4796a5a7bfed1fd7a23d9d426f65db0ba27203ae06f6e1a",
+      "bytes": 25134,
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c/src/peer-music.js"
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c",
+      "path": "src/api-server.js",
+      "gitBlobSha": "9c619d3c692fcb6b5e990d7fa5f573612a7f1632",
+      "verifiedByteEquivalent": true,
+      "sha256": "c66660b4e5c8dd1103ce3200cfbd8a042ec31efbdf4425ff268452ff74032564",
+      "bytes": 15160,
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c/src/api-server.js"
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c",
+      "path": "docs/PEER_MUSIC.md",
+      "gitBlobSha": "048c02f87277e8d430e214881b3ad61a4a09c281",
+      "verifiedByteEquivalent": true,
+      "sha256": "efb5c40ad4b4841756b108d071c03e4ebdca83f6022abbbe5310acefd4409a49",
+      "bytes": 4925,
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c/docs/PEER_MUSIC.md"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "README.md",
+      "gitBlobSha": "e4d2ac770eee58a69133b96a37cc69e50b7597d1",
+      "verifiedByteEquivalent": true,
+      "sha256": "a10a371e5c50bc171e10c2ff6bd7d472fb7e35344665c997184a1cfa5479f3be",
+      "bytes": 47145,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/README.md"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/domain/echo-record-garden-atmosphere.js",
+      "gitBlobSha": "5b29b838e840d03b5a1bc2c76396e0d86273bb19",
+      "verifiedByteEquivalent": true,
+      "sha256": "7eb827869a31fb6db321cb8341bc948a46d00e77090b2e29f623b0a94fe3d94b",
+      "bytes": 7293,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/domain/echo-record-garden-atmosphere.js"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/components/echo-record-garden-audio-visualizer.js",
+      "gitBlobSha": "3a99ad8beb6a7164c05e2934eed773c4ccdf9612",
+      "verifiedByteEquivalent": true,
+      "sha256": "5d16f400505e529400ad84cbbe8acd2e0c793273de9785abe7ebdcda8d9e4a86",
+      "bytes": 7291,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/components/echo-record-garden-audio-visualizer.js"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/components/echo-record-garden-visual-system.js",
+      "gitBlobSha": "52fcf050ca099fdc3839032ee1931d02a6ff9845",
+      "verifiedByteEquivalent": true,
+      "sha256": "98599e745571e15e15d3ce3f0d485b118e9fed2684b1e7668b3d7715a642102e",
+      "bytes": 76625,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/components/echo-record-garden-visual-system.js"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/living-light/music-response.js",
+      "gitBlobSha": "5920dc6240463f02f45c0cac55f2aca3d0680adc",
+      "verifiedByteEquivalent": true,
+      "sha256": "14aded6f850aef4bcb630c92748ad5b64859b33c17921225c30e4f6a7af536e7",
+      "bytes": 5689,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/living-light/music-response.js"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/domain/living-light-music-response.js",
+      "gitBlobSha": "1a08f3148646483427073e745b0c3f4492c61d50",
+      "verifiedByteEquivalent": true,
+      "sha256": "72bf72153075e687c964bf0fd6fe947bb277a57f83d503bca060aefd466b7af9",
+      "bytes": 5077,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/domain/living-light-music-response.js"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/living-light/SIGNALS_HOST.md",
+      "gitBlobSha": "2db486242de025ba536dd18e6675a2f9b3fc2ce2",
+      "verifiedByteEquivalent": true,
+      "sha256": "b397dad162d4430f20456a8454edc9edb8bb62685ea5266fadb1dbd295f33a1c",
+      "bytes": 8058,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/living-light/SIGNALS_HOST.md"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/LIVING_LIGHT_INTEGRATION.md",
+      "gitBlobSha": "69d35888f2e67b39fa60b920b2a9ef4079652ec7",
+      "verifiedByteEquivalent": true,
+      "sha256": "f1c2e36ea338f5eb02990c9a855a90c0fe1097c8e1855dd04a803d2809b5a84b",
+      "bytes": 28397,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/LIVING_LIGHT_INTEGRATION.md"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/ECHO_RECORD_GARDEN_VISUAL_BIBLE.md",
+      "gitBlobSha": "da6a5e8f7a14510e66fd600f1492f990b65ef1df",
+      "verifiedByteEquivalent": true,
+      "sha256": "db157682a8afb3f498d31cc0ea1ad7d48f00f94d5c097fa80659c2e925ed87e9",
+      "bytes": 34762,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/ECHO_RECORD_GARDEN_VISUAL_BIBLE.md"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/living-light/runtime.js",
+      "gitBlobSha": "7119dc61103a99937fbc26318050a8c7ead7ca72",
+      "verifiedByteEquivalent": true,
+      "sha256": "2c3745e61112bb73c15da180d3138fdf7891aaf1b4331f4a9097c61a715c35f3",
+      "bytes": 17667,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/living-light/runtime.js"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/living-light/preview-driver.js",
+      "gitBlobSha": "370101be364b12dfad8d7e53e63ae922ea102990",
+      "verifiedByteEquivalent": true,
+      "sha256": "78c6b519c7d4e935371f32993ca38ab29578bfcbf91c98df442e130bced15f3a",
+      "bytes": 4086,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/living-light/preview-driver.js"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "resources/living-light-109/manifest.json",
+      "gitBlobSha": "2a2d2243fa03f06e03e968e4dccd08c096bdf5df",
+      "verifiedByteEquivalent": true,
+      "sha256": "e2079cbb96d342f051abf92a53b006115dbc82af37af53a88c4feac2aa9ad083",
+      "bytes": 16370,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/resources/living-light-109/manifest.json"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/living-light/DISCOVERY.md",
+      "gitBlobSha": "a4ea8d30a2291bc2d632270566281c97488cae5a",
+      "verifiedByteEquivalent": true,
+      "sha256": "09524cc1b57bddf2ac5be8fe398bf88968a4407148e42c3591139049faf3187a",
+      "bytes": 6750,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/living-light/DISCOVERY.md"
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "AGENTS.md",
+      "gitBlobSha": "f197fecd9c21e0d3c2ed6d4267ff14a8a9c107e8",
+      "verifiedByteEquivalent": true,
+      "sha256": "b344fbc0cde9980aff41555ecd925f334482fb71f464674c2c62453bd5edf841",
+      "bytes": 23341,
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/AGENTS.md"
+    },
+    {
+      "repository": "calderwong/hapa-campfire",
+      "commit": "91ca45c9411aa842efcf8b63237f1aa890e33183",
+      "path": "README.md",
+      "gitBlobSha": "9e8265801b0c403623ed1da70832827eb6f7b6aa",
+      "verifiedByteEquivalent": true,
+      "sha256": "bb5dcc57ba4bdad2555b41b3fb01e4264db9e580a0709ddf6838c1f7c54ee8aa",
+      "bytes": 7316,
+      "url": "https://github.com/calderwong/hapa-campfire/blob/91ca45c9411aa842efcf8b63237f1aa890e33183/README.md"
+    },
+    {
+      "repository": "calderwong/hapa-campfire",
+      "commit": "91ca45c9411aa842efcf8b63237f1aa890e33183",
+      "path": "src/echo/musical-signals.js",
+      "gitBlobSha": "eb988e8e1023624398d86208727caaafa4cd325f",
+      "verifiedByteEquivalent": true,
+      "sha256": "fe961814de69dc1755853c69317d4ff882e27760cf922d315746f8bfcbecc9e0",
+      "bytes": 2217,
+      "url": "https://github.com/calderwong/hapa-campfire/blob/91ca45c9411aa842efcf8b63237f1aa890e33183/src/echo/musical-signals.js"
+    },
+    {
+      "repository": "calderwong/hapa-campfire",
+      "commit": "91ca45c9411aa842efcf8b63237f1aa890e33183",
+      "path": "src/echo/stage-environment.js",
+      "gitBlobSha": "c8fc89b2cc0a0e4248d915c981cd9cdde6371e71",
+      "verifiedByteEquivalent": true,
+      "sha256": "393d9fc283c7242bcd74f3e165df36fa9f3528f94798eaceb40bc62f9ec98bb2",
+      "bytes": 784,
+      "url": "https://github.com/calderwong/hapa-campfire/blob/91ca45c9411aa842efcf8b63237f1aa890e33183/src/echo/stage-environment.js"
+    },
+    {
+      "repository": "calderwong/hapa-campfire",
+      "commit": "91ca45c9411aa842efcf8b63237f1aa890e33183",
+      "path": "src/echo/campfire-direction.js",
+      "gitBlobSha": "6d0a46067ad9413c140b13fe18bd2575ac58ec43",
+      "verifiedByteEquivalent": true,
+      "sha256": "963a1ae83affc7b12dbd47442abb553502130e7b2346d41446ab650737bbce37",
+      "bytes": 7097,
+      "url": "https://github.com/calderwong/hapa-campfire/blob/91ca45c9411aa842efcf8b63237f1aa890e33183/src/echo/campfire-direction.js"
+    },
+    {
+      "repository": "calderwong/hapa-campfire",
+      "commit": "91ca45c9411aa842efcf8b63237f1aa890e33183",
+      "path": "AGENTS.md",
+      "gitBlobSha": "8b8ca4e3a82bc63ec5e4569e338ca2f65a3a6e3d",
+      "verifiedByteEquivalent": true,
+      "sha256": "72598f44338afb74df8de2cb940ff2ecdf49575fb06de76bfe2115460062515a",
+      "bytes": 3767,
+      "url": "https://github.com/calderwong/hapa-campfire/blob/91ca45c9411aa842efcf8b63237f1aa890e33183/AGENTS.md"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "8308ea15df3ef844ade37b24a0097f915ac7ba6c",
+      "path": "src/hapa/presentation/scenery.js",
+      "gitBlobSha": "640312e7b36b7219b95ab282573f5da2c10c4570",
+      "verifiedByteEquivalent": true,
+      "sha256": "e466ca9b3381c51dd423733855f06160ea6e09b73654d0d772e35115d1027d53",
+      "bytes": 6940,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8308ea15df3ef844ade37b24a0097f915ac7ba6c/src/hapa/presentation/scenery.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "8308ea15df3ef844ade37b24a0097f915ac7ba6c",
+      "path": "src/hapa/presentation/soundtrack.js",
+      "gitBlobSha": "813ba478622183ea83d4cca66b16297f4f6c199b",
+      "verifiedByteEquivalent": true,
+      "sha256": "c08b4d17c42d4ef9f8a2e7b2904318377fdd240809557dc6d517192f6da8f5d8",
+      "bytes": 19708,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8308ea15df3ef844ade37b24a0097f915ac7ba6c/src/hapa/presentation/soundtrack.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "8308ea15df3ef844ade37b24a0097f915ac7ba6c",
+      "path": "AGENTS.md",
+      "gitBlobSha": "7ca4262277cc1f89a9b6cb6391581d3b882cdffb",
+      "verifiedByteEquivalent": true,
+      "sha256": "ae2c72adbcb521c32ae16a9b455e70d89e18b2d4e7749a1fce16391e94114237",
+      "bytes": 5920,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8308ea15df3ef844ade37b24a0097f915ac7ba6c/AGENTS.md"
+    }
+  ],
+  "libraryReferences": [
+    {
+      "path": "library/Echo_Album_Master_Reference.header-extract.md",
+      "metadata": {
+        "libraryFileId": "libfile_3c9f49a578548191bd67d2611540e767",
+        "format": "Library read extract, lines1\u201390; source100152462bytes, not full file",
+        "sourceBytes": 100152462,
+        "startLine": 1,
+        "endLine": 90
+      },
+      "url": "https://chatgpt.com/library?file_id=libfile_3c9f49a578548191bd67d2611540e767&account_id=personal"
+    },
+    {
+      "path": "library/Hapa_Living_Light_108_Storage_Receipt.json",
+      "metadata": {
+        "libraryFileId": "libfile_a963fdcb8fb48191b409b00272eb11a1",
+        "format": "Complete Library read text; raw-byte identity not assumed",
+        "sourceBytes": 1341
+      },
+      "url": "https://chatgpt.com/library?file_id=libfile_a963fdcb8fb48191b409b00272eb11a1&account_id=personal"
+    },
+    {
+      "path": "library/Astra_Papas_Island_Blender_Implementation_Prompt_v1.read-text.md",
+      "metadata": {
+        "libraryFileId": "libfile_0c6c696a0a048191b687b64388ffa8cc",
+        "format": "All386lines reconstructed from three Library read ranges; raw-byte identity not assumed",
+        "sourceBytes": 31403
+      },
+      "url": "https://chatgpt.com/library?file_id=libfile_0c6c696a0a048191b687b64388ffa8cc&account_id=personal"
+    }
+  ],
+  "uninspected": [
+    {
+      "name": "Hapa_Living_Light_108_Source.zip",
+      "libraryFileId": "libfile_fde3_f-1224dcdd9cc48191856516d058e55c6e_3caedc9a413881919d437b56e22f8e88",
+      "sourceBytes": 148221518,
+      "receiptSha256": "16f8e47a1ffe2dc7071c237273f72eef410c0c3e8f3369143a07a7e3777b7fe4",
+      "note": "Located and receipt read; archive bytes not downloaded/reviewed. Current Builder109 native modules were inspected instead."
+    },
+    {
+      "name": "Papa's Island image references and delivered Blender/repository source",
+      "note": "A Library implementation brief was resolved and read in full. Bounded GitHub papa/island and Library exact/alternate reference image searches did not locate delivered source or the named art. Not evidence of absence."
+    }
+  ]
+}

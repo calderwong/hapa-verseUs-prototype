@@ -1,0 +1,77 @@
+{
+  "commit": "8308ea15df3ef844ade37b24a0097f915ac7ba6c",
+  "reportedVersusHashChecks": [
+    {
+      "path": "src/hapa/presentation/table.js",
+      "reportedSha256": "53f53b2ead6f003800a73d670bdac3b128e5f56145f1444a9381e9c4c52d5612",
+      "observedSha256": "53f53b2ead6f003800a73d670bdac3b128e5f56145f1444a9381e9c4c52d5612",
+      "matches": true
+    },
+    {
+      "path": "src/hapa/presentation/versus.css",
+      "reportedSha256": "83163c6cc05fcf62238249de9451f430e5b1c8d62941bd360c52f418031ee96a",
+      "observedSha256": "83163c6cc05fcf62238249de9451f430e5b1c8d62941bd360c52f418031ee96a",
+      "matches": true
+    },
+    {
+      "path": "src/hapa/controllers/model-decider.js",
+      "reportedSha256": "e656a5016cf66ef2b02c2189e2f1278eb68fd577c33b19eb70bfeff7ffe50e72",
+      "observedSha256": "e656a5016cf66ef2b02c2189e2f1278eb68fd577c33b19eb70bfeff7ffe50e72",
+      "matches": true
+    },
+    {
+      "path": "tests/hapa/model-decider.test.js",
+      "reportedSha256": "51cf3d038ff7fb4e5840cb8cba40c4437e7bd9dc8d0096aa09223dc05994985a",
+      "observedSha256": "51cf3d038ff7fb4e5840cb8cba40c4437e7bd9dc8d0096aa09223dc05994985a",
+      "matches": true
+    },
+    {
+      "path": "src/hapa/presentation/seated-avatar.js",
+      "reportedSha256": "911432deaffad01db074a7b93aeee7e2771791bbfd6039e320b0de45ef77fb33",
+      "observedSha256": "911432deaffad01db074a7b93aeee7e2771791bbfd6039e320b0de45ef77fb33",
+      "matches": true
+    },
+    {
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "reportedSha256": "812ab5837903a914fb6cfb5583d63771f78ad4f06d78701a0fc855087660dee4",
+      "observedSha256": "812ab5837903a914fb6cfb5583d63771f78ad4f06d78701a0fc855087660dee4",
+      "matches": true
+    },
+    {
+      "path": "src/hapa/presentation/camera.js",
+      "reportedSha256": "1723754c44f0a72e683a3facadacadd2610363b25fcd66579845863588c21a8a",
+      "observedSha256": "1723754c44f0a72e683a3facadacadd2610363b25fcd66579845863588c21a8a",
+      "matches": true
+    }
+  ],
+  "unchangedCompositionChecks": [
+    {
+      "path": "src/hapa/presentation/seated-avatar.js",
+      "baselineCommit": "7d4a96bd753f8b0e79ac46e3ad0c1e206e54ea36",
+      "baselineGitBlob": "3e7c140c913553e6f934532aaaafb60d9de93180",
+      "currentGitBlob": "3e7c140c913553e6f934532aaaafb60d9de93180",
+      "matches": true
+    },
+    {
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "baselineCommit": "7d4a96bd753f8b0e79ac46e3ad0c1e206e54ea36",
+      "baselineGitBlob": "88702c1208a26fd4ef67160487aa2110d4ae66fa",
+      "currentGitBlob": "88702c1208a26fd4ef67160487aa2110d4ae66fa",
+      "matches": true
+    },
+    {
+      "path": "src/hapa/presentation/camera.js",
+      "baselineCommit": "7d4a96bd753f8b0e79ac46e3ad0c1e206e54ea36",
+      "baselineGitBlob": "bb05c2de37f853e31c5b3f868baa7c0859f86203",
+      "currentGitBlob": "bb05c2de37f853e31c5b3f868baa7c0859f86203",
+      "matches": true
+    }
+  ],
+  "outsideThisReview": [
+    {
+      "path": "src/hapa/presentation/soundtrack.js",
+      "reason": "outside this source register; music/source owner review belongs elsewhere"
+    }
+  ],
+  "ownerModules": "Not fetched or independently verified; response12 reports complete checksums and runtime limits."
+}
