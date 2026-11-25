@@ -1,0 +1,14 @@
+npm run check — final candidate, implementation c42649b (working tree equal to it), node v25.2.1, 2026-11-25
+exit 0
+ℹ tests 155
+ℹ pass 155
+ℹ fail 0
+✔ rules tests (5011 ms)
+✔ bot-versus-bot smoke match (1469 ms)
+✔ two-process peer-verified match (3251 ms)
+✔ build (491 ms)
+
+new tests in this run:
+✔ a local replay bookmarks the table once, stops at its end, and Return restores the bookmark (110.8015ms)
+✔ Keep changes saved state only, and a reply after Next stays with the original encounter (32.370375ms)
+✔ Kept rows are one per exact asset; similar titles stay apart; unretained saves are honest (7.665666ms)

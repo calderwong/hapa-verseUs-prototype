@@ -1,0 +1,91 @@
+{
+  "schema": "hapa.versus.response13.ui-journey.v1",
+  "date": "2026-11-25",
+  "kind": "new live observation (this response); values read from the page between real pointer/keyboard actions in the Claude desktop Browser pane",
+  "running": {
+    "server": "Vite dev server on 127.0.0.1:5199 serving the working tree from disk with hot reload; a scoped second server on 127.0.0.1:5200 with HAPA_MUSIC_RED_URL pointed at an unused port (step 7 only, stopped afterwards)",
+    "sourceAtJourney": "steps 1-6 and 8-12 ran on working trees that became commit c42649b; later edits before the commit: Kept row marker by key, Return wording with an empty table mix, setting texture disposal, Red's hit area transparent on hover. Steps 9 and 13 ran after the first two; captures 01-07 before the last two (neither changes what those captures show)",
+    "browser": "Chromium in the Claude desktop Browser pane, devicePixelRatio 1",
+    "viewport": "1440 x 900 CSS px emulated (step 12: 700 x 800)",
+    "match": "A human, B heuristic bot with Red (model-assisted moves through Hapa Harness, heuristic fallback), seed 1, profile hapa_open_10x9_v3_07",
+    "owners": "CJ's listener library 127.0.0.1:8811 and Red's library 127.0.0.1:8801 (Song Registry dadb049), Harbor 127.0.0.1:8862, Harness 127.0.0.1:61290"
+  },
+  "steps": [
+    {
+      "step": 1, "what": "Sound on; the table mix starts",
+      "observed": { "status": "playing", "now": "q1:red-library-1-a9d65d3e", "analysis": "measured", "audioContext": "running", "elementVolume": 1, "graphGain": 0.55, "queue": ["q1 Red 60 s (already retained)", "q2 your track Good Knight 193 s", "q3 Red 24 s (already retained)", "q4 Red 258 s (already retained)"] }
+    },
+    {
+      "step": 2, "what": "Keep during playback (real click), sampled every 250 ms through the owner's acknowledgement; Red not speaking",
+      "observed": { "sourceUnchanged": true, "generationUnchanged": 1, "gainValues": [0.55], "timeMonotonic": true, "pausedAtAnySample": false, "speakingAtAnySample": false, "transportEventsDuringKeep": [], "keepButtonRect": "unchanged 1108,119 92x32", "nextButtonRect": "unchanged 1072,119 32x32", "keepState": "available-offline", "ownerDiscoveries": 3, "label": "Kept ✓", "status": "Kept · Available offline", "liveRegion": "Kept “Untitled — “We kept a lantern by the water” (60 s)” · available offline", "note": "the recording was already retained: the owner recorded a third introduction without downloading the audio again" }
+    },
+    {
+      "step": 3, "what": "Independent Next, then a bounded seek near the end of q2 (189.5 of 193 s)",
+      "observed": { "transport": [["start", null, "q1", 1], ["next", "q1", "q2", 2], ["ended", "q2", "q3", 3]], "keepSlotOnOwnTrack": "Yours" }
+    },
+    {
+      "step": 4, "what": "SIMULATED failure: a page-level fetch wrapper answered the first Keep POST with 503 'simulated: owner unavailable' (owner not contacted)",
+      "observed": { "keepState": "keep-failed", "slot": "Retry", "status": "Keep failed: simulated: owner unavailable · playback continues", "liveRegion": "Keep failed: simulated: owner unavailable. Playback continues.", "sourceGenGainUnchanged": true, "note": "q3 (24 s) then ended naturally with reason 'ended' before Retry was pressed; its failed save stays retryable (now also from its Queue/Played row)" }
+    },
+    {
+      "step": 5, "what": "Keep q4 with the wrapper delaying the real owner call 2.5 s; Previous pressed at once (16 s had played, so Previous restarted the song)",
+      "observed": { "midState": "saving", "transport": [["restart", "q4", "q4", 4]], "afterReply": { "q4": "available-offline", "now": "q4", "gen": 4, "gain": 0.55, "src": "unchanged" }, "wrapper": ["simulated-failure n=1", "delayed-2500ms n=2", "owner-replied n=2"] }
+    },
+    {
+      "step": 6, "what": "Music drawer → Played this match → Play again on q1; Next, Previous; seek to 57.5 of 60 s; Return to table mix",
+      "observed": {
+        "openingDrawer": { "playbackChanged": false, "freeRightReserved": "455px" },
+        "bookmark": { "entry": "q4", "time": 24.84, "listening": true },
+        "replayList": ["q1", "q2", "q3", "q4"],
+        "afterNext": { "now": "q2", "bookmarkTime": 24.84 },
+        "afterPrevious": { "now": "q1", "bookmarkTime": 24.84 },
+        "replayEnd": { "mode": "replay", "status": "replay-ended", "advanced": false, "tableIndex": 3, "playButton": "Play again", "status text": "Replay finished · Play again or return to the table mix" },
+        "afterReturn": { "mode": "table", "now": "q4", "timeThreeSecondsLater": 27.59, "listening": true, "bookmark": null, "transport": ["replay-select", "replay-next", "replay-previous", "replay-ended", "return"] }
+      }
+    },
+    {
+      "step": 7, "what": "New match on the scoped server: Red's library unreachable (502), CJ's listener owner running (200); the shared 5199 Red route stayed 200 throughout",
+      "observed": { "tableMix": "unavailable (Red: /music/red/songs 502)", "played": 0, "keptRetainedRows": 3, "playKept": { "item": "cj/retained:8eb31e1137565ac8294508ff", "src": "/music/cj/retained/retained:8eb31e1137565ac8294508ff/audio", "status": "playing", "durationSeconds": 257.999, "analysis": "measured" }, "returnWithoutTable": { "transport": "return-unavailable", "audio": "none", "status": "The table mix had not started; choose a song from Queue (wording since changed to point at Kept/Played when the table mix is empty)" } }
+    },
+    {
+      "step": 8, "what": "Scene response, same track and camera (scenery stats sampled 12 x 250 ms)",
+      "observed": [
+        { "mode": "subtle", "glow": [0.355, 0.368], "shimmerMax": 0.381, "inlayMax": 0.393, "lanternMax": 320, "waterClockAdvanced": 3.09 },
+        { "mode": "off", "glowMax": 0.001, "shimmerMax": 0, "inlayMax": 0.081, "lanternMax": 274.3, "waterClockAdvanced": 3.05 },
+        { "mode": "expressive", "glow": [0.816, 0.861], "shimmerMax": 0.905, "inlayMax": 0.812, "lanternMax": 378.6 },
+        { "mode": "still (expressive selected)", "glowMax": 0, "shimmerMax": 0, "waterClockAdvanced": 0 },
+        { "mode": "subtle, paused 3 s", "frame": { "playing": false, "item": null, "generation": -1 }, "glowMax": 0 },
+        { "mode": "subtle, resumed", "glowMax": 0.359, "generation": 10 }
+      ],
+      "note": "measured before the envelope normalization changed from peak-relative to floor-to-peak (the subtle glow then sat near-constant around 0.36); the later normalization was observed live only as energy 0.64 on the retained replay in step 7"
+    },
+    {
+      "step": 9, "what": "Home, Tactical, band −3 cutaway, close formation inspection, low orbit",
+      "observed": "captures 01, 04, 05, 06, 02. The playing surface, banks and pieces keep their light (lantern light sits below the table-top plane); the −3 cutaway shows its floor and tile outlines with nothing from the setting inside the excavation volume; formations read at close zoom"
+    },
+    {
+      "step": 10, "what": "Orders + Music drawers + Red's conversation; pans across seven poses (R12-01)",
+      "observed": { "allInside": true, "freeBand": [8, 554], "poses": [
+        { "pan": 0, "faceX": 716, "panel": [253, 553], "docked": true, "note": "the old left-edge-only check would have accepted a left candidate ending near 678" },
+        { "pan": -120, "faceX": 602, "panel": [207, 507], "docked": false },
+        { "pan": -240, "faceX": 488, "panel": [93, 393], "docked": false },
+        { "pan": -360, "faceX": 377, "panel": [253, 553], "docked": true },
+        { "pan": 200, "faceX": 904, "panel": [253, 553], "docked": true }
+      ] }
+    },
+    {
+      "step": 11, "what": "Draft, wheel over the conversation and the Music list; one board command; one Ready",
+      "observed": { "draftKept": "Draft: keep the board steady", "focusKept": "Ask your opponent", "cameraAfterWheel": "unchanged", "textSelection": "not established (the tool's Cmd+A did not select; selection was covered by response 12)", "musicListScrollable": false, "boardCommand": { "rejectedMove": "Not added: not enough Supply for the whole route (rules)", "accepted": { "type": "load_supply", "party": "A.mount.C1", "card": "A.C1.T1.0" } }, "ready": { "tick": [1, 2], "castleSupply": "2 of Wands loaded", "musicTransportDuringResolution": [] } }
+    },
+    {
+      "step": 12, "what": "Deck at 700 x 800",
+      "observed": { "overflowX": false, "controlsHeightPx": 32, "volumeSlider": "hidden by design", "limit": "the deck covers Red's face in the Home pose at this width" }
+    },
+    {
+      "step": 13, "what": "Response Off vs Expressive frame times (6 s each, Home pose, same playing track, 1440 x 900, DPR 1) and repeated match setup",
+      "observed": { "off": { "frames": 323, "meanMs": 18.63, "p95Ms": 21.9, "maxMs": 32 }, "expressive": { "frames": 324, "meanMs": 18.54, "p95Ms": 22.1, "maxMs": 31.7 },
+        "repeatedSetup": { "pointLightsAfterEachNewMatch": 4, "sceneryGroupsInRoot": 1, "previousAudioGraphClosed": true, "settingGeometries": 319, "settingTextures": 35, "gpuGeometriesPerNewMatch": "+~1100 (mostly the previous BoardView, removed but not disposed before this work)" } }
+    }
+  ],
+  "ownerWrites": "Keep in steps 2 and 5 wrote two real introduction records to CJ's listener library (Song Registry discoveries); no audio was downloaded again because both recordings were already retained. Step 4's failure was simulated in the page and wrote nothing."
+}

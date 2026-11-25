@@ -123,6 +123,16 @@ Review 11 / Assignment 12 delivered at `4dc271d`: [response 12](../reviews/2026-
 
 Owners are unchanged: Harbor `1ab09d9`, Song Registry `dadb049` (peer-music bytes as `49a441a`), Harness `16dc700`.
 
+## Response 13 (25 November 2026)
+
+Review 12 / Assignment 13 delivered at `c42649b`: [response 13](../reviews/2026-11-25-ui-design-response-13.md).
+
+- **Music deck and drawer:** a fixed-slot deck and a Music drawer with Queue, Played this match (actual playback starts) and Kept. Kept is the owner's retained membership plus saved discoveries; Play uses listener library + `libraryId` over the literal `retained:` route.
+- **Local replay:** one bookmark of the table mix, manual Previous/Next over the captured list, a stop at the song's end and an explicit Return. All of it runs on the same element and fences.
+- **Quiet Keep:** Keep changes saved state only. The automatic Red acknowledgement and its ducking are removed.
+- **Music signal:** `music-signal.js` taps the music element only. It owns the effective gain once attached and feeds the dusk island setting's glow, water shimmer and rare accents (Off/Subtle/Expressive/Still).
+- **Owners:** unchanged. Harbor `1ab09d9`, Song Registry `dadb049`, Harness `16dc700`; engine `ba838cc`.
+
 ## Status (24 November 2026)
 
 | Milestone | Technical status | Evidence |
