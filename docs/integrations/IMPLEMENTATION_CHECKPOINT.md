@@ -144,6 +144,14 @@ Review 13 / Assignment 14 delivered at `153b657`: [response 14](../reviews/2026-
 - **Setting:** quieter coursed paving with moss in the joints, a cedar top rail with a brass line, and a high-tide quay with a moored skiff, bollards and rope behind the opponent.
 - **Owners:** unchanged. Harbor `1ab09d9`, Song Registry `dadb049`, Harness `16dc700`; engine `ba838cc`.
 
+## Response 15 (25 November 2026)
+
+Review 14 / Assignment 15 delivered at `da76b0b`: [response 15](../reviews/2026-11-25-ui-design-response-15.md).
+
+- **Layout:** `App._reconcilePanels` keeps the most recently used panels that fit and collapses the rest with their state. It runs on deliberate opens (Orders, Music, conversation, Parties & Cards) and, coalesced, on world-size or fixed-reservation changes. Parties & Cards refreshes the free band on open and close.
+- **Teardown:** `HitFX.dispose()` releases running effect parts and its three reusable textures once; `BoardView.dispose()` calls it first and reports `fx`.
+- **Owners:** unchanged. Harbor `1ab09d9`, Song Registry `dadb049`, Harness `16dc700`; engine `ba838cc`.
+
 ## Status (24 November 2026)
 
 | Milestone | Technical status | Evidence |

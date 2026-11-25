@@ -1,0 +1,8 @@
+npm run check — integrated candidate at commit da76b0b (tree 9f68527), 25 November 2026
+exit: 0
+ℹ tests 158
+ℹ pass 158
+ℹ fail 0
+✔ bot-versus-bot smoke match (1472 ms)
+✔ two-process peer-verified match (3295 ms)
+✔ build (514 ms)

@@ -1,0 +1,37 @@
+{
+  "schema": "hapa.versus.response15.layout-transition.v1",
+  "date": "2026-11-25",
+  "kind": "new live observation: real pointer/keyboard actions in the Claude desktop Browser pane; values read from the page between actions. 'hit' is document.elementFromPoint at the control's center ('self' = the control or its child owns the point)",
+  "running": {
+    "server": "the existing Vite dev server on 127.0.0.1:5199, serving the working tree from disk (reloaded before the journey)",
+    "source": "exactly the source committed as da76b0b (no source edits after the journey)",
+    "match": "A human, B heuristic bot with Red, seed 1, profile hapa_open_10x9_v3_07",
+    "owners": "CJ's library 8811 and Red's library 8801 (Song Registry dadb049), Harbor 8862 (1ab09d9), Harness 61290 (16dc700)"
+  },
+  "steps": [
+    { "step": 1, "what": "1440x900: Play; open Orders, History; open Music, Kept, filter 'lantern'",
+      "observed": { "orders": true, "ordersTab": "history", "music": true, "tab": "kept", "filter": "lantern", "deck": [572, 61, 1012, 472], "orders": [1027, 61, 1427, 853], "recency": ["music", "orders"], "status": "playing" }, "capture": "01" },
+    { "step": 2, "what": "Narrow the viewport to 700x900 with both open (no other action)",
+      "observed": { "orders": false, "ordersTabKept": "history", "music": true, "tab": "kept", "filter": "lantern", "deck": [247, 61, 687, 472], "pause": [292, 119, 328, 151], "pauseHit": "self", "previousHit": "self", "rowPlay": [{ "rect": [264, 288, 321, 316], "hit": "self" }, { "rect": [264, 386, 321, 414], "hit": "self" }], "freeRight": "454px",
+        "reviewBaseline": "both stayed expanded; Music squeezed to x=13..272" }, "capture": "02" },
+    { "step": 3, "what": "Open Parties & Cards (real click) while Music is open",
+      "observed": { "roster": [13, 61, 313, 853], "music": false, "freeLeft": "315px", "deck": [407, 61, 687, 173], "place": "right", "hits": { "previous": "self", "play": "self", "next": "self", "keep": "self", "music": "self" }, "focus": "the navigator's close button (its existing open focus)",
+        "reviewBaseline": "Pause at x=292..328 was covered: elementFromPoint returned the 'Parties and Cards' NAV" }, "capture": "03" },
+    { "step": 4, "what": "Close Parties & Cards; reopen Music",
+      "observed": { "freeLeft": "0px", "music": true, "tab": "kept", "filter": "lantern", "focusOnMusicButton": true, "playHit": "self", "rowPlayHits": ["self", "self"] } },
+    { "step": 5, "what": "Pause, then Play on the open drawer (real clicks at x=310,y=135)",
+      "observed": { "afterPause": { "status": "paused", "label": "Play music" }, "afterPlay": { "status": "playing", "label": "Pause music" } } },
+    { "step": 6, "what": "Open the conversation, type 'Playtest draft' (not sent); open Music; reopen the conversation",
+      "observed": { "conversationOpenMusicCollapsed": true, "musicReopened": { "tab": "kept", "filter": "lantern", "talkCollapsed": true }, "conversationReopened": { "draft": "Playtest draft", "focusInInput": true, "musicCollapsed": true } }, "capture": "04" },
+    { "step": 7, "what": "Clear the draft without sending (triple-click, Backspace); widen to 1440x900; open Music; press N for Parties & Cards",
+      "observed": { "draft": "", "talk": true, "music": true, "roster": true, "playHit": "self", "recency": ["roster", "music", "talk", "orders"], "note": "desktop coexistence retained: navigator, conversation and Music all stay open at 1440" }, "capture": "05" },
+    { "step": 8, "what": "Restart witness for R14-02: one Ready (real click) whose resolution spawned real Supply effects, then three match replacements (app.startMatch, as Start match)",
+      "observed": { "afterReady": { "tick": 2, "supplyEffects": 2, "hitEffects": 0, "fxItemsLeft": 0, "gpu": { "geometries": 1286, "textures": 129, "programs": 41 } },
+        "replacements": [
+          { "n": 1, "fxReleased": { "items": 0, "textures": 3 }, "gpu": { "geometries": 1276, "textures": 120, "programs": 40 } },
+          { "n": 2, "fxReleased": { "items": 0, "textures": 3 }, "gpu": { "geometries": 1276, "textures": 120, "programs": 40 } },
+          { "n": 3, "fxReleased": { "items": 0, "textures": 3 }, "gpu": { "geometries": 1277, "textures": 121, "programs": 41 } } ],
+        "note": "a short witness, not a benchmark; one or two textures above Response 14's 119 are consistent with shared caches warming for piece states the Tick produced (not measured individually)" } }
+  ],
+  "actions": "one Ready; zero Keep; zero messages to Red (the draft was cleared unsent); viewport reset to the pane's own size afterwards"
+}
