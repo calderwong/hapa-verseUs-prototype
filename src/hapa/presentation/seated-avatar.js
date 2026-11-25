@@ -27,6 +27,7 @@
  * the camera comes too close. It is never drawn without depth.
  */
 import * as THREE from 'three';
+import { TERRACE_Y } from './scenery.js';
 
 const BG = 146; // the owner renderer's declared clear color (each channel)
 const FRONT = 50, SIDE = 80; // degrees: full body / no body
@@ -90,9 +91,9 @@ export class SeatedAvatar {
     const sink = 9; // how far the frame's lower edge sits below the table top (the seated waist)
     this.disposables = [];
     const own = (x) => { this.disposables.push(x); return x; };
-    const wood = own(new THREE.MeshStandardMaterial({ color: 0x8a5a36, roughness: 0.85, flatShading: true }));
-    const darkWood = own(new THREE.MeshStandardMaterial({ color: 0x5e3d26, roughness: 0.9, flatShading: true }));
-    const slate = own(new THREE.MeshStandardMaterial({ color: 0x323946, roughness: 0.95, flatShading: true }));
+    const wood = own(new THREE.MeshStandardMaterial({ color: 0x76513a, roughness: 0.85, flatShading: true })); // cedar (dusk island table)
+    const darkWood = own(new THREE.MeshStandardMaterial({ color: 0x4a3326, roughness: 0.9, flatShading: true }));
+    const slate = own(new THREE.MeshStandardMaterial({ color: 0x24323b, roughness: 0.95, flatShading: true }));
     const box = (W, H, D, mat, x, y, z2) => { const m = new THREE.Mesh(own(new THREE.BoxGeometry(W, H, D)), mat); m.position.set(x, y, z2); m.receiveShadow = true; this.group.add(m); return m; };
     // the far table edge: the plinth continues under the opponent's forearms, with an apron facing down
     const tableW = (w + 1.8) * S;
@@ -102,13 +103,13 @@ export class SeatedAvatar {
     // the chair: a tall back behind the shoulders and two posts, visible from every side
     this.chair = new THREE.Group();
     // the chair has its own materials so it can recede when it stands between the camera and the banks
-    this.chairWood = own(new THREE.MeshStandardMaterial({ color: 0x8a5a36, roughness: 0.85, flatShading: true, transparent: true }));
-    this.chairDark = own(new THREE.MeshStandardMaterial({ color: 0x5e3d26, roughness: 0.9, flatShading: true, transparent: true }));
+    this.chairWood = own(new THREE.MeshStandardMaterial({ color: 0x76513a, roughness: 0.85, flatShading: true, transparent: true }));
+    this.chairDark = own(new THREE.MeshStandardMaterial({ color: 0x4a3326, roughness: 0.9, flatShading: true, transparent: true }));
     // an open chair back: two posts just outside the shoulders and a rail at neck height (the head
     // rises above it), so it reads as a chair rather than a frame behind a picture
     const chairW = bodyW * 0.86, top = -sink + bodyH * 0.7;
     for (const sx of [-1, 1]) {
-      const post = new THREE.Mesh(own(new THREE.BoxGeometry(1.5, top + sink, 1.5)), this.chairDark); post.position.set(sx * chairW / 2, (top - sink) / 2, -4.2); this.chair.add(post);
+      const post = new THREE.Mesh(own(new THREE.BoxGeometry(1.5, top - TERRACE_Y, 1.5)), this.chairDark); post.position.set(sx * chairW / 2, (top + TERRACE_Y) / 2, -4.2); this.chair.add(post); // the posts stand on the terrace (dusk island table)
       const finial = new THREE.Mesh(own(new THREE.BoxGeometry(2.1, 1.6, 2.1)), this.chairWood); finial.position.set(sx * chairW / 2, top + 0.8, -4.2); this.chair.add(finial);
     }
     const rail = new THREE.Mesh(own(new THREE.BoxGeometry(chairW, 1.6, 1.0)), this.chairWood); rail.position.set(0, top - 1.2, -4.2);

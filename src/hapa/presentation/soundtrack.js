@@ -1,38 +1,55 @@
 /**
- * The table soundtrack (Milestones A and B, docs/integrations/IMPLEMENTATION_CHECKPOINT.md).
+ * The table soundtrack (Milestones A and B; Assignment 13 §3A–C, companion §2–§3).
  *
  * Each participant contributes a selected snapshot of whole recordings from their own Music
- * Library owner (Hapa Song Registry). The table queue alternates whole tracks between the
+ * Library owner (Hapa Song Registry). The table mix alternates whole tracks between the
  * contributions. It is local to this browser: one queue controller (the host seat) may advance it,
- * and every change bumps its revision. There is no remote queue subscription or room clock yet, so
- * this is not synchronized listening between human clients (review 10, R10-06). Volume, mute and whether to listen at all are local to each
- * listener and never touch the queue. The listener's own library node fetches every entry, its own
- * or a peer's, by the exact offer (recording + asset digest), so media bytes and transfer state
- * stay with the music owner and never enter game records.
+ * and every change bumps its revision. There is no remote queue subscription or room clock, so this
+ * is not synchronized listening between human clients (review 10, R10-06). The listener's own
+ * library node fetches every entry by the exact offer (recording + asset digest), so media bytes
+ * and transfer state stay with the music owner and never enter game records.
  *
- * Keep (Milestone B) asks the listener's library to save the reference durably and start verified
- * retention of exactly the offered asset of that queue entry. It records whether it was actually heard
- * here; the states shown are the owner's own, never optimistic.
- * Music never blocks a Tick: every failure leaves the match playable and says so in the strip.
+ * One audible player, two explicit listening contexts (companion §2.4):
+ *   - table mix: the contribution order with ordinary natural-end advancement;
+ *   - local replay: Play on a Queue, Played or Kept row. The first switch bookmarks the table
+ *     entry, its position and the listening intent once; the ordered list of that view's playable
+ *     rows is captured for manual Previous/Next. A replay stops at the song's end. Return to table
+ *     mix restores the bookmark. Nothing here changes the queue or another listener.
+ * Every source attempt is fenced by its item and a per-request generation, Pause/not listening and
+ * disposal (R10-03, R11-02), under the finite acquisition and start deadlines.
+ *
+ * Keep (HF6-03) changes saved state only: it never selects, seeks, pauses, restarts, re-gains or
+ * navigates, and it announces nothing aloud. Its target is captured when pressed; a reply that
+ * arrives after Next changes the saved state of that original encounter only. Played this match is
+ * actual playback starting here; Kept is the listener owner's durable record (retained membership
+ * plus saved discoveries), replayed by listener library + owner-returned libraryId.
+ * Music never blocks a Tick: every failure leaves the match playable and says so.
  */
-import { h } from './dom.js';
+import { MusicSignal } from './music-signal.js';
 
 const KEY = 'hapa-versus.music-settings.v1';
-const STATE_LABEL = {
+export const STATE_LABEL = {
   saving: 'Saving…',
-  'saved-downloading': 'Saved · downloading',
-  'saved-waiting-source': 'Saved · waiting for source',
-  'saved-reference-only': 'Saved · reference only',
-  verifying: 'Verifying…',
+  'saved-downloading': 'Saving audio…',
+  'saved-waiting-source': 'Waiting for the source',
+  'saved-reference-only': 'Reference only',
+  'saved-paused': 'Saving audio paused',
+  verifying: 'Verifying audio…',
   'available-offline': 'Available offline',
-  'download-failed-reference-saved': 'Download failed · reference saved',
+  'download-failed-reference-saved': 'Audio download failed · reference saved',
+  'keep-failed': 'Keep failed',
 };
 const TERMINAL = new Set(['available-offline', 'saved-reference-only', 'download-failed-reference-saved']);
 const RETRYABLE = new Set(['keep-failed', 'download-failed-reference-saved']);
 const ACQUIRE_MS = 20000, START_MS = 8000; // bounded waits for a track's bytes and its first sound
+const RESTART_S = 3; // Previous restarts the song after this much has played
+/** The owner's retained address (its route matches a literal colon; %3A does not match). */
+export const RETAINED_ID = /^retained:[a-f0-9]{24}$/;
+
+const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function loadSettings() {
-  const d = { volume: 0.55, muted: false, listening: true };
+  const d = { volume: 0.55, muted: false, listening: true, response: 'subtle', still: null };
   try { return { ...d, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return d; }
 }
 
@@ -49,40 +66,77 @@ export function alternate(lists) {
   return out;
 }
 
+/** Who made it, from the recording's own credits; the storing or introducing party is not the creator. */
+export function creditLine(c) {
+  const who = c?.creators?.length ? c.creators.join(', ') : null;
+  return who ? `by ${who}` : c?.generator?.name ? `made with ${c.generator.name}` : 'Creator not stated';
+}
+
+/** A queue entry as a playable item (an exact current-session offer). */
+function offerItem(e) {
+  return { key: e.queueEntryId, kind: 'offer', entry: e, title: e.title, durationSeconds: e.durationSeconds ?? null, version: e.offer?.manifest?.recording?.version ?? null,
+    credits: e.credits, assetId: e.assetId, recordingId: e.recordingId, own: e.own, introducer: e.own ? 'You' : (e.contributor.participant?.label ?? e.contributor.label), source: e.contributor.label };
+}
+
+/** A retained membership as a playable item (listener library + owner-returned libraryId). */
+export function retainedItem(r, library) {
+  return { key: `${library}/${r.libraryId}`, kind: 'retained', library, libraryId: r.libraryId, title: r.title, durationSeconds: r.durationSeconds ?? null, version: r.version ?? null,
+    credits: r.credits, assetId: r.assetId, recordingId: r.recordingId, receiptId: r.receiptId, retainedAt: r.retainedAt, introductions: r.introductions ?? [], source: r.source?.issuer?.label ?? null };
+}
+
 export class Soundtrack extends EventTarget {
   /**
-   * @param {{ host: HTMLElement, sessionId: string, epoch: number, listener: { library: string, seat: string, label: string }, controller: boolean }} o
+   * @param {{ sessionId: string, epoch: number, listener: { library: string, seat: string, label: string }, controller: boolean }} o
    */
   constructor(o) {
     super();
-    Object.assign(this, { host: o.host, sessionId: o.sessionId, epoch: o.epoch, listener: o.listener, isController: o.controller });
+    Object.assign(this, { sessionId: o.sessionId, epoch: o.epoch, listener: o.listener, isController: o.controller });
     this.settings = loadSettings();
     this.queue = { revision: 0, controllerSeat: o.listener.seat, entries: [], index: -1 };
     this.contributions = [];
     // Keep is per encounter (this queue entry and its introducer), not per byte asset: the owner
     // stores identical bytes once and records each introduction as its own discovery (R10-04)
     this.keeps = new Map(); // queueEntryId → owner state | { state: 'saving' | 'keep-failed' }
-    // playback identity (R10-03): the selected entry, the audio actually loaded (fenced by a
-    // per-request generation, never by array index alone) and what was actually heard
+    this.mode = 'table'; // 'table' | 'replay'
+    this.replay = null; // { list: item[], view, item, ended }
+    this.bookmark = null; // { entry, index, time, listening }
+    this.tablePos = 0; // the table entry's position when it was last detached
+    this.played = []; // { item, firstAt, lastAt, plays } in the order playback first started
+    this.retained = null; // the owner's retained membership (array) once read
+    this.encounters = null;
+    this.transport = []; // developer diagnostics: causal transport reasons, most recent last
     this.playGen = 0;
-    this.active = null; // { gen, entry, url }
+    this.active = null; // { gen, item, url, owned, bytes, started }
     this.heard = new Map(); // queueEntryId → ISO time the audio really started
     this.audio = new Audio();
     this.audio.preload = 'auto';
-    this.audio.addEventListener('ended', () => { if (this.active?.gen === this.playGen) this._advance('ended'); });
-    this.audio.addEventListener('error', () => { if (this.active?.gen === this.playGen && this.audio.getAttribute('src')) this._fail(this.active.entry, 'playback failed'); });
+    this.signal = new MusicSignal();
+    this.audio.addEventListener('ended', () => { if (this.active?.gen === this.playGen) this._ended(); });
+    this.audio.addEventListener('error', () => { if (this.active?.gen === this.playGen && this.audio.getAttribute('src')) this._fail(this.active.item, 'playback failed'); });
     this.audio.addEventListener('playing', () => {
       const a = this.active;
-      if (!a || a.gen !== this.playGen || a.entry !== this.now) return;
-      if (!this.heard.has(a.entry.queueEntryId)) this.heard.set(a.entry.queueEntryId, new Date().toISOString());
+      if (!a || a.gen !== this.playGen || a.item !== this.now) return;
+      if (!a.started) { a.started = true; this._markPlayed(a.item); }
+      if (a.item.kind === 'offer' && !this.heard.has(a.item.key)) this.heard.set(a.item.key, new Date().toISOString());
       this.status = 'playing';
-      this._render();
+      this._changed('status');
     });
+    this.audio.addEventListener('pause', () => this._changed('status'));
+    this.audio.addEventListener('timeupdate', () => this.dispatchEvent(new Event('time')));
+    this.audio.addEventListener('loadedmetadata', () => this.dispatchEvent(new Event('time')));
     this.duck = 1;
     this.disposed = false;
-    this.el = h('div', { class: 'np-strip', role: 'region', 'aria-label': 'Now playing' });
-    o.host.append(this.el);
-    this._render();
+    this.status = 'idle';
+  }
+
+  /** Effective atmosphere preference: Still follows reduced motion until the player chooses. */
+  get still() { return this.settings.still ?? reducedMotion(); }
+
+  _changed(what) { if (!this.disposed) this.dispatchEvent(new CustomEvent('change', { detail: { what } })); }
+
+  _log(reason, from, to) {
+    this.transport.push({ at: new Date().toISOString(), reason, context: this.mode, from: from?.key ?? null, to: to?.key ?? null, gen: this.playGen });
+    if (this.transport.length > 60) this.transport.shift();
   }
 
   /**
@@ -92,7 +146,8 @@ export class Soundtrack extends EventTarget {
   async prepare(parts) {
     const epoch = this.epoch;
     this.status = 'preparing';
-    this._render();
+    this._changed('status');
+    this.refreshKept().catch(() => {}); // the durable library, independent of this match's queue
     const lists = [];
     for (const p of parts) {
       try {
@@ -110,73 +165,125 @@ export class Soundtrack extends EventTarget {
     }
     if (epoch !== this.epoch) return;
     this.queue.entries = alternate(lists).map((e, i) => ({ ...e, queueEntryId: `q${i + 1}:${e.entryId}`, assetId: e.offer.manifest.files[0].assetId }));
+    for (const e of this.queue.entries) e.item = offerItem(e);
     this.queue.revision = 1;
     this.status = this.queue.entries.length ? 'ready' : 'unavailable';
-    this._render();
+    this._changed('queue');
     return this.queue;
   }
 
   /** Begin (after the human's sound gesture). */
-  start() { if (this.queue.index < 0 && this.queue.entries.length) this._select(0); else if (this.settings.listening) this._resume(); }
+  start() {
+    this._attachSignal();
+    if (this.queue.index < 0 && this.queue.entries.length) this._select(0, 'start');
+    else if (this.settings.listening) this._resume();
+  }
 
-  get now() { return this.queue.entries[this.queue.index] ?? null; }
+  _attachSignal() { if (this.signal.attach(this.audio)) { this._applyVolume(); this.signal.resume(); } }
+
+  /** The table mix's current entry. */
+  get tableEntry() { return this.queue.entries[this.queue.index] ?? null; }
+
+  /** The item the player has selected now (table entry or local replay). */
+  get now() { return this.mode === 'replay' ? this.replay?.item ?? null : this.tableEntry?.item ?? null; }
 
   /** Stop and release whatever audio is loaded, and fence any pending acquisition. */
   _detach() {
+    if (this.mode === 'table' && this.active?.item === this.tableEntry?.item && this.audio.getAttribute('src')) this.tablePos = this.audio.currentTime || 0;
     this.playGen++;
     this._pending?.abort();
     this._pending = null;
     this.audio.pause();
     if (this.audio.getAttribute('src')) { this.audio.removeAttribute('src'); this.audio.load(); }
-    if (this.active?.url) URL.revokeObjectURL(this.active.url);
+    if (this.active?.owned) URL.revokeObjectURL(this.active.url);
     this.active = null;
   }
 
-  /** A committed switch: the old song stops at once, so it can never play under the new title. */
-  _select(i) {
+  /** A committed table switch: the old song stops at once, so it can never play under the new title. */
+  _select(i, reason, at = 0) {
     if (!this.queue.entries[i] || this.disposed) return;
+    const from = this.now;
     this._detach();
+    this.mode = 'table';
+    this.replay = null;
     this.queue.index = i;
+    this.tablePos = at;
     this.status = 'loading';
     this.error = null;
-    this._render();
-    if (this.settings.listening) this._load();
+    if (!this.settings.listening) this.status = 'paused';
+    this._log(reason, from, this.now);
+    this._changed('select');
+    if (this.settings.listening) this._load(at);
   }
 
-  async _load() {
-    const gen = this.playGen, entry = this.now;
-    if (!entry) return;
+  /** Play one local item through the same player (replay context). */
+  _selectReplay(item, list, view, reason) {
+    if (this.disposed || !item) return;
+    const from = this.now;
+    // bookmark the table mix once, at the first switch away from it; never overwrite it here
+    if (this.mode === 'table') {
+      const e = this.tableEntry;
+      const pos = this.active?.item === e?.item && this.audio.getAttribute('src') ? this.audio.currentTime : this.tablePos;
+      this.bookmark = e ? { entry: e, index: this.queue.index, time: pos || 0, listening: this.settings.listening } : { entry: null, index: -1, time: 0, listening: this.settings.listening };
+    }
+    this._detach();
+    this.mode = 'replay';
+    this.replay = { list, view, item, ended: false };
+    this.status = 'loading';
+    this.error = null;
+    this._log(reason, from, item);
+    // Play is an explicit request to hear this item
+    if (!this.settings.listening) { this.settings.listening = true; this._save(); }
+    this._changed('select');
+    this._load(0);
+  }
+
+  async _load(at = 0) {
+    const gen = this.playGen, item = this.now;
+    if (!item) return;
     const ctl = this._pending = new AbortController();
     const timer = setTimeout(() => ctl.abort(Object.assign(Error('the track took too long to arrive'), { code: 'deadline' })), ACQUIRE_MS);
-    let url = null;
     try {
-      // the listener's own library fetches exactly this offered asset (its own, or over the peer link)
-      const r = await fetch(`/music/${this.listener.library}/audio`, { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ offer: entry.offer }) });
-      if (!r.ok) { const j = await r.json().catch(() => ({})); throw Error(j.error || `audio ${r.status}`); }
-      const blob = await r.blob();
+      let url, owned = false, bytes = null;
+      if (item.kind === 'offer') {
+        // the listener's own library fetches exactly this offered asset (its own, or over the peer link)
+        const r = await fetch(`/music/${this.listener.library}/audio`, { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ offer: item.entry.offer }) });
+        if (!r.ok) { const j = await r.json().catch(() => ({})); throw Error(j.error || `audio ${r.status}`); }
+        const blob = await r.blob();
+        if (!this._current(gen, item)) return; // replaced, paused or disposed while in flight: drop the bytes
+        url = URL.createObjectURL(blob); owned = true; bytes = blob.size;
+      } else {
+        // retained bytes, re-verified by the listener's owner on every read; the source peer may be gone
+        if (!RETAINED_ID.test(item.libraryId)) throw Error('not a retained library address');
+        url = `/music/${item.library}/retained/${item.libraryId}/audio`;
+      }
       clearTimeout(timer);
-      // a replaced selection, Not listening or disposal while this was in flight: drop the bytes
-      if (gen !== this.playGen || !this.settings.listening || this.disposed || this.now !== entry) return;
-      url = URL.createObjectURL(blob);
-      this.active = { gen, entry, url, bytes: blob.size };
+      this.active = { gen, item, url, owned, bytes, started: false };
       this.audio.src = url;
       this._applyVolume();
+      if (at > 0) {
+        await new Promise((res) => { if (this.audio.readyState >= 1) return res(); const t = setTimeout(res, START_MS); this.audio.addEventListener('loadedmetadata', () => { clearTimeout(t); res(); }, { once: true }); });
+        if (!this._current(gen, item)) return;
+        const d = this.audio.duration;
+        this.audio.currentTime = Math.max(0, Number.isFinite(d) ? Math.min(at, Math.max(0, d - 0.5)) : at);
+      }
       await this._play();
-      if (!this._current(gen, entry)) return;
-      this.lastPlayback = { queueEntryId: entry.queueEntryId, assetId: entry.assetId, bytes: blob.size, startedAt: new Date().toISOString() };
-      this.dispatchEvent(new CustomEvent('track', { detail: entry }));
+      if (!this._current(gen, item)) return;
+      this.lastPlayback = { key: item.key, kind: item.kind, assetId: item.assetId, bytes, startedAt: new Date().toISOString() };
+      this.dispatchEvent(new CustomEvent('track', { detail: item }));
     } catch (e) {
       clearTimeout(timer);
-      if (!this._current(gen, entry)) return; // superseded, opted out or disposed: not failed
-      this._fail(entry, ctl.signal.reason?.message ?? e.message);
+      if (!this._current(gen, item)) return; // superseded, opted out or disposed: not failed
+      this._fail(item, ctl.signal.reason?.message ?? e.message);
     } finally { if (this._pending === ctl) this._pending = null; }
   }
 
-  /** Is this attempt (generation and entry) still the one the listener wants to hear? */
-  _current(gen, entry) { return gen === this.playGen && !this.disposed && this.settings.listening && this.now === entry; }
+  /** Is this attempt (generation and item) still the one the listener wants to hear? */
+  _current(gen, item) { return gen === this.playGen && !this.disposed && this.settings.listening && this.now === item; }
 
   /** Start the loaded audio under the finite start policy (START_MS); the deadline is always released. */
   async _play() {
+    if (!(await this.signal.resume())) throw Error('sound is blocked by the browser: press Play');
     let timer;
     try {
       await Promise.race([this.audio.play(), new Promise((_, no) => { timer = setTimeout(() => no(Error('playback did not start')), START_MS); })]);
@@ -184,57 +291,176 @@ export class Soundtrack extends EventTarget {
   }
 
   /**
-   * One finite failure policy: the queue controller moves past an unusable entry once; a listener
-   * who is not the controller just reports it. There is no retry chain.
+   * One finite failure policy. In the table mix the queue controller moves past an unusable entry
+   * once; a listener who is not the controller just reports it. A replay item that cannot play is a
+   * truthful terminal state with navigation still usable. There is no retry chain.
    */
-  _fail(entry, msg) {
+  _fail(item, msg) {
+    if (this.status === 'failed' && this.error === msg && this._failed === item) return;
+    this._failed = item;
     this.status = 'failed';
     this.error = msg;
     console.warn(`[versus] music: ${msg}`);
-    this._render();
-    if (!this.isController || !entry || entry.skipped || entry !== this.now) return;
-    entry.skipped = true;
-    setTimeout(() => { if (this.now === entry && !this.disposed) this._advance('skip-unusable'); }, 1500);
+    this._changed('status');
+    if (this.mode !== 'table' || !this.isController || !item?.entry || item.entry.skipped || item !== this.now) return;
+    item.entry.skipped = true;
+    setTimeout(() => { if (this.now === item && !this.disposed) this._advance('skip-unusable'); }, 1500);
+  }
+
+  /** Natural completion: the table mix continues; a local replay stops at its song's end. */
+  _ended() {
+    if (this.mode === 'replay') {
+      this.replay.ended = true;
+      this.status = 'replay-ended';
+      this._log('replay-ended', this.now, null);
+      this._changed('status');
+      return;
+    }
+    this._advance('ended');
   }
 
   _advance(reason) {
-    if (this.queue.index + 1 >= this.queue.entries.length) { this._detach(); this.status = 'finished'; this._render(); return; }
+    if (this.queue.index + 1 >= this.queue.entries.length) { this._detach(); this.status = 'finished'; this._log(reason, this.now, null); this._changed('status'); return; }
     this.queue.revision++;
     this.queue.lastChange = { reason, by: reason === 'next' ? this.listener.seat : reason, revision: this.queue.revision };
-    this._select(this.queue.index + 1);
+    this._select(this.queue.index + 1, reason);
   }
 
-  /** Queue controller only: skip to the next track of this table's (local) queue. */
-  next() { if (this.isController) this._advance('next'); }
+  _markPlayed(item) {
+    const now = new Date().toISOString();
+    const p = this.played.find((x) => x.item.key === item.key);
+    if (p) { p.lastAt = now; p.plays++; } else this.played.push({ item, firstAt: now, lastAt: now, plays: 1 });
+    this._changed('played');
+  }
+
+  // --- transport (local to this listener) ------------------------------------------------------
+
+  /** What Previous / Next would do now, with a reason when unavailable. */
+  nav() {
+    const t = this.audio.currentTime || 0;
+    if (this.mode === 'replay') {
+      const { list, item } = this.replay;
+      const i = list.indexOf(item);
+      return {
+        prev: t > RESTART_S && this.active?.item === item ? { ok: true, does: 'restart' } : i > 0 ? { ok: true, does: 'previous' } : { ok: false, why: 'No earlier song in this list' },
+        next: i >= 0 && i + 1 < list.length ? { ok: true, does: 'next' } : { ok: false, why: 'No later song in this list' },
+      };
+    }
+    const cur = this.tableEntry?.item;
+    const earlier = this.played.filter((p) => p.item !== cur).map((p) => p.item);
+    return {
+      prev: cur && t > RESTART_S && this.active?.item === cur ? { ok: true, does: 'restart' } : earlier.length ? { ok: true, does: 'replay-earlier' } : { ok: false, why: 'Nothing earlier has played in this match' },
+      next: !this.isController ? { ok: false, why: 'Only the table host advances the table mix' } : this.queue.index + 1 < this.queue.entries.length ? { ok: true, does: 'next' } : { ok: false, why: 'This is the last song in the table mix' },
+    };
+  }
+
+  previous() {
+    const n = this.nav().prev;
+    if (!n.ok) return;
+    if (n.does === 'restart') { this.audio.currentTime = 0; this._log('restart', this.now, this.now); return; }
+    if (n.does === 'previous') { const { list, item, view } = this.replay; this._selectReplay(list[list.indexOf(item) - 1], list, view, 'replay-previous'); return; }
+    // the most recent song that actually played earlier, opened as a local replay of Played
+    const list = this.played.map((p) => p.item);
+    const cur = this.tableEntry?.item;
+    const target = [...list].reverse().find((x) => x !== cur);
+    this._selectReplay(target, list, 'played', 'previous-earlier');
+  }
+
+  /** Next: the table mix advances (queue controller only); a replay moves along its captured list. */
+  next() {
+    const n = this.nav().next;
+    if (!n.ok) return;
+    if (this.mode === 'replay') { const { list, item, view } = this.replay; this._selectReplay(list[list.indexOf(item) + 1], list, view, 'replay-next'); return; }
+    this._advance('next');
+  }
+
+  /**
+   * Play a row locally. `list` is the ordered playable rows of that view at this moment.
+   * @param {any} item @param {any[]} list @param {'queue'|'played'|'kept'} view
+   */
+  playItem(item, list, view) {
+    this._attachSignal();
+    if (this.mode === 'replay' && this.replay.item === item && !this.replay.ended && this.status !== 'failed') { if (!this.settings.listening) this.togglePlay(); return; }
+    this._selectReplay(item, list.includes(item) ? list : [item], view, 'replay-select');
+  }
+
+  /** Play again after a replay finished (same item, same list). */
+  replayAgain() { if (this.mode === 'replay') this._selectReplay(this.replay.item, this.replay.list, this.replay.view, 'replay-again'); }
+
+  /** Return to table mix: the bookmarked entry, position (clamped) and listening intent. */
+  returnToTable() {
+    if (this.mode !== 'replay') return { ok: true };
+    const b = this.bookmark;
+    const e = b?.entry;
+    const from = this.now;
+    if (!e || !this.queue.entries.includes(e) || e.skipped) {
+      // never start an unrelated song silently: leave the choice to the listener
+      this._detach();
+      this.mode = 'table';
+      this.replay = null;
+      this.bookmark = null;
+      this.status = 'paused';
+      this.error = !this.queue.entries.length ? 'The table mix is unavailable; play a song from Kept or Played' : e ? 'The table song you left could not play; choose one from Queue' : 'The table mix had not started; choose a song from Queue';
+      this._log('return-unavailable', from, null);
+      this._changed('select');
+      return { ok: false, why: this.error };
+    }
+    this.settings.listening = b.listening;
+    this._save();
+    this.bookmark = null;
+    this._select(b.index, 'return', b.time);
+    return { ok: true };
+  }
+
+  seek(t) {
+    if (!this.active || !Number.isFinite(t)) return;
+    const d = this.audio.duration;
+    this.audio.currentTime = Math.max(0, Number.isFinite(d) ? Math.min(t, d - 0.05) : t);
+  }
 
   // --- local listener controls (never change the queue) ----------------------------------------
-  setVolume(v) { this.settings.volume = Math.max(0, Math.min(1, v)); this._applyVolume(); this._save(); }
-  toggleMute() { this.settings.muted = !this.settings.muted; this._applyVolume(); this._save(); this._render(); }
-  toggleListening() {
+  setVolume(v) { this.settings.volume = Math.max(0, Math.min(1, v)); this._applyVolume(); this._save(); this._changed('volume'); }
+  toggleMute() { this.settings.muted = !this.settings.muted; this._applyVolume(); this._save(); this._changed('volume'); }
+  setResponse(mode) { if (['off', 'subtle', 'expressive'].includes(mode)) { this.settings.response = mode; this._save(); this._changed('response'); } }
+  setStill(on) { this.settings.still = !!on; this._save(); this._changed('response'); }
+
+  /**
+   * Play / Pause: Pause keeps the position and stops any acquisition in flight (the listening
+   * intent is off on this device); Play resumes the selected item, or plays a finished replay again.
+   */
+  togglePlay() {
+    this._attachSignal();
+    if (this.mode === 'replay' && this.replay.ended) { this.replayAgain(); return; }
     this.settings.listening = !this.settings.listening;
     this._save();
     if (!this.settings.listening) {
-      // opting out also cancels an acquisition in flight, so it cannot start playing afterwards
       this._pending?.abort(); this._pending = null;
       this.playGen++;
       this.audio.pause();
-    } else this._resume();
-    this._render();
+      this.status = 'paused';
+    } else if (!this.now && this.queue.entries.length) this._select(Math.max(0, this.queue.index), 'start');
+    else this._resume();
+    this._changed('status');
   }
 
-  /** Resume the selected entry: its own loaded audio if that is what is loaded, otherwise fetch it. */
+  /** Back-compatible name for the device listening switch. */
+  toggleListening() { this.togglePlay(); }
+
+  /** Resume the selected item: its own loaded audio if that is what is loaded, otherwise fetch it. */
   _resume() {
-    const entry = this.now;
-    if (!entry) return;
-    if (this.active && this.active.entry === entry && this.audio.getAttribute('src')) {
-      // this attempt is bound to its entry and generation (R11-02): a late result after Next, Not
-      // listening or disposal is ignored; only a still-current attempt can fail its own entry
+    const item = this.now;
+    if (!item) return;
+    if (this.active && this.active.item === item && this.audio.getAttribute('src')) {
+      // this attempt is bound to its item and generation (R11-02): a late result after Next, Pause
+      // or disposal is ignored; only a still-current attempt can fail its own item
       const gen = this.active.gen = ++this.playGen;
-      this._play().catch((e) => { if (this._current(gen, entry)) this._fail(entry, e.message); });
-    } else this._select(this.queue.index);
+      this.status = 'loading';
+      this._play().catch((e) => { if (this._current(gen, item)) this._fail(item, e.message); });
+    } else if (this.mode === 'replay') { this.status = 'loading'; this._load(0); }
+    else this._select(this.queue.index, 'resume', this.tablePos);
   }
 
-  /** Lower the music while the opponent's voice is actually playing. */
+  /** Lower the music while the opponent's voice is actually playing (an independently requested conversation). */
   setDucked(on) {
     const target = on ? 0.28 : 1;
     clearInterval(this._duckTimer);
@@ -245,40 +471,67 @@ export class Soundtrack extends EventTarget {
     }, 40);
   }
 
-  _applyVolume() { this.audio.volume = this.settings.muted ? 0 : this.settings.volume * this.duck; }
+  /** One owner of effective gain: the graph's gain once attached, otherwise the element's volume. */
+  _applyVolume() {
+    const v = this.settings.muted ? 0 : this.settings.volume * this.duck;
+    if (this.signal.gain) { this.audio.volume = 1; this.signal.setGain(v); } else this.audio.volume = v;
+  }
+
   _save() { try { localStorage.setItem(KEY, JSON.stringify(this.settings)); } catch { /* storage unavailable */ } }
 
-  // --- Keep (Milestone B) ---------------------------------------------------------------------
+  /** The read-only music frame for the setting (companion §6.2); bound to the exact active item. */
+  sample(dt, opts) {
+    const a = this.active;
+    const live = !!a && a.gen === this.playGen && a.item === this.now;
+    const playing = live && this.status === 'playing' && !this.audio.paused && !this.audio.ended;
+    return this.signal.sample(dt, { itemKey: live ? a.item.key : null, assetId: live ? a.item.assetId : null, recordingId: live ? a.item.recordingId : null, generation: live ? a.gen : -1,
+      playing, listening: this.settings.listening, muted: this.settings.muted, time: this.audio.currentTime || 0, duration: this.audio.duration }, opts);
+  }
+
+  // --- Keep (HF6-03) -----------------------------------------------------------------------------
+
+  /** The encounter a Keep press targets: the current offer item (captured at activation). */
+  keepTarget(item = this.now) { return item?.kind === 'offer' && !item.entry.own ? item.entry : null; }
+
+  /** Is this exact recording already retained in the listener's library? (by asset, not title) */
+  isRetained(assetId) { return !!this.retained?.some((r) => r.assetId === assetId); }
 
   /**
-   * Keep the current (or given) entry: saved reference first, then verified retention. Keyed by the
-   * encounter, so a second introducer of the same bytes is recorded too; a repeated click on the
-   * same encounter is idempotent, and both failure states retry through the owner's idempotent Keep.
-   * `heardAt` is only the time the audio really started here; an unheard save says so.
+   * Keep an encounter: saved reference first, then verified retention. Keyed by the encounter, so a
+   * second introducer of the same bytes is recorded too (the owner does not download them twice); a
+   * repeated press on the same encounter is idempotent and never deletes. Failures retry through
+   * the owner's idempotent Keep. `heardAt` is only the time the audio really started here.
+   * Nothing here touches the audio element, the selection, the gain or the view's navigation.
    */
-  async keep(entry = this.now) {
-    if (!entry || entry.own) return null;
-    const k = this.keeps.get(entry.queueEntryId);
-    if (k && !RETRYABLE.has(k.state)) return k;
-    this.keeps.set(entry.queueEntryId, { state: 'saving' });
-    this._render();
-    const heardAt = this.heard.get(entry.queueEntryId) ?? null;
+  async keep(item = this.now) {
+    const entry = this.keepTarget(item);
+    if (!entry) return null;
+    const key = entry.queueEntryId;
+    const k = this.keeps.get(key);
+    if (k && !RETRYABLE.has(k.state)) return k; // in flight or already kept
+    this.keeps.set(key, { state: 'saving' });
+    this._changed('keep');
+    const heardAt = this.heard.get(key) ?? null;
     try {
       const st = await (await call(`/music/${this.listener.library}/keep`, {
         offer: entry.offer,
         // who introduced it (the participant at this table) is recorded apart from who made it
         // (the offer's own credits, which the owner imports unchanged)
-        discovery: { app: 'hapa-versus', sessionId: this.sessionId, playlistId: entry.playlistId, queueRevision: this.queue.revision, entryId: entry.queueEntryId, heardAt,
+        discovery: { app: 'hapa-versus', sessionId: this.sessionId, playlistId: entry.playlistId, queueRevision: this.queue.revision, entryId: key, heardAt,
           introducer: entry.contributor.participant?.avatarId ? { kind: 'avatar', id: entry.contributor.participant.avatarId, label: entry.contributor.participant.label } : { kind: 'participant', id: entry.contributor.nodeId, label: entry.contributor.participant?.label ?? entry.contributor.label } },
       })).json();
-      this.keeps.set(entry.queueEntryId, { ...st, heard: !!heardAt });
-      if (!k) this.dispatchEvent(new CustomEvent('kept', { detail: { entry, state: st, heard: !!heardAt } })); // the reference is durably saved now
-      this._poll(entry.queueEntryId, st.acquisitionId);
-      this._render();
+      if (this.disposed) return st;
+      this.keeps.set(key, { ...st, heard: !!heardAt, durable: true });
+      this._announce(`Kept “${entry.title}”${st.state === 'available-offline' ? ' · available offline' : ''}`);
+      this._changed('keep');
+      if (TERMINAL.has(st.state)) this.refreshKept().catch(() => {});
+      else this._poll(key, st.acquisitionId);
       return st;
     } catch (e) {
-      this.keeps.set(entry.queueEntryId, { state: 'keep-failed', error: e.message });
-      this._render();
+      if (this.disposed) return null;
+      this.keeps.set(key, { state: 'keep-failed', error: e.message });
+      this._announce(`Keep failed: ${e.message}. Playback continues.`);
+      this._changed('keep');
       return null;
     }
   }
@@ -290,59 +543,73 @@ export class Soundtrack extends EventTarget {
       await new Promise((r) => setTimeout(r, i < 20 ? 500 : 2000));
       try {
         const st = await (await call(`/music/${this.listener.library}/keep/${acq}`)).json();
-        if (this.keeps.get(key)?.acquisitionId !== acq) return;
-        this.keeps.set(key, { ...st, heard: cur.heard });
-        this._render();
+        if (this.disposed || this.keeps.get(key)?.acquisitionId !== acq) return;
+        this.keeps.set(key, { ...st, heard: cur.heard, durable: true });
+        if (st.state === 'available-offline') this._announce('Available offline');
+        this._changed('keep');
+        if (TERMINAL.has(st.state)) { this.refreshKept().catch(() => {}); return; }
       } catch { /* the owner is restarting; keep polling */ }
     }
   }
+
+  /** A polite one-time announcement for save / error changes (the deck renders it in a live region). */
+  _announce(text) { this.announcement = { text, at: Date.now() }; this.dispatchEvent(new CustomEvent('announce', { detail: text })); }
+
+  /** Read the durable library: retained membership and saved discoveries (data only; no playback). */
+  async refreshKept() {
+    const epoch = this.epoch, lib = this.listener.library;
+    const [ret, enc] = await Promise.allSettled([call(`/music/${lib}/retained`).then((r) => r.json()), call(`/music/${lib}/encounters`).then((r) => r.json())]);
+    if (epoch !== this.epoch || this.disposed) return;
+    if (ret.status === 'fulfilled') this.retained = (ret.value.entries ?? []).filter((r) => RETAINED_ID.test(r.libraryId));
+    if (enc.status === 'fulfilled') this.encounters = enc.value.encounters ?? [];
+    this.keptError = ret.status === 'rejected' ? ret.reason.message : null;
+    this._changed('kept');
+  }
+
+  /**
+   * The Kept rows: one per exact retained asset (its membership aggregates introductions), then
+   * saved discoveries whose audio is not retained, grouped by exact asset. Similar titles stay apart.
+   */
+  keptRows() {
+    const lib = this.listener.library;
+    const rows = [];
+    this._keptItems ??= new Map();
+    const itemFor = (r) => { let it = this._keptItems.get(r.libraryId); if (!it) { it = retainedItem(r, lib); this._keptItems.set(r.libraryId, it); } return it; };
+    const retainedAssets = new Set();
+    for (const r of [...(this.retained ?? [])].sort((a, b) => String(b.retainedAt).localeCompare(String(a.retainedAt)))) {
+      retainedAssets.add(r.assetId);
+      rows.push({ key: r.libraryId, item: itemFor(r), availability: 'available-offline', introductions: r.introductions ?? [] });
+    }
+    const byAsset = new Map();
+    for (const d of this.encounters ?? []) {
+      if (retainedAssets.has(d.assetId)) continue;
+      const g = byAsset.get(d.assetId) ?? { key: d.assetId, discoveries: [] };
+      g.discoveries.push(d); byAsset.set(d.assetId, g);
+    }
+    for (const g of [...byAsset.values()].sort((a, b) => String(b.discoveries.at(-1).savedAt).localeCompare(String(a.discoveries.at(-1).savedAt)))) {
+      const d = g.discoveries.at(-1);
+      // a current-session offer of the exact same asset can still be played while its source is here
+      const live = this.queue.entries.find((e) => e.assetId === d.assetId && !e.skipped);
+      rows.push({ key: g.key, item: live?.item ?? null, availability: d.acquisition?.state ?? 'unavailable', title: d.title, credits: d.credits, assetId: d.assetId, recordingId: d.recordingId,
+        introductions: g.discoveries.map((x) => ({ discoveryId: x.discoveryId, introducer: x.introducer, encounter: x.encounter })), liveOffer: !!live });
+    }
+    return rows;
+  }
+
+  /** Played this match, in the order playback first started. */
+  playedRows() { return this.played.map((p) => ({ key: p.item.key, item: p.item, plays: p.plays, lastAt: p.lastAt })); }
+
+  /** The table mix in contribution order. */
+  queueRows() { return this.queue.entries.map((e, i) => ({ key: e.queueEntryId, item: e.item, index: i, skipped: !!e.skipped })); }
+
+  /** Developer diagnostics: recent transport changes with cause, item and generation. */
+  diagnostics() { return { mode: this.mode, status: this.status, gen: this.playGen, now: this.now?.key ?? null, tableIndex: this.queue.index, bookmark: this.bookmark ? { entry: this.bookmark.entry?.queueEntryId ?? null, time: this.bookmark.time, listening: this.bookmark.listening } : null, transport: [...this.transport] }; }
 
   dispose() {
     this.disposed = true;
     this.epoch = -1;
     clearInterval(this._duckTimer);
     this._detach();
-    this.el.remove();
-  }
-
-  // --- view -----------------------------------------------------------------------------------
-
-  _render() {
-    if (this.disposed) return;
-    const e = this.now, s = this.settings;
-    const credit = (c) => {
-      const who = c?.creators?.length ? c.creators.join(', ') : null;
-      return who ? `by ${who}` : c?.generator?.name ? `made with ${c.generator.name}` : 'creator not stated';
-    };
-    const k = e ? this.keeps.get(e.queueEntryId) : null;
-    const unheard = e && !this.heard.has(e.queueEntryId) ? ' (not heard yet: saved as unheard)' : '';
-    const keepBtn = !e ? null : e.own ? h('span', { class: 'dim', title: 'This recording is from your own library' }, 'yours')
-      : !k ? h('button', { class: 'np-keep', title: `Save this song to your library: a saved reference first, then a verified copy${unheard}`, onclick: () => this.keep() }, '♡ Keep')
-        : RETRYABLE.has(k.state) ? h('span', { class: 'np-kept' }, h('span', { class: `np-kept ${k.state}`, title: k.error?.message ?? k.error ?? '' }, k.state === 'keep-failed' ? 'Keep failed' : STATE_LABEL[k.state]), ' ', h('button', { class: 'np-keep', title: 'Try again (the library keeps one record of this encounter)', onclick: () => this.keep() }, 'Retry'))
-          : h('span', { class: `np-kept ${k.state}`, title: k.heard === false ? 'Saved without having been heard here' : '' }, `${STATE_LABEL[k.state] ?? k.state}${k.heard === false ? ' · unheard' : ''}`);
-    const label = this.status === 'preparing' ? 'Gathering tracks…' : this.status === 'unavailable' ? 'Music unavailable — the match plays without it' : this.status === 'failed' ? `Music paused: ${this.error}` : this.status === 'finished' ? 'Queue finished' : !e ? 'Music ready' : null;
-    this.el.replaceChildren(...[
-      h('span', { class: 'np-icon', 'aria-hidden': 'true' }, '♪'),
-      e && !label ? h('span', { class: 'np-title' }, h('b', {}, e.title), h('small', {}, ` · ${e.own ? 'your track' : `from ${e.contributor.label}`} · ${credit(e.credits)}`)) : h('span', { class: 'np-title dim' }, label ?? ''),
-      e && (this.status === 'loading' || !s.listening) ? h('span', { class: 'dim' }, s.listening ? 'loading…' : 'not listening') : null,
-      keepBtn,
-      h('button', { 'aria-pressed': String(!s.listening), title: 'Listen to the table music on this device (does not change the queue)', onclick: () => this.toggleListening() }, s.listening ? 'Listening' : 'Not listening'),
-      h('button', { 'aria-label': s.muted ? 'Music muted' : 'Mute music', 'aria-pressed': String(s.muted), title: 'Music volume on this device only', onclick: () => this.toggleMute() }, s.muted ? '🔇' : '♫'),
-      h('input', { type: 'range', min: 0, max: 1, step: 0.05, value: s.volume, 'aria-label': 'Music volume (this device)', oninput: (ev) => this.setVolume(Number(ev.target.value)) }),
-      h('button', { 'aria-expanded': String(!!this.showEncounters), title: 'Songs you kept (from your library\'s own record)', onclick: () => this.toggleEncounters() }, 'Kept'),
-      this.isController && e ? h('button', { title: `Next track in this table's queue (local to this browser; queue revision ${this.queue.revision})`, onclick: () => this.next() }, 'Next ⏭') : null,
-      this.showEncounters ? h('div', { class: 'np-encounters' }, this.encounters == null ? h('span', { class: 'dim' }, 'Loading…') : !this.encounters.length ? h('span', { class: 'dim' }, 'Nothing kept yet.')
-        : this.encounters.slice(-6).reverse().map((d) => h('div', {}, h('b', {}, d.title ?? d.recordingId), h('small', { class: 'dim' }, ` · introduced by ${d.introducer?.label ?? 'unknown'}${d.encounter?.app ? ` in ${d.encounter.app}` : ''} · ${STATE_LABEL[d.acquisition?.state] ?? d.acquisition?.state ?? 'reference saved'}`)))) : null,
-    ].filter(Boolean));
-  }
-
-  /** The optional Songs encountered list: what this listener kept, as the library records it. */
-  async toggleEncounters() {
-    this.showEncounters = !this.showEncounters;
-    this.encounters = null;
-    this._render();
-    if (!this.showEncounters) return;
-    try { this.encounters = (await (await call(`/music/${this.listener.library}/encounters`)).json()).encounters; } catch (e) { this.encounters = []; this.error = e.message; }
-    this._render();
+    this.signal.dispose();
   }
 }

@@ -220,12 +220,14 @@ export class BoardView {
   toBoard(v) { return { x: v.x / S, y: -v.z / S }; }
 
   _buildLights() {
-    // a stable warm key and a cool fill (Design Companion ch.2); the light stays with the world
-    const hemi = new THREE.HemisphereLight(0xc9d8f0, 0x4a3a28, 1.05);
-    const fill = new THREE.DirectionalLight(0x9db8ff, 0.7);
+    // a stable warm key and a cool fill (Design Companion ch.2); the light stays with the world and
+    // never follows the music. Dusk island (Assignment 13): a slightly cooler sky and darker bounce,
+    // with the key kept strong enough that units, Cards and legal targets read as before
+    const hemi = new THREE.HemisphereLight(0xbccbe2, 0x3a3430, 1.02);
+    const fill = new THREE.DirectionalLight(0x93afef, 0.72);
     fill.position.set(-this.w * S * 0.6, 30, -this.h * S * 1.2);
     this.root.add(fill);
-    const sun = new THREE.DirectionalLight(0xffdcae, 2.9);
+    const sun = new THREE.DirectionalLight(0xffd6a8, 2.85);
     sun.position.set(this.w * S * 0.2, 60, 30);
     sun.target.position.copy(this.center);
     sun.castShadow = true;

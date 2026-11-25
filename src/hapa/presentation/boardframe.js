@@ -1,5 +1,6 @@
 /**
- * The board as a crafted object (Design Companion ch.2 "slate / ivory / brass", brushed-pixel
+ * The board as a crafted object (Design Companion ch.2 "slate / ivory / brass"; the dusk island
+ * table's ink slate and aged brass, Assignment 13; brushed-pixel
  * materials; review 03 R3-04; human-feedback addendum 01 §9). A carved slate frame with a brass
  * inlay around the playable field, stone trays under each owner's real Card banks (Minor, Major,
  * row Enchantments) and plinths under the Fire Pits and Mana basins, so the banks read as part of
@@ -38,9 +39,10 @@ function stoneTexture(base, seed) {
 export function buildBoardFrame(root, { w, h, S }) {
   const g = new THREE.Group();
   g.name = 'board-frame';
-  const slate = new THREE.MeshStandardMaterial({ map: stoneTexture('#3a4250', 7), roughness: 0.95, flatShading: true });
-  const tray = new THREE.MeshStandardMaterial({ map: stoneTexture('#2a2f38', 11), roughness: 1, flatShading: true });
-  const brass = new THREE.MeshStandardMaterial({ color: 0xc9a65e, metalness: 0.75, roughness: 0.35 });
+  // dusk island table (Assignment 13 §3D): matte ink slate bands and trays, restrained aged brass
+  const slate = new THREE.MeshStandardMaterial({ map: stoneTexture('#2c3b44', 7), roughness: 0.95, flatShading: true });
+  const tray = new THREE.MeshStandardMaterial({ map: stoneTexture('#1d2a32', 11), roughness: 1, flatShading: true });
+  const brass = new THREE.MeshStandardMaterial({ color: 0xb99252, metalness: 0.6, roughness: 0.42 });
   const box = (x0, x1, y0, y1, top, mat, rep = 4) => {
     const W = (x1 - x0) * S, D = (y1 - y0) * S;
     const m = new THREE.Mesh(new THREE.BoxGeometry(W, top, D), mat.clone());

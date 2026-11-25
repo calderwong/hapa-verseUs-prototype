@@ -55,6 +55,7 @@ import { PhaseAgreement, agreementPolicy } from '../protocol/agreement.js';
 import { readPreset, savePreset, clearPreset, resolveLaunch, launchURL, describeConfig, ROLE_NAME as CONTROLLER_NAME } from './dev-preset.js';
 
 const U = 1e6;
+const reducedMotionPref = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SUIT = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠', wildcard: '✱' };
 const SUIT_NAME = { wands: 'Wands', pentacles: 'Pentacles', cups: 'Cups', swords: 'Swords', wildcard: 'Wildcard' };
 const ROLE_ABBR = { swordsman: 'Sw', pikeman: 'Pk', archer: 'Ar', mage: 'Mg', priest: 'Pr', center: '★' };
@@ -165,9 +166,9 @@ export class VersusApp {
     // Versus reads its own keys and pointers; the engine's game Input (which claims Enter, Space and
     // Tab on the window for its adventure bindings) listens to a detached target, so keyboard focus
     // and button activation work in the HUD (the engine's documented inputTarget option)
-    this.engine = new Engine({ container: this.el.world, clearColor: 0x17212d, maxPixelRatio: 2, inputTarget: new EventTarget() });
+    this.engine = new Engine({ container: this.el.world, clearColor: 0x1b2a35, maxPixelRatio: 2, inputTarget: new EventTarget() });
     this.engine.renderer.toneMappingExposure = 1.12;
-    this.engine.scene.fog = new THREE.Fog(0x17212d, 160, 320);
+    this.engine.scene.fog = new THREE.Fog(0x33464f, 300, 860); // cool coastal dusk haze (Assignment 13 §3D)
     // restrained post (Design Companion ch.2): no depth blur, grain or chromatic aberration over
     // playable territory; a soft bloom for the inlays and short effects; a gentle vignette
     try {
@@ -353,11 +354,12 @@ export class VersusApp {
     this.viewSeat = seats.A === 'human' ? 'A' : seats.B === 'human' ? 'B' : 'A';
     this._initEngine();
     if (this.view) { this.engine.scene.remove(this.view.root); }
+    this.scenery?.dispose?.(); // the previous match's setting: geometry, materials, textures and lights
     this.view = new BoardView(this.engine.scene, this.ctx);
-    // decorative diorama around the field (outside the playable rectangle and its banks)
+    // the dusk island table around the field (outside the playable rectangle and its banks)
     this.scenery = null;
     const v = this.view, Sx = 1.5;
-    buildScenery(v.root, { x0: -6 * Sx, x1: (v.w + 6) * Sx, z0: -(v.h + 12) * Sx, z1: 12 * Sx }).then((sc) => { if (this.view === v) this.scenery = sc; }).catch((err) => console.warn('[versus] scenery unavailable', err));
+    buildScenery(v.root, { x0: -6 * Sx, x1: (v.w + 6) * Sx, z0: -(v.h + 12) * Sx, z1: 12 * Sx, home: this.viewSeat }).then((sc) => { if (this.view === v) this.scenery = sc; else sc.dispose(); }).catch((err) => console.warn('[versus] scenery unavailable', err));
     this.cam?.dispose();
     this.cam = new BoardCamera(this.engine.camera, this.el.world, { center: this.view.center, size: this.view.size, subject: this.view.subject });
     this.cam.groundAt = (cx, cy) => this._groundAt(cx, cy);
@@ -406,7 +408,7 @@ export class VersusApp {
     const seat = bot[0];
     const rev = this.session.manifest.controllers?.[seat]?.revision ?? 'heuristic-bot/0.2.0';
     this.table = new Table({ world: this.el.world, scene: { root: this.view.root, board: { w: this.view.w, h: this.view.h, S: MEMBER_S } }, sessionId: this.session.manifest.matchId, epoch: gen, avatarSeat: seat, humanSeat: other(seat), avatarId: table.avatarId, songIds: table.songIds ?? [],
-      controller: this.deciders?.[seat] ? { kind: 'model-assisted', revision: rev, label: 'a local model (through Hapa Harness) choosing among my legal moves, with the heuristic bot as fallback' } : { kind: 'heuristic', revision: rev, label: `the heuristic bot (${rev}), not a model` }, partyLabel: (id) => spokenParty(this.state, id) });
+      controller: this.deciders?.[seat] ? { kind: 'model-assisted', revision: rev, label: 'a local model (through Hapa Harness) choosing among my legal moves, with the heuristic bot as fallback' } : { kind: 'heuristic', revision: rev, label: `the heuristic bot (${rev}), not a model` }, partyLabel: (id) => spokenParty(this.state, id), onLayout: () => this._syncFreeSpace() });
     this.table.start().catch((err) => console.warn('[versus] table unavailable', err));
     // the Home composition now includes the seated opponent (addendum 05 §3): fitted once at setup
     if (this.cam) { this.cam.homeExtras = () => this.table?.homePoints() ?? []; if (seat === other(this.viewSeat)) this.cam.home(); }
@@ -1541,7 +1543,9 @@ export class VersusApp {
     if (!this.cam) return;
     this.cam.update(dt, this.keys);
     this._stepPlayback(dt);
-    this.scenery?.update(dt);
+    // the setting responds to the music actually playing (read-only; never a rule, camera or target)
+    const music = this.table?.music;
+    this.scenery?.update(dt, music ? { frame: music.sample(dt, { accentGap: music.settings.response === 'expressive' ? 3 : 6 }), response: music.settings.response, still: music.still, busy: !!(this.cardDrag?.active || this.cam?.dragging || this.tool) } : { frame: null, response: 'off', still: reducedMotionPref(), busy: false });
     this.view.update(dt, this.engine.camera);
     if (this.table) this.table.update(this.engine.camera, { width: this.el.world.clientWidth, height: this.el.world.clientHeight });
     this.view.viewportH = this.engine.renderer.domElement.clientHeight;
@@ -1614,13 +1618,18 @@ export class VersusApp {
     const w = this.el.world.getBoundingClientRect();
     const edge = (el) => (el && !el.hidden && getComputedStyle(el).display !== 'none' ? el.getBoundingClientRect() : null);
     const nav = edge(this.el.roster), dec = edge(this.el.decision), ord = edge(this.el.orders);
-    const right = Math.max(dec ? w.right - dec.left + 6 : 0, ord ? w.right - ord.left + 6 : 0);
-    return { left: nav ? Math.max(0, nav.right - w.left + 6) : 0, right };
+    const drawers = Math.max(dec ? w.right - dec.left + 6 : 0, ord ? w.right - ord.left + 6 : 0);
+    // an open Music drawer joins the composition (Assignment 13 §3E): it stands beside the other
+    // drawers (--music-r) and the free band ends at its left edge
+    const mus = this.table?.musicEl, open = mus?.classList.contains('drawer-open') ? mus.getBoundingClientRect() : null;
+    const right = Math.max(drawers, open && open.width ? w.right - open.left + 6 : 0);
+    return { left: nav ? Math.max(0, nav.right - w.left + 6) : 0, right, drawers };
   }
 
   _syncFreeSpace() {
     const f = this._freeSpace(), st = this.el.world.style;
-    const l = `${Math.round(f.left)}px`, r = `${Math.round(f.right)}px`;
+    const l = `${Math.round(f.left)}px`, r = `${Math.round(f.right)}px`, mr = `${Math.round(f.drawers)}px`;
+    if (st.getPropertyValue('--music-r') !== mr) st.setProperty('--music-r', mr);
     if (st.getPropertyValue('--free-l') !== l || st.getPropertyValue('--free-r') !== r) {
       st.setProperty('--free-l', l); st.setProperty('--free-r', r);
       this._avoidCache = null;
