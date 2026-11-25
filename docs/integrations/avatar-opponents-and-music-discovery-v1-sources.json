@@ -1,0 +1,1242 @@
+{
+  "schema": "hapa.versus.integration-research.v1",
+  "review_date": "2026-11-24",
+  "proposal": "avatar-opponents-and-music-discovery-v1.md",
+  "status": "Future design, not implementation or live qualification",
+  "source_pins": {
+    "calderwong/hapa-avatar-builder": [
+      "c7e16f4ddba3d2278f257fc76fab98d726a78e82"
+    ],
+    "calderwong/hapa-harness": [
+      "c3a0f63568fe86e2136877dec8dc0309495c8205"
+    ],
+    "calderwong/hapa-mesh-avatar": [
+      "a6fc5111f1e772548a4c241187e59d8fd82daeee"
+    ],
+    "calderwong/hapa-overwind-node": [
+      "086d4fe148680de990b07d1008949ebae0f26b94"
+    ],
+    "calderwong/hapa-song-registry": [
+      "0276cc211cb4db71abfaf910c49c062386e463f5"
+    ],
+    "calderwong/hapa-verseUs-prototype": [
+      "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "8505ec97b95e0fac4975098856c2a99ba43e74f4"
+    ]
+  },
+  "versus_documentation_head_observed": "8505ec97b95e0fac4975098856c2a99ba43e74f4",
+  "engine_gitlink_reviewed": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "sources": [
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "AGENTS.md",
+      "git_blob_sha": "f197fecd9c21e0d3c2ed6d4267ff14a8a9c107e8",
+      "source_sha256": "b344fbc0cde9980aff41555ecd925f334482fb71f464674c2c62453bd5edf841",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/AGENTS.md",
+      "research_groups": [
+        "avatar",
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "README.md",
+      "git_blob_sha": "e4d2ac770eee58a69133b96a37cc69e50b7597d1",
+      "source_sha256": "a10a371e5c50bc171e10c2ff6bd7d472fb7e35344665c997184a1cfa5479f3be",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/README.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/API_CLI_UI_PARITY.md",
+      "git_blob_sha": "89bf703e9521c743c3614d288ae871fd1f26da57",
+      "source_sha256": "889ea9ceb5c87081b189fedf702dc66bf696fd34f1912c696df8ef30f8f8171b",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/API_CLI_UI_PARITY.md",
+      "research_groups": [
+        "avatar",
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/AVATAR_AGENT_CONTRACT.md",
+      "git_blob_sha": "b60fd12656f2efeafc528faa1d3994584b61e85a",
+      "source_sha256": "30872c9121035a755868ce29cd6da10ed61772ecaa110f4ea2a0fc83abc61df0",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/AVATAR_AGENT_CONTRACT.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/AVATAR_CARD_PROTOCOL.md",
+      "git_blob_sha": "cace2babeda419606eff3f8f2603c845c79d3611",
+      "source_sha256": "14494b8a28008ef0f48586013f1104cb96552aa20985d2dba1c4360b775a03a2",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/AVATAR_CARD_PROTOCOL.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/AVATAR_VOICE_CARDS.md",
+      "git_blob_sha": "c81e935eedf650dd0a0a008dd9e5200e88d54e04",
+      "source_sha256": "6aea4a6b952fb800e55319081db35e196d5fe157870a4ffde67bc89eea0a0d65",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/AVATAR_VOICE_CARDS.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/CARD_HYPERCORE_CUSTODY.md",
+      "git_blob_sha": "1a29c3d6e9b483cb0c4c537afaea3e2176589cd6",
+      "source_sha256": "5a3378e479bb54bcb608abe397a64137e154970f32ff925606a9d96bd593a21b",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/CARD_HYPERCORE_CUSTODY.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/MOTION_AVATAR_SOURCES.md",
+      "git_blob_sha": "c0d31f4459356032ac5280f9a0bd246619e8ff3d",
+      "source_sha256": "6bbfcfff44f1d31db5f89a7d0c29a442b76fc4ac5d3c36a082c75b0379f33248",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/MOTION_AVATAR_SOURCES.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "docs/SONG_CARD_MINTING.md",
+      "git_blob_sha": "5654d1d9a1383bfea1cad1d5fcce545c5c19623b",
+      "source_sha256": "0139a29469e9b03883b70482aabc7c70c84208f3002016cc4473116f4e974b49",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/docs/SONG_CARD_MINTING.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "package.json",
+      "git_blob_sha": "3aab3b6a484345aa3edfff3e3cd43e31bab90a95",
+      "source_sha256": "1f756d47d4abb0cf08aa993b112e5157ecd30069e888533caa6e278d0452b4df",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/package.json",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/api.mjs",
+      "git_blob_sha": "40b4d1c0a5232bab623f093760a4506a0bc7854e",
+      "source_sha256": "ea7edc5fd5bcc1fb7c0280e549e8adb290aa2adb178d7a34c1e72018be389995",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/api.mjs",
+      "research_groups": [
+        "avatar",
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/audio-atlas-routes.mjs",
+      "git_blob_sha": "9682fe4436ea3cca165bcd0a3ba4b3aacdd60f52",
+      "source_sha256": "0a96dd34200f61441ac28ef77968a2290d3d0a134b3960fd87304aa567eb327d",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/audio-atlas-routes.mjs",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/avatar-voice-consumer.mjs",
+      "git_blob_sha": "bb0a22941c1485942bdd65dd1f31deb15c0112dd",
+      "source_sha256": "c928947a4c8eccf65c8238522658ef59b45374e45acb6990fece68f488592f35",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/avatar-voice-consumer.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/avatar-voice-provider.mjs",
+      "git_blob_sha": "b90e7fb54e7f3afcf007d7530e9f4606e16740e7",
+      "source_sha256": "99f010f4ba778fbd7a565bff424792eb996bc90d751bd21a92649924a6604bad",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/avatar-voice-provider.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/avatar-voice-routes.mjs",
+      "git_blob_sha": "52550a2d976ca3cb91bf9674462fe0df0d66711a",
+      "source_sha256": "03dfc31064b246f40c80ceebda7432eafed26cd68f80b03df13349c2f0ac4323",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/avatar-voice-routes.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/avatar-voice.mjs",
+      "git_blob_sha": "581a8ee7cde305b710561a29940fcd5e55c7dcce",
+      "source_sha256": "3b529882295ce96407aedfc1e2976573aca08d41e568f8a33f4c67808feeb38e",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/avatar-voice.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/card-custody-service.mjs",
+      "git_blob_sha": "662aa1cdac93378768c0a7e5ebb961512b19e726",
+      "source_sha256": "d1c99f782175d094e3db81c1b8e688465aa5666e26f1b9643df783aeea7289c1",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/card-custody-service.mjs",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/card-origin-announcement-peer-worker.mjs",
+      "git_blob_sha": "f6f8633ad23e05af3cf739c375d61a4ebcf5a272",
+      "source_sha256": "9fec4d74573e28ce7828acf07450f1c06bffe0322f41ac54f4642cf27afccfb2",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/card-origin-announcement-peer-worker.mjs",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/card-origin-announcement-protocol.mjs",
+      "git_blob_sha": "bb12cdac5c2af909d5ba94c8f853967e636710ca",
+      "source_sha256": "ed63d5a6207f092ec4195722db357765d03c3d904c25ae412f5d1af6eaff53ef",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/card-origin-announcement-protocol.mjs",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/echo-runtime-media-route.mjs",
+      "git_blob_sha": "55d278d43f5e252b8c177407d46acc34aea315d4",
+      "source_sha256": "f2431760abebdb6e2d97fc52f967d6a3e9673898066bc8f242d0009d7f6e932d",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/echo-runtime-media-route.mjs",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/echo-score-dust-sessions.mjs",
+      "git_blob_sha": "26e4bdfeec84fa7cb9a06f76c0b1c90746d6c48b",
+      "source_sha256": "7092e96e700adaab71e99662acc9bf6a270cac62952c1b4d9ba91c873e706068",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/echo-score-dust-sessions.mjs",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/file-serving.mjs",
+      "git_blob_sha": "c195e44862e95c7fc50ea06c824b758d9b81815c",
+      "source_sha256": "4e3537323b154c6d18b19100ea252017e37ac8d43f1af3475643a47b136b5a0d",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/file-serving.mjs",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "server/song-audio-upload.mjs",
+      "git_blob_sha": "a8afaa7a80d4d1f316645fbbc1b93cd07b8829d0",
+      "source_sha256": "7af24167527db9b5b48b4fdcea9e410cf6f1b5c646a409385e2a6b4f8e2b5d52",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/server/song-audio-upload.mjs",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/domain/avatar-voice.js",
+      "git_blob_sha": "6cf19d0a966248e63fc8efbd51207423ec56c46d",
+      "source_sha256": "ebc6d83c9dd5f18f6729e5e42d7fd310def555526dba544acf2dc45988260e8d",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/domain/avatar-voice.js",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/domain/avatar.js",
+      "git_blob_sha": "a6dd1bc8840e9efa8e4d8f1b3b028842e93d4d32",
+      "source_sha256": null,
+      "verification": "source locator only",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/domain/avatar.js",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/domain/card-custody.js",
+      "git_blob_sha": "9511d853c477972b5503f11fa1af7088a28601b4",
+      "source_sha256": "789092da7edf253bf421036a886ae25a43412d96ddb0ad5d74bfbdc3451d3069",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/domain/card-custody.js",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/domain/echo-playlist-manifest.js",
+      "git_blob_sha": "2970ed2866086fc01f30598933c7a9068522adff",
+      "source_sha256": "1a9994dbea1b38013a2706950328bfa2cb2ac6705ef710ab0f829fd567130885",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/domain/echo-playlist-manifest.js",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/domain/echo-score-dust-shared-play.js",
+      "git_blob_sha": "792c5a1c4bcd88886c70036e6649fef4dd8a1acb",
+      "source_sha256": "0bcb3a3846f8346e77c02413d8a700a540435fa8f2615e9674936b5834f1adfb",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/domain/echo-score-dust-shared-play.js",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-avatar-builder",
+      "commit": "c7e16f4ddba3d2278f257fc76fab98d726a78e82",
+      "path": "src/domain/song.js",
+      "git_blob_sha": "1b7e8ab0a770bf72472bd45e1cee5db883b6bd5a",
+      "source_sha256": "aba63c69338e926b4a6312b004ec004ec0a47d556ed045aefb579656f61a36f5",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-avatar-builder/blob/c7e16f4ddba3d2278f257fc76fab98d726a78e82/src/domain/song.js",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-harness",
+      "commit": "c3a0f63568fe86e2136877dec8dc0309495c8205",
+      "path": "AGENTS.md",
+      "git_blob_sha": "1173e186f3b05e841c9b495831f3f14d0922de80",
+      "source_sha256": "ed09b4da9b34ffd3856f795cfe8bc62de7c0260daf470edbc69b7596a15f45dc",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-harness/blob/c3a0f63568fe86e2136877dec8dc0309495c8205/AGENTS.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-harness",
+      "commit": "c3a0f63568fe86e2136877dec8dc0309495c8205",
+      "path": "README.md",
+      "git_blob_sha": "39ded51ba088572eb1269e2b432682baecf5a77b",
+      "source_sha256": "7ad90c1622c8831b82b901ffc25cf5f33b22f4da5bd6bc5c4736941464b561a8",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-harness/blob/c3a0f63568fe86e2136877dec8dc0309495c8205/README.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-harness",
+      "commit": "c3a0f63568fe86e2136877dec8dc0309495c8205",
+      "path": "docs/BUILD_STATE.md",
+      "git_blob_sha": "4f12f3119b1d8ceb6a4da0ab2c532b29b3284266",
+      "source_sha256": "5db9993e397f273460991fbe8eb29addbf7206d1a2169188ee3c01382a2b62a5",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-harness/blob/c3a0f63568fe86e2136877dec8dc0309495c8205/docs/BUILD_STATE.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-harness",
+      "commit": "c3a0f63568fe86e2136877dec8dc0309495c8205",
+      "path": "src/application.mjs",
+      "git_blob_sha": "e71faa5b0a9ce0feba1f497eda116144b609c1d0",
+      "source_sha256": "9b18a1d20f352de58f91019b096114c669ebedede75a7edf43704809d9e8a879",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-harness/blob/c3a0f63568fe86e2136877dec8dc0309495c8205/src/application.mjs",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-harness",
+      "commit": "c3a0f63568fe86e2136877dec8dc0309495c8205",
+      "path": "src/contract.mjs",
+      "git_blob_sha": "5391a590975d90d08128d70770b3db3a74e50cc3",
+      "source_sha256": "bdb6ff300f59e0acd52b629bbd7e9b45b9a7bcd716c229814b64ee7d64d82011",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-harness/blob/c3a0f63568fe86e2136877dec8dc0309495c8205/src/contract.mjs",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-harness",
+      "commit": "c3a0f63568fe86e2136877dec8dc0309495c8205",
+      "path": "src/conversation.mjs",
+      "git_blob_sha": "ec38acc5ecee3f88abd82653110f1e11c5f3147c",
+      "source_sha256": "f8dc3db4de76da7271e20d51e951a1d26c6e2c6acb69a00f9d68591c387e5867",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-harness/blob/c3a0f63568fe86e2136877dec8dc0309495c8205/src/conversation.mjs",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-harness",
+      "commit": "c3a0f63568fe86e2136877dec8dc0309495c8205",
+      "path": "src/model-context.mjs",
+      "git_blob_sha": "efffbcc2966b5b760f000d7bd39c8699ef803190",
+      "source_sha256": "1df2ffe5cf549771345c7c364fca76a730e5d522c301d63a4626cef5adee0e21",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-harness/blob/c3a0f63568fe86e2136877dec8dc0309495c8205/src/model-context.mjs",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-harness",
+      "commit": "c3a0f63568fe86e2136877dec8dc0309495c8205",
+      "path": "src/server.mjs",
+      "git_blob_sha": "afeafe596b2b644e4648ac5571dfd1804653f07f",
+      "source_sha256": "81c957250e4d799a09f37d0c355daaee065b9c2a934782855b9ceabe05c95c02",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-harness/blob/c3a0f63568fe86e2136877dec8dc0309495c8205/src/server.mjs",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "AGENTS.md",
+      "git_blob_sha": "0b6ac0a139db90f7632209a3e57e8d22abc34aac",
+      "source_sha256": "14888fc137f69bdd9bc49139a0ff752e217136729910b6da6a8538debb88b7b9",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/AGENTS.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "README.md",
+      "git_blob_sha": "d2ef45812f7f85b807e1aaa294606c2de642770a",
+      "source_sha256": "87f9748e86e30339a5fddd73171c66b048d44409505a54aa3d4d10582fb4e0f3",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/README.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "apps/drive/index.html",
+      "git_blob_sha": "867be6effe9d87453ef7cd7f3e9df650a75f9dfb",
+      "source_sha256": "f6a0a8b01a89c731ee41a47d37652b49984f2fe7819d020f4cc9ffa0b33e99f7",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/apps/drive/index.html",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "apps/drive/player.mjs",
+      "git_blob_sha": "73ea57a262e6127a3d905233fc02da68df39cad7",
+      "source_sha256": "7528f74420cfbf738c258df9594201956fadfdd6d6f685302b4d3c0b6a6d97a6",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/apps/drive/player.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "apps/player/index.html",
+      "git_blob_sha": "ea085d893bbd53c8255600e6ada0b950ba73074d",
+      "source_sha256": "f7c98c6740b2b28566269cc91bc143e29cbe17c6080c447341f862d1e5936f08",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/apps/player/index.html",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "docs/ARCHITECTURE.md",
+      "git_blob_sha": "bce1c4c8881dfe2742aa89d5cb2781a3a422aab7",
+      "source_sha256": "55d29a6505bd0c0ada5220a342d2ac0ccbb7eb65e795a270cc1c2f179599b49a",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/docs/ARCHITECTURE.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "docs/AVATAR_PACKAGE_FOUNDATION_2026-11-02.md",
+      "git_blob_sha": "abf8640948cb8c28406aefdf038522add40b3ddc",
+      "source_sha256": "e4fb2dca36300f9b6047579a9808181e8b85d67a591af1a1de7ea0670d5786fb",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/docs/AVATAR_PACKAGE_FOUNDATION_2026-11-02.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "docs/PIPELINE_DESIGN.md",
+      "git_blob_sha": "9b49f001ced33fa3c396b8d91b494ce664f982d8",
+      "source_sha256": "e448149f4544b6d8e9d9e2599c5e23df97ede2b91c7ea1eaa074c03db705feac",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/docs/PIPELINE_DESIGN.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "docs/TAKEOVER_REVIEW_2026-10-15.md",
+      "git_blob_sha": "b5782317891698b196cd58294cd770ce84b4c04b",
+      "source_sha256": "c1826db8f8d1566c3c7b735a0da1b99ee40d4b13a9962a69f7d0c99d1417bcca",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/docs/TAKEOVER_REVIEW_2026-10-15.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/audio-adapter/index.mjs",
+      "git_blob_sha": "db70bee58f82611c694bf2f0c06603d210edd1c3",
+      "source_sha256": "b61fb349eb0eaab1f827d1d19a9459e191e63414486c7861ca37d172a3e1fbc7",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/audio-adapter/index.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/avatar-control/index.mjs",
+      "git_blob_sha": "a15c01c9ef7e402847aafd11d5e40b8209019649",
+      "source_sha256": "c3684a3dbb7534780d0ddea91b9c1cdf43cc254cd9105ad2dacce3f57248b439",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/avatar-control/index.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/avatar-drive/SKILL.md",
+      "git_blob_sha": "9cb0224041b2ee671458d8602508f6fb322c9b3e",
+      "source_sha256": "3c7ce6d3dd7b056f52dfce924d3edb09acbe63a0e59f81e4df5fc46364de719c",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/avatar-drive/SKILL.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/avatar-drive/capabilities.json",
+      "git_blob_sha": "61490c51d7c0c681f64dbebd17af90accd8cde1c",
+      "source_sha256": "a3d5e4ee3109eaf45c190168a6cdf5dc1ed1599e22a58c8e765fea5d7d29d519",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/avatar-drive/capabilities.json",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/avatar-drive/contract.mjs",
+      "git_blob_sha": "7ced19c9e598ece1643616be8a4cee8f21c8a7ab",
+      "source_sha256": "50f23f3b56dc8bf4fc370f6fdd35dc96d76d1b8f903e0f8293c6681fd5ad08ab",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/avatar-drive/contract.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/avatar-drive/package.mjs",
+      "git_blob_sha": "4d42f67b4ee3753a56e0e0862f208b71d199e4f8",
+      "source_sha256": "4fb74cc6c877435a3e087dc5e890c3f7deb1eeb2970e42c721b012f28f39418b",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/avatar-drive/package.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/avatar-drive/red-package.json",
+      "git_blob_sha": "f0ba5380dbaf3b2267f9b0f04b278a54c294180e",
+      "source_sha256": "fc2d4d6cf1ea70eb83403ab842a0d85374b71039bd5afc218677f14301be1098",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/avatar-drive/red-package.json",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/avatar-drive/references/integration.md",
+      "git_blob_sha": "c9e7f15c00acea4ff8bb6f3f724ce87f526bfe86",
+      "source_sha256": "93c97c3c7bfb3b03443a07fc8d7dbb9ca96836fb34ff733971f8da73f9807bb2",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/avatar-drive/references/integration.md",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/avatar-drive/references/model-prompt.txt",
+      "git_blob_sha": "704ddca73ff8f9437058adb5721c01aabbabdf10",
+      "source_sha256": "4d30a1599565a3e22fc7142de539b57184ad1f104eea86f4a77eb576f9fad29e",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/avatar-drive/references/model-prompt.txt",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/avatar-drive/scripts/drive.mjs",
+      "git_blob_sha": "4533be33a291039eff636b9da4c8dbabcf2fb49a",
+      "source_sha256": "0aeaa6a663f1361047b85ecfe6b869c845e88b556d390fb4459b10566e384556",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/avatar-drive/scripts/drive.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "packages/hapa-adapter/index.mjs",
+      "git_blob_sha": "4a594516a4cf590cedd489c4dad274b37fd9c7fa",
+      "source_sha256": "43a56e854074dcb999eae43b844632a839fa96f527cf8ae9a2ccfe8338cb8450",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/packages/hapa-adapter/index.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "server/api.mjs",
+      "git_blob_sha": "18f4d4acb3a206a86cc3d09b117c897ea3b55330",
+      "source_sha256": "b972e3ab3ac3b31d1907114591ed5254efe259265a456f440e81db6e338b7e5b",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/server/api.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-mesh-avatar",
+      "commit": "a6fc5111f1e772548a4c241187e59d8fd82daeee",
+      "path": "server/drive.mjs",
+      "git_blob_sha": "d4d4f5f2f72ca11144d3373a59041d253a2808da",
+      "source_sha256": "a42523bde120787f1b344a2bffa85a69dfef2edc321bc4cbaaf7966ff01da08d",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-mesh-avatar/blob/a6fc5111f1e772548a4c241187e59d8fd82daeee/server/drive.mjs",
+      "research_groups": [
+        "avatar"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "AGENTS.md",
+      "git_blob_sha": "754941560999fce243f5a48894df8afe444766d2",
+      "source_sha256": "a2f268b50a01281611ad49ff1899227376044a318c1b79197264f61818f01991",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/AGENTS.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "docs/CARD_LINEAGE_GRAPH_API.md",
+      "git_blob_sha": "aae4c8a2fd42a28d8f4b3625c5b7f4520511a594",
+      "source_sha256": "8e9708c50596c87e2b85ab5103ccf31176a9b5d3cbf79c7930fb137cac039d3f",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/docs/CARD_LINEAGE_GRAPH_API.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "docs/CARD_READ_SEARCH_API.md",
+      "git_blob_sha": "7db68bc02089f718836038860797104340763e57",
+      "source_sha256": "ca8e2a099badef41e82cf8a2d55d80e2b80c0089f41d6415a20fab99876eb55c",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/docs/CARD_READ_SEARCH_API.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "docs/UNIVERSAL_HAPA_CARD_ORIGIN_ADAPTER_SDK.md",
+      "git_blob_sha": "6478c600e77ec919f4900a7cdaa9ec4cceb2b2e3",
+      "source_sha256": "3b7020b5874eacd911121cd2d0b2c16c0c8f24669f7c9faf7a72a6a13503b4a5",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/docs/UNIVERSAL_HAPA_CARD_ORIGIN_ADAPTER_SDK.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "hapa_overwind/server.py",
+      "git_blob_sha": "ba260eacf9909bae834e9388e00a3b6849814a6c",
+      "source_sha256": "7026cf02695e92268800489d005c55982654ac34f0bfd9f3c264de70ef87e173",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/hapa_overwind/server.py",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "schema/hapa-card-envelope.schema.json",
+      "git_blob_sha": "2a5fd1b71d9cbe04f363996b13d920af0911746a",
+      "source_sha256": "0b8e86451dea05f4665eea4d2437dcae90f52e77cfbd7499651bd329e1d66422",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/schema/hapa-card-envelope.schema.json",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "schema/hapa-card-lineage.openapi.json",
+      "git_blob_sha": "11a76c21559bd49e5e4c8eb4b5d2a19d73ba700c",
+      "source_sha256": "e5e7ef4422c6a1971a787420b75b0648c5b6b1b78e65644575327a3cf5c7adf1",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/schema/hapa-card-lineage.openapi.json",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "schema/hapa-card-reads.openapi.json",
+      "git_blob_sha": "6fe20defad010c2c005dad6c2c488f95341ac918",
+      "source_sha256": "ca8e42710a8ef2783d43b4f15c73b4ae0536439bc0d9dee7d5486e4e9dc60a4c",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/schema/hapa-card-reads.openapi.json",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "schema/hapa-card-subscriber-read-envelope.schema.json",
+      "git_blob_sha": "f25001c7a4dc5610181fdbe295b33e9d2a4f0f22",
+      "source_sha256": "a72149ea0eeaf35afd775566f406389de181ea939810f85822f9c66a6ec95904",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/schema/hapa-card-subscriber-read-envelope.schema.json",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "0276cc211cb4db71abfaf910c49c062386e463f5",
+      "path": "AGENTS.md",
+      "git_blob_sha": "708f76ed173717a8d08f13d3732e1a8cd7b80783",
+      "source_sha256": "89ffda1da4f1ef34959ef2067d1f2b12093457aa5e2e93e3faaea561198cf6ff",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/0276cc211cb4db71abfaf910c49c062386e463f5/AGENTS.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "0276cc211cb4db71abfaf910c49c062386e463f5",
+      "path": "README.md",
+      "git_blob_sha": "e0c7b8ec059ba4568c92640d2a556c413f9ad3eb",
+      "source_sha256": "a42d323ef830a59ab884966aec55cd9d4abec5575971d15117755567fc6c97a7",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/0276cc211cb4db71abfaf910c49c062386e463f5/README.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "0276cc211cb4db71abfaf910c49c062386e463f5",
+      "path": "docs/HAPA_CONNECTIVITY.md",
+      "git_blob_sha": "5132ba744aea1c5717059684af2d263061a3f4ca",
+      "source_sha256": "7747770bb53d243f8090ec84d713d096293f914c4de6fc14d5437833db35579e",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/0276cc211cb4db71abfaf910c49c062386e463f5/docs/HAPA_CONNECTIVITY.md",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "0276cc211cb4db71abfaf910c49c062386e463f5",
+      "path": "scripts/ingest_suno.py",
+      "git_blob_sha": "cab7d8a3dddfb2fa46c30eb59d2d0f5b0b40f439",
+      "source_sha256": "53b825ccfdeaf0ae3ac7425583a0420d5c0ddbb0e8fc0efa606dd73a10952e76",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/0276cc211cb4db71abfaf910c49c062386e463f5/scripts/ingest_suno.py",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "0276cc211cb4db71abfaf910c49c062386e463f5",
+      "path": "src/daw-engine.js",
+      "git_blob_sha": "67937e0a1d9d717eea6c037d7724266715ad7e75",
+      "source_sha256": "982f61cfba96aab5285787ffc8516c6a04a620ca7a1b00cdb8b2cec2ed61fc8e",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/0276cc211cb4db71abfaf910c49c062386e463f5/src/daw-engine.js",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "0276cc211cb4db71abfaf910c49c062386e463f5",
+      "path": "src/main.js",
+      "git_blob_sha": "3ec35c3c9bef26ad5db4a30b3eb51d47e3bc8b4c",
+      "source_sha256": "cc48d404e0c4a6d7802c7ae72fe8275e323f5cef4073afeee659350122b571f2",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/0276cc211cb4db71abfaf910c49c062386e463f5/src/main.js",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "0276cc211cb4db71abfaf910c49c062386e463f5",
+      "path": "src/preload.js",
+      "git_blob_sha": "23e2ec218621ba7419d064bf68e2da908b0c89aa",
+      "source_sha256": "d476456dd038cf24ae18e07c1a4e7ee3cf50df636b681c804658e79f971126ca",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/0276cc211cb4db71abfaf910c49c062386e463f5/src/preload.js",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "0276cc211cb4db71abfaf910c49c062386e463f5",
+      "path": "src/renderer.js",
+      "git_blob_sha": "2727fcd311402428d00c1b1614bcac781fbdc32d",
+      "source_sha256": "ec1eab2d0a0f262be774e2de5414b025b5805670c158197dba2ca665e310e45c",
+      "verification": "source bytes verified after removing one appended transport LF",
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/0276cc211cb4db71abfaf910c49c062386e463f5/src/renderer.js",
+      "research_groups": [
+        "music"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "AGENTS.md",
+      "git_blob_sha": "7ca4262277cc1f89a9b6cb6391581d3b882cdffb",
+      "source_sha256": "ae2c72adbcb521c32ae16a9b455e70d89e18b2d4e7749a1fce16391e94114237",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/AGENTS.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "README.md",
+      "git_blob_sha": "5ff46c79de58b29a1ea1fd3894d936be08ddbc9c",
+      "source_sha256": "506860aedb70d8d1ac0539d17e1432af51b8d43d6b12caf75c47bc060db8f36e",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/README.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "docs/requirements/2026-11-23-human-feedback-addendum-03.md",
+      "git_blob_sha": "6ca8a6067cc5b5d8668cd85455bc226afcc11f93",
+      "source_sha256": "c9dc4bb5642208fc994e7785fe765c616d53ce9425518cb6bd8f630874e23a29",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/docs/requirements/2026-11-23-human-feedback-addendum-03.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "docs/reviews/2026-11-23-next-agent-assignment-10.md",
+      "git_blob_sha": "c5746f210fee8ac7e0f95a805520b4a52d6d282c",
+      "source_sha256": "83bfee5ea51693114d45b7902345f47b5e1585c4c1de46f74d8362fa159b7676",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/docs/reviews/2026-11-23-next-agent-assignment-10.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "docs/reviews/2026-11-24-ui-design-response-10.md",
+      "git_blob_sha": "ddbfb9d404a57d16965cf6837212faf1ecd78e0d",
+      "source_sha256": "4f083a5484d42cacf9ca5f22ad22e0e33efca3479a850bff0a3a8cd702a8718b",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/docs/reviews/2026-11-24-ui-design-response-10.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "8505ec97b95e0fac4975098856c2a99ba43e74f4",
+      "path": "docs/reviews/2026-11-24-ui-design-review-09.md",
+      "git_blob_sha": "3043a1fa6a6775bbac42b0852d571027091a7c3f",
+      "source_sha256": "8e1aaee5905aa9d4c52e4162e03914f2ee12fff8658b88b42a1df544f9091b80",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8505ec97b95e0fac4975098856c2a99ba43e74f4/docs/reviews/2026-11-24-ui-design-review-09.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "docs/reviews/README.md",
+      "git_blob_sha": "f7c7011a174baf7fd727abefe5ab8ec002fa2ea2",
+      "source_sha256": "41ee5c5a005ab79ac9ec7661b3516182534ebfc621f1524b9ac63d4fdb705d8d",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/docs/reviews/README.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "8505ec97b95e0fac4975098856c2a99ba43e74f4",
+      "path": "docs/reviews/README.md",
+      "git_blob_sha": "b83775e4a0394aeb694ad9f875a80f4c288817d8",
+      "source_sha256": "c484e76907360e759b42763390e6cba44d78bc2a2a960a74e5ed3112ea332fa2",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8505ec97b95e0fac4975098856c2a99ba43e74f4/docs/reviews/README.md",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/controllers/heuristic-bot.js",
+      "git_blob_sha": "3bd12573bb586388311c1c6fb086893295faa4b3",
+      "source_sha256": "9d2aebf7a1f2e96687907e4ab5dea25f329ba44461e8db98abe91a8ba88c654b",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/controllers/heuristic-bot.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/presentation/app.js",
+      "git_blob_sha": "0292053e6115aa1cb756e4d2576f26bb4a9381e1",
+      "source_sha256": "50be7972507bc555f5026e582caa7b405a2d02d3f2936e9e218b7205cdc0d1e0",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/presentation/app.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/presentation/dev-preset.js",
+      "git_blob_sha": "785ca2319358af17d640f6828339e404ace1fa73",
+      "source_sha256": "57a5449f62f7404b3b4211b570fe8f9fcdefce0dc739a6d1b559eb64bc557334",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/presentation/dev-preset.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/presentation/pieces.js",
+      "git_blob_sha": "289194f32586ae90f0e7c086261c5b12d4eba12b",
+      "source_sha256": "058ff7a078110117ca9d8203474ae3a0b109402f9acdb4520fcb65d2111615ba",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/presentation/pieces.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/presentation/playback.js",
+      "git_blob_sha": "abf4b70776e7327ff421aae3accfa2ef33e0e926",
+      "source_sha256": "9f95ee5238c8e96165b095391cbe7dc718fe1963379bcf6fc82ac18cb8c13ff1",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/presentation/playback.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/presentation/sound.js",
+      "git_blob_sha": "be181135d404d31a63962e71f328a97a3caf9df0",
+      "source_sha256": "b945ed1fb7531299de7c7d8b3c9f1b0f736c809e13de58804011a6aac8afa85d",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/presentation/sound.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/protocol/agreement.js",
+      "git_blob_sha": "433a18642d1fdcbc95331e11260d53be806806c7",
+      "source_sha256": "3b3ad11ab7d8846847b8d2544f138cf8616af51b9aa989b35b70da1e3c1a6939",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/protocol/agreement.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/protocol/messages.js",
+      "git_blob_sha": "016d693e1bd64aeba1ea419b61c8513f8fc54a14",
+      "source_sha256": "1ea03bded273a6d6ff8ea54b298b62d1c0c9ab18a6ef90d5ba27064a078ef795",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/protocol/messages.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/protocol/peer.js",
+      "git_blob_sha": "12574809a85c6b6619a632a30dff93870393d517",
+      "source_sha256": "e0d87d1148dd8027d044a516191119777fa357ceaba87c3755afeb847b42a56a",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/protocol/peer.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/rules/context.js",
+      "git_blob_sha": "1917c727398bb6876076c2b50a4f5a31b710fa37",
+      "source_sha256": "174378bebde9a109a6e37f756bc1d3016dd56f7cd00899b288e94648cff177ac",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/rules/context.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/rules/inspection.js",
+      "git_blob_sha": "c89810284640d3d339ea260ed87403e828220ed8",
+      "source_sha256": "00b34aab8eb53d23a4ec22d35e07d00421b70865e5ed2d5320d1845df87fb1b7",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/rules/inspection.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/rules/match.js",
+      "git_blob_sha": "25b0f7ccf494ea19462438f52c429cc65ef934d2",
+      "source_sha256": "54379e9b5753bd47b27d7442fd5648e3e5532e8a3cb729ed6846a9cd1df8ffce",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/rules/match.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/rules/session.js",
+      "git_blob_sha": "184e6f3b4c44c0f1554175f81ebe0ada5cb3e7a0",
+      "source_sha256": "2cb108dfe24ece759d1c48273774796c7828085560529107ea58a3be9555e51d",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/rules/session.js",
+      "research_groups": [
+        "versus"
+      ]
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f",
+      "path": "src/hapa/rules/state.js",
+      "git_blob_sha": "a82081f88ef37642dc7215fd84fd1329f55e0978",
+      "source_sha256": "7773be2054ec1b6ca0409a67bdb413c85333c9fb6ea170e83a71fc02e42d1bb8",
+      "verification": "exact local source bytes",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/2d8a5ff2a1c5686101b3dc3c2c8e0cee33c6df4f/src/hapa/rules/state.js",
+      "research_groups": [
+        "versus"
+      ]
+    }
+  ],
+  "public_references": [
+    {
+      "url": "https://github.com/holepunchto/hypercore",
+      "accessed": "2026-11-24"
+    },
+    {
+      "url": "https://github.com/holepunchto/hyperdrive",
+      "accessed": "2026-11-24"
+    },
+    {
+      "url": "https://github.com/holepunchto/hyperswarm",
+      "accessed": "2026-11-24"
+    },
+    {
+      "url": "https://developer.chrome.com/blog/autoplay",
+      "accessed": "2026-11-24"
+    }
+  ],
+  "historical_context": {
+    "name": "Hapa_World_Review.html",
+    "report_date": "2026-11-14",
+    "source_type": "CJ-owned saved report",
+    "scope": "Prawn Shop and owner composition; historical secondary evidence, not current local source or live playback"
+  },
+  "limits": [
+    "Source code review, not runtime verification.",
+    "No game/model/audio/transfer tests or services run for this proposal.",
+    "Local Mesh connection on known port 8860 was refused.",
+    "Current local Prawn Shop code and separately named Music Library owner were not inspected.",
+    "Local-only shared grounding files were unavailable through the published root Hapa snapshot.",
+    "No provider credentials, private conversation text, or media bytes are included."
+  ]
+}
