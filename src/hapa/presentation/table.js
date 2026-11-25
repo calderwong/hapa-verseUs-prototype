@@ -23,7 +23,7 @@ export function spokenParty(state, id) {
 
 export class Table {
   /**
-   * @param {{ world: HTMLElement, scene?: { root: any, board: { w: number, h: number, S: number } }, sessionId: string, epoch: number, avatarSeat: 'A'|'B', humanSeat: 'A'|'B', avatarId: string, controller: any, songIds: string[], partyLabel: (id: string) => string, onLayout?: () => void }} o
+   * @param {{ world: HTMLElement, scene?: { root: any, board: { w: number, h: number, S: number } }, sessionId: string, epoch: number, avatarSeat: 'A'|'B', humanSeat: 'A'|'B', avatarId: string, controller: any, songIds: string[], partyLabel: (id: string) => string, onLayout?: () => void, onPanel?: (which: 'music'|'talk') => void }} o
    */
   constructor(o) {
     this.o = o;
@@ -48,7 +48,10 @@ export class Table {
     this.seated = o.scene ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: 'Red' }) : null;
     this.opponent.addEventListener('rendering', (e) => this.seated?.setSource(e.detail.canvas));
     this.music = new Soundtrack({ sessionId: o.sessionId, epoch: o.epoch, listener: { library: 'cj', seat: o.humanSeat, label: 'You' }, controller: true });
-    this.deck = new MusicDeck(this.music, this.musicEl, { onLayout: () => o.onLayout?.() });
+    this.deck = new MusicDeck(this.music, this.musicEl, { onLayout: () => o.onLayout?.(), onOpen: () => o.onPanel?.('music') });
+    // an expanded side panel may need the others to collapse at compact widths (R13-04; the app decides)
+    this.opponent.addEventListener('expanded', (e) => { if (e.detail.open) o.onPanel?.('talk'); });
+    this._deckPlace = 'default';
     // an independently requested conversation keeps the voice policy (music ducks under speech);
     // Keep is visual only (HF6-03): it says nothing aloud, so it never ducks the music
     this.opponent.addEventListener('speaking', (e) => this.music.setDucked(e.detail.speaking));
@@ -103,11 +106,7 @@ export class Table {
     const maxW = `${Math.max(160, Math.floor(box.r - box.l))}px`;
     if (this._maxW !== maxW) { this._maxW = maxW; this.el.style.setProperty('--soc-max-w', maxW); }
     const size = this._ro ? this._size : { w: this.el.offsetWidth, h: this.el.offsetHeight };
-    const music = this._ro ? this._music : { w: this.musicEl.offsetWidth, h: this.musicEl.offsetHeight };
-    // the closed deck holds the top-right corner; the social layer stays below it there. An open Music
-    // drawer is reserved out of the free area itself (the app's --free-r), so nothing goes under it
     const drawerOpen = this.musicEl.classList.contains('drawer-open');
-    const belowMusic = drawerOpen ? box.t : 8 + music.h + 6, musicLeft = drawerOpen ? box.r + 1 : box.r - music.w;
     let on = false, x = 0, y = 0, r = 0;
     if (this.seated) {
       this.seated.update(camera);
@@ -122,6 +121,14 @@ export class Table {
       }
     }
     this.hit.hidden = !on;
+    // the Music deck: placed from both reserved edges (R13-04) and kept clear of the face when closed
+    const deck = this._placeDeck(rect, { on, x, y, r }, drawerOpen);
+    // the social layer stays below the deck where they share columns; an open drawer is reserved out
+    // of the free area itself (the app's --free-r), so nothing goes under it
+    const belowMusic = drawerOpen ? box.t : deck.b + 6;
+    const underDeck = (l, w) => !drawerOpen && l < deck.r && l + w > deck.l;
+    // nor under the camera pad (top left) when a narrow free band pushes it there
+    const underPad = (l, w) => this._pad && l < this._pad.r && l + w > this._pad.l;
     // beside the face: right of it, else left of it; an expanded panel that fits neither side docks
     // both edges of either candidate must lie in the free area (R12-01): a face panned toward an
     // open drawer cannot leave a panel's unchecked edge behind that drawer
@@ -135,7 +142,8 @@ export class Table {
     }
     const docked = left === null;
     this.el.classList.toggle('docked', docked);
-    const t0 = docked || left + size.w > musicLeft ? Math.max(box.t, belowMusic) : box.t;
+    const lx = docked ? box.r - size.w : left;
+    const t0 = Math.max(underDeck(lx, size.w) ? Math.max(box.t, belowMusic) : box.t, underPad(lx, size.w) ? this._pad.b : box.t);
     const top = docked ? t0 : Math.max(t0, Math.min(y - r * 0.9, box.b - size.h));
     const maxH = `${Math.max(120, Math.floor(box.b - t0))}px`;
     if (this._maxH !== maxH) { this._maxH = maxH; this.el.style.setProperty('--soc-max-h', maxH); }
@@ -145,6 +153,50 @@ export class Table {
     if (on) this.hit.style.cssText = `left:${x - r}px;top:${y - r * 1.25}px;width:${2 * r}px;height:${2.5 * r}px`;
     if (docked) { this.el.style.left = ''; this.el.style.top = `${t0}px`; }
     else { this.el.style.left = `${left}px`; this.el.style.top = `${top}px`; }
+  }
+
+  /**
+   * Place the Music deck inside the band between the left reservation (--free-l) and the other
+   * drawers on the right (--music-r), sized from both edges so it can never extend past either
+   * (R13-04). While the drawer is closed, the deck avoids the opponent's face at Home: the
+   * top-right corner when that is clear, else a compact slot beside the face or below the camera
+   * pad. The current placement is kept while it stays clear (no flicker while the camera moves).
+   * @returns {{ l: number, t: number, r: number, b: number }} the deck's rectangle in world px
+   */
+  _placeDeck(rect, face, drawerOpen) {
+    const ws = this.o.world.style, px = (v) => parseFloat(ws.getPropertyValue(v)) || 0;
+    const L = px('--free-l') + 8, R = rect.width - 8 - px('--music-r');
+    const H = this.deck.deck.offsetHeight || 112, MIN = 272, FULL = 440;
+    const pad = this.o.world.querySelector('.cam-pad'), pr = pad && !pad.hidden ? pad.getBoundingClientRect() : null, wr = this.o.world.getBoundingClientRect();
+    const padR = pr ? pr.right - wr.left + 8 : L, padB = pr ? pr.bottom - wr.top + 6 : 8;
+    this._pad = pr ? { l: pr.left - wr.left, r: padR, b: padB } : null;
+    // the face region (eyes to chin, with a little air), from the projected head size
+    const fb = face.on ? { l: face.x - face.r * 0.8, r: face.x + face.r * 0.8, t: face.y - face.r * 1.3, b: face.y + face.r * 0.7 } : null;
+    const cand = {
+      default: () => { const w = Math.min(FULL, R - L); return { l: R - w, t: 8, w }; },
+      right: () => fb && { l: Math.max(L, fb.r + 8), t: 8, w: Math.min(FULL, R - Math.max(L, fb.r + 8)) },
+      left: () => fb && { l: Math.max(L, padR), t: 8, w: Math.min(FULL, fb.l - 8 - Math.max(L, padR)) },
+      below: () => fb && { l: L, t: padB, w: Math.min(FULL, Math.min(R, fb.l - 8) - L) },
+    };
+    const clear = (c, m = 0) => c && c.w >= MIN && (!fb || c.l + c.w + m <= fb.l || c.l - m >= fb.r || c.t + H + m <= fb.t || c.t - m >= fb.b);
+    let place = 'default';
+    if (!drawerOpen && fb) {
+      const cur = this._deckPlace;
+      // prefer the corner when it is clearly free; otherwise keep the current slot while it stays clear
+      if (clear(cand.default(), 24)) place = 'default';
+      else if (cur !== 'default' && clear(cand[cur]())) place = cur;
+      else place = ['default', 'right', 'left', 'below'].find((k) => clear(cand[k]())) ?? 'default';
+    }
+    this._deckPlace = place;
+    const c = cand[place]();
+    const w = Math.max(Math.min(MIN, R - L), c.w);
+    const st = this.musicEl.style, l = `${Math.round(c.l)}px`, t = `${Math.round(c.t)}px`, wd = `${Math.round(w)}px`;
+    if (st.left !== l) st.left = l;
+    if (st.top !== t) st.top = t;
+    if (st.width !== wd) st.width = wd;
+    this.musicEl.classList.toggle('compact', w < 400);
+    this.musicEl.dataset.place = place;
+    return { l: c.l, t: c.t, r: c.l + w, b: c.t + H };
   }
 
   dispose() {

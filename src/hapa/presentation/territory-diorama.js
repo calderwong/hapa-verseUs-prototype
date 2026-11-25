@@ -22,6 +22,7 @@
  * painted here (no external media).
  */
 import * as THREE from 'three';
+import { shared } from './resources.js';
 import { brushRng } from './palette.js';
 import { solidAt, surfaceBand } from '../rules/terrain.js';
 import { territoryColors } from '../rules/economy.js';
@@ -50,7 +51,7 @@ function groundTexture(color, open) {
   // squares open to the sky stay open: never paint a floor over a real excavation
   for (let i = 0; i < 9; i++) if (open[i]) g.clearRect((i % 3) * (N / 3), Math.floor(i / 3) * (N / 3), N / 3, N / 3);
   const t = new THREE.CanvasTexture(cv); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.colorSpace = THREE.SRGBColorSpace;
-  texCache.set(key, t);
+  texCache.set(key, shared(t));
   return t;
 }
 
@@ -62,6 +63,7 @@ function grassTexture() {
   const blades = [[2, 15, 4, 5], [5, 15, 6, 2], [8, 15, 8, 4], [11, 15, 12, 6], [13, 15, 14, 8], [7, 15, 5, 7]];
   for (const [x0, y0, x1, y1] of blades) { g.strokeStyle = (x0 % 2) ? '#6f9a42' : '#4f7a30'; g.lineWidth = 1.4; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke(); }
   grassTex = new THREE.CanvasTexture(cv); grassTex.magFilter = THREE.NearestFilter; grassTex.colorSpace = THREE.SRGBColorSpace;
+  shared(grassTex);
   return grassTex;
 }
 
@@ -73,7 +75,7 @@ function pixelTexture(name, w, h, paint) {
   paint(cv.getContext('2d'), brushRng(name.length * 977 + w * 31 + h));
   const t = new THREE.CanvasTexture(cv); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.colorSpace = THREE.SRGBColorSpace;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  painted.set(name, t);
+  painted.set(name, shared(t));
   return t;
 }
 /** Dressed stone: offset courses, mortar, chipped highlights and moss at the foot. */
@@ -133,6 +135,7 @@ function clothTexture() {
   g.fillStyle = '#c9a65e'; g.fillRect(0, 0, 16, 2); g.fillRect(6, 8, 4, 4);
   g.clearRect(10, 18, 6, 6); g.clearRect(13, 15, 3, 3); // torn corner
   clothTex = new THREE.CanvasTexture(cv); clothTex.magFilter = THREE.NearestFilter; clothTex.colorSpace = THREE.SRGBColorSpace;
+  shared(clothTex);
   return clothTex;
 }
 

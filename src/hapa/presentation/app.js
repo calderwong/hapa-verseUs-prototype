@@ -353,8 +353,13 @@ export class VersusApp {
     this.deciders = ms ? { [ms]: new ModelDecider({ seat: ms, avatarId: table.avatarId, identityRevision: 'red-v1.0', deadlines: table.deadlines }) } : {};
     this.viewSeat = seats.A === 'human' ? 'A' : seats.B === 'human' ? 'B' : 'A';
     this._initEngine();
-    if (this.view) { this.engine.scene.remove(this.view.root); }
+    // replace the previous table in ownership order (R13-05): the social table (seated Avatar, its
+    // music and voice), then the setting, then the board's own resources. Each step is idempotent
+    this.table?.dispose();
+    this.table = null;
     this.scenery?.dispose?.(); // the previous match's setting: geometry, materials, textures and lights
+    this.scenery = null;
+    this.lastDisposal = this.view?.dispose() ?? null;
     this.view = new BoardView(this.engine.scene, this.ctx);
     // the dusk island table around the field (outside the playable rectangle and its banks)
     this.scenery = null;
@@ -408,7 +413,7 @@ export class VersusApp {
     const seat = bot[0];
     const rev = this.session.manifest.controllers?.[seat]?.revision ?? 'heuristic-bot/0.2.0';
     this.table = new Table({ world: this.el.world, scene: { root: this.view.root, board: { w: this.view.w, h: this.view.h, S: MEMBER_S } }, sessionId: this.session.manifest.matchId, epoch: gen, avatarSeat: seat, humanSeat: other(seat), avatarId: table.avatarId, songIds: table.songIds ?? [],
-      controller: this.deciders?.[seat] ? { kind: 'model-assisted', revision: rev, label: 'a local model (through Hapa Harness) choosing among my legal moves, with the heuristic bot as fallback' } : { kind: 'heuristic', revision: rev, label: `the heuristic bot (${rev}), not a model` }, partyLabel: (id) => spokenParty(this.state, id), onLayout: () => this._syncFreeSpace() });
+      controller: this.deciders?.[seat] ? { kind: 'model-assisted', revision: rev, label: 'a local model (through Hapa Harness) choosing among my legal moves, with the heuristic bot as fallback' } : { kind: 'heuristic', revision: rev, label: `the heuristic bot (${rev}), not a model` }, partyLabel: (id) => spokenParty(this.state, id), onLayout: () => this._syncFreeSpace(), onPanel: (which) => this._onePanel(which) });
     this.table.start().catch((err) => console.warn('[versus] table unavailable', err));
     // the Home composition now includes the seated opponent (addendum 05 §3): fitted once at setup
     if (this.cam) { this.cam.homeExtras = () => this.table?.homePoints() ?? []; if (seat === other(this.viewSeat)) this.cam.home(); }
@@ -1620,10 +1625,14 @@ export class VersusApp {
     const nav = edge(this.el.roster), dec = edge(this.el.decision), ord = edge(this.el.orders);
     const drawers = Math.max(dec ? w.right - dec.left + 6 : 0, ord ? w.right - ord.left + 6 : 0);
     // an open Music drawer joins the composition (Assignment 13 §3E): it stands beside the other
-    // drawers (--music-r) and the free band ends at its left edge
-    const mus = this.table?.musicEl, open = mus?.classList.contains('drawer-open') ? mus.getBoundingClientRect() : null;
-    const right = Math.max(drawers, open && open.width ? w.right - open.left + 6 : 0);
-    return { left: nav ? Math.max(0, nav.right - w.left + 6) : 0, right, drawers };
+    // drawers (--music-r) and the free band ends at its left edge. Its width follows the same rule
+    // Table._placeDeck applies (both reserved edges, at most 440px), so the reservation never depends
+    // on where the closed deck happened to be when the drawer opened (R13-04)
+    const left = nav ? Math.max(0, nav.right - w.left + 6) : 0;
+    const open = !!this.table?.deck.open;
+    const musicW = open ? Math.max(Math.min(272, w.width - 16 - left - drawers), Math.min(440, w.width - 16 - left - drawers)) : 0;
+    const right = Math.max(drawers, open ? drawers + 8 + musicW + 6 : 0);
+    return { left, right, drawers };
   }
 
   _syncFreeSpace() {
@@ -2182,14 +2191,42 @@ export class VersusApp {
         h('ul', {}, ...l.map((e) => h('li', {}, h('button', { class: 'linkish', onclick: () => open(e) }, eventLine(s, e))))))));
   }
 
-  _toggleOrders(open = !this.ordersOpen, tab = null) {
+  _toggleOrders(open = !this.ordersOpen, tab = null, { quiet = false } = {}) {
+    // a collapsed drawer reopens where it was (R13-04): its tab is kept, and its scroll is restored
+    if (!open && this.ordersOpen) this._ordersScroll = this.el.orders.scrollTop;
+    const opening = open && !this.ordersOpen;
     this.ordersOpen = open;
     if (tab) this.ordersTab = tab;
+    if (opening) this._onePanel('orders');
     this._renderAll();
+    if (opening && this._ordersScroll) this.el.orders.scrollTop = this._ordersScroll;
     this.inspect.relayout();
     this._avoidCache = null;
+    if (quiet) return;
     if (open) this.el.orders.querySelector('h3')?.setAttribute('tabindex', '-1'), this.el.orders.querySelector('h3')?.focus();
     else this.el.ordersBtn?.focus();
+  }
+
+  /**
+   * One active expanded side panel when they cannot share the world (R13-04). Orders, the Music
+   * drawer and the expanded conversation are compared with the room left beside the navigator
+   * and any required decision; if the board would keep less than a usable band, opening `which`
+   * collapses the others. Each collapsed panel keeps its own state (Orders tab and scroll, Music
+   * tab, filter and list scroll, the conversation draft and history scroll) for reopening, and
+   * focus stays with the panel the player just opened. At wide layouts they coexist as before.
+   * @param {'orders'|'music'|'talk'} which
+   */
+  _onePanel(which) {
+    const W = this.el.world.clientWidth, t = this.table, f = this._freeSpace();
+    const dec = this.el.decision && !this.el.decision.hidden ? this.el.decision.offsetWidth + 6 : 0;
+    const open = { orders: !!this.ordersOpen, music: !!t?.deck.open, talk: !!t?.opponent.expanded };
+    const width = { orders: Math.min(400, 0.46 * W), music: Math.min(440, W - 16), talk: 300 };
+    const used = f.left + dec + Object.keys(open).reduce((n, k) => n + (open[k] ? width[k] + 8 : 0), 8);
+    if (W - used >= 220) return;
+    if (which !== 'orders' && open.orders) this._toggleOrders(false, null, { quiet: true });
+    if (which !== 'music' && open.music) t.deck.toggle(false);
+    if (which !== 'talk' && open.talk) t.opponent.toggleConversation(false, { quiet: true });
+    this._syncFreeSpace();
   }
 
   /** Mana basin counters: sharp numerals attached to the world basins (§7). */

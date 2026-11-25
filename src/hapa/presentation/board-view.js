@@ -8,6 +8,7 @@
  * the near edge in A's home view).
  */
 import * as THREE from 'three';
+import { shared, collectOwned, release } from './resources.js';
 import { Sprite3D } from '../../../vendor/lumina/src/engine/sprite/Sprite3D.js';
 import { createCharacterSheet } from '../../../vendor/lumina/src/engine/pixel/CharacterSprites.js';
 import { territoryColors } from '../rules/economy.js';
@@ -101,7 +102,7 @@ function mountCrest(mount, ownerHex, commander) {
     g.fillText(MOUNT_GLYPH[mount] ?? '•', 64, 70);
     if (commander) { g.fillStyle = '#C9A65E'; g.font = 'bold 30px sans-serif'; g.fillText('★', 100, 26); }
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-    crestCache.set(key, t);
+    crestCache.set(key, shared(t));
   }
   // 0.46 S: legible at overview distance (UX-10)
   const m = new THREE.Mesh(new THREE.CircleGeometry(0.46 * S, 24), new THREE.MeshBasicMaterial({ map: crestCache.get(key), transparent: true, depthWrite: false, toneMapped: false }));
@@ -907,5 +908,30 @@ export class BoardView {
       this.cardTiles.set(key, tile);
       this.root.add(tile);
     }
+  }
+  /**
+   * Release what this board created (R13-05), once. Order: the app disposes the social table (the
+   * seated Avatar) and the setting first; both subtrees carry `userData.owner` and are skipped here
+   * anyway. Each Sprite3D releases its own mesh, materials and sheet texture and its reference to
+   * Luminati's shared blob; module caches (marked shared) and three's shared Sprite geometry stay.
+   * Lights free their shadow maps. Nothing pending outlives this: effects and dressing advance only
+   * from `update`, which the app no longer calls.
+   * @returns {{ geometries: number, materials: number, textures: number, lights: number, sprites: number } | null}
+   */
+  dispose() {
+    if (this.disposed) return null;
+    this.disposed = true;
+    this.scene.remove(this.root);
+    const sprites = [];
+    this.root.traverse((o) => { if (o instanceof Sprite3D && !o.userData?.owner) sprites.push(o); });
+    const internal = new Set(sprites.flatMap((s) => [s.mesh, s.shadowProxy, s.blob].filter(Boolean)));
+    const owned = collectOwned(this.root, { skip: (n) => internal.has(n) });
+    // three's Sprite shares one internal quad geometry across every THREE.Sprite: never released here
+    this.root.traverse((o) => { if (o.isSprite) owned.geometries.delete(o.geometry); });
+    for (const s of sprites) s.dispose();
+    const n = release(owned);
+    this.sprites.clear(); this.markers.clear(); this.cardTiles.clear(); this.sheets.clear();
+    this.supplyTokens?.clear?.();
+    return { ...n, sprites: sprites.length };
   }
 }

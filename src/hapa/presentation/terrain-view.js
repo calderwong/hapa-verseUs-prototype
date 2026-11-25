@@ -6,6 +6,7 @@
  * authoritative state and never changes it.
  */
 import * as THREE from 'three';
+import { shared } from './resources.js';
 import { BANDS, solidAt, exposed, surfaceBand, cellKey } from '../rules/terrain.js';
 
 export const BAND_H = 0.9; // world units per band
@@ -31,7 +32,7 @@ function strataTexture(kind = 'earth') {
   const t = new THREE.CanvasTexture(cv);
   t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.generateMipmaps = false;
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace;
-  strataCache.set(kind, t);
+  strataCache.set(kind, shared(t));
   return t;
 }
 const strataMat = (kind, w, h, side = THREE.FrontSide) => { const t = strataTexture(kind).clone(); t.needsUpdate = true; t.repeat.set(Math.max(1, Math.round(w)), Math.max(1, h)); return new THREE.MeshLambertMaterial({ map: t, side, transparent: true, opacity: 1 }); };
@@ -45,6 +46,7 @@ function chevronTexture() {
   g.fillStyle = 'rgba(60,40,22,0.85)';
   for (const y0 of [6, 16, 26]) for (let i = 0; i < 6; i++) { g.fillRect(2 + i, y0 - i, 2, 2); g.fillRect(12 - i, y0 - i, 2, 2); }
   chevTex = new THREE.CanvasTexture(cv); chevTex.magFilter = THREE.NearestFilter; chevTex.colorSpace = THREE.SRGBColorSpace;
+  shared(chevTex);
   return chevTex;
 }
 

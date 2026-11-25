@@ -105,3 +105,106 @@ test('Kept rows are one per exact asset; similar titles stay apart; unretained s
   assert.equal(m.keptRows()[0].item, rows[0].item, 'row items are stable across reads');
   m.dispose();
 });
+
+// --- Review 13 / Assignment 14 focused transport families (R13-01 – R13-03) -----------------------
+
+test('R13-01: a delayed graph resume after Pause never plays; the current valid attempt still starts', async () => {
+  const m = await playingTrack();
+  m.pause(); await tick();
+  let release; const gate = new Promise((r) => { release = r; });
+  m.signal.resume = () => gate.then(() => true); // the audio graph takes time to resume
+  m.play(); // Play: the start waits on the graph
+  assert.equal(m.primaryAction(), 'pause', 'a pending start shows Pause');
+  m.pause(); // Pause while the old resume is pending
+  const plays = m.audio.calls.filter((c) => c === 'play').length;
+  release(); await tick(); await tick();
+  assert.equal(m.audio.calls.filter((c) => c === 'play').length, plays, 'no late audio.play() after Pause');
+  assert.deepEqual([m.settings.listening, m.status, m.audio.paused], [false, 'paused', true]);
+  // the same fence for a selection change and for disposal during the wait
+  let r2; m.signal.resume = () => new Promise((r) => { r2 = r; }).then(() => true);
+  m.play(); const stale = m.now; m.next(); // the new selection's own start also waits on r2
+  r2(); await tick(); await tick();
+  assert.notEqual(m.now, stale);
+  // a current valid attempt starts
+  m.signal.resume = async () => true;
+  m.pause(); m.play(); await tick(); await tick();
+  assert.equal(m.status, 'playing'); assert.equal(m.audio.paused, false);
+  let r3; m.signal.resume = () => new Promise((r) => { r3 = r; }).then(() => true);
+  m.pause(); m.play(); const before = m.audio.calls.filter((c) => c === 'play').length;
+  m.dispose(); r3(); await tick();
+  assert.equal(m.audio.calls.filter((c) => c === 'play').length, before, 'disposal fences a pending start');
+});
+
+test('R13-02: one Play from ready, recoverable failure, finished and activation-blocked states', async () => {
+  // ready (prepared, never started): one press plays
+  installFetch();
+  const a = new Soundtrack({ sessionId: 's3', epoch: 1, listener: { library: 'cj', seat: 'A', label: 'You' }, controller: true });
+  await a.prepare([{ library: 'red', participant: { label: 'Red' }, max: 2 }]);
+  assert.deepEqual([a.status, a.primaryAction()], ['ready', 'play']);
+  a.togglePlay(); await tick(); await tick();
+  assert.deepEqual([a.status, a.primaryAction(), a.audio.paused], ['playing', 'pause', false], 'the first press plays');
+  // recoverable failure in the table mix: Play retries the same recording; the pending skip is cancelled
+  const failed = a.now;
+  a.audio.dispatchEvent(new Event('error'));
+  assert.deepEqual([a.status, a.primaryAction()], ['failed', 'play']);
+  a.togglePlay(); await tick(); await tick();
+  assert.equal(a.now, failed); assert.equal(a.status, 'playing'); assert.equal(failed.entry.skipped, false);
+  await new Promise((r) => setTimeout(r, 1700));
+  assert.equal(a.now, failed, 'no skip after a successful retry');
+  // finished table mix: Play again restarts the last song from zero
+  a.next(); await tick(); await tick();
+  a.audio.currentTime = 99.5; a.audio.dispatchEvent(new Event('ended'));
+  assert.deepEqual([a.status, a.primaryAction()], ['finished', 'play-again']);
+  a.togglePlay(); await tick(); await tick();
+  assert.deepEqual([a.status, a.audio.currentTime, a.transport.at(-1).reason], ['playing', 0, 'play-again']);
+  a.dispose();
+  // activation blocked: the recording stays selected (never skipped) until one gesture
+  const b = await playingTrack();
+  b.pause();
+  b.signal.resume = async () => false; // the browser holds the audio graph until a user gesture
+  const keep = b.now;
+  b.play(); await tick(); await tick();
+  assert.deepEqual([b.status, b.primaryAction()], ['blocked', 'play']);
+  await new Promise((r) => setTimeout(r, 1700));
+  assert.equal(b.now, keep); assert.equal(!!keep.entry.skipped, false, 'a block is not unusable media');
+  b.signal.resume = async () => true;
+  b.togglePlay(); await tick(); await tick();
+  assert.deepEqual([b.now, b.status], [keep, 'playing'], 'one gesture recovers the same recording');
+  // a play() refusal (NotAllowedError) is the same block
+  b.pause();
+  const orig = b.audio.play.bind(b.audio);
+  b.audio.play = () => Promise.reject(Object.assign(Error('denied'), { name: 'NotAllowedError' }));
+  b.play(); await tick(); await tick();
+  assert.equal(b.status, 'blocked');
+  b.audio.play = orig; b.togglePlay(); await tick(); await tick();
+  assert.equal(b.status, 'playing');
+  b.dispose();
+});
+
+test('R13-03: Previous follows actual recent listening (1, 2, 3, replay 1, Return 3, Previous → 1)', async () => {
+  installFetch();
+  const m = new Soundtrack({ sessionId: 's4', epoch: 1, listener: { library: 'cj', seat: 'A', label: 'You' }, controller: true });
+  await m.prepare([{ library: 'red', participant: { label: 'Red' }, max: 2 }, { library: 'cj', songIds: ['x'], participant: { label: 'You' } }]);
+  m.start(); await tick(); await tick();
+  m.next(); await tick(); await tick(); m.next(); await tick(); await tick();
+  const [s1, , s3] = m.queue.entries.map((e) => e.item);
+  assert.equal(m.now, s3);
+  m.keep(s1); m.keptRows(); m.playedRows(); await tick(); // saving and browsing are not listening
+  assert.deepEqual(m.history.map((x) => x.item), m.queue.entries.map((e) => e.item));
+  m.audio.currentTime = 20;
+  m.playItem(s1, m.playedRows().map((r) => r.item), 'played'); await tick(); await tick();
+  m.returnToTable(); await tick(); await tick();
+  assert.equal(m.now, s3);
+  m.seek(0);
+  assert.equal(m.nav().prev.does, 'replay-earlier');
+  const recent = m.recentItems().map((i) => i.key); // latest occurrence order when Previous is pressed
+  m.previous(); await tick(); await tick();
+  assert.deepEqual([m.mode, m.now], ['replay', s1], 'the most recently heard other recording');
+  // the replay list is captured then (recency order) and navigation walks back through it
+  assert.deepEqual(m.replay.list.map((i) => i.key), recent);
+  m.audio.currentTime = 10; m.previous();
+  assert.equal(m.transport.at(-1).reason, 'restart', 'after 3 s Previous restarts the song');
+  m.audio.currentTime = 1; m.previous(); await tick(); await tick();
+  assert.equal(m.transport.at(-1).reason, 'replay-previous');
+  m.dispose();
+});

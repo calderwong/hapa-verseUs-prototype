@@ -77,7 +77,7 @@ export class SeatedAvatar {
     this.seat = o.seat;
     this.group = new THREE.Group();
     this.group.name = 'seated-avatar';
-    this.group.userData = { environment: true, pickable: false };
+    this.group.userData = { environment: true, pickable: false, owner: 'seated-avatar' }; // released by the social table
     // the seat: beyond the far bank tray (y = h + 7.7 member widths for B), on the long centerline
     const back = 7.7 + 3.2;
     const cx = (w / 2) * S;

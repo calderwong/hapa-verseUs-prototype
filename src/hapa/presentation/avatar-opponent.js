@@ -254,12 +254,19 @@ export class AvatarOpponent extends EventTarget {
 
   _save() { try { localStorage.setItem(KEY, JSON.stringify({ mode: this.settings.mode, voice: this.settings.voice, captions: this.settings.captions })); } catch { /* storage unavailable */ } }
 
-  /** Open or close the conversation (nameplate, figure or keyboard). */
-  toggleConversation(open = !this.expanded) {
+  /**
+   * Open or close the conversation (nameplate, figure or keyboard). Collapsing keeps the draft, its
+   * selection and the history's scroll for reopening; `quiet` (another panel took the room, R13-04)
+   * leaves keyboard focus where the player put it.
+   */
+  toggleConversation(open = !this.expanded, { quiet = false } = {}) {
+    if (!!open === !!this.expanded) return;
+    if (!open && this.ui) this._logScroll = this.ui.log.scrollTop;
     this.expanded = open;
     this._render();
-    if (open) this.ui.input.focus({ preventScroll: true });
-    else this.ui.name.focus({ preventScroll: true });
+    if (open && this._logScroll != null && this.ui) this.ui.log.scrollTop = this._logScroll;
+    if (!quiet) { if (open) this.ui.input.focus({ preventScroll: true }); else this.ui.name.focus({ preventScroll: true }); }
+    this.dispatchEvent(new CustomEvent('expanded', { detail: { open: !!open } }));
   }
 
   // --- view (built once; updates touch only the nodes that change) -------------------------------
@@ -306,7 +313,7 @@ export class AvatarOpponent extends EventTarget {
     // only the history and labels change; the input element and its draft are never replaced
     const shown = this.log.slice(-8);
     const key = shown.map((m) => m.at ?? m.text).join('|') + shown.length;
-    if (key !== this._logKey) { this._logKey = key; u.log.replaceChildren(...shown.map((m) => h('p', { class: m.who === 'you' ? 'you' : 'them' }, h('b', {}, `${m.who}: `), m.text))); u.log.scrollTop = u.log.scrollHeight; }
+    if (key !== this._logKey) { this._logKey = key; u.log.replaceChildren(...shown.map((m) => h('p', { class: m.who === 'you' ? 'you' : 'them' }, h('b', {}, `${m.who}: `), m.text))); u.log.scrollTop = u.log.scrollHeight; this._logScroll = null; }
     for (const [m, btn] of Object.entries(u.modes)) btn.setAttribute('aria-pressed', String(s.mode === m));
     u.captions.checked = s.captions;
     const detail = [

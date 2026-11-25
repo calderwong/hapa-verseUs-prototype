@@ -8,6 +8,7 @@
  * data: a `sword` melee attack shows the sword, a `shield` protection shows the shield.
  */
 import * as THREE from 'three';
+import { shared } from './resources.js';
 import { PPU } from '../../../vendor/lumina/src/engine/constants.js';
 
 const OUT = '#0D131B';
@@ -57,7 +58,7 @@ function swordTexture() {
 }
 
 const cache = new Map();
-const tex = (key, make) => { if (!cache.has(key)) cache.set(key, make()); return cache.get(key); };
+const tex = (key, make) => { if (!cache.has(key)) cache.set(key, shared(make())); return cache.get(key); };
 
 const GEAR_SCALE = 1.25; // a little larger than the body's pixels so the gear reads at tactical distance
 function billboard(texture, wPx, hPx) {

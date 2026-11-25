@@ -13,6 +13,8 @@ import { STATE_LABEL, creditLine } from './soundtrack.js';
 
 const fmt = (s) => { if (!Number.isFinite(s) || s < 0) return '–:––'; const m = Math.floor(s / 60), x = Math.floor(s % 60); return `${m}:${String(x).padStart(2, '0')}`; };
 const lower = (s) => String(s ?? '').toLowerCase();
+const VIEW_LABEL = { queue: 'Queue', played: 'Played this match', kept: 'Kept', recent: 'Recently heard' };
+const PLAY_LABEL = { pause: 'Pause music', play: 'Play music', 'play-again': 'Play again from the start', 'replay-again': 'Play again', none: 'Nothing to play yet' };
 
 /** Introduction text from owner introduction records (who brought it, where), never its creator. */
 function introLine(intros) {
@@ -84,13 +86,24 @@ export class MusicDeck {
   }
 
   toggle(force) {
-    this.open = force ?? !this.open;
+    const open = force ?? !this.open;
+    if (open === this.open) return;
+    // a collapsed drawer keeps its tab, filter and list scroll for when it reopens (R13-04)
+    if (!open) this._listScroll = this.listEl.scrollTop;
+    this.open = open;
     this.drawer.hidden = !this.open;
     this.musicBtn.setAttribute('aria-expanded', String(this.open));
     this.musicBtn.textContent = this.open ? 'Music ▴' : 'Music ▾';
     this.deck.parentElement?.classList.toggle('drawer-open', this.open);
     if (this.open && this.tab === 'kept') this.m.refreshKept().catch(() => {});
     this._renderList(true);
+    if (this.open && this._listScroll != null) {
+      // restore once the reopened drawer has its final height (the deck may have moved slots)
+      const want = this._listScroll;
+      this.listEl.scrollTop = want;
+      requestAnimationFrame(() => requestAnimationFrame(() => { if (this.open && this.listEl.scrollTop !== want) this.listEl.scrollTop = want; }));
+    }
+    if (this.open) this.o.onOpen?.();
     this.o.onLayout?.();
   }
 
@@ -121,7 +134,7 @@ export class MusicDeck {
     const replay = m.mode === 'replay';
     this.ctxSlot.classList.toggle('on', replay);
     set(this.ctxBadge, 'Replay');
-    attr(this.ctxBadge, 'title', replay ? `A local replay from ${m.replay.view === 'kept' ? 'Kept' : m.replay.view === 'queue' ? 'Queue' : 'Played this match'}; the table mix is bookmarked` : '');
+    attr(this.ctxBadge, 'title', replay ? `A local replay from ${VIEW_LABEL[m.replay.view] ?? 'Played this match'}; the table mix is bookmarked` : '');
     attr(this.returnBtn, 'aria-disabled', String(!replay));
     attr(this.returnBtn, 'tabindex', replay ? '0' : '-1');
     // transport
@@ -131,11 +144,12 @@ export class MusicDeck {
       const t = n.ok ? (n.does === 'restart' ? `${label} (restart this song)` : n.does === 'replay-earlier' ? `${label}: replay the song played before` : label) : `${label} — ${n.why}`;
       attr(b, 'title', t); attr(b, 'aria-label', t);
     }
-    const playing = s.listening && it && ['playing', 'loading'].includes(m.status) && !(replay && m.replay.ended);
-    set(this.playBtn, playing ? '⏸' : '▶');
-    const pl = replay && m.replay.ended ? 'Play again' : playing ? 'Pause music' : 'Play music';
+    // the main button shows, names and performs one action (R13-02): Soundtrack.primaryAction()
+    const act = m.primaryAction();
+    set(this.playBtn, act === 'pause' ? '⏸' : act === 'play-again' || act === 'replay-again' ? '↻' : '▶');
+    const pl = PLAY_LABEL[act];
     attr(this.playBtn, 'aria-label', pl); attr(this.playBtn, 'title', pl);
-    attr(this.playBtn, 'aria-disabled', String(!it && !m.queue.entries.length));
+    attr(this.playBtn, 'aria-disabled', String(act === 'none'));
     // Keep: one slot, fixed labels
     const target = m.keepTarget();
     const k = target ? m.keeps.get(target.queueEntryId) : null;
@@ -158,7 +172,7 @@ export class MusicDeck {
     if (document.activeElement !== this.vol && Number(this.vol.value) !== s.volume) this.vol.value = String(s.volume);
     // status line (reserved height)
     set(this.stateEl, this._statusText(it, k));
-    this.stateEl.className = `np-state ${m.status === 'failed' || k?.state === 'keep-failed' ? 'warn' : ''}`;
+    this.stateEl.className = `np-state ${m.status === 'failed' || m.status === 'blocked' || k?.state === 'keep-failed' ? 'warn' : ''}`;
     // response settings
     for (const r of this.respRadios) { const inp = r.querySelector('input'); inp.checked = inp.value === s.response; }
     this.stillBox.checked = m.still;
@@ -168,7 +182,9 @@ export class MusicDeck {
 
   _statusText(it, k) {
     const m = this.m;
-    if (m.status === 'failed') return m.mode === 'replay' ? `Unavailable: ${m.error}` : `Music paused: ${m.error}`;
+    if (m.status === 'failed') return m.mode === 'replay' ? `Unavailable: ${m.error} · Play tries again` : `Could not play: ${m.error} · Play tries again`;
+    if (m.status === 'blocked') return m.error ?? 'Press Play to start the sound';
+    if (m.status === 'finished') return 'Table mix finished · Play again restarts the last song';
     if (m.error && m.status === 'paused') return m.error;
     if (m.status === 'loading') return 'Loading…';
     if (m.mode === 'replay' && m.replay.ended) return 'Replay finished · Play again or return to the table mix';
@@ -222,7 +238,7 @@ export class MusicDeck {
     if (!force && sig === this._sig) return;
     this._sig = sig;
     const active = document.activeElement, focusKey = this.listEl.contains(active) ? active.closest('[data-key]')?.dataset.key : null, focusAct = active?.dataset?.act;
-    const scroll = this.listEl.scrollTop;
+    const scroll = this.listEl.scrollTop || (force ? this._listScroll ?? 0 : 0);
     const openProv = new Set([...this.listEl.querySelectorAll('details[open]')].map((d) => d.closest('[data-key]')?.dataset.key));
     const playable = rows.filter((r) => r.item && !r.skipped).map((r) => r.item);
     this.listEl.replaceChildren(...rows.map((r) => this._row(r, playable, now, tableItem)));

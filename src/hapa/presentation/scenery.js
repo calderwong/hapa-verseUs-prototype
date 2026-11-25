@@ -29,7 +29,7 @@ import { brushRng } from './palette.js';
 export const M = 40;
 export const APRON = 9; // a deep cedar apron: it encloses the excavation bands (to −2.7) and Red's seated waist
 export const TERRACE_Y = -0.76 * M; // the stone terrace the table stands on (a 76 cm table)
-export const WATER_Y = TERRACE_Y - 1.3 * M;
+export const WATER_Y = TERRACE_Y - 0.55 * M; // a high-tide quay: the water reads from Home just past the parapet (R13-06)
 const CEDAR = 0x76513a, CEDAR_DARK = 0x4a3326, BRASS = 0xb99252, HAZE = 0x8ba5a4, LANTERN = 0xffd7a0, LINEN = 0xeee2c8;
 
 const lerpK = (dt, tau) => 1 - Math.exp(-dt / tau);
@@ -138,27 +138,54 @@ function dotTexture() {
   return t;
 }
 
-/** Broad wet flagstones (procedural): large irregular flags, dark joints, a little moss; low contrast. */
+/**
+ * Wet coursed flagstones (procedural; Review 13 R13-06): six irregular courses per repeat, quiet
+ * joints only a little darker than the stone, soft per-stone value shifts, and moss living in the
+ * joints (never flat polygons on top), so the floor reads as a material rather than a grid.
+ */
 function flagTexture(seed) {
   const N = 256, cv = document.createElement('canvas'); cv.width = cv.height = N;
   const g = cv.getContext('2d');
   const rng = brushRng(seed);
-  g.fillStyle = '#263030'; g.fillRect(0, 0, N, N);
-  const rows = [0, 58, 120, 176, 256];
+  g.fillStyle = '#4b514c'; g.fillRect(0, 0, N, N); // the joint: close in value to the stone
+  const rows = [0, 40, 86, 126, 170, 212, 256];
+  const wrap = (fn) => { for (const dx of [0, -N]) fn(dx); };
   for (let r = 0; r < rows.length - 1; r++) {
-    let x = -Math.floor(rng() * 60);
+    let x = -Math.floor(rng() * 50);
     while (x < N) {
-      const w = 70 + Math.floor(rng() * 80), y0 = rows[r] + 2, y1 = rows[r + 1] - 2;
-      const v = 86 + Math.floor(rng() * 16), tint = Math.floor(rng() * 6);
-      g.fillStyle = `rgb(${v - 8 - tint},${v},${v - 2})`;
-      for (const dx of [0, N]) g.fillRect(x + 2 - dx, y0, w - 4, y1 - y0); // wrap horizontally
-      for (let i = 0; i < 26; i++) { g.fillStyle = rng() < 0.5 ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.06)'; g.fillRect(x + 4 + rng() * (w - 12), y0 + 3 + rng() * (y1 - y0 - 6), 6 + rng() * 22, 2 + rng() * 3); }
-      if (rng() < 0.35) { g.fillStyle = 'rgba(70,96,62,0.55)'; g.fillRect(x + rng() * w, y1 - 2, 10 + rng() * 26, 3); }
+      const w = 38 + Math.floor(rng() * 52), y0 = rows[r] + 1, y1 = rows[r + 1] - 1;
+      const v = 92 + Math.floor(rng() * 9), warm = Math.floor(rng() * 5);
+      g.fillStyle = `rgb(${v + warm - 4},${v},${v - 5})`;
+      wrap((dx) => g.fillRect(x + 1 + dx, y0, w - 2, y1 - y0)); // wrap horizontally
+      for (let i = 0; i < 18; i++) { g.fillStyle = rng() < 0.5 ? 'rgba(255,250,235,0.03)' : 'rgba(0,0,0,0.045)'; const px = x + 3 + rng() * (w - 8), py = y0 + 2 + rng() * (y1 - y0 - 4), pw = 4 + rng() * 14, ph = 1 + rng() * 3; wrap((dx) => g.fillRect(px + dx, py, pw, ph)); }
+      // moss in the joint under some stones, feathered into the stone's foot
+      if (rng() < 0.45) {
+        const mx = x + rng() * w * 0.6, mw = 10 + rng() * 26;
+        for (let k = 0; k < 3; k++) { g.fillStyle = `rgba(${78 + k * 6},${98 + k * 6},${62},${0.42 - k * 0.12})`; wrap((dx) => g.fillRect(mx + dx - k * 2, y1 - 1 - k, mw + k * 4, 2 + k)); }
+      }
       x += w;
     }
   }
+  // a few lichen speckles (quiet, warm) so broad areas are not flat
+  for (let i = 0; i < 140; i++) { g.fillStyle = rng() < 0.6 ? 'rgba(120,128,88,0.16)' : 'rgba(170,160,120,0.10)'; g.fillRect(rng() * N, rng() * N, 1 + rng() * 2, 1 + rng() * 2); }
   const t = new THREE.CanvasTexture(cv);
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+
+/** A soft moss decal (alpha falls off irregularly), for drifts along the parapet and planters. */
+function mossTexture(seed) {
+  const N = 128, cv = document.createElement('canvas'); cv.width = N; cv.height = N / 2;
+  const g = cv.getContext('2d');
+  const rng = brushRng(seed);
+  for (let i = 0; i < 220; i++) {
+    const x = N * (0.08 + 0.84 * rng()), y = (N / 2) * (0.25 + 0.5 * rng()) + Math.sin(x * 0.07) * 4;
+    const r = 3 + rng() * 9, a = 0.10 + rng() * 0.14;
+    const grd = g.createRadialGradient(x, y, 0, x, y, r);
+    grd.addColorStop(0, `rgba(${84 + rng() * 20},${104 + rng() * 18},${64},${a})`); grd.addColorStop(1, 'rgba(70,90,58,0)');
+    g.fillStyle = grd; g.fillRect(x - r, y - r, 2 * r, 2 * r);
+  }
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 
@@ -188,7 +215,7 @@ function cedarTexture(seed) {
 export async function buildScenery(root, b) {
   const group = new THREE.Group();
   group.name = 'scenery';
-  group.userData = { environment: true, pickable: false };
+  group.userData = { environment: true, pickable: false, owner: 'scenery' }; // released by its own dispose (R13-05)
   root.add(group);
   const textures = new TextureLibrary({ seed: 1337, anisotropy: 4 });
   const f = new PropFactory({ textures, seed: 7 });
@@ -213,12 +240,21 @@ export async function buildScenery(root, b) {
   // the underside: faces down only, so from above it never fills an open pit; from below it hides them
   const under = new THREE.Mesh(keep(new THREE.PlaneGeometry(W, D)), keep(new THREE.MeshStandardMaterial({ color: 0x241a14, roughness: 1 })));
   under.rotation.x = Math.PI / 2; under.position.set(cx, -APRON + 0.05, cz); group.add(under);
-  // the raised lip: a darker cedar edge just above the top plane, never over the banks
+  // the top rail (R13-06): a warm cedar overhang round the painted top, wide enough to read as the
+  // table's own edge from Home, with a fine brass line and brass corner plates. Outside the painted
+  // top and the banks; it does not respond to music (the response stays on the apron inlay)
   const lipMat = keep(new THREE.MeshStandardMaterial({ color: CEDAR_DARK, roughness: 0.75, flatShading: true }));
-  box(W + 2 * lip + 0.4, 0.3, lip + 0.4, lipMat, cx, 0.06, b.z1 + lip / 2 + 0.2);
-  box(W + 2 * lip + 0.4, 0.3, lip + 0.4, lipMat, cx, 0.06, b.z0 - lip / 2 - 0.2);
-  box(lip + 0.4, 0.3, D, lipMat, b.x0 - lip / 2 - 0.2, 0.06, cz);
-  box(lip + 0.4, 0.3, D, lipMat, b.x1 + lip / 2 + 0.2, 0.06, cz);
+  const RAIL = 3.4, railY = 0.2, railH = 0.42;
+  const railX = cedarMat(W / 5, 1), railZ = cedarMat(D / 5, 1);
+  box(W + 2 * RAIL, railH, RAIL, railX, cx, railY, b.z1 + RAIL / 2);
+  box(W + 2 * RAIL, railH, RAIL, railX, cx, railY, b.z0 - RAIL / 2);
+  box(RAIL, railH, D, railZ, b.x0 - RAIL / 2, railY, cz);
+  box(RAIL, railH, D, railZ, b.x1 + RAIL / 2, railY, cz);
+  // a darker bevel on the rail's outer edge
+  box(W + 2 * RAIL + 0.3, 0.5, 0.3, lipMat, cx, railY - 0.06, b.z1 + RAIL + 0.15);
+  box(W + 2 * RAIL + 0.3, 0.5, 0.3, lipMat, cx, railY - 0.06, b.z0 - RAIL - 0.15);
+  box(0.3, 0.5, D + 2 * RAIL, lipMat, b.x0 - RAIL - 0.15, railY - 0.06, cz);
+  box(0.3, 0.5, D + 2 * RAIL, lipMat, b.x1 + RAIL + 0.15, railY - 0.06, cz);
   // two aged-brass inlay bands on the apron (the decorative trim that responds to music)
   const inlay = keep(new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.55, roughness: 0.45, emissive: new THREE.Color(0xffb46a), emissiveIntensity: 0.08 }));
   const band = 0.32, out = 0.06, bands = [-1.6, -APRON + 1.2];
@@ -230,6 +266,12 @@ export async function buildScenery(root, b) {
   }
   const by = bands[0];
   const capMat = keep(new THREE.MeshStandardMaterial({ color: BRASS, metalness: 0.6, roughness: 0.5 }));
+  const lineY = railY + railH / 2 + 0.01, lineIn = RAIL * 0.62;
+  box(W + 2 * lineIn, 0.04, 0.22, capMat, cx, lineY, b.z1 + lineIn);
+  box(W + 2 * lineIn, 0.04, 0.22, capMat, cx, lineY, b.z0 - lineIn);
+  box(0.22, 0.04, D + 2 * lineIn, capMat, b.x0 - lineIn, lineY, cz);
+  box(0.22, 0.04, D + 2 * lineIn, capMat, b.x1 + lineIn, lineY, cz);
+  for (const [x, z] of [[b.x0 - RAIL / 2, b.z0 - RAIL / 2], [b.x1 + RAIL / 2, b.z0 - RAIL / 2], [b.x0 - RAIL / 2, b.z1 + RAIL / 2], [b.x1 + RAIL / 2, b.z1 + RAIL / 2]]) box(RAIL - 0.5, 0.06, RAIL - 0.5, capMat, x, lineY + 0.02, z);
   const corners = [[b.x0 - lip, b.z0 - lip], [b.x1 + lip, b.z0 - lip], [b.x0 - lip, b.z1 + lip], [b.x1 + lip, b.z1 + lip]];
   for (const [x, z] of corners) box(1.1, APRON + 0.2, 1.1, capMat, x, -APRON / 2 + 0.05, z);
   // turned cedar legs and a low stretcher frame down to the terrace
@@ -247,13 +289,16 @@ export async function buildScenery(root, b) {
   box(1.6, 1.6, legAt[3][1] - legAt[1][1], lipMat, legAt[1][0], stretchY, cz);
 
   // --- the terrace: wet flagstones with moss, a low parapet and a retaining wall to the water -----
-  const T = { x0: b.x0 - 2.2 * M, x1: b.x1 + 2.2 * M, z0: b.z0 - 2.6 * M, z1: b.z1 + 2.6 * M };
+  // shallower behind the opponent's chair and at the sides, so the far parapet and the water below
+  // it enter the normal Home frame (R13-06); deep on the viewer's side, which Home barely shows
+  const farD = 1.4 * M, nearD = 2.6 * M, sideD = 1.8 * M;
+  const T = { x0: b.x0 - sideD, x1: b.x1 + sideD, z0: b.z0 - (nearZ > 0 ? farD : nearD), z1: b.z1 + (nearZ > 0 ? nearD : farD) };
+  const farEdge = nearZ > 0 ? T.z0 : T.z1;
   // the excavation volume (to band −3, y −3.6) stays empty: the terrace lies ~27 units below it and the
   // apron/underside enclose it, so the terrace can run under the table without covering a pit
-  const hole = { x0: b.x0 - 0.02, x1: b.x1 + 0.02, z0: b.z0 - 0.02, z1: b.z1 + 0.02 };
   const flagTex = keep(flagTexture(0xf1a6));
-  const FLAG = 2.6 * M; // one texture repeat: about 2.6 m of terrace
-  const flagMat = keep(new THREE.MeshStandardMaterial({ map: flagTex, roughness: 0.62, metalness: 0.05, color: 0xb4bcbb }));
+  const FLAG = 1.9 * M; // one texture repeat: about 1.9 m of terrace (six courses of ~32 cm)
+  const flagMat = keep(new THREE.MeshStandardMaterial({ map: flagTex, roughness: 0.66, metalness: 0.04, color: 0xa9ada6 }));
   const flag = (x0, x1, z0, z1) => {
     const geo = keep(new THREE.PlaneGeometry(x1 - x0, z1 - z0));
     const uv = geo.attributes.uv; // world-anchored UVs: the pattern continues across strips
@@ -269,17 +314,18 @@ export async function buildScenery(root, b) {
   keep(shadowTex);
   const contact = new THREE.Mesh(keep(new THREE.PlaneGeometry(W * 1.35, D * 1.25)), keep(new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, color: 0x000000, opacity: 0.8 })));
   contact.rotation.x = -Math.PI / 2; contact.position.set(cx, TERRACE_Y + 0.12, cz); group.add(contact);
-  // moss creeping in from the terrace edge (composed patches, not uniform scatter)
-  const mossMat = keep(new THREE.MeshLambertMaterial({ color: 0x3f5a3c, transparent: true, opacity: 0.8, depthWrite: false }));
-  for (let i = 0; i < 26; i++) {
-    const edge = i % 4, t = rnd();
-    const x = edge === 0 ? T.x0 + 6 + rnd() * 18 : edge === 1 ? T.x1 - 6 - rnd() * 18 : T.x0 + t * (T.x1 - T.x0);
-    const z = edge >= 2 ? (edge === 2 ? T.z0 + 6 + rnd() * 18 : T.z1 - 6 - rnd() * 14) : T.z0 + t * (T.z1 - T.z0);
-    if (x > hole.x0 - 8 && x < hole.x1 + 8 && z > hole.z0 - 8 && z < hole.z1 + 8) continue;
-    const m = new THREE.Mesh(keep(new THREE.CircleGeometry(6 + rnd() * 12, 7)), mossMat);
-    m.rotation.x = -Math.PI / 2; m.rotation.z = rnd() * 6; m.scale.set(1, 0.5 + rnd() * 0.6, 1);
-    m.position.set(x, TERRACE_Y + 0.05, z);
-    group.add(m);
+  // moss drifts hugging the parapet and the planters (soft-edged, in the stone's own value range);
+  // the rest of the moss lives in the joints of the flag texture
+  const mossTex = keep(mossTexture(0x3055));
+  const mossMat = keep(new THREE.MeshLambertMaterial({ map: mossTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 }));
+  const drift = (x, z, len, depth, ry) => {
+    const m = new THREE.Mesh(keep(new THREE.PlaneGeometry(len, depth)), mossMat);
+    m.rotation.set(-Math.PI / 2, 0, ry); m.position.set(x, TERRACE_Y + 0.06, z); group.add(m);
+  };
+  for (let i = 0; i < 18; i++) {
+    const edge = i % 4, t = 0.08 + 0.84 * rnd(), len = (0.7 + rnd() * 0.9) * M, dep = (0.22 + rnd() * 0.16) * M;
+    if (edge < 2) drift(T.x0 + t * (T.x1 - T.x0), (edge === 0 ? T.z0 : T.z1) + (edge === 0 ? 1 : -1) * (dep / 2 + 4), len, dep, 0);
+    else drift((edge === 2 ? T.x0 : T.x1) + (edge === 2 ? 1 : -1) * (dep / 2 + 4), T.z0 + t * (T.z1 - T.z0), len, dep, Math.PI / 2);
   }
   const curbMat = keep(new THREE.MeshStandardMaterial({ color: 0x56605f, roughness: 0.9, flatShading: true }));
   const curb = 0.35 * M, curbH = 0.4 * M;
@@ -365,8 +411,11 @@ export async function buildScenery(root, b) {
   // enough out that no camera mode looks through them at the board)
   const shrubMat = keep(new THREE.MeshLambertMaterial({ color: 0x34503a, flatShading: true }));
   const planterMat = keep(new THREE.MeshStandardMaterial({ color: 0x4a5453, roughness: 0.95, flatShading: true }));
-  for (const [x, z] of [[T.x0 + 0.45 * M, T.z0 + 0.45 * M], [T.x1 - 0.45 * M, T.z0 + 0.45 * M], [T.x0 + 0.45 * M, T.z1 - 0.45 * M], [T.x1 - 0.45 * M, T.z1 - 0.45 * M]]) {
+  // only on the viewer's side: the far corners stay open so the parapet and water read from Home
+  const nearT = nearZ > 0 ? T.z1 - 0.45 * M : T.z0 + 0.45 * M;
+  for (const [x, z] of [[T.x0 + 0.45 * M, nearT], [T.x1 - 0.45 * M, nearT]]) {
     box(0.6 * M, 0.3 * M, 0.6 * M, planterMat, x, TERRACE_Y + 0.15 * M, z);
+    drift(x, z, 0.95 * M, 0.95 * M, rnd() * 3);
     for (let i = 0; i < 5; i++) {
       const m = new THREE.Mesh(keep(new THREE.IcosahedronGeometry(5 + rnd() * 4, 0)), shrubMat);
       m.position.set(x + (rnd() - 0.5) * 14, TERRACE_Y + 0.3 * M + 4 + rnd() * 5, z + (rnd() - 0.5) * 14); m.scale.y = 0.75;
@@ -387,6 +436,53 @@ export async function buildScenery(root, b) {
     moss.position.copy(m.position).add(new THREE.Vector3(0, 2, 0)); moss.scale.set(1.1, 0.35, 1);
     group.add(moss);
   }
+
+  // --- the coastal cue seen from Home (R13-06): a moored skiff below the far parapet, its line made
+  // fast to an iron bollard on the curb, a second bollard and a coiled rope beside it ---------------
+  const ironMat = keep(new THREE.MeshStandardMaterial({ color: 0x2b302f, roughness: 0.6, metalness: 0.35, flatShading: true }));
+  const ropeMat = keep(new THREE.MeshStandardMaterial({ color: 0x86735a, roughness: 0.95 }));
+  const curbTop = TERRACE_Y + curbH, inward = nearZ; // +z is inward when the far edge is z0
+  const bollards = [cx - 1.35 * M, cx + 1.55 * M].map((x) => {
+    const post = new THREE.Mesh(keep(new THREE.CylinderGeometry(1.5, 1.9, 0.3 * M, 10)), ironMat);
+    post.position.set(x, curbTop + 0.15 * M, farEdge); group.add(post);
+    const cap = new THREE.Mesh(keep(new THREE.SphereGeometry(2.2, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2)), ironMat);
+    cap.position.set(x, curbTop + 0.3 * M, farEdge); cap.scale.y = 0.6; group.add(cap);
+    const turn = new THREE.Mesh(keep(new THREE.TorusGeometry(1.9, 0.4, 6, 14)), ropeMat);
+    turn.rotation.x = Math.PI / 2; turn.position.set(x, curbTop + 0.2 * M, farEdge); group.add(turn);
+    return new THREE.Vector3(x, curbTop + 0.2 * M, farEdge);
+  });
+  const coil = new THREE.Mesh(keep(new THREE.TorusGeometry(2.8, 0.7, 6, 18)), ropeMat);
+  coil.rotation.x = -Math.PI / 2; coil.position.set(bollards[1].x + 9, TERRACE_Y + 1.1, farEdge + inward * 9); group.add(coil);
+  // the skiff: a lofted cedar hull with thwarts, riding just off the wall
+  const skiff = new THREE.Group();
+  const L = 2.0 * M, Bm = 0.8 * M, Hh = 0.3 * M;
+  const outline = new THREE.Shape();
+  outline.moveTo(-L / 2, 0); outline.quadraticCurveTo(-L * 0.25, Bm / 2, 0, Bm / 2); outline.quadraticCurveTo(L * 0.3, Bm / 2, L / 2, 0);
+  outline.quadraticCurveTo(L * 0.3, -Bm / 2, 0, -Bm / 2); outline.quadraticCurveTo(-L * 0.25, -Bm / 2, -L / 2, 0);
+  const hullGeo = keep(new THREE.ExtrudeGeometry(outline, { depth: Hh, bevelEnabled: true, bevelThickness: 2, bevelSize: 2, bevelSegments: 1, curveSegments: 12 }));
+  hullGeo.rotateX(Math.PI / 2); hullGeo.translate(0, Hh, 0);
+  // a painted working skiff: weathered teal hull, cream gunwale (reads as a boat at a glance)
+  const hullMat = keep(new THREE.MeshStandardMaterial({ color: 0x2f5552, roughness: 0.75, flatShading: true }));
+  const hull = new THREE.Mesh(hullGeo, hullMat); skiff.add(hull);
+  const rimGeo = keep(new THREE.ExtrudeGeometry(outline, { depth: 1.1, bevelEnabled: false, curveSegments: 12 }));
+  rimGeo.rotateX(Math.PI / 2); rimGeo.translate(0, Hh + 2.4, 0);
+  const rim = new THREE.Mesh(rimGeo, keep(new THREE.MeshStandardMaterial({ color: 0xd8ccb0, roughness: 0.8, flatShading: true })));
+  rim.scale.set(1.03, 1, 1.05); skiff.add(rim);
+  const inside = new THREE.Mesh(keep(new THREE.ShapeGeometry(outline, 12)), keep(new THREE.MeshStandardMaterial({ color: 0x2c2019, roughness: 1 })));
+  inside.rotation.x = -Math.PI / 2; inside.position.y = Hh + 2.6; inside.scale.set(0.93, 0.86, 1); skiff.add(inside);
+  for (const t of [-0.22, 0.12]) { const th = new THREE.Mesh(keep(new THREE.BoxGeometry(2.2, 1.0, Bm * 0.8)), cedarMat(1, 1)); th.position.set(t * L, Hh + 3.2, 0); skiff.add(th); }
+  const oar = new THREE.Mesh(keep(new THREE.BoxGeometry(L * 0.7, 0.8, 1.6)), keep(new THREE.MeshStandardMaterial({ color: 0x9a7a55, roughness: 0.85, flatShading: true })));
+  oar.position.set(0.05 * L, Hh + 3.8, Bm * 0.18); oar.rotation.y = 0.12; skiff.add(oar);
+  // lying along the wall in the band of water the Home view sees just beyond the parapet
+  const skiffAt = new THREE.Vector3(cx - 2.3 * M, WATER_Y + 0.5, farEdge - inward * (curb / 2 + 0.5 * M));
+  skiff.position.copy(skiffAt); skiff.rotation.y = 0.1; group.add(skiff);
+  // its painter (bow line) sags from the bow ring to the left bollard
+  const bow = new THREE.Vector3(-L / 2 - 2, Hh, 0).applyEuler(skiff.rotation).add(skiffAt);
+  const mid = bow.clone().lerp(bollards[0], 0.5); mid.y = Math.min(bow.y, bollards[0].y) + 6;
+  const line = new THREE.Mesh(keep(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(bow, mid, bollards[0]), 16, 0.45, 5, false)), ropeMat);
+  group.add(line);
+  let bob = 0;
+  updates.push((dt) => { bob += dt; skiff.position.y = skiffAt.y + Math.sin(bob * 0.9) * 0.45; skiff.rotation.z = Math.sin(bob * 0.7 + 1) * 0.015; });
 
   // --- practicals: four warm lanterns, a brazier, and a small linen-and-brass side table ----------
   const lanterns = [];
@@ -425,9 +521,9 @@ export async function buildScenery(root, b) {
   const cup = new THREE.Mesh(keep(new THREE.CylinderGeometry(1.7, 1.3, 3.6, 12)), capMat);
   cup.position.set(st.x + 0.24 * M, TERRACE_Y + stH + 2.5, st.z - 0.08 * M); group.add(cup);
   // a linen runner folded over the near lip of the table (outside the playable top)
-  const nearLip = nearZ > 0 ? b.z1 + lip / 2 + 0.2 : b.z0 - lip / 2 - 0.2;
-  box(9, 0.12, lip + 0.7, linen, b.x0 + 9, 0.26, nearLip);
-  box(9, 5.5, 0.1, linen, b.x0 + 9, -2.6, nearLip + nearZ * (lip / 2 + 0.42));
+  const nearRail = nearZ > 0 ? b.z1 + RAIL / 2 : b.z0 - RAIL / 2;
+  box(9, 0.12, RAIL + 0.5, linen, b.x0 + 9, railY + railH / 2 + 0.07, nearRail);
+  box(9, 5.5, 0.1, linen, b.x0 + 9, railY - 2.6, nearRail + nearZ * (RAIL / 2 + 0.42));
 
   // --- music response objects: an ember pool and one trim glint (fixed, reused) -----------------
   const dot = keep(dotTexture());

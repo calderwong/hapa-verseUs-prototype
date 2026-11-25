@@ -16,6 +16,7 @@
  * parties aiming at one territory fan out with a count. Endpoints never enter rules occupancy.
  */
 import * as THREE from 'three';
+import { shared } from './resources.js';
 
 const INK = { slate: '#17212D', ivory: '#F5F0E3', brass: '#C9A65E', a: '#7FB2E8', b: '#E8857A', bad: '#EF6A5B' };
 
@@ -131,7 +132,7 @@ const textures = new Map();
 export function pieceTexture(owner, piece, o = {}) {
   const key = `${owner}:${piece}:${o.ghost ? 1 : 0}:${o.status ?? ''}:${o.bad ? 1 : 0}:${o.count ?? 1}`;
   let t = textures.get(key);
-  if (!t) { t = new THREE.CanvasTexture(paintPiece(owner, piece, o)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; textures.set(key, t); }
+  if (!t) { t = new THREE.CanvasTexture(paintPiece(owner, piece, o)); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; textures.set(key, shared(t)); }
   return t;
 }
 
