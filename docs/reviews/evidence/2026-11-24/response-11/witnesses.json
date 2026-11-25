@@ -1,0 +1,226 @@
+{
+ "schema": "hapa.versus.response-11.witnesses.v1",
+ "candidate": "bafc36f1e40c46ab69cd8b239e6014acbc1393df (clean source; only this evidence folder untracked during captures)",
+ "browser": "Claude desktop built-in browser pane (Chromium), viewport emulation 1440x900 unless stated, ?debug handle for state reads",
+ "setup": {
+  "profile": "hapa_open_10x9_v3_07",
+  "A": "human (ui/0.2.0)",
+  "B": "bot with Red (red-reaper) at the table",
+  "table_choices_not_in_URL": "stored in localStorage hapa-versus.table.v1: avatarId red-reaper, songIds [00428c65\u2026 Good Knight], controller model|heuristic per witness"
+ },
+ "home_composition_1440x900": {
+  "pitch_deg": 46,
+  "world_px": [
+   1430,
+   808
+  ],
+  "head_top_y_px": 44,
+  "plane_anchor_shoulder_width_px": 229,
+  "far_table_edge_px": 397,
+  "note": "shoulder anchors are the plane's \u00b10.42 width points, slightly wider than the painted shoulders; head-top to shoulder-anchor spans 19.7% of the world view height; the visible head and torso above the table edge is larger"
+ },
+ "home_composition_2838x1020": {
+  "world_px": [
+   2828,
+   928
+  ],
+  "plane_anchor_shoulder_width_px": 264,
+  "far_table_edge_px": 456,
+  "head_top_y_px": 50,
+  "reviewer_baseline": "62x78 px portrait in a 64x80 corner box at the same viewport (review 10)"
+ },
+ "orbit_policy": {
+  "45deg": {
+   "a": 1,
+   "angle": 34.6
+  },
+  "90deg": {
+   "a": 0.48,
+   "angle": 65.7
+  },
+  "180deg": {
+   "a": 0,
+   "body_visible": false,
+   "chair_opacity": 0.22
+  },
+  "tactical": {
+   "a_during_rise": 0.28,
+   "pitch": 72,
+   "fit": "board only (tactical set before refit)"
+  }
+ },
+ "inspection_return_home": {
+  "close_inspection": {
+   "party": "A.mount.C4",
+   "distance": 25.6,
+   "opponent_in_fit": false,
+   "social": "docked"
+  },
+  "return_R": {
+   "restored": "prior pose (Home here: yaw 0, pitch 46, distance 255.4)"
+  },
+  "return_from_turned_pose": {
+   "before": {
+    "yaw": -0.7854,
+    "dist": 157.92
+   },
+   "after": {
+    "yaw": -0.7854,
+    "dist": 157.92
+   }
+  },
+  "home_after_turn_and_zoom": {
+   "yaw": 0,
+   "pitch": 0.8029,
+   "dist": 255.43
+  }
+ },
+ "conversation": {
+  "quiet_first_question": "greeting filtered (log 0); first typed question answered and voiced: clip-46377465-1524-489c-ae64-b72c49ade9a0, preparation 10266 ms, played",
+  "draft_survival": [
+   {
+    "state": "preparing-voice",
+    "draft": "And the music",
+    "focused": true,
+    "sel": [
+     4,
+     7
+    ]
+   },
+   {
+    "state": "speaking",
+    "speaking": true,
+    "sameInput": true,
+    "draft": "And the music",
+    "focused": true,
+    "sel": [
+     4,
+     7
+    ]
+   },
+   {
+    "state": "idle",
+    "sameInput": true,
+    "draft": "And the music",
+    "focused": true,
+    "sel": [
+     4,
+     7
+    ]
+   }
+  ],
+  "malformed_current_reply": "stubbed /v1/utterance with a foreign id \u2192 voiceError 'utterance reply does not match this request', state caption \u2192 finished (current null) within 4.2 s; caption kept",
+  "deadline": "30 s preparation deadline in source; not exercised live"
+ },
+ "music_identity": [
+  {
+   "tag": "q1 playing",
+   "now": "q1",
+   "active": "q1",
+   "src": true,
+   "paused": false,
+   "heard": [
+    "q1"
+   ]
+  },
+  {
+   "tag": "Next with a 2.5 s injected fetch delay",
+   "now": "q2",
+   "active": null,
+   "src": false,
+   "paused": true,
+   "title": "Good Knight"
+  },
+  {
+   "tag": "Not listening while q2 pending, then the fetch completes",
+   "now": "q2",
+   "active": null,
+   "src": false,
+   "paused": true
+  },
+  {
+   "tag": "Next while not listening",
+   "now": "q3",
+   "active": null,
+   "src": false
+  },
+  {
+   "tag": "Listening again \u2192 resumed",
+   "now": "q3",
+   "active": "q3",
+   "src": true,
+   "paused": false,
+   "heard": [
+    "q1",
+    "q3"
+   ]
+  }
+ ],
+ "keep": {
+  "injected_first_failure": {
+   "state": "keep-failed",
+   "retry_button": true
+  },
+  "after_retry": {
+   "state": "available-offline",
+   "discoveries": 1,
+   "heard": true
+  },
+  "unheard_save_q4": {
+   "state": "available-offline",
+   "heard": false,
+   "owner_encounter": {
+    "heardAt": null,
+    "heard": false
+   }
+  },
+  "two_introducers_one_file": "owner test test/peer-music.test.js (Song Registry 49a441a): same encounter repeated \u2192 same discoveryId, 1 discovery; a different introducer \u2192 2 discoveries, 1 asset file. Not reproduced live (no second live introducer of the same bytes)."
+ },
+ "model_live": {
+  "provider": "Harness participant-game view on 61290 \u2192 LM Studio qwen/qwen3.8-27b",
+  "ticks": [
+   [
+    1,
+    "admitted",
+    2317
+   ],
+   [
+    2,
+    "abstained",
+    1343
+   ],
+   [
+    3,
+    "admitted",
+    4038
+   ],
+   [
+    4,
+    "admitted",
+    4661
+   ]
+  ],
+  "replay_contains_provider_data": false,
+  "detach": {
+   "was_deciding": true,
+   "inflight_before": 1,
+   "old_receipt": {
+    "tick": 5,
+    "outcome": "cancelled-fallback",
+    "waitedMs": 556
+   },
+   "old_disposed": true,
+   "new_generation": 2
+  }
+ },
+ "owner_unavailable": {
+  "harbor_stopped": true,
+  "binding": "text-only (/capabilities 502)",
+  "body_visible": false,
+  "chair": "present",
+  "caption": "text",
+  "tick_before": 1,
+  "tick_after_ready": 2,
+  "capture": "06-harbor-unavailable.jpg"
+ }
+}

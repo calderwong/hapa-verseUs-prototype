@@ -9,7 +9,7 @@ CJ's acceptance is separate from technical completion and is not recorded here o
 | Area | Default |
 | --- | --- |
 | Opponent | Red (`red-reaper`). Until Milestone C, Red's moves come from the heuristic bot, and Red's binding says so. |
-| Presence | A compact perch in the opponent's corner with short captions. The conversation panel opens only on a deliberate click. |
+| Presence | Superseded by addendum 05 (response 11): Red is seated in the scene across the table, beyond the opponent's banks; a nameplate and short captions follow the face; the conversation opens only by deliberate click or keyboard. |
 | Talk | Normal (sparse) by default, with Quiet and Talkative settings. |
 | Music | Whole tracks alternate between contributions, opponent first. One explicit queue controller (the host seat); every change bumps the revision. Volume, mute and listening are local to each listener. |
 | Keep | Keep saves the reference durably, then starts verified retention of the exact heard asset. |
@@ -37,7 +37,7 @@ Rules for these attachments:
 Built:
 - `src/hapa/presentation/avatar-opponent.js`
   - The binding: seat ↔ Avatar ↔ renderer package ↔ Voice Card ↔ controller.
-  - Red's `RedPlayer` perch, captions, one speaking line and one waiting line, Stop, voice mute and the Talk mode.
+  - Red's `RedPlayer` (since response 11 rendered offscreen and seated in the scene by `seated-avatar.js`), captions, one speaking line and one waiting line, Stop, voice mute and the Talk mode.
   - Reduced motion and epoch fencing; Harbor cancel and receipts.
 - `src/hapa/presentation/reactions.js`: lines grounded in displayed events only.
 - `src/hapa/presentation/soundtrack.js`
@@ -108,6 +108,10 @@ Evidence: `evidence/milestone-c-model-decisions.json`.
 Invalid output is covered by the owner tests (Harness and Versus) because the strict schema
 prevented shape-invalid output live.
 
+## Response 11 (24 November 2026)
+
+Review 10 / Assignment 11 delivered at `bafc36f`: [response 11](../reviews/2026-11-24-ui-design-response-11.md). Owner revisions in use: Harbor `1ab09d9`, Song Registry `49a441a` (encounter-idempotent Keep), Harness `16dc700`.
+
 ## Status (24 November 2026)
 
 | Milestone | Technical status | Evidence |
@@ -124,7 +128,7 @@ CJ's acceptance is pending for all three; it is not recorded here.
   Hypercore keys over loopback. It is not two machines.
 - Red's songs are YuE2 generations. Their creator is recorded as *not stated*, because the job
   recorded no author; the generator is credited as a tool, not as a creator.
-- Red's portrait is the full `RedPlayer` canvas scaled into the perch, not a cropped portrait render.
+- Red's owner canvas is opaque (rgb 146 gray baked in by every stage); the seated plane uses a bounded border-connected matte of that exact color until the owner offers a transparent output (response 11).
 - Voice preparation takes about 9–10 s per line (OmniVoice). Captions show at once; voices arrive
   later. A line older than 35 s is dropped.
 - The launch link and saved preset do not carry the table choices (Red, tracks, controller). Those
@@ -132,8 +136,11 @@ CJ's acceptance is pending for all three; it is not recorded here.
 - The model-assisted run with seed 1 stalled at Tick 98–111 with all parties idle, while the human
   seat stayed idle. It is not established whether the model's choices caused this; the
   heuristic-only run with seed 1 ended at Tick 34.
-- No model response decision arose live: the human never cast a Spell. The response path is covered
-  by tests only.
+- No model response decision arose live: the human never cast a Spell. Correction (review 10, R10-05/06):
+  at `3b812f1` the host tests did **not** exercise `respond()`; since response 11 they do (input-digest
+  binding, exactly one choice, prepared fallback).
+- Music scope (R10-06): the table queue, its revision and Next are local to one browser. Two library
+  processes on one Mac played and kept songs; this is not synchronized listening between clients.
 - Listening replicas of peer offers stay in the receiving node's `peer-music/remote/` until pruned.
   Pruning is not built.
 - Export and re-share, and retained songs in the Song Registry's Electron UI, are not built.
