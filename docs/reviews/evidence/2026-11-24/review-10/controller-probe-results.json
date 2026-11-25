@@ -1,0 +1,180 @@
+{
+  "sourceCommit": "3b812f1877c3d00b080268e57fce5137e574669d",
+  "environment": "headless source-only; fetch stubbed; no model/service/browser calls",
+  "probes": {
+    "combinedFunding": {
+      "label": "ordinary opening reached by six actual resolved Ticks with A passing and B heuristic",
+      "tick": 7,
+      "offered": [
+        {
+          "id": "d1",
+          "subject": "Queen at R7C3",
+          "options": [
+            {
+              "key": "hold",
+              "text": "no new destination this Tick"
+            },
+            {
+              "key": "o1",
+              "text": "move to R2C3, attacking the enemy there (route cost 5)"
+            },
+            {
+              "key": "o2",
+              "text": "move to R2C8, attacking the enemy there (route cost 5)"
+            },
+            {
+              "key": "o3",
+              "text": "move to R1C3, attacking the enemy there (route cost 6)"
+            },
+            {
+              "key": "o4",
+              "text": "move to R4C6 (route cost 3)"
+            }
+          ]
+        },
+        {
+          "id": "d2",
+          "subject": "Bishop at R10C3",
+          "options": [
+            {
+              "key": "hold",
+              "text": "no new destination this Tick"
+            },
+            {
+              "key": "o1",
+              "text": "move to R8C1, picking up a Pawn on the way (route cost 2)"
+            },
+            {
+              "key": "o2",
+              "text": "move to R8C5, picking up a Pawn on the way (route cost 2)"
+            },
+            {
+              "key": "o3",
+              "text": "move to R9C2, picking up a Pawn on the way (route cost 1)"
+            },
+            {
+              "key": "o4",
+              "text": "move to R9C4, picking up a Pawn on the way (route cost 1)"
+            }
+          ]
+        }
+      ],
+      "requested": {
+        "B.mount.C4": "3_1",
+        "B.mount.C7": "1_8"
+      },
+      "actualDestinations": [
+        {
+          "type": "set_destination",
+          "partyId": "B.mount.C4",
+          "target": {
+            "column": 3,
+            "row": 1
+          }
+        }
+      ],
+      "sharedValidator": {
+        "ok": true,
+        "accepted": [
+          {
+            "type": "load_supply",
+            "cardId": "B.C7.T7.0",
+            "partyId": "B.mount.C4"
+          },
+          {
+            "type": "load_supply",
+            "cardId": "B.C3.T7.0",
+            "partyId": "B.mount.C4"
+          },
+          {
+            "type": "set_destination",
+            "partyId": "B.mount.C4",
+            "target": {
+              "column": 3,
+              "row": 1
+            }
+          }
+        ],
+        "errors": []
+      },
+      "source": "model",
+      "admission": "admitted",
+      "omittedRequestedParty": true
+    },
+    "responseHash": {
+      "label": "prepared diagnostic response snapshot, not reached by ordinary match",
+      "preparedCounter": {
+        "cardId": "B.C9.T1.0",
+        "actorPartyId": "B.mount.C1",
+        "target": {
+          "stackId": "S1.1"
+        },
+        "burns": []
+      },
+      "sentInputHash": "3bb6b7efb8948aefdcc4b91fe24de6c1181df50e3285be58c740d5b627ed17c9",
+      "returnedInputHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "answer": {
+        "pass": true
+      },
+      "lastReceipt": {
+        "at": "2026-11-25T02:11:16.180Z",
+        "requestId": "68649062-6366-41a4-b2a0-3d1469ba0c99",
+        "kind": "response",
+        "tick": 1,
+        "choiceId": "C1.1",
+        "waitedMs": 0,
+        "harness": {
+          "request_id": "68649062-6366-41a4-b2a0-3d1469ba0c99",
+          "input_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "outcome": "proposal"
+        },
+        "outcome": "admitted",
+        "admitted": true,
+        "proposal": {
+          "choices": [
+            {
+              "decision": "d1",
+              "option": "pass"
+            }
+          ],
+          "remark": ""
+        }
+      },
+      "mismatchedHashAdmitted": true
+    },
+    "emptyChoices": {
+      "source": "model",
+      "outcome": "admitted",
+      "equalsStoredFallback": true
+    },
+    "missingChoices": {
+      "source": "model",
+      "outcome": "admitted",
+      "equalsStoredFallback": true
+    },
+    "nonArrayChoices": {
+      "throws": "object is not iterable (cannot read property Symbol(Symbol.iterator))",
+      "lastReceipt": null
+    }
+  },
+  "evidence": {
+    "modelDeciderTestCalls": {
+      "plan": 9,
+      "respond": 0
+    },
+    "admitted": 30,
+    "admittedWithEmptyChoices": [
+      2,
+      4,
+      16
+    ],
+    "submittedReplayVerification": {
+      "ok": true,
+      "ticks": 111,
+      "finalFingerprint": "sha256:6f49e152df0ce5a07419a08c2a0c652e7a84a1853aecb6ef51e85f3173eae8c3",
+      "outcome": null
+    },
+    "actualReplayArtifactPresent": false,
+    "note": "Submitted aggregate/abbreviated receipts inspected; no independent replay recomputation from a full replay artifact in this task."
+  }
+}

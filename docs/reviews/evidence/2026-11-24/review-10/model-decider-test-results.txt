@@ -1,0 +1,14 @@
+✔ options() is side-effect free: the heuristic plan is unchanged by asking for its shortlist (39.844736ms)
+✔ an admitted proposal: one request, an immutable bound packet, and a plan the shared validator accepts (35.657946ms)
+✔ invalid output never plays: unknown keys, a repeated decision and a mismatched receipt fall back (95.341909ms)
+✔ late: the host deadline plays the fallback, cancels, and a later reply is receipted and ignored (380.789982ms)
+✔ unavailable: a Harness that cannot be reached plays the fallback (19.668072ms)
+✔ stale and duplicate: a reset during the request, or a consumed request, is fenced out (54.607106ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 768.143187
