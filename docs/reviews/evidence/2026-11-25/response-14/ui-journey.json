@@ -1,0 +1,75 @@
+{
+  "schema": "hapa.versus.response14.ui-journey.v1",
+  "date": "2026-11-25",
+  "kind": "new live observation (this response): values read from the page between real pointer/keyboard actions in the Claude desktop Browser pane; marked 'api' where a step called the page's own Soundtrack/camera API instead of a pointer",
+  "running": {
+    "server": "the existing Vite dev server on 127.0.0.1:5199 (serving the working tree from disk; reloaded after each source edit)",
+    "sourceAtJourney": "steps 6-12 ran on exactly the source committed as 153b657. Steps 1-5 ran before three small layout corrections found by this journey (the open-drawer reservation arithmetic, nameplate clearance below the camera pad, and the scroll restore after layout); steps 3-5 were repeated after the first two and the values shown are from the repeat; steps 1-2 do not involve those code paths",
+    "browser": "Chromium in the Claude desktop Browser pane, devicePixelRatio 1; viewport emulated 1440x900, 700x900 and 700x620",
+    "match": "A human, B heuristic bot with Red, seed 1, profile hapa_open_10x9_v3_07",
+    "owners": "CJ's listener library 127.0.0.1:8811 and Red's library 127.0.0.1:8801 (Song Registry dadb049, clean), Harbor 127.0.0.1:8862 (1ab09d9, clean), Harness 127.0.0.1:61290"
+  },
+  "steps": [
+    {
+      "step": 1, "what": "700x900, fresh match, press Play once (real click)",
+      "observed": { "status": "playing", "action": "pause", "label": "Pause music", "glyph": "⏸", "time": 3.9, "history": ["q1"], "note": "Review 13 observed two presses at this point" }
+    },
+    {
+      "step": 2, "what": "700x900 Home, drawers closed: deck placement against Red's face",
+      "observed": { "deck": [407, 61, 687, 173], "place": "right", "compact": true, "faceHitBox": [289, 101, 411, 253], "transportRow": "prev 416-446, play 449-483, next 486-516, Keep 519-593, mute 599-629, Music 632-678 (all inside 0..700)", "nameplate": [448, 179, 628, 271], "reviewBaseline": "deck 247..687 covered Red's eyes" }
+    },
+    {
+      "step": 3, "what": "Orders open (real click), History tab, then Music opened (real click)",
+      "observed": {
+        "ordersOpenDeck": { "place": "below", "deck": [13, 158, 293, 270], "prev": [22, 52], "play": [55, 89] },
+        "afterMusicOpen": { "ordersOpen": false, "ordersTabKept": "history", "deck": [247, 61, 687, 685], "prev": [256, 288], "rowPlay": [264, 321], "focus": "Music button", "freeRight": "454px", "reviewBaseline": "deck x=-85..355 with Previous/Pause and row Play clipped" }
+      }
+    },
+    {
+      "step": 4, "what": "Music drawer: Kept tab, filter 'lantern' (typed), then open the conversation (real click on the nameplate) and type a draft",
+      "observed": { "musicCollapsed": true, "talkOpen": true, "draft": "Draft: keep the board steady", "focusInInput": true, "conversation": [387, 179, 687, 404], "deckReturnedTo": "right [407..687]", "faceVisible": true }
+    },
+    {
+      "step": 5, "what": "Reopen Music, then Orders, then the conversation (real clicks)",
+      "observed": {
+        "music": { "tab": "kept", "filter": "lantern", "rows": 2, "talkCollapsed": true, "focus": "Music button" },
+        "orders": { "tab": "history", "historyShown": true, "musicCollapsed": true, "deckPlace": "below", "prev": [22, 52] },
+        "conversation": { "draft": "Draft: keep the board steady", "focusInInput": true, "conversation": [387, 61, 687, 286], "deck": [13, 158, 293, 270] }
+      }
+    },
+    {
+      "step": 6, "what": "700x620 (so the Queue list scrolls): wheel the list (real wheel), open Orders, reopen Music",
+      "observed": { "listScrollBefore": 92, "listScrollAfterReopen": 92, "tab": "queue", "scrollMax": 108, "note": "a first attempt restored 85 of 100 because the reopened drawer had not reached its final height; the restore now repeats after layout settles. Orders history was not long enough to scroll at Tick 1 (scroll restoration is in code, observed only for the Music list)" }
+    },
+    {
+      "step": 7, "what": "1440x900: six match replacements after the first (api: app.startMatch, the same call as Start match), 2.5 s each, renderer.info after rendering",
+      "observed": {
+        "perReplacement": { "gpuGeometries": [1275, 1275, 1275, 1275, 1275, 1275, 1275], "gpuTextures": [119, 119, 119, 119, 119, 119, 119], "programs": [41, 41, 41, 41, 41, 41, 41], "sceneRoots": 1, "pointLights": 4 },
+        "releasedByBoardViewDispose": { "geometries": 1376, "materials": 1300, "textures": 204, "sprites": 162, "lights": 3 },
+        "kept": "module caches marked shared (crest, piece, gear, strata, chevron and diorama textures), three's shared Sprite quad, Luminati's ref-counted sprite blob; the setting and seated Avatar are released by their own dispose first",
+        "reviewBaseline": "Response 13 reported about +1,100 GPU geometries per New match"
+      }
+    },
+    {
+      "step": 8, "what": "After the replacements: Play (real click), Next x3 (real clicks), bounded seek to 2.5 s before the end of q4 (api), natural end, then the displayed button (real click)",
+      "observed": { "atEnd": { "status": "finished", "action": "play-again", "label": "Play again from the start", "glyph": "↻", "state": "Table mix finished · Play again restarts the last song" }, "afterOnePress": { "status": "playing", "time3sLater": 2.8, "transport": ["ended", "play-again"] }, "reviewBaseline": "resumed at 99.5 of 100 s after two presses (fixture)" }
+    },
+    {
+      "step": 9, "what": "Previous chronology in the browser (api for the replay/Return/seek, real DOM click on Previous)",
+      "observed": { "history": ["q1", "q2", "q3", "q4", "q1", "q4", "q1"], "afterReturnPrevious": { "does": "replay-earlier" }, "selected": "q1", "view": "recent", "replayList": ["q2", "q3", "q1", "q4"] }
+    },
+    {
+      "step": 10, "what": "Return to table mix (api), one Ready (real click)",
+      "observed": { "tick": [1, 2], "musicAfter": { "status": "playing", "mode": "table", "now": "q4" }, "musicTransportDuringResolution": [] }
+    },
+    {
+      "step": 11, "what": "Normal Home, useful orbit (35° turn, 22° lower) and close formation (A's Queen), 1440x900",
+      "observed": "captures 01, 02, 03. Home: quieter coursed paving, moss in joints and drifts at the parapet, the cedar top rail with its brass line, the moored teal skiff, bollards and rope beyond the far parapet. Orbit: rail, legs, stretchers, runner, parapet and water. Close formation reads as before"
+    },
+    {
+      "step": 12, "what": "Frame time at Home, Subtle, a song playing, 1440x900, 6 s",
+      "observed": { "frames": 321, "meanMs": 18.72, "p95Ms": 21.1, "maxMs": 30.4, "previous": "Response 13: 18.63 / 21.9 / 32 (Off) on the same pane" }
+    }
+  ],
+  "ownerWrites": "none: no Keep was pressed in this journey; no message was sent to Red (the draft was typed and never sent)"
+}

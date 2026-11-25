@@ -1,0 +1,8 @@
+npm run check — integrated candidate at commit 153b657 (tree aa35b00), 25 November 2026
+exit: 0
+ℹ tests 158
+ℹ pass 158
+ℹ fail 0
+✔ bot-versus-bot smoke match (1462 ms)
+✔ two-process peer-verified match (3327 ms)
+✔ build (536 ms)

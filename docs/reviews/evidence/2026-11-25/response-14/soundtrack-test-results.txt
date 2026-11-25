@@ -1,0 +1,9 @@
+✔ a local replay bookmarks the table once, stops at its end, and Return restores the bookmark (89.163791ms)
+✔ Keep changes saved state only, and a reply after Next stays with the original encounter (31.047208ms)
+✔ Kept rows are one per exact asset; similar titles stay apart; unretained saves are honest (7.133792ms)
+✔ R13-01: a delayed graph resume after Pause never plays; the current valid attempt still starts (62.051375ms)
+✔ R13-02: one Play from ready, recoverable failure, finished and activation-blocked states (3508.336042ms)
+✔ R13-03: Previous follows actual recent listening (1, 2, 3, replay 1, Return 3, Previous → 1) (88.217333ms)
+ℹ tests 6
+ℹ pass 6
+ℹ fail 0

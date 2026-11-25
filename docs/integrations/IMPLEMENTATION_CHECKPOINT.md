@@ -133,6 +133,17 @@ Review 12 / Assignment 13 delivered at `c42649b`: [response 13](../reviews/2026-
 - **Music signal:** `music-signal.js` taps the music element only. It owns the effective gain once attached and feeds the dusk island setting's glow, water shimmer and rare accents (Off/Subtle/Expressive/Still).
 - **Owners:** unchanged. Harbor `1ab09d9`, Song Registry `dadb049`, Harness `16dc700`; engine `ba838cc`.
 
+## Response 14 (25 November 2026)
+
+Review 13 / Assignment 14 delivered at `153b657`: [response 14](../reviews/2026-11-25-ui-design-response-14.md).
+
+- **Transport:** one fenced start path (`_play(gen, item)` validates before and after the graph resume, right before `audio.play()`); `primaryAction()` drives the button's glyph, name and action; `blocked` is distinct from unusable media; finished table playback restarts from zero.
+- **Previous:** a bounded chronology of actual playback starts, separate from Played.
+- **Layout:** `Table._placeDeck` places the deck from both reserved edges and clear of the face; `App._onePanel` keeps one expanded side panel when Orders, Music and the conversation cannot coexist, each keeping its state.
+- **Teardown:** `BoardView.dispose()` with `resources.js` ownership (shared module caches marked; the setting and seated Avatar released by their owners first). GPU allocations plateau across replacements.
+- **Setting:** quieter coursed paving with moss in the joints, a cedar top rail with a brass line, and a high-tide quay with a moored skiff, bollards and rope behind the opponent.
+- **Owners:** unchanged. Harbor `1ab09d9`, Song Registry `dadb049`, Harness `16dc700`; engine `ba838cc`.
+
 ## Status (24 November 2026)
 
 | Milestone | Technical status | Evidence |
