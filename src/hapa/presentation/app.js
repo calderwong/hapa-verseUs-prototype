@@ -11,7 +11,7 @@ import { Engine } from '../../../vendor/lumina/src/engine/core/Engine.js';
 import { PostFX } from '../../../vendor/lumina/src/engine/render/PostFX.js';
 import { loadCharacterKit } from '../../../vendor/lumina/src/engine/pixel/CharacterSprites.js';
 import { BoardCamera } from './camera.js';
-import { BoardView, COLOR_HEX, OWNER_HEX } from './board-view.js';
+import { BoardView, COLOR_HEX, OWNER_HEX, S as MEMBER_S } from './board-view.js';
 import { eventLine, explainHit, memberName, partyName, fmtMana } from './explain.js';
 import { createSession, createFixtureSession, openTick } from '../rules/session.js';
 import { validatePlan, resolveTick, responseOptions, projectPlan } from '../rules/match.js';
@@ -399,14 +399,17 @@ export class VersusApp {
   _attachTable(table, gen) {
     this.table?.dispose();
     this.table = null;
+    if (this.cam) this.cam.homeExtras = null;
     if (!this._tableUnload) { this._tableUnload = true; window.addEventListener('pagehide', () => { this.table?.dispose(); this.table = null; }); }
     const bot = ['A', 'B'].filter((s) => this.seats[s] === 'bot');
     if (!table?.avatarId || bot.length !== 1 || this.session.fixture) return;
     const seat = bot[0];
     const rev = this.session.manifest.controllers?.[seat]?.revision ?? 'heuristic-bot/0.2.0';
-    this.table = new Table({ world: this.el.world, sessionId: this.session.manifest.matchId, epoch: gen, avatarSeat: seat, humanSeat: other(seat), avatarId: table.avatarId, songIds: table.songIds ?? [],
+    this.table = new Table({ world: this.el.world, scene: { root: this.view.root, board: { w: this.view.w, h: this.view.h, S: MEMBER_S } }, sessionId: this.session.manifest.matchId, epoch: gen, avatarSeat: seat, humanSeat: other(seat), avatarId: table.avatarId, songIds: table.songIds ?? [],
       controller: this.deciders?.[seat] ? { kind: 'model-assisted', revision: rev, label: 'a local model (through Hapa Harness) choosing among my legal moves, with the heuristic bot as fallback' } : { kind: 'heuristic', revision: rev, label: `the heuristic bot (${rev}), not a model` }, partyLabel: (id) => spokenParty(this.state, id) });
     this.table.start().catch((err) => console.warn('[versus] table unavailable', err));
+    // the Home composition now includes the seated opponent (addendum 05 §3): fitted once at setup
+    if (this.cam) { this.cam.homeExtras = () => this.table?.homePoints() ?? []; if (seat === other(this.viewSeat)) this.cam.home(); }
   }
 
   /** The bot seat whose moves a model assists (Milestone C): Red's seat, when chosen at setup. */
@@ -425,7 +428,9 @@ export class VersusApp {
     this._deciding[seat] = true;
     this._renderAll();
     let out;
-    try { out = await this.deciders[seat].plan(this, this.bots[seat]); } catch (err) { console.warn('[versus] model decision failed; heuristic plan', err); out = { commands: this.bots[seat].plan(this.state, this.ctx), source: 'fallback' }; }
+    // plan() returns the request's stored fallback on every rejection; this catch only covers the
+    // heuristic itself failing before a fallback existed
+    try { out = await this.deciders[seat].plan(this, this.bots[seat]); } catch (err) { console.warn('[versus] model decision failed before a fallback was stored', err); out = { commands: [], source: 'fallback' }; }
     if (gen !== this.generation || tick !== this.state.tick || !this._deciding?.[seat]) return; // fenced: a new match or Tick owns the seat now
     this._deciding[seat] = false;
     this.plans[seat] = out.commands;
@@ -701,6 +706,8 @@ export class VersusApp {
     this.resolving = false;
     pc?.resolve({ pass: true, detached: true });
     pb?.resolve();
+    // outstanding model requests are cancelled; their generation fence still applies to any late reply
+    for (const d of Object.values(this.deciders ?? {})) d.dispose();
     this.table?.dispose();
     this.table = null;
   }
@@ -1536,6 +1543,7 @@ export class VersusApp {
     this._stepPlayback(dt);
     this.scenery?.update(dt);
     this.view.update(dt, this.engine.camera);
+    if (this.table) this.table.update(this.engine.camera, { width: this.el.world.clientWidth, height: this.el.world.clientHeight });
     this.view.viewportH = this.engine.renderer.domElement.clientHeight;
     const busy = !!(this.cardDrag?.active || this.cam?.dragging || this.tool);
     if (busy !== this._inspectBusy) { this._inspectBusy = busy; this.inspect.setSuspended(busy); }

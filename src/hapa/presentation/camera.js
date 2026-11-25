@@ -35,6 +35,8 @@ export class BoardCamera {
     this.tactical = false;
     this._saved = null;
     this.homeYaw = 0;
+    this.homeExtras = null; // () => Vector3[]: a seated opponent's head and shoulders
+    this.homePitch = 46 * DEG; // the across-table Home with a seated opponent (56° without one)
     camera.fov = 24; // a long lens: far rows crowd less behind near ones (review UX-07); home and tactical fit the distance
     camera.far = 1000;
     camera.updateProjectionMatrix();
@@ -50,12 +52,12 @@ export class BoardCamera {
    * bank allowance) inside the actual viewport at a yaw and pitch, balancing its projected top and
    * bottom margins (Design Companion ch.4; review UX-07). Pure viewing: no rule reads it.
    */
-  fit(yaw, pitch) {
+  fit(yaw, pitch, extras = []) {
     const b = this.board.subject;
     if (!b) return { distance: this.board.size * 1.55, focus: this.board.center.clone() };
     const W = this.el.clientWidth || 960, H = this.el.clientHeight || 600;
     const cam = new THREE.PerspectiveCamera(this.camera.fov, W / H, 0.1, 2000);
-    const corners = [[b.x0, b.z0], [b.x1, b.z0], [b.x0, b.z1], [b.x1, b.z1], [(b.x0 + b.x1) / 2, b.z0], [(b.x0 + b.x1) / 2, b.z1]].map(([x, z]) => new THREE.Vector3(x, 0, z));
+    const corners = [[b.x0, b.z0], [b.x1, b.z0], [b.x0, b.z1], [b.x1, b.z1], [(b.x0 + b.x1) / 2, b.z0], [(b.x0 + b.x1) / 2, b.z1]].map(([x, z]) => new THREE.Vector3(x, 0, z)).concat(extras);
     const focus = new THREE.Vector3((b.x0 + b.x1) / 2, 0, (b.z0 + b.z1) / 2);
     const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)); // ground direction the camera looks along
     const place = (d) => {
@@ -83,7 +85,11 @@ export class BoardCamera {
   }
 
   _refit() {
-    const f = this.fit(this.goal.yaw, this.goal.pitch);
+    // the seated opponent (addendum 05 §3) joins only the Home composition: the across-table view at
+    // the home yaw. Tactical, turned and close-inspection fits keep their own subjects.
+    const d = Math.atan2(Math.sin(this.goal.yaw - this.homeYaw), Math.cos(this.goal.yaw - this.homeYaw));
+    const extras = !this.tactical && Math.abs(d) < 1e-3 && this.homeExtras ? this.homeExtras() : [];
+    const f = this.fit(this.goal.yaw, this.goal.pitch, extras);
     this.goal.distance = f.distance; this.goal.focus.copy(f.focus);
   }
 
@@ -96,7 +102,7 @@ export class BoardCamera {
   home() {
     this.tactical = false;
     this.goal.yaw = this.homeYaw;
-    this.goal.pitch = 56 * DEG;
+    this.goal.pitch = this.homeExtras ? this.homePitch : 56 * DEG;
     this._refit(); // the whole subject, fitted to this viewport (no fixed near-edge bias)
     this.atHome = true;
   }
@@ -106,8 +112,8 @@ export class BoardCamera {
       this._saved = { ...this.goal, focus: this.goal.focus.clone() };
       this._savedHome = this.atHome;
       this.goal.pitch = 84 * DEG;
+      this.tactical = true; // before the fit: tactical frames the board without the opponent
       this._refit();
-      this.tactical = true;
       this.atHome = true;
     } else {
       Object.assign(this.goal, this._saved, { focus: this._saved.focus.clone() });

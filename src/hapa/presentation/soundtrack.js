@@ -3,14 +3,16 @@
  *
  * Each participant contributes a selected snapshot of whole recordings from their own Music
  * Library owner (Hapa Song Registry). The table queue alternates whole tracks between the
- * contributions and is shared: one explicit queue controller (the host seat) may advance it, and
- * every change bumps its revision. Volume, mute and whether to listen at all are local to each
+ * contributions. It is local to this browser: one queue controller (the host seat) may advance it,
+ * and every change bumps its revision. There is no remote queue subscription or room clock yet, so
+ * this is not synchronized listening between human clients (review 10, R10-06). Volume, mute and whether to listen at all are local to each
  * listener and never touch the queue. The listener's own library node fetches every entry, its own
  * or a peer's, by the exact offer (recording + asset digest), so media bytes and transfer state
  * stay with the music owner and never enter game records.
  *
  * Keep (Milestone B) asks the listener's library to save the reference durably and start verified
- * retention of exactly the heard asset; the states shown are the owner's own, never optimistic.
+ * retention of exactly the offered asset of that queue entry. It records whether it was actually heard
+ * here; the states shown are the owner's own, never optimistic.
  * Music never blocks a Tick: every failure leaves the match playable and says so in the strip.
  */
 import { h } from './dom.js';
@@ -26,6 +28,8 @@ const STATE_LABEL = {
   'download-failed-reference-saved': 'Download failed · reference saved',
 };
 const TERMINAL = new Set(['available-offline', 'saved-reference-only', 'download-failed-reference-saved']);
+const RETRYABLE = new Set(['keep-failed', 'download-failed-reference-saved']);
+const ACQUIRE_MS = 20000, START_MS = 8000; // bounded waits for a track's bytes and its first sound
 
 function loadSettings() {
   const d = { volume: 0.55, muted: false, listening: true };
@@ -55,12 +59,25 @@ export class Soundtrack extends EventTarget {
     this.settings = loadSettings();
     this.queue = { revision: 0, controllerSeat: o.listener.seat, entries: [], index: -1 };
     this.contributions = [];
-    this.keeps = new Map(); // assetId → { state, acquisitionId, error }
+    // Keep is per encounter (this queue entry and its introducer), not per byte asset: the owner
+    // stores identical bytes once and records each introduction as its own discovery (R10-04)
+    this.keeps = new Map(); // queueEntryId → owner state | { state: 'saving' | 'keep-failed' }
+    // playback identity (R10-03): the selected entry, the audio actually loaded (fenced by a
+    // per-request generation, never by array index alone) and what was actually heard
+    this.playGen = 0;
+    this.active = null; // { gen, entry, url }
+    this.heard = new Map(); // queueEntryId → ISO time the audio really started
     this.audio = new Audio();
     this.audio.preload = 'auto';
-    this.audio.addEventListener('ended', () => this._advance('ended'));
-    this.audio.addEventListener('error', () => this._fail('playback failed'));
-    this.audio.addEventListener('playing', () => { this.status = 'playing'; this._render(); });
+    this.audio.addEventListener('ended', () => { if (this.active?.gen === this.playGen) this._advance('ended'); });
+    this.audio.addEventListener('error', () => { if (this.active?.gen === this.playGen && this.audio.getAttribute('src')) this._fail(this.active.entry, 'playback failed'); });
+    this.audio.addEventListener('playing', () => {
+      const a = this.active;
+      if (!a || a.gen !== this.playGen || a.entry !== this.now) return;
+      if (!this.heard.has(a.entry.queueEntryId)) this.heard.set(a.entry.queueEntryId, new Date().toISOString());
+      this.status = 'playing';
+      this._render();
+    });
     this.duck = 1;
     this.disposed = false;
     this.el = h('div', { class: 'np-strip', role: 'region', 'aria-label': 'Now playing' });
@@ -100,51 +117,83 @@ export class Soundtrack extends EventTarget {
   }
 
   /** Begin (after the human's sound gesture). */
-  start() { if (this.queue.index < 0 && this.queue.entries.length) this._playAt(0); else if (this.settings.listening) this.audio.play().catch(() => {}); }
+  start() { if (this.queue.index < 0 && this.queue.entries.length) this._select(0); else if (this.settings.listening) this._resume(); }
 
   get now() { return this.queue.entries[this.queue.index] ?? null; }
 
-  async _playAt(i) {
-    const epoch = this.epoch;
-    const entry = this.queue.entries[i];
-    if (!entry || this.disposed) return;
+  /** Stop and release whatever audio is loaded, and fence any pending acquisition. */
+  _detach() {
+    this.playGen++;
+    this._pending?.abort();
+    this._pending = null;
+    this.audio.pause();
+    if (this.audio.getAttribute('src')) { this.audio.removeAttribute('src'); this.audio.load(); }
+    if (this.active?.url) URL.revokeObjectURL(this.active.url);
+    this.active = null;
+  }
+
+  /** A committed switch: the old song stops at once, so it can never play under the new title. */
+  _select(i) {
+    if (!this.queue.entries[i] || this.disposed) return;
+    this._detach();
     this.queue.index = i;
     this.status = 'loading';
+    this.error = null;
     this._render();
-    if (!this.settings.listening) return; // the queue advances; this listener chose not to hear it
+    if (this.settings.listening) this._load();
+  }
+
+  async _load() {
+    const gen = this.playGen, entry = this.now;
+    if (!entry) return;
+    const ctl = this._pending = new AbortController();
+    const timer = setTimeout(() => ctl.abort(Object.assign(Error('the track took too long to arrive'), { code: 'deadline' })), ACQUIRE_MS);
+    let url = null;
     try {
       // the listener's own library fetches exactly this offered asset (its own, or over the peer link)
-      const r = await call(`/music/${this.listener.library}/audio`, { offer: entry.offer });
+      const r = await fetch(`/music/${this.listener.library}/audio`, { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ offer: entry.offer }) });
+      if (!r.ok) { const j = await r.json().catch(() => ({})); throw Error(j.error || `audio ${r.status}`); }
       const blob = await r.blob();
-      if (epoch !== this.epoch || this.queue.index !== i || this.disposed) return;
-      if (this.url) URL.revokeObjectURL(this.url);
-      this.url = URL.createObjectURL(blob);
-      this.audio.src = this.url;
+      clearTimeout(timer);
+      // a replaced selection, Not listening or disposal while this was in flight: drop the bytes
+      if (gen !== this.playGen || !this.settings.listening || this.disposed || this.now !== entry) return;
+      url = URL.createObjectURL(blob);
+      this.active = { gen, entry, url, bytes: blob.size };
+      this.audio.src = url;
       this._applyVolume();
-      await this.audio.play();
+      await Promise.race([this.audio.play(), new Promise((_, no) => setTimeout(() => no(Error('playback did not start')), START_MS))]);
+      if (gen !== this.playGen) return;
       this.lastPlayback = { queueEntryId: entry.queueEntryId, assetId: entry.assetId, bytes: blob.size, startedAt: new Date().toISOString() };
       this.dispatchEvent(new CustomEvent('track', { detail: entry }));
     } catch (e) {
-      if (epoch !== this.epoch) return;
-      this._fail(e.message);
-    }
+      clearTimeout(timer);
+      if (gen !== this.playGen || this.disposed) return; // superseded, not failed
+      this._fail(entry, ctl.signal.reason?.message ?? e.message);
+    } finally { if (this._pending === ctl) this._pending = null; }
   }
 
-  _fail(msg) {
+  /**
+   * One finite failure policy: the queue controller moves past an unusable entry once; a listener
+   * who is not the controller just reports it. There is no retry chain.
+   */
+  _fail(entry, msg) {
     this.status = 'failed';
     this.error = msg;
     console.warn(`[versus] music: ${msg}`);
     this._render();
+    if (!this.isController || !entry || entry.skipped || entry !== this.now) return;
+    entry.skipped = true;
+    setTimeout(() => { if (this.now === entry && !this.disposed) this._advance('skip-unusable'); }, 1500);
   }
 
   _advance(reason) {
-    if (this.queue.index + 1 >= this.queue.entries.length) { this.status = 'finished'; this._render(); return; }
+    if (this.queue.index + 1 >= this.queue.entries.length) { this._detach(); this.status = 'finished'; this._render(); return; }
     this.queue.revision++;
-    this.queue.lastChange = { reason, by: reason === 'next' ? this.listener.seat : 'track-ended', revision: this.queue.revision };
-    this._playAt(this.queue.index + 1);
+    this.queue.lastChange = { reason, by: reason === 'next' ? this.listener.seat : reason, revision: this.queue.revision };
+    this._select(this.queue.index + 1);
   }
 
-  /** Shared queue control: only the queue controller may skip. */
+  /** Queue controller only: skip to the next track of this table's (local) queue. */
   next() { if (this.isController) this._advance('next'); }
 
   // --- local listener controls (never change the queue) ----------------------------------------
@@ -153,9 +202,22 @@ export class Soundtrack extends EventTarget {
   toggleListening() {
     this.settings.listening = !this.settings.listening;
     this._save();
-    if (!this.settings.listening) this.audio.pause();
-    else if (this.now) { if (this.audio.src) this.audio.play().catch(() => {}); else this._playAt(this.queue.index); }
+    if (!this.settings.listening) {
+      // opting out also cancels an acquisition in flight, so it cannot start playing afterwards
+      this._pending?.abort(); this._pending = null;
+      this.playGen++;
+      this.audio.pause();
+    } else this._resume();
     this._render();
+  }
+
+  /** Resume the selected entry: its own loaded audio if that is what is loaded, otherwise fetch it. */
+  _resume() {
+    if (!this.now) return;
+    if (this.active && this.active.entry === this.now && this.audio.getAttribute('src')) {
+      this.active.gen = ++this.playGen;
+      this.audio.play().catch((e) => this._fail(this.now, e.message));
+    } else this._select(this.queue.index);
   }
 
   /** Lower the music while the opponent's voice is actually playing. */
@@ -174,41 +236,48 @@ export class Soundtrack extends EventTarget {
 
   // --- Keep (Milestone B) ---------------------------------------------------------------------
 
-  /** Keep the current (or given) entry: saved reference first, then verified retention. */
+  /**
+   * Keep the current (or given) entry: saved reference first, then verified retention. Keyed by the
+   * encounter, so a second introducer of the same bytes is recorded too; a repeated click on the
+   * same encounter is idempotent, and both failure states retry through the owner's idempotent Keep.
+   * `heardAt` is only the time the audio really started here; an unheard save says so.
+   */
   async keep(entry = this.now) {
     if (!entry || entry.own) return null;
-    const k = this.keeps.get(entry.assetId);
-    if (k && k.state !== 'download-failed-reference-saved') return k;
-    this.keeps.set(entry.assetId, { state: 'saving' });
+    const k = this.keeps.get(entry.queueEntryId);
+    if (k && !RETRYABLE.has(k.state)) return k;
+    this.keeps.set(entry.queueEntryId, { state: 'saving' });
     this._render();
+    const heardAt = this.heard.get(entry.queueEntryId) ?? null;
     try {
       const st = await (await call(`/music/${this.listener.library}/keep`, {
         offer: entry.offer,
         // who introduced it (the participant at this table) is recorded apart from who made it
         // (the offer's own credits, which the owner imports unchanged)
-        discovery: { app: 'hapa-versus', sessionId: this.sessionId, playlistId: entry.playlistId, queueRevision: this.queue.revision, entryId: entry.entryId, heardAt: new Date().toISOString(),
+        discovery: { app: 'hapa-versus', sessionId: this.sessionId, playlistId: entry.playlistId, queueRevision: this.queue.revision, entryId: entry.queueEntryId, heardAt,
           introducer: entry.contributor.participant?.avatarId ? { kind: 'avatar', id: entry.contributor.participant.avatarId, label: entry.contributor.participant.label } : { kind: 'participant', id: entry.contributor.nodeId, label: entry.contributor.participant?.label ?? entry.contributor.label } },
       })).json();
-      this.keeps.set(entry.assetId, st);
-      this.dispatchEvent(new CustomEvent('kept', { detail: { entry, state: st } })); // the reference is durably saved now
-      this._poll(entry.assetId, st.acquisitionId);
+      this.keeps.set(entry.queueEntryId, { ...st, heard: !!heardAt });
+      if (!k) this.dispatchEvent(new CustomEvent('kept', { detail: { entry, state: st, heard: !!heardAt } })); // the reference is durably saved now
+      this._poll(entry.queueEntryId, st.acquisitionId);
       this._render();
       return st;
     } catch (e) {
-      this.keeps.set(entry.assetId, { state: 'keep-failed', error: e.message });
+      this.keeps.set(entry.queueEntryId, { state: 'keep-failed', error: e.message });
       this._render();
       return null;
     }
   }
 
-  async _poll(assetId, acq) {
+  async _poll(key, acq) {
     for (let i = 0; i < 600 && !this.disposed; i++) {
-      const cur = this.keeps.get(assetId);
-      if (!cur || TERMINAL.has(cur.state)) return;
+      const cur = this.keeps.get(key);
+      if (!cur || TERMINAL.has(cur.state) || cur.acquisitionId !== acq) return;
       await new Promise((r) => setTimeout(r, i < 20 ? 500 : 2000));
       try {
         const st = await (await call(`/music/${this.listener.library}/keep/${acq}`)).json();
-        this.keeps.set(assetId, st);
+        if (this.keeps.get(key)?.acquisitionId !== acq) return;
+        this.keeps.set(key, { ...st, heard: cur.heard });
         this._render();
       } catch { /* the owner is restarting; keep polling */ }
     }
@@ -218,10 +287,7 @@ export class Soundtrack extends EventTarget {
     this.disposed = true;
     this.epoch = -1;
     clearInterval(this._duckTimer);
-    this.audio.pause();
-    this.audio.removeAttribute('src');
-    this.audio.load();
-    if (this.url) URL.revokeObjectURL(this.url);
+    this._detach();
     this.el.remove();
   }
 
@@ -234,21 +300,23 @@ export class Soundtrack extends EventTarget {
       const who = c?.creators?.length ? c.creators.join(', ') : null;
       return who ? `by ${who}` : c?.generator?.name ? `made with ${c.generator.name}` : 'creator not stated';
     };
-    const k = e ? this.keeps.get(e.assetId) : null;
+    const k = e ? this.keeps.get(e.queueEntryId) : null;
+    const unheard = e && !this.heard.has(e.queueEntryId) ? ' (not heard yet: saved as unheard)' : '';
     const keepBtn = !e ? null : e.own ? h('span', { class: 'dim', title: 'This recording is from your own library' }, 'yours')
-      : !k || k.state === 'keep-failed' ? h('button', { class: 'np-keep', title: 'Save this song to your library (a saved reference first, then a verified copy)', onclick: () => this.keep() }, k?.state === 'keep-failed' ? 'Keep (retry)' : '♡ Keep')
-        : h('span', { class: `np-kept ${k.state}`, title: k.reason || '' }, STATE_LABEL[k.state] ?? k.state);
+      : !k ? h('button', { class: 'np-keep', title: `Save this song to your library: a saved reference first, then a verified copy${unheard}`, onclick: () => this.keep() }, '♡ Keep')
+        : RETRYABLE.has(k.state) ? h('span', { class: 'np-kept' }, h('span', { class: `np-kept ${k.state}`, title: k.error?.message ?? k.error ?? '' }, k.state === 'keep-failed' ? 'Keep failed' : STATE_LABEL[k.state]), ' ', h('button', { class: 'np-keep', title: 'Try again (the library keeps one record of this encounter)', onclick: () => this.keep() }, 'Retry'))
+          : h('span', { class: `np-kept ${k.state}`, title: k.heard === false ? 'Saved without having been heard here' : '' }, `${STATE_LABEL[k.state] ?? k.state}${k.heard === false ? ' · unheard' : ''}`);
     const label = this.status === 'preparing' ? 'Gathering tracks…' : this.status === 'unavailable' ? 'Music unavailable — the match plays without it' : this.status === 'failed' ? `Music paused: ${this.error}` : this.status === 'finished' ? 'Queue finished' : !e ? 'Music ready' : null;
     this.el.replaceChildren(...[
       h('span', { class: 'np-icon', 'aria-hidden': 'true' }, '♪'),
       e && !label ? h('span', { class: 'np-title' }, h('b', {}, e.title), h('small', {}, ` · ${e.own ? 'your track' : `from ${e.contributor.label}`} · ${credit(e.credits)}`)) : h('span', { class: 'np-title dim' }, label ?? ''),
-      e && this.status === 'loading' ? h('span', { class: 'dim' }, s.listening ? 'loading…' : 'not listening') : null,
+      e && (this.status === 'loading' || !s.listening) ? h('span', { class: 'dim' }, s.listening ? 'loading…' : 'not listening') : null,
       keepBtn,
       h('button', { 'aria-pressed': String(!s.listening), title: 'Listen to the table music on this device (does not change the queue)', onclick: () => this.toggleListening() }, s.listening ? 'Listening' : 'Not listening'),
       h('button', { 'aria-label': s.muted ? 'Music muted' : 'Mute music', 'aria-pressed': String(s.muted), title: 'Music volume on this device only', onclick: () => this.toggleMute() }, s.muted ? '🔇' : '♫'),
       h('input', { type: 'range', min: 0, max: 1, step: 0.05, value: s.volume, 'aria-label': 'Music volume (this device)', oninput: (ev) => this.setVolume(Number(ev.target.value)) }),
       h('button', { 'aria-expanded': String(!!this.showEncounters), title: 'Songs you kept (from your library\'s own record)', onclick: () => this.toggleEncounters() }, 'Kept'),
-      this.isController && e ? h('button', { title: `Shared: skip to the next track for everyone at the table (queue revision ${this.queue.revision})`, onclick: () => this.next() }, 'Next ⏭') : null,
+      this.isController && e ? h('button', { title: `Next track in this table's queue (local to this browser; queue revision ${this.queue.revision})`, onclick: () => this.next() }, 'Next ⏭') : null,
       this.showEncounters ? h('div', { class: 'np-encounters' }, this.encounters == null ? h('span', { class: 'dim' }, 'Loading…') : !this.encounters.length ? h('span', { class: 'dim' }, 'Nothing kept yet.')
         : this.encounters.slice(-6).reverse().map((d) => h('div', {}, h('b', {}, d.title ?? d.recordingId), h('small', { class: 'dim' }, ` · introduced by ${d.introducer?.label ?? 'unknown'}${d.encounter?.app ? ` in ${d.encounter.app}` : ''} · ${STATE_LABEL[d.acquisition?.state] ?? d.acquisition?.state ?? 'reference saved'}`)))) : null,
     ].filter(Boolean));

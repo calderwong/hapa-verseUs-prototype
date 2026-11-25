@@ -30,6 +30,16 @@ const freeze = (o) => { if (o && typeof o === 'object') { Object.values(o).forEa
 const at = (r) => `R${r.row}C${r.column}`;
 const piece = (p) => (p.mount ? p.mount[0].toUpperCase() + p.mount.slice(1) : 'Pawn');
 
+/** The boundary shape of a proposal; returns a reason when it is not { choices: [{decision, option}], remark? }. */
+export function proposalShape(p, max) {
+  if (!p || typeof p !== 'object' || Array.isArray(p)) return 'not an object';
+  if (!Array.isArray(p.choices)) return 'choices is not a list';
+  if (p.choices.length > max) return 'more choices than decisions';
+  if (p.choices.some((c) => !c || typeof c !== 'object' || typeof c.decision !== 'string' || typeof c.option !== 'string')) return 'a choice is not { decision, option }';
+  if (p.remark !== undefined && typeof p.remark !== 'string') return 'remark is not text';
+  return null;
+}
+
 export class ModelDecider {
   /**
    * @param {{ seat: 'A'|'B', avatarId: string, identityRevision: string, endpoint?: string, deadlines?: { plan: number, response: number } }} o
@@ -75,10 +85,15 @@ export class ModelDecider {
     const rid = request.ref.request_id;
     const sent = performance.now();
     const ctl = new AbortController();
+    (this.inflight ??= new Map()).set(rid, ctl);
     const reply = fetch(`${this.endpoint}/game-decision`, { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ request, deadline_ms: deadline }) })
       .then(async (r) => { const j = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(Error(j.error || j.code || `harness ${r.status}`), { code: j.code || j.error || `http_${r.status}` }); return j; });
+    reply.finally?.(() => this.inflight?.delete(rid)).catch(() => {});
     return new Promise((resolve) => {
       let done = false;
+      this._settle ??= new Map();
+      // dispose(): stop waiting at once; the caller still fences, because cancellation is cooperative
+      this._settle.set(rid, () => { if (done) return; done = true; clearTimeout(timer); resolve({ status: 'cancelled', proposal: null, receipt: null, ms: performance.now() - sent }); });
       const timer = setTimeout(() => {
         done = true;
         resolve({ status: 'deadline', proposal: null, receipt: null, ms: performance.now() - sent });
@@ -86,9 +101,20 @@ export class ModelDecider {
         fetch(`${this.endpoint}/game-decision-cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ request_id: rid }) }).catch(() => {});
         reply.then((j) => this._record({ requestId: rid, kind: request.ref.kind, tick: request.ref.tick, outcome: 'late-ignored', harness: j.receipt ?? null }), () => {});
       }, deadline);
-      reply.then((j) => { if (done) return; done = true; clearTimeout(timer); resolve({ status: 'arrived', proposal: j.proposal ?? null, receipt: j.receipt ?? null, ms: performance.now() - sent }); },
+      reply.then((j) => { this._settle?.delete(rid); if (done) return; done = true; clearTimeout(timer); resolve({ status: 'arrived', proposal: j.proposal ?? null, receipt: j.receipt ?? null, ms: performance.now() - sent }); },
         (e) => { if (done) return; done = true; clearTimeout(timer); resolve({ status: 'unavailable', proposal: null, receipt: null, error: e.code || e.message, ms: performance.now() - sent }); });
     });
+  }
+
+  /** Cancel every outstanding request (match detached or reset). Fences stay in force. */
+  dispose() {
+    this.disposed = true;
+    for (const [rid, ctl] of this.inflight ?? []) {
+      ctl.abort();
+      fetch(`${this.endpoint}/game-decision-cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ request_id: rid }) }).catch(() => {});
+    }
+    for (const settle of this._settle?.values() ?? []) settle();
+    this.inflight?.clear(); this._settle?.clear();
   }
 
   _record(r) {
@@ -128,25 +154,42 @@ export class ModelDecider {
     const request = freeze({ schema: 'hapa.versus.decision-request/v1', ref: this._ref(app, 'plan', 'plan', null, { view, decisions }), view, decisions });
     const res = await this._ask(request, this.deadlines.plan);
     const base = { requestId: request.ref.request_id, kind: 'plan', tick: request.ref.tick, inputHash: request.ref.input_hash, waitedMs: Math.round(res.ms), harness: res.receipt };
+    // every rejection plays the fallback stored for this request (never a recomputed plan)
     const fallBack = (outcome, extra = {}) => ({ commands: fallback, source: 'fallback', receipt: this._record({ ...base, outcome, admitted: false, ...extra }) });
-    if (res.status !== 'arrived') return fallBack(res.status === 'deadline' ? 'deadline-fallback' : 'unavailable-fallback', { error: res.error ?? null });
-    const fence = this._fenced(app, request, gen, fp);
-    if (fence) return fallBack(`rejected-${fence}`);
-    this.consumed.add(request.ref.request_id); // single consumption, admitted or not
-    if (res.receipt?.request_id !== request.ref.request_id || res.receipt?.input_hash !== request.ref.input_hash) return fallBack('rejected-mismatched-receipt');
-    if (!res.proposal) return fallBack(`rejected-${res.receipt?.outcome ?? 'empty'}`);
-    const choice = {};
-    const seen = new Set();
-    for (const c of res.proposal.choices ?? []) {
-      const key = keyMap.get(`${c.decision}:${c.option}`);
-      if (!key || seen.has(c.decision)) return fallBack('rejected-invalid-choice', { proposal: res.proposal });
-      seen.add(c.decision);
-      choice[shortlist[Number(c.decision.slice(1)) - 1].partyId] = key;
+    try {
+      if (res.status !== 'arrived') return fallBack(`${res.status === 'deadline' ? 'deadline' : res.status === 'cancelled' ? 'cancelled' : 'unavailable'}-fallback`, { error: res.error ?? null });
+      const fence = this._fenced(app, request, gen, fp);
+      if (fence) return fallBack(`rejected-${fence}`);
+      this.consumed.add(request.ref.request_id); // single consumption, admitted or not
+      if (res.receipt?.request_id !== request.ref.request_id || res.receipt?.input_hash !== request.ref.input_hash) return fallBack('rejected-mismatched-receipt');
+      const shape = proposalShape(res.proposal, decisions.length);
+      if (shape) return fallBack(`rejected-${res.proposal ? 'malformed' : res.receipt?.outcome ?? 'empty'}`, { reason: shape, proposal: res.proposal ?? null });
+      // explicit abstention: no choices means "no requested destination", which is the fallback, not a model move
+      if (!res.proposal.choices.length) return fallBack('abstained', { proposal: res.proposal });
+      const choice = {};
+      const seen = new Set();
+      for (const c of res.proposal.choices) {
+        const key = keyMap.get(`${c.decision}:${c.option}`);
+        if (!key || seen.has(c.decision)) return fallBack('rejected-invalid-choice', { proposal: res.proposal });
+        seen.add(c.decision);
+        choice[shortlist[Number(c.decision.slice(1)) - 1].partyId] = key;
+      }
+      const commands = bot.plan(state, ctx, choice);
+      // faithful application: every selected destination must be in the plan (joint funding can
+      // make a second choice unaffordable); otherwise the proposal is not admitted at all
+      const missing = Object.entries(choice).filter(([partyId, key]) => {
+        const dest = commands.find((c) => c.type === 'set_destination' && c.partyId === partyId);
+        if (key === 'hold') return !!dest;
+        const [col, row, via] = key.split('_');
+        return !dest || dest.target.column !== Number(col) || dest.target.row !== Number(row) || (via ?? null) !== (dest.via ?? null);
+      }).map(([partyId]) => partyId);
+      if (missing.length) return fallBack('rejected-unfulfilled-choice', { proposal: res.proposal, reason: `selected destinations not all realizable together (${missing.join(', ')})` });
+      const v = validatePlan(state, ctx, this.seat, commands);
+      if (v.errors.length) return fallBack('rejected-invalid-plan', { proposal: res.proposal, errors: v.errors.map((e) => e.error) });
+      return { commands, source: 'model', receipt: this._record({ ...base, outcome: 'admitted', admitted: true, proposal: res.proposal, choice, commands: commands.length }) };
+    } catch (e) {
+      return fallBack('rejected-error', { error: e.message });
     }
-    const commands = bot.plan(state, ctx, choice);
-    const v = validatePlan(state, ctx, this.seat, commands);
-    if (v.errors.length) return fallBack('rejected-invalid-plan', { proposal: res.proposal, errors: v.errors.map((e) => e.error) });
-    return { commands, source: 'model', receipt: this._record({ ...base, outcome: 'admitted', admitted: true, proposal: res.proposal, choice, commands: commands.length }) };
   }
 
   /**
@@ -163,14 +206,21 @@ export class ModelDecider {
     const view = this._view(state, ctx);
     const request = freeze({ schema: 'hapa.versus.decision-request/v1', ref: this._ref(app, 'response', req.choiceId.replace(/[^A-Za-z0-9:._-]/g, '.'), req.choiceId, { view, decisions }), view, decisions });
     const res = await this._ask(request, this.deadlines.response);
-    const base = { requestId: request.ref.request_id, kind: 'response', tick: request.ref.tick, choiceId: req.choiceId, waitedMs: Math.round(res.ms), harness: res.receipt };
-    if (res.status !== 'arrived') { this._record({ ...base, outcome: res.status === 'deadline' ? 'deadline-fallback' : 'unavailable-fallback', error: res.error ?? null }); return fallback; }
-    const fence = this._fenced(app, request, gen, fp);
-    if (fence) { this._record({ ...base, outcome: `rejected-${fence}` }); return fallback; }
-    this.consumed.add(request.ref.request_id);
-    const c = res.proposal?.choices?.[0];
-    if (!c || c.decision !== 'd1' || !['pass', 'counter'].includes(c.option) || res.receipt?.request_id !== request.ref.request_id) { this._record({ ...base, outcome: 'rejected-invalid-choice', proposal: res.proposal }); return fallback; }
-    this._record({ ...base, outcome: 'admitted', admitted: true, proposal: res.proposal });
-    return c.option === 'pass' ? { pass: true } : fallback;
+    const base = { requestId: request.ref.request_id, kind: 'response', tick: request.ref.tick, choiceId: req.choiceId, inputHash: request.ref.input_hash, waitedMs: Math.round(res.ms), harness: res.receipt };
+    const reject = (outcome, extra = {}) => { this._record({ ...base, outcome, admitted: false, ...extra }); return fallback; };
+    try {
+      if (res.status !== 'arrived') return reject(`${res.status === 'deadline' ? 'deadline' : res.status === 'cancelled' ? 'cancelled' : 'unavailable'}-fallback`, { error: res.error ?? null });
+      const fence = this._fenced(app, request, gen, fp);
+      if (fence) return reject(`rejected-${fence}`);
+      this.consumed.add(request.ref.request_id);
+      // bound as strictly as planning: the request ID and the input digest, then exactly one known choice
+      if (res.receipt?.request_id !== request.ref.request_id || res.receipt?.input_hash !== request.ref.input_hash) return reject('rejected-mismatched-receipt');
+      const shape = proposalShape(res.proposal, 1);
+      if (shape) return reject('rejected-malformed', { reason: shape, proposal: res.proposal ?? null });
+      const cs = res.proposal.choices;
+      if (cs.length !== 1 || cs[0].decision !== 'd1' || !['pass', 'counter'].includes(cs[0].option)) return reject('rejected-invalid-choice', { proposal: res.proposal });
+      this._record({ ...base, outcome: 'admitted', admitted: true, proposal: res.proposal });
+      return cs[0].option === 'pass' ? { pass: true } : fallback;
+    } catch (e) { return reject('rejected-error', { error: e.message }); }
   }
 }

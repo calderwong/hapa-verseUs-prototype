@@ -1,6 +1,7 @@
 /**
- * The social table around one match (Milestones A–B): the Avatar opponent's presence and the shared
- * soundtrack. It observes only what the viewer has been shown and never changes game state; the
+ * The social table around one match (Milestones A–B; addendum 05): the Avatar opponent seated
+ * across the table, its small social layer, and the table soundtrack (a local queue in this browser:
+ * two library processes, not synchronized listening between clients). It observes only what the viewer has been shown and never changes game state; the
  * match runs the same with or without it (and when any owner is unavailable). One instance per
  * match epoch; New match, a different opponent, or closing the page disposes it and fences its
  * late work.
@@ -8,6 +9,8 @@
 import { h } from './dom.js';
 import { AvatarOpponent } from './avatar-opponent.js';
 import { Soundtrack } from './soundtrack.js';
+import { SeatedAvatar } from './seated-avatar.js';
+import * as THREE from 'three';
 import { greeting, reactionsTo, resultLine, keptLine } from './reactions.js';
 
 /** A party as the opponent says it: its piece, no seat letter or grid code. */
@@ -19,15 +22,20 @@ export function spokenParty(state, id) {
 
 export class Table {
   /**
-   * @param {{ world: HTMLElement, sessionId: string, epoch: number, avatarSeat: 'A'|'B', humanSeat: 'A'|'B', avatarId: string, controller: any, songIds: string[], partyLabel: (id: string) => string }} o
+   * @param {{ world: HTMLElement, scene?: { root: any, board: { w: number, h: number, S: number } }, sessionId: string, epoch: number, avatarSeat: 'A'|'B', humanSeat: 'A'|'B', avatarId: string, controller: any, songIds: string[], partyLabel: (id: string) => string }} o
    */
   constructor(o) {
     this.o = o;
     this.epoch = o.epoch;
-    this.el = h('div', { class: 'table-dock' });
-    o.world.append(this.el);
+    // the social layer follows the seated figure; music has its own strip (addendum 05 §4.3)
+    this.el = h('div', { class: 'table-social' });
+    this.musicEl = h('div', { class: 'table-music' });
+    this.hit = h('button', { class: 'opp-hit', tabindex: '-1', 'aria-hidden': 'true', title: 'Talk with Red', onclick: () => this.opponent.toggleConversation() });
+    o.world.append(this.hit, this.el, this.musicEl);
     this.opponent = new AvatarOpponent({ host: this.el, seat: o.avatarSeat, avatarId: o.avatarId, sessionId: o.sessionId, epoch: o.epoch, controller: o.controller });
-    this.music = new Soundtrack({ host: this.el, sessionId: o.sessionId, epoch: o.epoch, listener: { library: 'cj', seat: o.humanSeat, label: 'You' }, controller: true });
+    this.seated = o.scene ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: 'Red' }) : null;
+    this.opponent.addEventListener('rendering', (e) => this.seated?.setSource(e.detail.canvas));
+    this.music = new Soundtrack({ host: this.musicEl, sessionId: o.sessionId, epoch: o.epoch, listener: { library: 'cj', seat: o.humanSeat, label: 'You' }, controller: true });
     this.opponent.addEventListener('speaking', (e) => this.music.setDucked(e.detail.speaking));
     this.music.addEventListener('kept', (e) => this.opponent.say(keptLine(e.detail.entry.title)));
     this.firstContactSeen = false;
@@ -62,8 +70,38 @@ export class Table {
 
   result(outcome) { const l = resultLine(outcome, this.o.avatarSeat); if (l) this.opponent.say(l); }
 
+  /** Home fit points: the seated head and shoulders (empty without a seated figure). */
+  homePoints() { return this.seated ? this.seated.homePoints() : []; }
+
+  /**
+   * Per frame: the seated figure's view policy and texture, then the social layer. Near the figure
+   * at Home the nameplate and caption sit beside the face (above the table edge, clear of the banks);
+   * when the figure is turned away, faded or out of view they dock in the corner caption region.
+   */
+  update(camera, rect) {
+    if (!this.seated) { this.el.classList.add('docked'); return; }
+    this.seated.update(camera);
+    const vis = this.seated.visibility;
+    const f = this.seated.faceWorld().project(camera);
+    const on = vis > 0.35 && f.z < 1 && Math.abs(f.x) < 0.9 && f.y < 0.95 && f.y > -0.6;
+    this.el.classList.toggle('docked', !on);
+    this.hit.hidden = !on;
+    if (on) {
+      const x = (f.x + 1) / 2 * rect.width, y = (1 - f.y) / 2 * rect.height;
+      // the projected head size: the figure's width at the face depth
+      const edge = this.seated.faceWorld().add(new THREE.Vector3(this.seated.bodyW * 0.22, 0, 0)).project(camera);
+      const r = Math.max(24, Math.abs((edge.x - f.x) / 2 * rect.width));
+      this.hit.style.cssText = `left:${x - r}px;top:${y - r * 1.25}px;width:${2 * r}px;height:${2.5 * r}px`;
+      this.el.style.left = `${Math.min(rect.width - 260, x + r * 1.6)}px`;
+      this.el.style.top = `${Math.max(8, y - r * 0.9)}px`;
+    } else { this.el.style.left = ''; this.el.style.top = ''; }
+  }
+
   dispose() {
     this.epoch = -1;
+    this.seated?.dispose();
+    this.hit.remove();
+    this.musicEl.remove();
     this.opponent.dispose();
     this.music.dispose();
     this.el.remove();

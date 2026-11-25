@@ -113,3 +113,77 @@ test('stale and duplicate: a reset during the request, or a consumed request, is
   await d2.plan(t2.app, t2.bot);
   assert.equal(d2._fenced(t2.app, seen, 1, (await import('../../src/hapa/rules/state.js')).stateFingerprint(t2.app.state)), 'duplicate');
 });
+
+// --- review 10, R10-05 witnesses (admission correctness, not playing strength) -------------------
+import { closeTick } from '../../src/hapa/rules/session.js';
+import { responseOptions } from '../../src/hapa/rules/match.js';
+
+test('joint selections that cannot all be funded are not admitted: the stored fallback plays with a reason', async () => {
+  const { app, bot } = table();
+  for (let t = 1; t <= 6; t++) { const p = bot.plan(app.state, app.ctx); closeTick(app.session, { A: [], B: p }, (r) => (r.seat === 'B' ? bot.choose(r, app.state, app.ctx) : { pass: true })); openTick(app.session); }
+  harness((req) => ({ proposal: { choices: [{ decision: 'd1', option: 'o3' }, { decision: 'd2', option: 'o1' }], remark: '' }, receipt: receiptFor(req) }));
+  const fallback = new HeuristicBot({ seat: 'B', seed: 4 });
+  fallback.rng = bot.rng;
+  const expected = fallback.plan(app.state, app.ctx);
+  const d = new ModelDecider({ seat: 'B', avatarId: 'red-reaper', identityRevision: 'red-v1.0' });
+  const out = await d.plan(app, bot);
+  assert.equal(out.source, 'fallback');
+  assert.equal(out.receipt.outcome, 'rejected-unfulfilled-choice');
+  assert.equal(canonicalize(out.commands), canonicalize(expected));
+});
+
+test('malformed and empty proposals use the exact stored fallback, with a receipt', async () => {
+  for (const [proposal, outcome] of [[{ remark: '' }, 'rejected-malformed'], [{ choices: { decision: 'd1', option: 'hold' }, remark: '' }, 'rejected-malformed'], [{ choices: [], remark: '' }, 'abstained']]) {
+    const { app, bot } = table();
+    const expected = new HeuristicBot({ seat: 'B', seed: 4 }).plan(app.state, app.ctx);
+    harness((req) => ({ proposal, receipt: receiptFor(req) }));
+    const d = new ModelDecider({ seat: 'B', avatarId: 'red-reaper', identityRevision: 'red-v1.0' });
+    const out = await d.plan(app, bot);
+    assert.equal(out.receipt.outcome, outcome);
+    assert.equal(canonicalize(out.commands), canonicalize(expected));
+  }
+});
+
+/** A prepared response window where B holds a payable Blue Denial (diagnostic state, as in the review probe). */
+function responseTable() {
+  const { app, bot } = table();
+  const cardId = Object.values(app.state.players.B.bank.minor).find(Boolean);
+  app.state.cards[cardId].abilityId = 'fixture.blue_denial';
+  app.state.players.B.pool = { blue: 2 };
+  app.state.phase = 'responding';
+  app.state.stack = [{ id: 'S1.1', seat: 'A', defId: 'fixture.ember_strike', counterable: true, countered: false, target: {} }];
+  const req = { kind: 'response', seat: 'B', choiceId: 'C1.1', stack: app.state.stack.map((x) => ({ ...x })), options: responseOptions(app.state, app.ctx, 'B') };
+  return { app, bot, req, counter: bot.choose(req, app.state, app.ctx) };
+}
+
+test('responses are bound like plans: input digest, exactly one recognized choice, prepared fallback otherwise', async () => {
+  const cases = [
+    [(req) => ({ proposal: { choices: [{ decision: 'd1', option: 'pass' }], remark: '' }, receipt: { ...receiptFor(req), input_hash: '0'.repeat(64) } }), 'rejected-mismatched-receipt', false],
+    [(req) => ({ proposal: { choices: [{ decision: 'd1', option: 'pass' }, { decision: 'd1', option: 'counter' }], remark: '' }, receipt: receiptFor(req) }), 'rejected-malformed', false],
+    [(req) => ({ proposal: { choices: [], remark: '' }, receipt: receiptFor(req) }), 'rejected-invalid-choice', false],
+    [(req) => ({ proposal: { choices: [{ decision: 'd1', option: 'pass' }], remark: '' }, receipt: receiptFor(req) }), 'admitted', true],
+  ];
+  for (const [reply, outcome, passes] of cases) {
+    const { app, bot, req, counter } = responseTable();
+    assert.ok(!counter.pass, 'the prepared state offers a counter');
+    harness(reply);
+    const d = new ModelDecider({ seat: 'B', avatarId: 'red-reaper', identityRevision: 'red-v1.0' });
+    const answer = await d.respond(app, bot, req);
+    assert.equal(d.receipts.at(-1).outcome, outcome);
+    if (passes) assert.deepEqual(answer, { pass: true });
+    else assert.deepEqual(answer, counter, 'the prepared counter (fallback)');
+  }
+});
+
+test('dispose cancels an outstanding request at once; the result is the stored fallback, never admitted', async () => {
+  const { app, bot } = table();
+  const calls = harness((req) => ({ proposal: firstChoice(req), receipt: receiptFor(req) }), { delay: 400 });
+  const d = new ModelDecider({ seat: 'B', avatarId: 'red-reaper', identityRevision: 'red-v1.0' });
+  const pending = d.plan(app, bot);
+  await new Promise((r) => setTimeout(r, 30));
+  d.dispose();
+  const out = await pending;
+  assert.equal(out.source, 'fallback');
+  assert.equal(out.receipt.outcome, 'cancelled-fallback');
+  assert.ok(calls.some((c) => c.url.endsWith('/game-decision-cancel')));
+});
