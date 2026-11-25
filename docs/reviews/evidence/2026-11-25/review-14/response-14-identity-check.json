@@ -1,0 +1,99 @@
+{
+  "commit": "3fc3f1b386a03ea2d3f307adc4391e090de4592a",
+  "report": "docs/reviews/2026-11-25-ui-design-response-14.md",
+  "matched": 15,
+  "total": 15,
+  "limit": "Matches published source bytes, not any running local process or browser identity.",
+  "files": [
+    {
+      "path": "src/hapa/presentation/soundtrack.js",
+      "reportedSha256": "24072501c3020b0002ea078c3669db4ee0f84b1a22b67a40140d9d58deeb8351",
+      "fetchedSha256": "24072501c3020b0002ea078c3669db4ee0f84b1a22b67a40140d9d58deeb8351",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/music-deck.js",
+      "reportedSha256": "bbe699931ab620741a00722ab887758f08418d8129b46d93beb0a16841088213",
+      "fetchedSha256": "bbe699931ab620741a00722ab887758f08418d8129b46d93beb0a16841088213",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/table.js",
+      "reportedSha256": "50aa4926b5295e26164108d5f9c0daa2748318207a2e1e44cb0187f870b2ff18",
+      "fetchedSha256": "50aa4926b5295e26164108d5f9c0daa2748318207a2e1e44cb0187f870b2ff18",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "reportedSha256": "0175b7a1cffe7f66c730a97cc7e7e7f943eb6228759da6925fc398874ae5b104",
+      "fetchedSha256": "0175b7a1cffe7f66c730a97cc7e7e7f943eb6228759da6925fc398874ae5b104",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "reportedSha256": "d59662a0697511d0726da0cd47d53a89486dd614c197c90498a99f7a8bb36ec3",
+      "fetchedSha256": "d59662a0697511d0726da0cd47d53a89486dd614c197c90498a99f7a8bb36ec3",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/board-view.js",
+      "reportedSha256": "204fb15758c38c8408e32ea4075f7e514e420831f7e473eaba95d7921a110c35",
+      "fetchedSha256": "204fb15758c38c8408e32ea4075f7e514e420831f7e473eaba95d7921a110c35",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/resources.js",
+      "reportedSha256": "3427c768cfd321ff6f4a0c26d0eeeb6c2e6cf565780e1efc47689a2a0e7d5584",
+      "fetchedSha256": "3427c768cfd321ff6f4a0c26d0eeeb6c2e6cf565780e1efc47689a2a0e7d5584",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/scenery.js",
+      "reportedSha256": "3e6df2c4fecc8aab363d1c02abc3f5c2c4d987c4d805afc4011cb04485a7a017",
+      "fetchedSha256": "3e6df2c4fecc8aab363d1c02abc3f5c2c4d987c4d805afc4011cb04485a7a017",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/seated-avatar.js",
+      "reportedSha256": "96f4dcba586d904072fc05de48b40f8ce22fc9c2d06613055a22e685fd70c04b",
+      "fetchedSha256": "96f4dcba586d904072fc05de48b40f8ce22fc9c2d06613055a22e685fd70c04b",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/pieces.js",
+      "reportedSha256": "578a9061dc1ef863cc44278b0d6819a66ac95c65e2b377dc2f645b07e0482d73",
+      "fetchedSha256": "578a9061dc1ef863cc44278b0d6819a66ac95c65e2b377dc2f645b07e0482d73",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/gear.js",
+      "reportedSha256": "fade11e69602192a39d0d1799c21e7c0bc884ad3722f94004f1488b18c893b7d",
+      "fetchedSha256": "fade11e69602192a39d0d1799c21e7c0bc884ad3722f94004f1488b18c893b7d",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/terrain-view.js",
+      "reportedSha256": "3a44f13343f64c9354f9bdd03dea3b87ebbe12eb33c221a0b053fbf39fcc8a8f",
+      "fetchedSha256": "3a44f13343f64c9354f9bdd03dea3b87ebbe12eb33c221a0b053fbf39fcc8a8f",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/territory-diorama.js",
+      "reportedSha256": "fe69938bb91897a995247648e6f6c91c4e6a79d261e9bf2c7b963f6d6eca23ea",
+      "fetchedSha256": "fe69938bb91897a995247648e6f6c91c4e6a79d261e9bf2c7b963f6d6eca23ea",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/versus.css",
+      "reportedSha256": "4ece892cc3cbcef3664264d940a883d0fed73a53b2905f405e3dd6238450a85f",
+      "fetchedSha256": "4ece892cc3cbcef3664264d940a883d0fed73a53b2905f405e3dd6238450a85f",
+      "match": true
+    },
+    {
+      "path": "tests/hapa/soundtrack.test.js",
+      "reportedSha256": "9d02c9b23bdce271957d9a337965e45995b2f4f37b687e3f62a676de8d7fcb75",
+      "fetchedSha256": "9d02c9b23bdce271957d9a337965e45995b2f4f37b687e3f62a676de8d7fcb75",
+      "match": true
+    }
+  ]
+}

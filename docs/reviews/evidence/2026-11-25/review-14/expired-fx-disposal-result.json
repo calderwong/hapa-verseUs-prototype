@@ -1,0 +1,49 @@
+{
+  "schema": "hapa.versus.review14.expired-fx-disposal.v1",
+  "reviewBaselineCommit": "3fc3f1b386a03ea2d3f307adc4391e090de4592a",
+  "source": [
+    {
+      "path": "src/hapa/presentation/board-view.js",
+      "gitBlobSha": "5bee9a45967b567ac0d1b60010456f45f67414db"
+    },
+    {
+      "path": "src/hapa/presentation/fx.js",
+      "gitBlobSha": "c7dbd60c9d78c9d846c917308727c6ea7cb9dfa1"
+    },
+    {
+      "path": "src/hapa/presentation/resources.js",
+      "gitBlobSha": "6a6451b5442fbe664755fc18c01c2000fa4be0f6"
+    }
+  ],
+  "method": "Actual HitFX.supply and expiry, followed by actual BoardView.dispose and resources collector, with Three/canvas/unrelated imports as fixtures.",
+  "limitations": "No real renderer, GPU measurements, browser or network. Confirms dispose calls are omitted for the dormant helper textures; does not quantify GPU growth.",
+  "activeBurstReferences": 14,
+  "expired": {
+    "items": 0,
+    "children": 0
+  },
+  "firstBoardDisposal": {
+    "geometries": 0,
+    "materials": 0,
+    "textures": 0,
+    "lights": 0,
+    "sprites": 0
+  },
+  "secondBoardDisposal": null,
+  "helperTextures": {
+    "burst": {
+      "disposeCalls": 0,
+      "referencedByActiveEffect": true
+    },
+    "rune": {
+      "disposeCalls": 0,
+      "referencedByActiveEffect": false
+    },
+    "arrow": {
+      "disposeCalls": 0,
+      "referencedByActiveEffect": false
+    }
+  },
+  "missedPreviouslyUsedTexture": true,
+  "networkRequests": 0
+}

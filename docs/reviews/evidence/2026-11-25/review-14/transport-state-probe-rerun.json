@@ -1,0 +1,119 @@
+{
+  "schema": "hapa.versus.review13.transport-state-probe.v1",
+  "reviewBaselineCommit": "e04286188e13800e588557bd5cb53a9b0e3724c0",
+  "source": {
+    "path": "/workspace/scratch/a3fd4cc6ced6/research/repo_review_14/transport/source/src/hapa/presentation/soundtrack.js",
+    "gitBlobSha": "47e24706ff5c373df830b545f9a1a37210c526f6"
+  },
+  "method": "Actual prepare/start/playItem/error event/ended event/togglePlay/next/seek/previous/Return with local audio/fetch/storage fixtures",
+  "limitations": "No browser hit testing, real audio output or owner calls. The failing/finished Play label is separately established from MusicDeck.patch source.",
+  "failedPlay": {
+    "before": {
+      "status": "failed",
+      "listening": true,
+      "mode": "replay",
+      "key": "q1:song-1",
+      "paused": true,
+      "time": 0,
+      "plays": 2,
+      "generation": 2
+    },
+    "firstClick": {
+      "status": "playing",
+      "listening": true,
+      "mode": "replay",
+      "key": "q1:song-1",
+      "paused": false,
+      "time": 0,
+      "plays": 3,
+      "generation": 3
+    },
+    "secondClick": {
+      "status": "paused",
+      "listening": false,
+      "mode": "replay",
+      "key": "q1:song-1",
+      "paused": true,
+      "time": 0,
+      "plays": 3,
+      "generation": 4
+    }
+  },
+  "finishedPlay": {
+    "before": {
+      "status": "finished",
+      "listening": true,
+      "mode": "table",
+      "key": "q3:song-3",
+      "paused": true,
+      "time": 0,
+      "plays": 3,
+      "generation": 4
+    },
+    "firstClick": {
+      "status": "playing",
+      "listening": true,
+      "mode": "table",
+      "key": "q3:song-3",
+      "paused": false,
+      "time": 0,
+      "plays": 4,
+      "generation": 5
+    },
+    "secondClick": {
+      "status": "paused",
+      "listening": false,
+      "mode": "table",
+      "key": "q3:song-3",
+      "paused": true,
+      "time": 0,
+      "plays": 4,
+      "generation": 6
+    }
+  },
+  "previousChronology": {
+    "before": {
+      "status": "playing",
+      "listening": true,
+      "mode": "table",
+      "key": "q3:song-3",
+      "paused": false,
+      "time": 0,
+      "plays": 5,
+      "generation": 5,
+      "history": [
+        {
+          "key": "q1:song-1",
+          "firstAt": "2026-11-25T23:05:58.246Z",
+          "lastAt": "2026-11-25T23:05:58.265Z",
+          "plays": 2
+        },
+        {
+          "key": "q2:song-2",
+          "firstAt": "2026-11-25T23:05:58.252Z",
+          "lastAt": "2026-11-25T23:05:58.252Z",
+          "plays": 1
+        },
+        {
+          "key": "q3:song-3",
+          "firstAt": "2026-11-25T23:05:58.259Z",
+          "lastAt": "2026-11-25T23:05:58.272Z",
+          "plays": 2
+        }
+      ],
+      "expectedPrevious": "q1:song-1"
+    },
+    "after": {
+      "status": "playing",
+      "listening": true,
+      "mode": "replay",
+      "key": "q1:song-1",
+      "paused": false,
+      "time": 0,
+      "plays": 6,
+      "generation": 6
+    }
+  },
+  "networkRequests": 0,
+  "fixtureRequests": 22
+}
