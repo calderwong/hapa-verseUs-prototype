@@ -32,6 +32,17 @@ export class Table {
     this.musicEl = h('div', { class: 'table-music' });
     this.hit = h('button', { class: 'opp-hit', tabindex: '-1', 'aria-hidden': 'true', title: 'Talk with Red', onclick: () => this.opponent.toggleConversation() });
     o.world.append(this.hit, this.el, this.musicEl);
+    // the social surfaces own their gestures (R11-01): selecting draft text, scrolling the history or
+    // dragging a slider never pans, orbits or zooms the board behind them (the inspection view's rule)
+    for (const el of [this.el, this.musicEl]) for (const t of ['pointerdown', 'wheel', 'contextmenu']) el.addEventListener(t, (e) => e.stopPropagation());
+    // the actual rendered size of the layer (collapsed nameplate or expanded conversation)
+    this._size = { w: 0, h: 0 };
+    this._music = { w: 0, h: 0 };
+    this._ro = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
+      this._size = { w: this.el.offsetWidth, h: this.el.offsetHeight };
+      this._music = { w: this.musicEl.offsetWidth, h: this.musicEl.offsetHeight };
+    }) : null;
+    this._ro?.observe(this.el); this._ro?.observe(this.musicEl);
     this.opponent = new AvatarOpponent({ host: this.el, seat: o.avatarSeat, avatarId: o.avatarId, sessionId: o.sessionId, epoch: o.epoch, controller: o.controller });
     this.seated = o.scene ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: 'Red' }) : null;
     this.opponent.addEventListener('rendering', (e) => this.seated?.setSource(e.detail.canvas));
@@ -79,27 +90,56 @@ export class Table {
    * when the figure is turned away, faded or out of view they dock in the corner caption region.
    */
   update(camera, rect) {
-    if (!this.seated) { this.el.classList.add('docked'); return; }
-    this.seated.update(camera);
-    const vis = this.seated.visibility;
-    const f = this.seated.faceWorld().project(camera);
-    const on = vis > 0.35 && f.z < 1 && Math.abs(f.x) < 0.9 && f.y < 0.95 && f.y > -0.6;
-    this.el.classList.toggle('docked', !on);
+    // the free game area: inside the world, clear of open drawers (the app's --free-l/--free-r)
+    const ws = this.o.world.style, px = (v) => parseFloat(ws.getPropertyValue(v)) || 0;
+    const box = { l: px('--free-l') + 8, r: rect.width - px('--free-r') - 8, t: 8, b: rect.height - 8 };
+    const open = !!this.opponent.expanded;
+    this.el.classList.toggle('open', open);
+    // the layer never exceeds the free area; an expanded conversation shrinks its history first,
+    // so the question field, settings and the nameplate (collapse) stay reachable (R11-01)
+    const maxW = `${Math.max(160, Math.floor(box.r - box.l))}px`;
+    if (this._maxW !== maxW) { this._maxW = maxW; this.el.style.setProperty('--soc-max-w', maxW); }
+    const size = this._ro ? this._size : { w: this.el.offsetWidth, h: this.el.offsetHeight };
+    const music = this._ro ? this._music : { w: this.musicEl.offsetWidth, h: this.musicEl.offsetHeight };
+    // the music strip holds the top-right corner; the social layer stays below it there
+    const belowMusic = 8 + music.h + 6, musicLeft = box.r - music.w;
+    let on = false, x = 0, y = 0, r = 0;
+    if (this.seated) {
+      this.seated.update(camera);
+      const vis = this.seated.visibility;
+      const f = this.seated.faceWorld().project(camera);
+      on = vis > 0.35 && f.z < 1 && Math.abs(f.x) < 0.9 && f.y < 0.95 && f.y > -0.6;
+      if (on) {
+        x = (f.x + 1) / 2 * rect.width; y = (1 - f.y) / 2 * rect.height;
+        // the projected head size: the figure's width at the face depth
+        const edge = this.seated.faceWorld().add(new THREE.Vector3(this.seated.bodyW * 0.22, 0, 0)).project(camera);
+        r = Math.max(24, Math.abs((edge.x - f.x) / 2 * rect.width));
+      }
+    }
     this.hit.hidden = !on;
+    // beside the face: right of it, else left of it; an expanded panel that fits neither side docks
+    let left = null;
     if (on) {
-      const x = (f.x + 1) / 2 * rect.width, y = (1 - f.y) / 2 * rect.height;
-      // the projected head size: the figure's width at the face depth
-      const edge = this.seated.faceWorld().add(new THREE.Vector3(this.seated.bodyW * 0.22, 0, 0)).project(camera);
-      const r = Math.max(24, Math.abs((edge.x - f.x) / 2 * rect.width));
-      this.hit.style.cssText = `left:${x - r}px;top:${y - r * 1.25}px;width:${2 * r}px;height:${2.5 * r}px`;
-      this.el.style.left = `${Math.min(rect.width - 260, x + r * 1.6)}px`;
-      this.el.style.top = `${Math.max(8, y - r * 0.9)}px`;
-    } else { this.el.style.left = ''; this.el.style.top = ''; }
+      const right = x + r * 1.6, other = x - r * 1.6 - size.w;
+      if (right + size.w <= box.r) left = right;
+      else if (other >= box.l) left = other;
+      else if (!open) left = Math.max(box.l, box.r - size.w);
+    }
+    const docked = left === null;
+    this.el.classList.toggle('docked', docked);
+    const t0 = docked || left + size.w > musicLeft ? Math.max(box.t, belowMusic) : box.t;
+    const top = docked ? t0 : Math.max(t0, Math.min(y - r * 0.9, box.b - size.h));
+    const maxH = `${Math.max(120, Math.floor(box.b - t0))}px`;
+    if (this._maxH !== maxH) { this._maxH = maxH; this.el.style.setProperty('--soc-max-h', maxH); }
+    if (on) this.hit.style.cssText = `left:${x - r}px;top:${y - r * 1.25}px;width:${2 * r}px;height:${2.5 * r}px`;
+    if (docked) { this.el.style.left = ''; this.el.style.top = `${t0}px`; }
+    else { this.el.style.left = `${left}px`; this.el.style.top = `${top}px`; }
   }
 
   dispose() {
     this.epoch = -1;
     this.seated?.dispose();
+    this._ro?.disconnect();
     this.hit.remove();
     this.musicEl.remove();
     this.opponent.dispose();

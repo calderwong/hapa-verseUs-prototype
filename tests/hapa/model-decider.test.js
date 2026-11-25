@@ -187,3 +187,70 @@ test('dispose cancels an outstanding request at once; the result is the stored f
   assert.equal(out.receipt.outcome, 'cancelled-fallback');
   assert.ok(calls.some((c) => c.url.endsWith('/game-decision-cancel')));
 });
+
+/** Stub an HTTP 200 whose parsed body is `body` (or unparsable text when `body` is the symbol). */
+const UNPARSABLE = Symbol('unparsable');
+function rawHarness(body, { delay = 0 } = {}) {
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, body: JSON.parse(init.body) });
+    if (url.endsWith('/game-decision-cancel')) return { ok: true, status: 200, json: async () => ({ cancelled: true }) };
+    if (delay) await new Promise((r) => setTimeout(r, delay));
+    return { ok: true, status: 200, json: async () => { if (body === UNPARSABLE) throw new SyntaxError('Unexpected token'); return body; } };
+  };
+  return calls;
+}
+async function noUnhandled(fn) {
+  const seen = [];
+  const on = (e) => seen.push(e?.message ?? String(e));
+  process.on('unhandledRejection', on);
+  try { await fn(); await new Promise((r) => setTimeout(r, 20)); } finally { process.removeListener('unhandledRejection', on); }
+  return seen;
+}
+
+test('a successful HTTP reply that is not a JSON object (null, a list, a number, unparsable) settles through the stored fallback (R11-03)', async () => {
+  for (const body of [null, [], 7, 'text', UNPARSABLE]) {
+    const { app, bot } = table();
+    const twin = new HeuristicBot({ seat: 'B', seed: 4 });
+    const stored = canonicalize(twin.plan(app.state, app.ctx));
+    const calls = rawHarness(body);
+    const d = new ModelDecider({ seat: 'B', avatarId: 'red-reaper', identityRevision: 'red-v1.0', deadlines: { plan: 20 } });
+    let out;
+    const unhandled = await noUnhandled(async () => {
+      out = await Promise.race([d.plan(app, bot), new Promise((r) => setTimeout(() => r('unsettled'), 150))]);
+    });
+    assert.notEqual(out, 'unsettled', `settles within its bound (${String(body?.toString?.() ?? body)})`);
+    assert.deepEqual(unhandled, []);
+    assert.equal(out.source, 'fallback');
+    assert.ok(Object.isFrozen(out.commands), 'the fallback stored before the request, not a recomputed plan');
+    assert.equal(canonicalize(out.commands), stored);
+    assert.equal(out.receipt.outcome, 'rejected-malformed-reply');
+    assert.equal(out.receipt.admitted, false);
+    assert.match(out.receipt.error, /malformed harness reply/);
+    assert.equal(d.receipts.length, 1, 'exactly one settlement receipt');
+    assert.equal(d.consumed.size, 0);
+    assert.equal(d.inflight.size, 0); assert.equal(d._settle.size, 0);
+    assert.equal(calls.filter((c) => c.url.endsWith('/game-decision')).length, 1);
+  }
+});
+
+test('a null wrapper for a response choice returns the prepared counter; a late null after the deadline is ignored quietly', async () => {
+  const { app, bot, req, counter } = responseTable();
+  rawHarness(null);
+  const d = new ModelDecider({ seat: 'B', avatarId: 'red-reaper', identityRevision: 'red-v1.0' });
+  let answer;
+  assert.deepEqual(await noUnhandled(async () => { answer = await d.respond(app, bot, req); }), []);
+  assert.deepEqual(answer, counter);
+  assert.equal(d.receipts.at(-1).outcome, 'rejected-malformed-reply');
+
+  const t = table();
+  const calls = rawHarness(null, { delay: 120 });
+  const late = new ModelDecider({ seat: 'B', avatarId: 'red-reaper', identityRevision: 'red-v1.0', deadlines: { plan: 30 } });
+  let out;
+  const unhandled = await noUnhandled(async () => { out = await late.plan(t.app, t.bot); await new Promise((r) => setTimeout(r, 200)); });
+  assert.deepEqual(unhandled, []);
+  assert.equal(out.receipt.outcome, 'deadline-fallback');
+  assert.ok(calls.some((c) => c.url.endsWith('/game-decision-cancel')));
+  assert.equal(late.receipts.length, 1, 'the late malformed reply adds no admission or late-ignored receipt');
+  assert.equal(late.consumed.size, 0);
+});

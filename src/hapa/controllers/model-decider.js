@@ -40,6 +40,9 @@ export function proposalShape(p, max) {
   return null;
 }
 
+/** The receipt outcome for a request that did not arrive as a usable reply. */
+const notArrived = (status) => ({ deadline: 'deadline-fallback', cancelled: 'cancelled-fallback', malformed: 'rejected-malformed-reply' })[status] ?? 'unavailable-fallback';
+
 export class ModelDecider {
   /**
    * @param {{ seat: 'A'|'B', avatarId: string, identityRevision: string, endpoint?: string, deadlines?: { plan: number, response: number } }} o
@@ -79,7 +82,8 @@ export class ModelDecider {
 
   /**
    * One Harness request under the host's deadline. Resolves to { proposal, receipt, status } where
-   * status is 'arrived' or 'deadline'; a reply after the deadline is receipted as late and ignored.
+   * status is 'arrived', 'deadline', 'unavailable', 'malformed' or 'cancelled'; a reply after the
+   * deadline is receipted as late and ignored.
    */
   _ask(request, deadline) {
     const rid = request.ref.request_id;
@@ -87,7 +91,15 @@ export class ModelDecider {
     const ctl = new AbortController();
     (this.inflight ??= new Map()).set(rid, ctl);
     const reply = fetch(`${this.endpoint}/game-decision`, { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ request, deadline_ms: deadline }) })
-      .then(async (r) => { const j = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(Error(j.error || j.code || `harness ${r.status}`), { code: j.code || j.error || `http_${r.status}` }); return j; });
+      .then(async (r) => {
+        // the outer wrapper is checked before anything completes (R11-03): a reply that is not a JSON
+        // object (null, a list, a number, unparsable text) is a malformed reply, never an arrival
+        const raw = await r.json().catch(() => undefined);
+        const j = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : null;
+        if (!r.ok) throw Object.assign(Error(j?.error || j?.code || `harness ${r.status}`), { code: j?.code || j?.error || `http_${r.status}` });
+        if (!j) throw Object.assign(Error(`malformed harness reply (${raw === undefined ? 'not JSON' : raw === null ? 'null' : Array.isArray(raw) ? 'a list' : typeof raw})`), { code: 'malformed-reply' });
+        return j;
+      });
     reply.finally?.(() => this.inflight?.delete(rid)).catch(() => {});
     return new Promise((resolve) => {
       let done = false;
@@ -101,8 +113,10 @@ export class ModelDecider {
         fetch(`${this.endpoint}/game-decision-cancel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ request_id: rid }) }).catch(() => {});
         reply.then((j) => this._record({ requestId: rid, kind: request.ref.kind, tick: request.ref.tick, outcome: 'late-ignored', harness: j.receipt ?? null }), () => {});
       }, deadline);
+      // exactly one settlement: arrival, failure, deadline or cancellation, whichever is first; the
+      // wrapper was validated above, so nothing here can throw after the recovery paths are cleared
       reply.then((j) => { this._settle?.delete(rid); if (done) return; done = true; clearTimeout(timer); resolve({ status: 'arrived', proposal: j.proposal ?? null, receipt: j.receipt ?? null, ms: performance.now() - sent }); },
-        (e) => { if (done) return; done = true; clearTimeout(timer); resolve({ status: 'unavailable', proposal: null, receipt: null, error: e.code || e.message, ms: performance.now() - sent }); });
+        (e) => { this._settle?.delete(rid); if (done) return; done = true; clearTimeout(timer); resolve({ status: e?.code === 'malformed-reply' ? 'malformed' : 'unavailable', proposal: null, receipt: null, error: e?.code === 'malformed-reply' ? e.message : e?.code || e?.message || String(e), ms: performance.now() - sent }); });
     });
   }
 
@@ -157,7 +171,7 @@ export class ModelDecider {
     // every rejection plays the fallback stored for this request (never a recomputed plan)
     const fallBack = (outcome, extra = {}) => ({ commands: fallback, source: 'fallback', receipt: this._record({ ...base, outcome, admitted: false, ...extra }) });
     try {
-      if (res.status !== 'arrived') return fallBack(`${res.status === 'deadline' ? 'deadline' : res.status === 'cancelled' ? 'cancelled' : 'unavailable'}-fallback`, { error: res.error ?? null });
+      if (res.status !== 'arrived') return fallBack(notArrived(res.status), { error: res.error ?? null });
       const fence = this._fenced(app, request, gen, fp);
       if (fence) return fallBack(`rejected-${fence}`);
       this.consumed.add(request.ref.request_id); // single consumption, admitted or not
@@ -209,7 +223,7 @@ export class ModelDecider {
     const base = { requestId: request.ref.request_id, kind: 'response', tick: request.ref.tick, choiceId: req.choiceId, inputHash: request.ref.input_hash, waitedMs: Math.round(res.ms), harness: res.receipt };
     const reject = (outcome, extra = {}) => { this._record({ ...base, outcome, admitted: false, ...extra }); return fallback; };
     try {
-      if (res.status !== 'arrived') return reject(`${res.status === 'deadline' ? 'deadline' : res.status === 'cancelled' ? 'cancelled' : 'unavailable'}-fallback`, { error: res.error ?? null });
+      if (res.status !== 'arrived') return reject(notArrived(res.status), { error: res.error ?? null });
       const fence = this._fenced(app, request, gen, fp);
       if (fence) return reject(`rejected-${fence}`);
       this.consumed.add(request.ref.request_id);

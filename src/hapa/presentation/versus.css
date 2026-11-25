@@ -631,8 +631,15 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
    table edge, clear of the banks. When the figure turns away or leaves the view they dock in the
    top-right caption region. Music has its own strip. Nothing here covers the Ready strip, the docked
    inspection bar or the height rail; the conversation opens only by deliberate click or keyboard. */
-.table-social { position: absolute; z-index: 24; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: max-content; max-width: 250px; pointer-events: none; }
-.table-social.docked { left: auto !important; right: calc(8px + var(--free-r, 0px)); top: 44px !important; align-items: flex-end; }
+.table-social { position: absolute; z-index: 24; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: max-content; max-width: min(250px, var(--soc-max-w, 250px)); max-height: var(--soc-max-h, none); pointer-events: none; }
+.table-social.open { max-width: var(--soc-max-w, 300px); }
+.table-social.docked { left: auto !important; right: calc(8px + var(--free-r, 0px)); align-items: flex-end; } /* top: below the music strip (Table.update) */
+/* an expanded conversation that meets the free area's edge shrinks its history, never its question field or controls (R11-01) */
+.table-social > .opp-social { min-height: 0; max-height: 100%; }
+.opp-social > * { flex: none; }
+.opp-social > .opp-panel { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+.opp-panel > * { flex: none; }
+.opp-panel > .opp-log { flex: 0 1 auto; min-height: 2.6em; }
 .table-social > * { pointer-events: auto; }
 .opp-hit { position: absolute; z-index: 22; padding: 0; background: transparent; border: 0; border-radius: 40%; cursor: pointer; }
 .opp-hit:hover { box-shadow: 0 0 0 2px rgba(232,133,122,0.35); }
@@ -648,7 +655,7 @@ dfn.term:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 .opp-controls { display: flex; gap: 3px; }
 .opp-controls button, .np-strip button, .opp-panel button { padding: 1px 7px; font-size: 12px; }
 .opp-controls button[hidden] { display: none; }
-.opp-panel { display: flex; flex-direction: column; gap: 5px; width: 300px; max-width: 70vw; padding: 6px 8px; background: rgba(16,24,32,0.94); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
+.opp-panel { display: flex; flex-direction: column; gap: 5px; box-sizing: border-box; width: 300px; max-width: 100%; padding: 6px 8px; background: rgba(16,24,32,0.94); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 6px 16px rgba(0,0,0,.4); }
 .opp-panel[hidden] { display: none; }
 .opp-log { max-height: 150px; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
 .opp-log p { margin: 0; } .opp-log .you { color: var(--a); }

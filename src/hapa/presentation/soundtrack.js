@@ -161,15 +161,26 @@ export class Soundtrack extends EventTarget {
       this.active = { gen, entry, url, bytes: blob.size };
       this.audio.src = url;
       this._applyVolume();
-      await Promise.race([this.audio.play(), new Promise((_, no) => setTimeout(() => no(Error('playback did not start')), START_MS))]);
-      if (gen !== this.playGen) return;
+      await this._play();
+      if (!this._current(gen, entry)) return;
       this.lastPlayback = { queueEntryId: entry.queueEntryId, assetId: entry.assetId, bytes: blob.size, startedAt: new Date().toISOString() };
       this.dispatchEvent(new CustomEvent('track', { detail: entry }));
     } catch (e) {
       clearTimeout(timer);
-      if (gen !== this.playGen || this.disposed) return; // superseded, not failed
+      if (!this._current(gen, entry)) return; // superseded, opted out or disposed: not failed
       this._fail(entry, ctl.signal.reason?.message ?? e.message);
     } finally { if (this._pending === ctl) this._pending = null; }
+  }
+
+  /** Is this attempt (generation and entry) still the one the listener wants to hear? */
+  _current(gen, entry) { return gen === this.playGen && !this.disposed && this.settings.listening && this.now === entry; }
+
+  /** Start the loaded audio under the finite start policy (START_MS); the deadline is always released. */
+  async _play() {
+    let timer;
+    try {
+      await Promise.race([this.audio.play(), new Promise((_, no) => { timer = setTimeout(() => no(Error('playback did not start')), START_MS); })]);
+    } finally { clearTimeout(timer); }
   }
 
   /**
@@ -213,10 +224,13 @@ export class Soundtrack extends EventTarget {
 
   /** Resume the selected entry: its own loaded audio if that is what is loaded, otherwise fetch it. */
   _resume() {
-    if (!this.now) return;
-    if (this.active && this.active.entry === this.now && this.audio.getAttribute('src')) {
-      this.active.gen = ++this.playGen;
-      this.audio.play().catch((e) => this._fail(this.now, e.message));
+    const entry = this.now;
+    if (!entry) return;
+    if (this.active && this.active.entry === entry && this.audio.getAttribute('src')) {
+      // this attempt is bound to its entry and generation (R11-02): a late result after Next, Not
+      // listening or disposal is ignored; only a still-current attempt can fail its own entry
+      const gen = this.active.gen = ++this.playGen;
+      this._play().catch((e) => { if (this._current(gen, entry)) this._fail(entry, e.message); });
     } else this._select(this.queue.index);
   }
 
