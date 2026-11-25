@@ -1,0 +1,72 @@
+{
+  "schema": "hapa.versus.review13.resume-pause-race.v1",
+  "reviewBaselineCommit": "e04286188e13800e588557bd5cb53a9b0e3724c0",
+  "source": [
+    {
+      "path": "src/hapa/presentation/soundtrack.js",
+      "gitBlobSha": "590eef73e9818972378cc355b11bdc7379d18d19"
+    },
+    {
+      "path": "src/hapa/presentation/music-signal.js",
+      "gitBlobSha": "5972a736aebf27794cf8ecabf94f4eeafdfaf77a"
+    }
+  ],
+  "method": "Actual Soundtrack.togglePlay twice and actual MusicSignal.resume with a deferred suspended-context fixture; Audio.play dispatches playing as a browser would.",
+  "limitations": "Controlled scheduling proof, not a live browser reproduction. No owner, network or audible output.",
+  "before": {
+    "listening": false,
+    "status": "paused",
+    "generation": 0,
+    "activeGeneration": 0,
+    "audioPaused": true,
+    "item": "queue-fixture-A",
+    "time": 37,
+    "calls": []
+  },
+  "pending": {
+    "listening": true,
+    "status": "loading",
+    "generation": 1,
+    "activeGeneration": 1,
+    "audioPaused": true,
+    "item": "queue-fixture-A",
+    "time": 37,
+    "calls": [
+      "context.resume",
+      "context.resume"
+    ]
+  },
+  "paused": {
+    "listening": false,
+    "status": "paused",
+    "generation": 2,
+    "activeGeneration": 1,
+    "audioPaused": true,
+    "item": "queue-fixture-A",
+    "time": 37,
+    "calls": [
+      "context.resume",
+      "context.resume",
+      "context.resume",
+      "audio.pause"
+    ]
+  },
+  "after": {
+    "listening": false,
+    "status": "paused",
+    "generation": 2,
+    "activeGeneration": 1,
+    "audioPaused": false,
+    "item": "queue-fixture-A",
+    "time": 37,
+    "calls": [
+      "context.resume",
+      "context.resume",
+      "context.resume",
+      "audio.pause",
+      "audio.play"
+    ]
+  },
+  "stalePlayAfterPause": true,
+  "pausedIntentUndone": true
+}

@@ -1,0 +1,187 @@
+{
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "reviewDateLocal": "2026-11-25",
+  "timezone": "America/Los_Angeles",
+  "commit": "e04286188e13800e588557bd5cb53a9b0e3724c0",
+  "tree": "8ae32b344284124a8c1ccaec83f02fa8058d07d9",
+  "engineGitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "method": "Fetched exact bytes verified against pinned Git tree. Provenance, not an exhaustive line-by-line audit of every dependency.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "gitBlobSha": "7ca4262277cc1f89a9b6cb6391581d3b882cdffb",
+      "bytes": 5920,
+      "sha256": "ae2c72adbcb521c32ae16a9b455e70d89e18b2d4e7749a1fce16391e94114237",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/AGENTS.md"
+    },
+    {
+      "path": "docs/integrations/README.md",
+      "gitBlobSha": "790380aed4796d3266e1b6a98d1462ab862faa83",
+      "bytes": 3311,
+      "sha256": "d85f96b42549111a011989ce2c615545ab0097806a11873019f7498deef8f2bb",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/docs/integrations/README.md"
+    },
+    {
+      "path": "docs/integrations/dusk-island-table-and-music-v1.md",
+      "gitBlobSha": "9ab2b6ac8e8f7b5540a30214a5f960d46939a45f",
+      "bytes": 31554,
+      "sha256": "32b324fe94db169716d29b21ae9551d755c066581e67816f01162e105ae21361",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/docs/integrations/dusk-island-table-and-music-v1.md"
+    },
+    {
+      "path": "docs/requirements/2026-11-25-human-feedback-addendum-06.md",
+      "gitBlobSha": "c02f758525fa3567f9592a5ca132c1d03c290869",
+      "bytes": 6730,
+      "sha256": "1367b87998f224737a5e0c7429fe7cedabea35fa083eb385eabe29fb1e4d85c3",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/docs/requirements/2026-11-25-human-feedback-addendum-06.md"
+    },
+    {
+      "path": "docs/reviews/2026-11-25-next-agent-assignment-13.md",
+      "gitBlobSha": "b0587814ebb0b165aee7f06f9b37f4f6017c379d",
+      "bytes": 12444,
+      "sha256": "1b911f66c56fb15979621d7002c82d90501718ae5257f8d027015fe544a69392",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/docs/reviews/2026-11-25-next-agent-assignment-13.md"
+    },
+    {
+      "path": "docs/reviews/2026-11-25-ui-design-response-13.md",
+      "gitBlobSha": "191b2ca497171d9b787007a65eadc3c4b24572e8",
+      "bytes": 25239,
+      "sha256": "bd4370d16c460245f99146ce7299865acd4674208887f2c5e9345f63dd7a8cde",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/docs/reviews/2026-11-25-ui-design-response-13.md"
+    },
+    {
+      "path": "docs/reviews/README.md",
+      "gitBlobSha": "503711b9e9e001cb7428919836045bba8bc69268",
+      "bytes": 22989,
+      "sha256": "672c81fb727a05ea059b3dd6c1086e13b281d2566d7954042a9ff9111d31c711",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/docs/reviews/README.md"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-13/ui-journey.json",
+      "gitBlobSha": "3eb750adb80f4b8e0c00fc80da995f8a2a97db37",
+      "bytes": 9446,
+      "sha256": "2c8ad767adf688ba04350efcdd429a457e7c4bfcb6e59f0d13407ee3203b4c26",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/docs/reviews/evidence/2026-11-25/response-13/ui-journey.json"
+    },
+    {
+      "path": "package.json",
+      "gitBlobSha": "7217956c327c97594241b1609233559f2f52b09f",
+      "bytes": 1309,
+      "sha256": "affb7667d0980754e301ab4411643cd539ff51412ea9bbdc12236efa57b5e82d",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/package.json"
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "gitBlobSha": "6862b8389346210a6771b2bc4d86cd4d402fd1ed",
+      "bytes": 223291,
+      "sha256": "0528ee76ccf9de8e09550455902a327747734110b997e3ad40690fae668cc9d9",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/app.js"
+    },
+    {
+      "path": "src/hapa/presentation/board-view.js",
+      "gitBlobSha": "5fedd83c3669e1484ff0ce9c44fa6cf1126588b2",
+      "bytes": 51297,
+      "sha256": "02d6c793b906408df68aaab5bb267aa806b45dbf3b659cb97f12bcd6e7d08001",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/board-view.js"
+    },
+    {
+      "path": "src/hapa/presentation/boardframe.js",
+      "gitBlobSha": "3c12eb8f069bcc23ab20f23ed173356cb90b3e90",
+      "bytes": 4299,
+      "sha256": "c358186a9aa1175b44a9983f07f0bde8b34092eecbe7f4c44f6fe7b4544ff04b",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/boardframe.js"
+    },
+    {
+      "path": "src/hapa/presentation/dom.js",
+      "gitBlobSha": "8f19fcae4308487763f80e1247e16c28d43237d3",
+      "bytes": 615,
+      "sha256": "21456e5ef2b7339b6471386a93d9a6ca38e7e02c95dcd8900a700bf23a250298",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/dom.js"
+    },
+    {
+      "path": "src/hapa/presentation/music-deck.js",
+      "gitBlobSha": "ee9064cf5ade13eb9fcc1c6973f1076015aa0652",
+      "bytes": 21023,
+      "sha256": "3cbaeb265f309104db64b458abb75f11efd14936d333d338889892bb161d33c2",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/music-deck.js"
+    },
+    {
+      "path": "src/hapa/presentation/music-signal.js",
+      "gitBlobSha": "5972a736aebf27794cf8ecabf94f4eeafdfaf77a",
+      "bytes": 7968,
+      "sha256": "1269f8b58f13c569fc1ef8692633e67d8285548d7ba55c05768193dfc4f1e993",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/music-signal.js"
+    },
+    {
+      "path": "src/hapa/presentation/scenery.js",
+      "gitBlobSha": "b582633216df9ccc46bf154f1351d1bbe6dca76e",
+      "bytes": 34304,
+      "sha256": "4ea741a1ebde9025bd5a0f399a9eb1d5678b16781c77b754a73935291bade4c5",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/scenery.js"
+    },
+    {
+      "path": "src/hapa/presentation/seated-avatar.js",
+      "gitBlobSha": "764c6789d0610cddfbdc2fcb4b419f335a318b56",
+      "bytes": 12585,
+      "sha256": "ad902fe46836f84d280f817c55680ea2501caeb697167f4c69605ba9e4929357",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/seated-avatar.js"
+    },
+    {
+      "path": "src/hapa/presentation/soundtrack.js",
+      "gitBlobSha": "590eef73e9818972378cc355b11bdc7379d18d19",
+      "bytes": 33334,
+      "sha256": "f0690c5ee046ccd4cc1c2cd9daaaf8fff594100a60c230cd1110d90bf4e35f6c",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/soundtrack.js"
+    },
+    {
+      "path": "src/hapa/presentation/table.js",
+      "gitBlobSha": "486d2d19b28309f6b63b3a910c23d2df0df22d35",
+      "bytes": 9590,
+      "sha256": "7f973f6b398e83ae005581519ba306df5aed9db6c2f459bbe4f1b0ab7fc64fab",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/table.js"
+    },
+    {
+      "path": "src/hapa/presentation/terrain-view.js",
+      "gitBlobSha": "2439ef5bba8c30528f9635de660f3034c2966853",
+      "bytes": 15168,
+      "sha256": "b8521c3def6837c700f5e04519065f0d48d3b4f01172b95f1b7bde02bfc77de5",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/terrain-view.js"
+    },
+    {
+      "path": "src/hapa/presentation/versus.css",
+      "gitBlobSha": "39f7ad6456d3654712edb1a13d6b6f95a3a45304",
+      "bytes": 64255,
+      "sha256": "83681496e982293eadaf4e89e60876be9c1df6da11dbada8272cfcdbd1beb805",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/src/hapa/presentation/versus.css"
+    },
+    {
+      "path": "tests/hapa/soundtrack.test.js",
+      "gitBlobSha": "f4e2660a7df1b3d223b43a7dc290926e256aec28",
+      "bytes": 7299,
+      "sha256": "a742a65dbf66def5d3a2eb5abf9bae0e9ed20e31ffe4e4a4f7e44802107bbcb7",
+      "verifiedByteEquivalent": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/e04286188e13800e588557bd5cb53a9b0e3724c0/tests/hapa/soundtrack.test.js"
+    }
+  ]
+}

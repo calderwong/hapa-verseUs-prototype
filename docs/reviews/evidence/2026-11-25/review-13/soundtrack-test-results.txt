@@ -1,0 +1,11 @@
+✔ a local replay bookmarks the table once, stops at its end, and Return restores the bookmark (75.31633ms)
+✔ Keep changes saved state only, and a reply after Next stays with the original encounter (28.637841ms)
+✔ Kept rows are one per exact asset; similar titles stay apart; unretained saves are honest (13.56747ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 253.910486
