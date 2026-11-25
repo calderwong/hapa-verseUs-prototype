@@ -1,0 +1,355 @@
+{
+ "schema": "hapa.versus.evidence.milestone-b.v1",
+ "topology": "LOCAL-ONLY. Two independently owned Hapa Song Registry processes on one Mac: cj-library (API 8811, peer 8812, default data root) and red-library (API 8801, peer 8802, data root ~/.hapa-music-libraries/red-reaper), each with its own bearer token and Hypercore keys, connected over loopback TCP. Not two machines.",
+ "live": [
+  {
+   "step": "Keep in the Versus now-playing strip (q1, Red's track, heard over the peer link)",
+   "observed": "Saving… → Saved · downloading → Available offline at 01:15:48–49Z",
+   "acquisitionId": "acq-a9d65d3e907c67f5f5df7aaa0a0fd0dd",
+   "receipt": {
+    "libraryId": "retained:a9d65d3e907c67f5f5df7aaa",
+    "receiptId": "47777f3f-7cb1-418d-bbc8-76bc1d140664"
+   }
+  },
+  {
+   "step": "Source disconnected (red-library stopped; 8802 closed), receiver restarted (cj-library stopped and started)",
+   "observed": "GET /music/cj/retained/retained:a9d65d3e907c67f5f5df7aaa/audio → 200, 11,519,788 bytes, sha256 a9d65d3e…88911a8 equals the offer; browser Audio played 2.51 s of 60 s"
+  },
+  {
+   "step": "Keep an unheard track (q4, 258 s) while the source is down",
+   "observed": "saved-downloading → saved-waiting-source (ECONNREFUSED 127.0.0.1:8802); after red-library restarted: saved-downloading → available-offline, 757/757 blocks",
+   "final": {
+    "acquisitionId": "acq-8eb31e1137565ac8294508ff67c51b76",
+    "discoveryId": null,
+    "state": "available-offline",
+    "receivedBlocks": 757,
+    "totalBlocks": 757,
+    "discoveries": 1,
+    "error": null,
+    "retained": {
+     "libraryId": "retained:8eb31e1137565ac8294508ff",
+     "receiptId": "431a65a0-59bd-44d8-9aa7-69dd48366664",
+     "retainedAt": "2026-11-25T01:16:31.774Z",
+     "file": "8eb31e1137565ac8294508ff67c51b76ea3951d2428ae096d5cf68539221c01e.wav"
+    },
+    "updatedAt": "2026-11-25T01:16:31.783Z"
+   }
+  }
+ ],
+ "retained_library": [
+  {
+   "libraryId": "retained:a9d65d3e907c67f5f5df7aaa",
+   "recordingId": "hapa-music-node:run:a571688059f9",
+   "assetId": "sha256:a9d65d3e907c67f5f5df7aaa0a0fd0dd5ca15bc302858e9b22a77bbb188911a8",
+   "title": "Untitled — “We kept a lantern by the water” (60 s)",
+   "length": 11519788,
+   "credits": {
+    "creators": null,
+    "generator": {
+     "backend": "mlx-ahmadw/YuE2-3B-MLX@fe0a9050fd658257b486b880422d8872ee1f81e3",
+     "job": "a571688059f9",
+     "model": "YuE2-3B (MLX port ahmadw/YuE2-3B-MLX)",
+     "name": "Hapa YuE2 Music",
+     "seed": 555
+    },
+    "lyricsAndStyle": {
+     "author": null,
+     "note": "written for a local Hapa Music Node job; author not recorded in the job"
+    },
+    "source": {
+     "artifactSha256": "a9d65d3e907c67f5f5df7aaa0a0fd0dd5ca15bc302858e9b22a77bbb188911a8",
+     "node": "hapa-music-node"
+    },
+    "style": "English cinematic electro-folk; warm adult lead vocal"
+   },
+   "source": {
+    "issuer": {
+     "coreKey": "3a3ec42de64835612cadf245a83539f8a75e7e087dcf70e397316091f5030f7d",
+     "label": "Red's music library",
+     "nodeId": "red-library"
+    },
+    "originId": "music-node-run-a571688059f9",
+    "manifestDigest": "ffbe6f86e52be4774fc33426ee5b04478be5985958d323af1627c1544f41aaf1",
+    "offeredCapabilities": {
+     "export": true,
+     "reshare": false,
+     "retain": true,
+     "stream": true
+    }
+   },
+   "introductions": [
+    {
+     "discoveryId": "74d6ca04-212c-4a23-9967-18c33341d029",
+     "introducer": {
+      "kind": "avatar",
+      "id": "red-reaper",
+      "label": "Red"
+     },
+     "encounter": {
+      "app": "hapa-versus",
+      "sessionId": "local-hapa_open_10x9_v3_07-3-mwvfm63q",
+      "playlistId": "contribution:red-library:mwvfm6do",
+      "queueRevision": 1,
+      "entryId": "red-library-1-a9d65d3e",
+      "heardAt": "2026-11-25T01:15:48.468Z"
+     }
+    }
+   ],
+   "retainedAt": "2026-11-25T01:15:48.518Z",
+   "receiptId": "47777f3f-7cb1-418d-bbc8-76bc1d140664"
+  },
+  {
+   "libraryId": "retained:8eb31e1137565ac8294508ff",
+   "recordingId": "hapa-music-node:run:a5a4751fd9fa",
+   "assetId": "sha256:8eb31e1137565ac8294508ff67c51b76ea3951d2428ae096d5cf68539221c01e",
+   "title": "Untitled — “Hey There, Hermione” (258 s)",
+   "length": 49535788,
+   "credits": {
+    "creators": null,
+    "generator": {
+     "backend": "mlx-ahmadw/YuE2-3B-MLX@fe0a9050fd658257b486b880422d8872ee1f81e3",
+     "job": "a5a4751fd9fa",
+     "model": "YuE2-3B (MLX port ahmadw/YuE2-3B-MLX)",
+     "name": "Hapa YuE2 Music",
+     "seed": 831001
+    },
+    "lyricsAndStyle": {
+     "author": null,
+     "note": "written for a local Hapa Music Node job; author not recorded in the job"
+    },
+    "source": {
+     "artifactSha256": "8eb31e1137565ac8294508ff67c51b76ea3951d2428ae096d5cf68539221c01e",
+     "node": "hapa-music-node"
+    },
+    "style": "acoustic guitar and humming into grunge-style strings"
+   },
+   "source": {
+    "issuer": {
+     "coreKey": "11d71aa7a3934636b4dd9f4cadb624578c471c76d0cdb1c1ec794861d63b0122",
+     "label": "Red's music library",
+     "nodeId": "red-library"
+    },
+    "originId": "music-node-run-a5a4751fd9fa",
+    "manifestDigest": "8a3fc96ac399cfeccb49a4050e72dbf68d4a2e98c5f6a56d14af7b77a120eff0",
+    "offeredCapabilities": {
+     "export": true,
+     "reshare": false,
+     "retain": true,
+     "stream": true
+    }
+   },
+   "introductions": [
+    {
+     "discoveryId": "bb2115f9-1982-49de-a0dd-82bc8e33aaa2",
+     "introducer": {
+      "kind": "avatar",
+      "id": "red-reaper",
+      "label": "Red"
+     },
+     "encounter": {
+      "app": "hapa-versus",
+      "sessionId": "local-hapa_open_10x9_v3_07-3-mwvfm63q",
+      "playlistId": "contribution:red-library:mwvfm6do",
+      "queueRevision": 1,
+      "entryId": "red-library-3-8eb31e11",
+      "heardAt": null
+     }
+    }
+   ],
+   "retainedAt": "2026-11-25T01:16:31.774Z",
+   "receiptId": "431a65a0-59bd-44d8-9aa7-69dd48366664"
+  }
+ ],
+ "encounters": [
+  {
+   "schema": "hapa.music.discovery.v1",
+   "discoveryId": "74d6ca04-212c-4a23-9967-18c33341d029",
+   "savedAt": "2026-11-25T01:15:48.471Z",
+   "recordingId": "hapa-music-node:run:a571688059f9",
+   "assetId": "sha256:a9d65d3e907c67f5f5df7aaa0a0fd0dd5ca15bc302858e9b22a77bbb188911a8",
+   "manifestDigest": "ffbe6f86e52be4774fc33426ee5b04478be5985958d323af1627c1544f41aaf1",
+   "coreKey": "3a3ec42de64835612cadf245a83539f8a75e7e087dcf70e397316091f5030f7d",
+   "title": "Untitled — “We kept a lantern by the water” (60 s)",
+   "credits": {
+    "creators": null,
+    "generator": {
+     "backend": "mlx-ahmadw/YuE2-3B-MLX@fe0a9050fd658257b486b880422d8872ee1f81e3",
+     "job": "a571688059f9",
+     "model": "YuE2-3B (MLX port ahmadw/YuE2-3B-MLX)",
+     "name": "Hapa YuE2 Music",
+     "seed": 555
+    },
+    "lyricsAndStyle": {
+     "author": null,
+     "note": "written for a local Hapa Music Node job; author not recorded in the job"
+    },
+    "source": {
+     "artifactSha256": "a9d65d3e907c67f5f5df7aaa0a0fd0dd5ca15bc302858e9b22a77bbb188911a8",
+     "node": "hapa-music-node"
+    },
+    "style": "English cinematic electro-folk; warm adult lead vocal"
+   },
+   "introducer": {
+    "kind": "avatar",
+    "id": "red-reaper",
+    "label": "Red"
+   },
+   "encounter": {
+    "app": "hapa-versus",
+    "sessionId": "local-hapa_open_10x9_v3_07-3-mwvfm63q",
+    "playlistId": "contribution:red-library:mwvfm6do",
+    "queueRevision": 1,
+    "entryId": "red-library-1-a9d65d3e",
+    "heardAt": "2026-11-25T01:15:48.468Z"
+   },
+   "source": {
+    "nodeId": "red-library",
+    "label": "Red's music library"
+   },
+   "acquisition": {
+    "acquisitionId": "acq-a9d65d3e907c67f5f5df7aaa0a0fd0dd",
+    "discoveryId": null,
+    "state": "available-offline",
+    "receivedBlocks": 177,
+    "totalBlocks": 177,
+    "discoveries": 1,
+    "error": null,
+    "retained": {
+     "libraryId": "retained:a9d65d3e907c67f5f5df7aaa",
+     "receiptId": "47777f3f-7cb1-418d-bbc8-76bc1d140664",
+     "retainedAt": "2026-11-25T01:15:48.518Z",
+     "file": "a9d65d3e907c67f5f5df7aaa0a0fd0dd5ca15bc302858e9b22a77bbb188911a8.wav"
+    },
+    "updatedAt": "2026-11-25T01:15:48.523Z"
+   }
+  },
+  {
+   "schema": "hapa.music.discovery.v1",
+   "discoveryId": "bb2115f9-1982-49de-a0dd-82bc8e33aaa2",
+   "savedAt": "2026-11-25T01:16:19.375Z",
+   "recordingId": "hapa-music-node:run:a5a4751fd9fa",
+   "assetId": "sha256:8eb31e1137565ac8294508ff67c51b76ea3951d2428ae096d5cf68539221c01e",
+   "manifestDigest": "8a3fc96ac399cfeccb49a4050e72dbf68d4a2e98c5f6a56d14af7b77a120eff0",
+   "coreKey": "11d71aa7a3934636b4dd9f4cadb624578c471c76d0cdb1c1ec794861d63b0122",
+   "title": "Untitled — “Hey There, Hermione” (258 s)",
+   "credits": {
+    "creators": null,
+    "generator": {
+     "backend": "mlx-ahmadw/YuE2-3B-MLX@fe0a9050fd658257b486b880422d8872ee1f81e3",
+     "job": "a5a4751fd9fa",
+     "model": "YuE2-3B (MLX port ahmadw/YuE2-3B-MLX)",
+     "name": "Hapa YuE2 Music",
+     "seed": 831001
+    },
+    "lyricsAndStyle": {
+     "author": null,
+     "note": "written for a local Hapa Music Node job; author not recorded in the job"
+    },
+    "source": {
+     "artifactSha256": "8eb31e1137565ac8294508ff67c51b76ea3951d2428ae096d5cf68539221c01e",
+     "node": "hapa-music-node"
+    },
+    "style": "acoustic guitar and humming into grunge-style strings"
+   },
+   "introducer": {
+    "kind": "avatar",
+    "id": "red-reaper",
+    "label": "Red"
+   },
+   "encounter": {
+    "app": "hapa-versus",
+    "sessionId": "local-hapa_open_10x9_v3_07-3-mwvfm63q",
+    "playlistId": "contribution:red-library:mwvfm6do",
+    "queueRevision": 1,
+    "entryId": "red-library-3-8eb31e11",
+    "heardAt": null
+   },
+   "source": {
+    "nodeId": "red-library",
+    "label": "Red's music library"
+   },
+   "acquisition": {
+    "acquisitionId": "acq-8eb31e1137565ac8294508ff67c51b76",
+    "discoveryId": null,
+    "state": "available-offline",
+    "receivedBlocks": 757,
+    "totalBlocks": 757,
+    "discoveries": 1,
+    "error": null,
+    "retained": {
+     "libraryId": "retained:8eb31e1137565ac8294508ff",
+     "receiptId": "431a65a0-59bd-44d8-9aa7-69dd48366664",
+     "retainedAt": "2026-11-25T01:16:31.774Z",
+     "file": "8eb31e1137565ac8294508ff67c51b76ea3951d2428ae096d5cf68539221c01e.wav"
+    },
+    "updatedAt": "2026-11-25T01:16:31.783Z"
+   }
+  }
+ ],
+ "owner_test": {
+  "command": "node test/peer-music.test.js (also via npm test → test/test_peer_music.py)",
+  "partial_transfer_recovery": "covered here, not live: a 30-block partial replica, source down, receiver restart, resume to available-offline",
+  "topology": "local-only: two PeerMusic owners (separate data roots, Hypercore keys and peer ports) over loopback TCP in one process",
+  "steps": [
+   {
+    "name": "transfer and verified retention",
+    "acquisitionId": "acq-541aa9230039c15694785fd29761a2d8",
+    "receipt": {
+     "libraryId": "retained:541aa9230039c15694785fd2",
+     "receiptId": "bcabd9d1-1a51-43c1-9042-2e2e7f611c92",
+     "retainedAt": "2026-11-25T01:14:53.801Z",
+     "file": "541aa9230039c15694785fd29761a2d8744c37af4078356e5c6c0e51c0ffb4c8.wav"
+    },
+    "bytes": 716844
+   },
+   {
+    "name": "dedup: one asset, two discoveries",
+    "discoveries": 2,
+    "assetFiles": 1
+   },
+   {
+    "name": "source unreachable: saved, waiting for source",
+    "state": "saved-waiting-source",
+    "error": "ECONNREFUSED",
+    "partialBlocks": 30,
+    "totalBlocks": 98
+   },
+   {
+    "name": "receiver restart resumes the partial transfer",
+    "resumedFrom": "saved-downloading",
+    "attemptsBefore": null,
+    "partialBlocksKept": 30,
+    "receipt": {
+     "libraryId": "retained:ee3ec71c0982c2ad7cde15d3",
+     "receiptId": "ce0920a2-b7b2-4da0-b922-f2d770d53a9b",
+     "retainedAt": "2026-11-25T01:14:54.327Z",
+     "file": "ee3ec71c0982c2ad7cde15d342e52cb2ad5b086adc5d853a2d28b22bbae71812.wav"
+    }
+   },
+   {
+    "name": "offline play after source disconnect and receiver restart",
+    "entries": [
+     {
+      "libraryId": "retained:541aa9230039c15694785fd2",
+      "length": 716844
+     },
+     {
+      "libraryId": "retained:ee3ec71c0982c2ad7cde15d3",
+      "length": 6291500
+     }
+    ]
+   },
+   {
+    "name": "tampered retained bytes refused"
+   },
+   {
+    "name": "forged manifest refused"
+   }
+  ],
+  "ranAt": "2026-11-25T01:14:54.450Z"
+ },
+ "not_done": [
+  "Export and re-share stay separate and are not built in this pass (offers carry reshare:false, export:true).",
+  "The Electron Song Registry UI does not yet list retained entries; they are in the owner API (/api/peer/retained)."
+ ]
+}

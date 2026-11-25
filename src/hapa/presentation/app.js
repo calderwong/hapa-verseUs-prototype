@@ -23,6 +23,7 @@ import { stateFingerprint, other } from '../rules/state.js';
 import { summarize } from '../rules/stats.js';
 import { clone, canonicalize } from '../rules/encoding.js';
 import { HeuristicBot } from '../controllers/heuristic-bot.js';
+import { ModelDecider, MODEL_CONTROLLER_REVISION } from '../controllers/model-decider.js';
 import { ALLOCATION_POLICIES } from '../rules/combat.js';
 import { profileById, PROFILE_IDS, BASE_PROFILE, DEFAULT_PROFILE_ID } from '../../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../../fixtures/hapa/content.js';
@@ -37,6 +38,7 @@ import { snapshot, poseAt, timeline, eventsBeforeMovement } from './playback.js'
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
 import { VersusSound } from './sound.js';
+import { Table, spokenParty } from './table.js';
 import { buildScenery } from './scenery.js';
 import { CardDrag } from './card-drag.js';
 import { emblemURL, COLOR_NAME, drawEmblem, INK, HUE, SUIT_GLYPH as SUIT_MARK } from './palette.js';
@@ -254,6 +256,7 @@ export class VersusApp {
         h('label', {}, 'A standing damage allocation', policySel('A')),
         h('label', {}, 'B standing damage allocation', policySel('B')),
         h('label', {}, 'Seed', seed)),
+      this._tableSetup(),
       h('p', { class: 'dim small' }, 'Allocation applies when your seat assigns damage under the profile (attacker or defender allocation). It is public and recorded in the match manifest.'),
       h('div', { class: 'row' },
         h('button', { class: 'primary', onclick: () => start() }, 'Start match'),
@@ -276,7 +279,45 @@ export class VersusApp {
     for (const id of ['set-A', 'set-B', 'set-seed', 'set-profile']) document.getElementById(id)?.addEventListener('input', showLink);
   }
 
-  async startMatch({ profileId = DEFAULT_PROFILE_ID, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null }) {
+  /**
+   * Setup: who shares the table with a human playing one bot seat, and the tracks the human brings.
+   * Choices are local (this browser) and only shape the social layer, never the rules.
+   */
+  _tableSetup() {
+    const t = this._tableChoice ??= (() => { try { return JSON.parse(localStorage.getItem('hapa-versus.table.v1')) ?? null; } catch { return null; } })() ?? { avatarId: 'red-reaper', songIds: [], titles: {} };
+    t.titles ??= {};
+    const save = () => { try { localStorage.setItem('hapa-versus.table.v1', JSON.stringify(t)); } catch { /* storage unavailable */ } };
+    const chips = h('span', { class: 'table-chips' });
+    const results = h('div', { class: 'table-results' });
+    const drawChips = () => chips.replaceChildren(...(t.songIds.length ? t.songIds.map((id) => h('button', { class: 'chip', title: 'Remove from your contribution', onclick: () => { t.songIds = t.songIds.filter((x) => x !== id); save(); drawChips(); } }, `${t.titles[id] ?? id} ✕`)) : [h('span', { class: 'dim small' }, 'none yet')]));
+    let timer = null;
+    const search = h('input', { type: 'search', placeholder: 'Find songs in your library…', 'aria-label': 'Search your music library', oninput: () => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        const q = search.value.trim();
+        if (q.length < 2) { results.replaceChildren(); return; }
+        try {
+          const r = await fetch(`/music/cj/songs?q=${encodeURIComponent(q)}`);
+          if (!r.ok) throw Error(`library ${r.status}`);
+          const { songs } = await r.json();
+          results.replaceChildren(...songs.slice(0, 8).map((x) => h('button', { class: 'linkish', disabled: t.songIds.includes(x.id) || t.songIds.length >= 3, onclick: () => { t.songIds.push(x.id); t.titles[x.id] = x.title; save(); drawChips(); results.replaceChildren(); search.value = ''; } }, `${x.title}${x.duration ? ` · ${Math.round(x.duration / 60)} min` : ''}`)));
+        } catch (e) { results.replaceChildren(h('span', { class: 'dim small' }, `Your Music Library is not reachable (${e.message}); the match plays without your tracks.`)); }
+      }, 220);
+    } });
+    drawChips();
+    const red = h('input', { type: 'checkbox', checked: !!t.avatarId, onchange: (e) => { t.avatarId = e.target.checked ? 'red-reaper' : null; save(); } });
+    t.controller ??= 'heuristic';
+    const ctl = h('select', { 'aria-label': "Red's moves", onchange: (e) => { t.controller = e.target.value; save(); } },
+      h('option', { value: 'heuristic', selected: t.controller === 'heuristic' }, 'Heuristic bot'),
+      h('option', { value: 'model', selected: t.controller === 'model' }, 'Model-assisted (local model via Harness; heuristic fallback)'));
+    return h('div', { class: 'table-setup' },
+      h('label', { class: 'inline' }, red, ' Red plays the bot seat at the table (portrait, voice, reactions and the music Red brings).'),
+      h('label', { class: 'inline small' }, "Red's moves: ", ctl),
+      h('div', { class: 'small' }, h('b', {}, 'Your tracks (up to 3, alternating with Red\'s): '), chips),
+      search, results);
+  }
+
+  async startMatch({ profileId = DEFAULT_PROFILE_ID, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null, table = this._tableChoice ?? { avatarId: 'red-reaper', songIds: [] } }) {
     // the new match owns everything from here: the previous match's pending response, playback and
     // continuation are detached so a late answer cannot write into this session (review 03, R3-02)
     const gen = this.generation = (this.generation ?? 0) + 1;
@@ -296,7 +337,7 @@ export class VersusApp {
       profileId = profile.id;
       this.session = createSession({
         matchId: `local-${profileId}-${seed}-${Date.now().toString(36)}`, profile, catalog: localCatalog(), decks: localDecks(profile), seed, allocationPolicies: policies,
-        controllers: { A: { type: seats.A, revision: seats.A === 'bot' ? 'heuristic-bot/0.2.0' : 'ui/0.2.0' }, B: { type: seats.B, revision: seats.B === 'bot' ? 'heuristic-bot/0.2.0' : 'ui/0.2.0' } },
+        controllers: Object.fromEntries(['A', 'B'].map((s) => [s, { type: seats[s], revision: seats[s] !== 'bot' ? 'ui/0.2.0' : this._modelSeat(seats, table, fixture) === s ? `${MODEL_CONTROLLER_REVISION}+heuristic-bot/0.2.0` : 'heuristic-bot/0.2.0' }])),
       });
     }
     this.ctx = this.session.ctx;
@@ -307,6 +348,8 @@ export class VersusApp {
     this.effective = { seats: { ...seats }, seed, profileId: fixture ? null : profileId, fixture };
     this.bots = {};
     for (const s of ['A', 'B']) if (seats[s] === 'bot') this.bots[s] = new HeuristicBot({ seat: s, seed: seed * 2 + (s === 'A' ? 1 : 2) });
+    const ms = this._modelSeat(seats, table, fixture);
+    this.deciders = ms ? { [ms]: new ModelDecider({ seat: ms, avatarId: table.avatarId, identityRevision: 'red-v1.0', deadlines: table.deadlines }) } : {};
     this.viewSeat = seats.A === 'human' ? 'A' : seats.B === 'human' ? 'B' : 'A';
     this._initEngine();
     if (this.view) { this.engine.scene.remove(this.view.root); }
@@ -345,7 +388,56 @@ export class VersusApp {
     this.playback = null;
     this.resolving = false;
     this.view.sync(this.state);
+    this._attachTable(table, gen);
     this._newTick();
+  }
+
+  /**
+   * Red shares the table (Milestone A): only for a human against one bot seat in ordinary play;
+   * the Avatar plays that seat, its moves still come from that seat's controller.
+   */
+  _attachTable(table, gen) {
+    this.table?.dispose();
+    this.table = null;
+    if (!this._tableUnload) { this._tableUnload = true; window.addEventListener('pagehide', () => { this.table?.dispose(); this.table = null; }); }
+    const bot = ['A', 'B'].filter((s) => this.seats[s] === 'bot');
+    if (!table?.avatarId || bot.length !== 1 || this.session.fixture) return;
+    const seat = bot[0];
+    const rev = this.session.manifest.controllers?.[seat]?.revision ?? 'heuristic-bot/0.2.0';
+    this.table = new Table({ world: this.el.world, sessionId: this.session.manifest.matchId, epoch: gen, avatarSeat: seat, humanSeat: other(seat), avatarId: table.avatarId, songIds: table.songIds ?? [],
+      controller: this.deciders?.[seat] ? { kind: 'model-assisted', revision: rev, label: 'a local model (through Hapa Harness) choosing among my legal moves, with the heuristic bot as fallback' } : { kind: 'heuristic', revision: rev, label: `the heuristic bot (${rev}), not a model` }, partyLabel: (id) => spokenParty(this.state, id) });
+    this.table.start().catch((err) => console.warn('[versus] table unavailable', err));
+  }
+
+  /** The bot seat whose moves a model assists (Milestone C): Red's seat, when chosen at setup. */
+  _modelSeat(seats, table, fixture) {
+    const bot = ['A', 'B'].filter((s) => seats[s] === 'bot');
+    return !fixture && bot.length === 1 && table?.avatarId && table.controller === 'model' ? bot[0] : null;
+  }
+
+  /**
+   * A model-assisted seat plans asynchronously: the heuristic plan is stored as the fallback, one
+   * Harness request runs under the planning deadline, and the admitted plan (or the fallback) is
+   * published and committed exactly once — never for an old match, Tick or state.
+   */
+  async _modelPlan(seat) {
+    const gen = this.generation, tick = this.state.tick;
+    this._deciding[seat] = true;
+    this._renderAll();
+    let out;
+    try { out = await this.deciders[seat].plan(this, this.bots[seat]); } catch (err) { console.warn('[versus] model decision failed; heuristic plan', err); out = { commands: this.bots[seat].plan(this.state, this.ctx), source: 'fallback' }; }
+    if (gen !== this.generation || tick !== this.state.tick || !this._deciding?.[seat]) return; // fenced: a new match or Tick owns the seat now
+    this._deciding[seat] = false;
+    this.plans[seat] = out.commands;
+    this.rev[seat] = 1;
+    this._publish(seat, 'plan');
+    this._syncDraftMana(seat);
+    this._publish(seat, 'ready');
+    this.ready[seat] = {};
+    this.lastDecision = { seat, tick, source: out.source, receipt: out.receipt };
+    if (this.table && this.table.o.avatarSeat === seat) { const st = this.state; this.table.orders(out.commands.map((c) => ({ type: c.type, party: c.partyId ? spokenParty(st, c.partyId) : null, column: c.target?.column ?? null, ability: c.type === 'play_ability' ? activeCatalog.cards[st.cards[c.cardId]?.abilityId]?.title ?? null : null }))); }
+    this._renderAll();
+    this._tryResolve();
   }
 
   get state() { return this.session.state; }
@@ -366,8 +458,11 @@ export class VersusApp {
     this._seq = { A: 0, B: 0 };
     this._resolvedTick = null;
     this._draft = { A: { burns: new Map(), pays: new Map() }, B: { burns: new Map(), pays: new Map() } };
-    for (const s of ['A', 'B']) if (this.bots[s]) { this.plans[s] = this.bots[s].plan(this.state, this.ctx); this.rev[s] = 1; this._publish(s, 'plan'); this._syncDraftMana(s); }
-    for (const s of ['A', 'B']) if (this.bots[s]) { this._publish(s, 'ready'); this.ready[s] = {}; }
+    this._deciding = {};
+    for (const s of ['A', 'B']) if (this.bots[s] && !this.deciders?.[s]) { this.plans[s] = this.bots[s].plan(this.state, this.ctx); this.rev[s] = 1; this._publish(s, 'plan'); this._syncDraftMana(s); }
+    for (const s of ['A', 'B']) if (this.bots[s] && !this.deciders?.[s]) { this._publish(s, 'ready'); this.ready[s] = {}; }
+    for (const s of ['A', 'B']) if (this.deciders?.[s]) this._modelPlan(s);
+    if (this.table) { const st = this.state; this.table.orders(this.plans[this.table.o.avatarSeat].map((c) => ({ type: c.type, party: c.partyId ? spokenParty(st, c.partyId) : null, column: c.target?.column ?? null, ability: c.type === 'play_ability' ? activeCatalog.cards[st.cards[c.cardId]?.abilityId]?.title ?? null : null }))); }
     this.view.setActiveColumns(this.state.activeColumns);
     this.view.sync(this.state);
     this.view.syncBanks(this.state, drawCardCanvas);
@@ -491,7 +586,7 @@ export class VersusApp {
     if (!this._publish(seat, 'plan').ok) { this.plans[seat] = prev; this.rev[seat] -= 1; this._toast('That plan revision was refused', true); this._renderAll(); return false; }
     this._syncDraftMana(seat);
     // the legacy pair-acknowledgment profile: bots re-acknowledge the new pair (own-plan Ready needs nothing)
-    if (this.agreement.policy === 'pair_acknowledgment_v3') for (const s of ['A', 'B']) if (this.bots[s] && s !== seat) this._publish(s, 'ready');
+    if (this.agreement.policy === 'pair_acknowledgment_v3') for (const s of ['A', 'B']) if (this.bots[s] && s !== seat && !this._deciding?.[s]) this._publish(s, 'ready');
     this._renderAll();
     return true;
   }
@@ -578,7 +673,8 @@ export class VersusApp {
     while (!step.done) {
       const req = step.value;
       let answer;
-      if (this.bots[req.seat]) answer = this.bots[req.seat].choose(req, state, ctx);
+      if (this.deciders?.[req.seat]) answer = await this.deciders[req.seat].respond(this, this.bots[req.seat], req);
+      else if (this.bots[req.seat]) answer = this.bots[req.seat].choose(req, state, ctx);
       else answer = await this._askResponse(req);
       if (owner !== this.generation) return false;
       answers.push(answer ?? { pass: true });
@@ -605,6 +701,8 @@ export class VersusApp {
     this.resolving = false;
     pc?.resolve({ pass: true, detached: true });
     pb?.resolve();
+    this.table?.dispose();
+    this.table = null;
   }
 
   /** Play back a resolved Tick: members follow the traced trajectories; casualties fall at their event. */
@@ -680,7 +778,7 @@ export class VersusApp {
     // one pose for the moment; BoardView.sync alone decides what is visible from it (R2-01)
     const { pos, evLen } = poseAt(pb.all, k * 1000, bandY);
     this.view.sync(this.state, k >= 1 ? null : pos);
-    if (evLen > pb.shown) { const fresh = pb.events.slice(pb.shown, evLen); this._spawnHits(fresh); this.sound?.events(fresh); pb.shown = evLen; this._renderEvents(); }
+    if (evLen > pb.shown) { const fresh = pb.events.slice(pb.shown, evLen); this._spawnHits(fresh); this.sound?.events(fresh); this.table?.shown(fresh); pb.shown = evLen; this._renderEvents(); }
     if (k >= 1) {
       this.playback = null;
       this.view.setWalking(new Set());
@@ -1575,7 +1673,7 @@ export class VersusApp {
       this.el.navBtn, this.el.ordersBtn, this.el.readyBig, this._autoControls(),
       h('div', { class: 'speed' }, h('label', {}, h('span', { class: 'sr' }, 'Playback speed '), h('select', { 'aria-label': 'Playback speed', onchange: (e) => (this.speed = Number(e.target.value)) }, ...[0.5, 1, 2, 4].map((v) => h('option', { value: v, selected: v === this.speed }, `${v}×`))))),
       h('button', { class: 'menu', 'aria-label': 'Help', 'aria-haspopup': 'dialog', onclick: () => this._help() }, '?'),
-      this.sound ? h('button', { class: 'menu', 'aria-label': this.sound.muted ? 'Sound off' : 'Sound on', 'aria-pressed': String(!this.sound.muted), onclick: () => { this.sound.toggle(); this._renderMatchBar(); } }, this.sound.muted ? '🔇' : '🔊') : null,
+      this.sound ? h('button', { class: 'menu', 'aria-label': this.sound.muted ? 'Game sounds off' : 'Game sounds on', title: 'Game effect sounds (separate from voice and music)', 'aria-pressed': String(!this.sound.muted), onclick: () => { this.sound.toggle(); this._renderMatchBar(); } }, this.sound.muted ? '🔇' : '🔊') : null,
       this.el.menuBtn = h('button', { class: 'menu', 'aria-label': 'Match menu', 'aria-haspopup': 'dialog', onclick: () => this._menu() }, '☰'),
     ].filter(Boolean));
   }
@@ -1747,6 +1845,7 @@ export class VersusApp {
       h('div', { class: 'row center' }, h('button', { onclick: () => (this.el.overlay.hidden = true) }, 'Inspect the board'), h('button', { onclick: () => this._downloadReplay() }, 'Download replay'), h('button', { class: 'primary', onclick: () => this.showSetup() }, 'New match'))));
     this.el.overlay.hidden = false;
     this.sound?.play(o.result === 'win' ? 'levelup' : 'close', { volume: 0.6 });
+    if (this._resultSaid !== this.generation) { this._resultSaid = this.generation; this.table?.result(o); }
   }
 
   /** Open or close the roster drawer (narrow layouts only; at wide layouts the roster is a column). */

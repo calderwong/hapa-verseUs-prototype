@@ -30,8 +30,24 @@ export class HeuristicBot {
 
   rand() { this.rng = xorshift32(this.rng); return this.rng / 0x100000000; }
 
-  /** Commands for this Tick's public plan. */
-  plan(state, ctx) {
+  /**
+   * The destination shortlist the policy weighs this Tick, per eligible party, best first (each
+   * option already legal and fundable under the same rules as the plan). Used to frame a bounded
+   * model decision; the bot's own random stream is restored, so its heuristic plan is unchanged.
+   * @returns {{ partyId: string, options: { key: string, column: number, row: number, via: any, score: number, attack: boolean, joins: boolean, cost: number }[] }[]}
+   */
+  options(state, ctx) {
+    const rng = this.rng;
+    this._collect = [];
+    try { this.plan(state, ctx); return this._collect; } finally { this.rng = rng; this._collect = null; }
+  }
+
+  /**
+   * Commands for this Tick's public plan. With `choice` (partyId → option key from options(), or
+   * 'hold'), the named shortlist option replaces the policy's pick for that party; a choice that is
+   * no longer in the shortlist (its funding changed) keeps the policy's pick, and the caller reports it.
+   */
+  plan(state, ctx, choice = null) {
     const seat = this.seat;
     const { geo, profile } = ctx;
     const cmds = [];
@@ -74,6 +90,7 @@ export class HeuristicBot {
       // shows — a route a friendly formation physically blocks now is not chosen again and again
       const clearance = recoveryPolicy(profile) === 'reachable_segment_v1';
       let best = null;
+      const scored = [];
       // a Knight under either_l_v1 weighs each of its L paths (a Pawn on the way is absorbed)
       for (const o of options.flatMap((d) => (d.vias ?? [null]).map((via) => ({ ...d, via })))) {
         if (destinationHeldError(state, ctx, p, o)) continue; // the validator's own rule
@@ -101,8 +118,16 @@ export class HeuristicBot {
         score += this.rand();
         const picks = funded ? fundWith(p, o, o.via) : [];
         if (!picks) continue; // cannot fund the whole route this Tick
-        if (!best || score > best.score) best = { o, score, picks };
+        const cand = { o, score, picks, attack: !!(occupant && occupant.owner !== seat), joins: score >= 100 };
+        scored.push(cand);
+        if (!best || score > best.score) best = cand;
       }
+      scored.sort((a, b) => b.score - a.score);
+      const keyOf = (c) => `${c.o.column}_${c.o.row}${c.o.via ? `_${c.o.via}` : ''}`;
+      if (this._collect && scored.length) this._collect.push({ partyId: p.id, options: scored.slice(0, 4).map((c) => ({ key: keyOf(c), column: c.o.column, row: c.o.row, via: c.o.via ?? null, score: Math.round(c.score), attack: c.attack, joins: c.joins, cost: c.o.cost })) });
+      const want = choice?.[p.id];
+      if (want === 'hold') best = null;
+      else if (want) { const hit = scored.find((c) => keyOf(c) === want); if (hit) best = { ...hit, score: Math.max(hit.score, 1) }; }
       if (best && best.score > 0) {
         for (const c of best.picks) { cmds.push({ type: 'load_supply', cardId: c.id, partyId: p.id }); used.add(c.id); }
         cmds.push({ type: 'set_destination', partyId: p.id, target: { column: best.o.column, row: best.o.row }, ...(best.o.via ? { via: best.o.via } : {}) });
