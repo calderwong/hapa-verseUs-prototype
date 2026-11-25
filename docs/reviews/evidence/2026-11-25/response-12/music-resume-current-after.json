@@ -1,0 +1,195 @@
+{
+  "schema": "hapa.versus.response12.resume-current-probe.v1",
+  "source": {
+    "path": "src/hapa/presentation/soundtrack.js",
+    "gitBlobSha": "813ba478622183ea83d4cca66b16297f4f6c199b"
+  },
+  "method": "Review 11 fixture: actual module in a local VM; controlled pending Audio.play; manual timers; UI and network fixtures.",
+  "limitation": "Deterministic lifecycle witness, not a browser timing or owner integration test.",
+  "cases": [
+    {
+      "case": "current resume rejected",
+      "pending": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [],
+        "paused": false,
+        "scheduledMs": [
+          8000
+        ]
+      },
+      "afterRejection": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "failed",
+        "error": "fixture: NotAllowedError",
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [
+          "A"
+        ],
+        "paused": false,
+        "scheduledMs": [
+          1500
+        ]
+      },
+      "firedSkipTimer": true,
+      "afterSkip": {
+        "selected": "B",
+        "revision": 2,
+        "listening": true,
+        "status": "loading",
+        "error": null,
+        "active": null,
+        "playGeneration": 2,
+        "skipped": [
+          "A"
+        ],
+        "paused": true,
+        "scheduledMs": [
+          20000
+        ]
+      },
+      "pass": true,
+      "warnings": [
+        "[versus] music: fixture: NotAllowedError"
+      ],
+      "interceptedAcquisitions": [
+        "B"
+      ],
+      "networkRequests": 0
+    },
+    {
+      "case": "current resume never starts (finite start policy)",
+      "pending": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [],
+        "paused": false,
+        "scheduledMs": [
+          8000
+        ]
+      },
+      "firedStartDeadline": true,
+      "afterDeadline": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "failed",
+        "error": "playback did not start",
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [
+          "A"
+        ],
+        "paused": false,
+        "scheduledMs": [
+          1500
+        ]
+      },
+      "firedSkipTimer": true,
+      "afterSkip": {
+        "selected": "B",
+        "revision": 2,
+        "listening": true,
+        "status": "loading",
+        "error": null,
+        "active": null,
+        "playGeneration": 2,
+        "skipped": [
+          "A"
+        ],
+        "paused": true,
+        "scheduledMs": [
+          20000
+        ]
+      },
+      "pass": true,
+      "warnings": [
+        "[versus] music: playback did not start"
+      ],
+      "interceptedAcquisitions": [
+        "B"
+      ],
+      "networkRequests": 0
+    },
+    {
+      "case": "current resume starts",
+      "pending": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [],
+        "paused": false,
+        "scheduledMs": [
+          8000
+        ]
+      },
+      "afterStart": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [],
+        "paused": false,
+        "scheduledMs": []
+      },
+      "pass": true,
+      "warnings": [],
+      "interceptedAcquisitions": [],
+      "networkRequests": 0
+    },
+    {
+      "case": "disposed during a pending resume, then rejected",
+      "pending": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [],
+        "paused": false,
+        "scheduledMs": [
+          8000
+        ]
+      },
+      "afterRejection": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": null,
+        "playGeneration": 2,
+        "skipped": [],
+        "paused": true,
+        "scheduledMs": []
+      },
+      "pass": true,
+      "warnings": [],
+      "interceptedAcquisitions": [],
+      "networkRequests": 0
+    }
+  ],
+  "allPass": true
+}

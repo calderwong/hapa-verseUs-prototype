@@ -1,0 +1,36 @@
+{
+  "reviewBaselineCommit": "7d4a96bd753f8b0e79ac46e3ad0c1e206e54ea36",
+  "sourceUnderTest": {
+    "modulePath": "src/hapa/controllers/model-decider.js",
+    "gitBlobSha": "990b11b514f3eb8876152edf9a5d1181599e7fc7"
+  },
+  "environment": "headless source-only; fetch stubbed; no services, model, or browser",
+  "case": "HTTP 200 with parsed JSON null",
+  "deadlineMs": 20,
+  "guardMs": 150,
+  "observed": {
+    "settled": true,
+    "rejected": false,
+    "source": "fallback",
+    "outcome": "rejected-malformed-reply"
+  },
+  "unhandledErrors": [],
+  "requestCount": 1,
+  "cancellationCount": 0,
+  "receipts": [
+    {
+      "at": "2026-11-25T08:20:07.078Z",
+      "requestId": "0b60ff8d-66de-4af9-8f49-d9a1a2f7bcf3",
+      "kind": "plan",
+      "tick": 1,
+      "inputHash": "0083a57f7e5e5912733a23b1aa4e4a9a84030acb598a98b2bded67c4bbc6d193",
+      "waitedMs": 0,
+      "harness": null,
+      "outcome": "rejected-malformed-reply",
+      "admitted": false,
+      "error": "malformed harness reply (null)"
+    }
+  ],
+  "remainingInflightHandles": 0,
+  "remainingSettlementHandles": 0
+}

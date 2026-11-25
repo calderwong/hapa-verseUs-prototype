@@ -1,0 +1,34 @@
+{
+  "schema": "hapa.versus.response12.ui-journey.v1",
+  "date": "2026-11-25",
+  "kind": "new live observation (this response); values read from the DOM between real pointer/keyboard actions",
+  "running": {
+    "url": "http://127.0.0.1:5199/versus.html",
+    "server": "Vite dev server (pid 82388, started 2026-11-22), serving the working tree from disk with hot reload",
+    "sourceAtJourney": "working tree equal to commit 4dc271d for the final steps; steps 1-4 ran before two later layout edits in table.js/versus.css (music-strip exclusion, squeezed-panel scroll); the gesture code they exercised was unchanged afterwards",
+    "browser": "Claude desktop Browser pane, Chrome/156.0.8078.100, devicePixelRatio 1, zoom not changed",
+    "viewport": "1357 x 1106 CSS px (world 1349 x 1016), plus emulated 900 x 420 and 900 x 300"
+  },
+  "settings": {
+    "A": "human", "B": "bot", "seed": 1, "profile": "default (hapa_open_10x9_v3_07)",
+    "avatar": "red-reaper at seat B", "redMoves": "model-assisted (Harness, heuristic fallback) — remembered table setting",
+    "songs": "one human track selected (Good Knight); Red contributes 3",
+    "talk": "Normal, voice on, captions on; Sound off until step 12"
+  },
+  "steps": [
+    { "n": 1, "action": "Home; open Red's nameplate; type a draft; drag-select across it, ending outside the panel", "observed": "selection 3–41; Red's projected face/hit box unchanged (camera did not pan); draft intact", "result": "pass" },
+    { "n": 2, "action": "ask three questions (local answers; sound off); type a new draft; wheel up over the history", "observed": "history 285 px in 150 px, scrolled from 135 to 0; camera unchanged; draft intact", "result": "pass" },
+    { "n": 3, "action": "wheel on the exposed board", "observed": "board zoomed (projected face moved and grew)", "result": "pass" },
+    { "n": 4, "action": "left-drag on the exposed board", "observed": "board panned; conversation stayed open with its draft", "result": "pass" },
+    { "n": 5, "action": "reload; Home; open conversation", "observed": "panel [800,146]-[1100,301] world px, beside the face, inside the world, clear of the music strip", "result": "pass" },
+    { "n": 6, "action": "pan the face toward the right edge", "observed": "panel moved to the left side of the face [700,172]-[1000,327]; inside", "result": "pass" },
+    { "n": 7, "action": "resize viewport to 900 x 420 (world 894 x 340)", "observed": "panel [263,153]-[563,308] on the face's free side; input, Talk, captions, nameplate inside; draft kept", "result": "pass" },
+    { "n": 8, "action": "resize to 900 x 300 (world 894 x 220)", "observed": "history shrank to 34 px and scrolls; input, settings and nameplate inside; before the overflow edit the 'Who is playing' line spilled below the panel; after it the panel scrolls (150 in 130 px)", "result": "pass after correction" },
+    { "n": 9, "action": "restore size; Escape in the input; Enter on the nameplate", "observed": "closed with focus on the nameplate; reopened with focus in the input and the draft 'draft kept'", "result": "pass" },
+    { "n": 10, "action": "Home, then turn left twice (90°) with the conversation open", "observed": "docked top-right below the music strip [1040,76]-[1340,301]; inside; hit target hidden", "result": "pass" },
+    { "n": 11, "action": "Home; Escape; Ready once", "observed": "Tick 1 → Tick 2 Planning with no further confirmation; B supplied its own plan (a /harness/game-decision request returned HTTP 200; its outcome was not inspected)", "result": "pass" },
+    { "n": 12, "action": "Sound on; Not listening; Listening (resume of the loaded track)", "observed": "Red's track played; after resume the same entry stayed selected with no failure or skip 11 s later (past the 8 s start deadline). Audible output was not independently measured.", "result": "pass (UI state)" }
+  ],
+  "unintendedAction": "Between steps 12's two toggles the strip re-laid out and one click landed on '♡ Keep': Red's track (Untitled — 'We kept a lantern by the water') was kept to CJ's local library node (Available offline). Not reverted.",
+  "notRun": ["voice preparation", "two-introducer Keep", "corrupt-track skip in a browser", "long match", "model benchmark"]
+}

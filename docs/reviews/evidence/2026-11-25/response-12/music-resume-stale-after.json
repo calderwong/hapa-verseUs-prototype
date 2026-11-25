@@ -1,0 +1,149 @@
+{
+  "schema": "hapa.versus.review11.resume-stale-rejection-probe.v1",
+  "reviewBaselineCommit": "7d4a96bd753f8b0e79ac46e3ad0c1e206e54ea36",
+  "reviewBaselineImplementationCommit": "bafc36f1e40c46ab69cd8b239e6014acbc1393df",
+  "source": {
+    "path": "src/hapa/presentation/soundtrack.js",
+    "gitBlobSha": "813ba478622183ea83d4cca66b16297f4f6c199b",
+    "reviewedGitBlobSha": "3b014bcb0b85c63f350a0c924c6793aeb5baa9be",
+    "matchesReviewedBlob": false
+  },
+  "method": "Actual module in a local VM; controlled pending Audio.play rejection; manual 1500ms timer; UI and network fixtures.",
+  "limitation": "Deterministic lifecycle reproduction, not a browser timing or owner integration test.",
+  "cases": [
+    {
+      "supersede": "not-listening",
+      "expected": "A superseded resume rejection leaves the current status and queue unchanged.",
+      "pendingResume": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [],
+        "paused": false,
+        "scheduledMs": [
+          8000
+        ]
+      },
+      "afterSupersession": {
+        "selected": "A",
+        "revision": 1,
+        "listening": false,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 2,
+        "skipped": [],
+        "paused": true,
+        "scheduledMs": [
+          8000
+        ]
+      },
+      "afterStaleRejection": {
+        "selected": "A",
+        "revision": 1,
+        "listening": false,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 2,
+        "skipped": [],
+        "paused": true,
+        "scheduledMs": []
+      },
+      "firedSkipTimer": false,
+      "afterSkip": {
+        "selected": "A",
+        "revision": 1,
+        "listening": false,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 2,
+        "skipped": [],
+        "paused": true,
+        "scheduledMs": []
+      },
+      "staleRejectionChangedStatus": false,
+      "staleRejectionMarkedCurrentSkipped": false,
+      "staleRejectionAdvancedQueue": false,
+      "warnings": [],
+      "interceptedAcquisitions": [],
+      "networkRequests": 0
+    },
+    {
+      "supersede": "next",
+      "expected": "A superseded resume rejection leaves the current status and queue unchanged.",
+      "pendingResume": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [],
+        "paused": false,
+        "scheduledMs": [
+          8000
+        ]
+      },
+      "afterSupersession": {
+        "selected": "B",
+        "revision": 2,
+        "listening": true,
+        "status": "loading",
+        "error": null,
+        "active": null,
+        "playGeneration": 2,
+        "skipped": [],
+        "paused": true,
+        "scheduledMs": [
+          8000,
+          20000
+        ]
+      },
+      "afterStaleRejection": {
+        "selected": "B",
+        "revision": 2,
+        "listening": true,
+        "status": "loading",
+        "error": null,
+        "active": null,
+        "playGeneration": 2,
+        "skipped": [],
+        "paused": true,
+        "scheduledMs": [
+          20000
+        ]
+      },
+      "firedSkipTimer": false,
+      "afterSkip": {
+        "selected": "B",
+        "revision": 2,
+        "listening": true,
+        "status": "loading",
+        "error": null,
+        "active": null,
+        "playGeneration": 2,
+        "skipped": [],
+        "paused": true,
+        "scheduledMs": [
+          20000
+        ]
+      },
+      "staleRejectionChangedStatus": false,
+      "staleRejectionMarkedCurrentSkipped": false,
+      "staleRejectionAdvancedQueue": false,
+      "warnings": [],
+      "interceptedAcquisitions": [
+        "B"
+      ],
+      "networkRequests": 0
+    }
+  ],
+  "reproduced": false
+}

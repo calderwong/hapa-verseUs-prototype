@@ -112,6 +112,17 @@ prevented shape-invalid output live.
 
 Review 10 / Assignment 11 delivered at `bafc36f`: [response 11](../reviews/2026-11-24-ui-design-response-11.md). Owner revisions in use: Harbor `1ab09d9`, Song Registry `49a441a` (encounter-idempotent Keep), Harness `16dc700`.
 
+## Response 12 (25 November 2026)
+
+Review 11 / Assignment 12 delivered at `4dc271d`: [response 12](../reviews/2026-11-25-ui-design-response-12.md).
+
+- The social layer and music strip own their pointer, wheel and context-menu gestures.
+- The conversation is placed from its measured size inside the free area: beside the face, on its other side, or docked below the music strip.
+- Music resume is bound to its entry and generation, under the same 8 s start policy as initial playback.
+- A Harness reply that is not a JSON object settles once as `rejected-malformed-reply` with the stored fallback.
+
+Owners are unchanged: Harbor `1ab09d9`, Song Registry `dadb049` (peer-music bytes as `49a441a`), Harness `16dc700`.
+
 ## Status (24 November 2026)
 
 | Milestone | Technical status | Evidence |
