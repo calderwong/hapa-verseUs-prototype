@@ -1,0 +1,158 @@
+{
+  "schema": "hapa.versus.review11.resume-stale-rejection-probe.v1",
+  "repositoryCommit": "7d4a96bd753f8b0e79ac46e3ad0c1e206e54ea36",
+  "implementationCommit": "bafc36f1e40c46ab69cd8b239e6014acbc1393df",
+  "source": {
+    "path": "/workspace/scratch/a3fd4cc6ced6/research/repo_review_11/music/sources/src/hapa/presentation/soundtrack.js",
+    "gitBlobSha": "3b014bcb0b85c63f350a0c924c6793aeb5baa9be",
+    "reviewedGitBlobSha": "3b014bcb0b85c63f350a0c924c6793aeb5baa9be",
+    "matchesReviewedBlob": true
+  },
+  "method": "Actual module in a local VM; controlled pending Audio.play rejection; manual 1500ms timer; UI and network fixtures.",
+  "limitation": "Deterministic lifecycle reproduction, not a browser timing or owner integration test.",
+  "cases": [
+    {
+      "supersede": "not-listening",
+      "expected": "A superseded resume rejection leaves the current status and queue unchanged.",
+      "pendingResume": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [],
+        "paused": false,
+        "scheduledMs": []
+      },
+      "afterSupersession": {
+        "selected": "A",
+        "revision": 1,
+        "listening": false,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 2,
+        "skipped": [],
+        "paused": true,
+        "scheduledMs": []
+      },
+      "afterStaleRejection": {
+        "selected": "A",
+        "revision": 1,
+        "listening": false,
+        "status": "failed",
+        "error": "fixture: pending play interrupted after supersession",
+        "active": "A",
+        "playGeneration": 2,
+        "skipped": [
+          "A"
+        ],
+        "paused": true,
+        "scheduledMs": [
+          1500
+        ]
+      },
+      "firedSkipTimer": true,
+      "afterSkip": {
+        "selected": "B",
+        "revision": 2,
+        "listening": false,
+        "status": "loading",
+        "error": null,
+        "active": null,
+        "playGeneration": 3,
+        "skipped": [
+          "A"
+        ],
+        "paused": true,
+        "scheduledMs": []
+      },
+      "staleRejectionChangedStatus": true,
+      "staleRejectionMarkedCurrentSkipped": true,
+      "staleRejectionAdvancedQueue": true,
+      "warnings": [
+        "[versus] music: fixture: pending play interrupted after supersession"
+      ],
+      "interceptedAcquisitions": [],
+      "networkRequests": 0
+    },
+    {
+      "supersede": "next",
+      "expected": "A superseded resume rejection leaves the current status and queue unchanged.",
+      "pendingResume": {
+        "selected": "A",
+        "revision": 1,
+        "listening": true,
+        "status": "playing",
+        "error": null,
+        "active": "A",
+        "playGeneration": 1,
+        "skipped": [],
+        "paused": false,
+        "scheduledMs": []
+      },
+      "afterSupersession": {
+        "selected": "B",
+        "revision": 2,
+        "listening": true,
+        "status": "loading",
+        "error": null,
+        "active": null,
+        "playGeneration": 2,
+        "skipped": [],
+        "paused": true,
+        "scheduledMs": [
+          20000
+        ]
+      },
+      "afterStaleRejection": {
+        "selected": "B",
+        "revision": 2,
+        "listening": true,
+        "status": "failed",
+        "error": "fixture: pending play interrupted after supersession",
+        "active": null,
+        "playGeneration": 2,
+        "skipped": [
+          "B"
+        ],
+        "paused": true,
+        "scheduledMs": [
+          1500,
+          20000
+        ]
+      },
+      "firedSkipTimer": true,
+      "afterSkip": {
+        "selected": "C",
+        "revision": 3,
+        "listening": true,
+        "status": "loading",
+        "error": null,
+        "active": null,
+        "playGeneration": 3,
+        "skipped": [
+          "B"
+        ],
+        "paused": true,
+        "scheduledMs": [
+          20000
+        ]
+      },
+      "staleRejectionChangedStatus": true,
+      "staleRejectionMarkedCurrentSkipped": true,
+      "staleRejectionAdvancedQueue": true,
+      "warnings": [
+        "[versus] music: fixture: pending play interrupted after supersession"
+      ],
+      "interceptedAcquisitions": [
+        "B",
+        "C"
+      ],
+      "networkRequests": 0
+    }
+  ],
+  "reproduced": true
+}

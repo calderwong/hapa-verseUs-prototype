@@ -1,0 +1,44 @@
+{
+  "head": "7d4a96bd753f8b0e79ac46e3ad0c1e206e54ea36",
+  "implementation": "bafc36f1e40c46ab69cd8b239e6014acbc1393df",
+  "headTreeURL": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/git/trees/7d4a96bd753f8b0e79ac46e3ad0c1e206e54ea36?recursive=1",
+  "implementationTreeURL": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/git/trees/bafc36f1e40c46ab69cd8b239e6014acbc1393df?recursive=1",
+  "compared": [
+    {
+      "path": "src/hapa/presentation/seated-avatar.js",
+      "head": "3e7c140c913553e6f934532aaaafb60d9de93180",
+      "implementation": "3e7c140c913553e6f934532aaaafb60d9de93180",
+      "equal": true
+    },
+    {
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "head": "88702c1208a26fd4ef67160487aa2110d4ae66fa",
+      "implementation": "88702c1208a26fd4ef67160487aa2110d4ae66fa",
+      "equal": true
+    },
+    {
+      "path": "src/hapa/presentation/table.js",
+      "head": "687da359c56fb87ada181d1184ce51075e86a1db",
+      "implementation": "687da359c56fb87ada181d1184ce51075e86a1db",
+      "equal": true
+    },
+    {
+      "path": "src/hapa/presentation/camera.js",
+      "head": "bb05c2de37f853e31c5b3f868baa7c0859f86203",
+      "implementation": "bb05c2de37f853e31c5b3f868baa7c0859f86203",
+      "equal": true
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "head": "d4f345d682ca898338082038eb71daaf0f21834e",
+      "implementation": "d4f345d682ca898338082038eb71daaf0f21834e",
+      "equal": true
+    },
+    {
+      "path": "src/hapa/presentation/versus.css",
+      "head": "7ff6c4570ba14d66f3cd4fafd6f26fc48b41e1be",
+      "implementation": "7ff6c4570ba14d66f3cd4fafd6f26fc48b41e1be",
+      "equal": true
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+✔ options() is side-effect free: the heuristic plan is unchanged by asking for its shortlist (57.709208ms)
+✔ an admitted proposal: one request, an immutable bound packet, and a plan the shared validator accepts (46.538417ms)
+✔ invalid output never plays: unknown keys, a repeated decision and a mismatched receipt fall back (132.720287ms)
+✔ late: the host deadline plays the fallback, cancels, and a later reply is receipted and ignored (384.974042ms)
+✔ unavailable: a Harness that cannot be reached plays the fallback (26.918931ms)
+✔ stale and duplicate: a reset during the request, or a consumed request, is fenced out (73.574268ms)
+✔ joint selections that cannot all be funded are not admitted: the stored fallback plays with a reason (398.365679ms)
+✔ malformed and empty proposals use the exact stored fallback, with a receipt (92.069845ms)
+✔ responses are bound like plans: input digest, exactly one recognized choice, prepared fallback otherwise (94.785794ms)
+✔ dispose cancels an outstanding request at once; the result is the stored fallback, never admitted (55.415648ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1934.068523

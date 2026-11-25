@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "7d4a96bd753f8b0e79ac46e3ad0c1e206e54ea36",
+  "environment": "headless source-only; fetch stubbed; no services, model, or browser",
+  "case": "HTTP 200 with parsed JSON null",
+  "deadlineMs": 20,
+  "guardMs": 150,
+  "observed": {
+    "settled": false
+  },
+  "unhandledErrors": [
+    "Cannot read properties of null (reading 'proposal')"
+  ],
+  "requestCount": 1,
+  "cancellationCount": 0,
+  "receipts": [],
+  "remainingInflightHandles": 0,
+  "remainingSettlementHandles": 0
+}
