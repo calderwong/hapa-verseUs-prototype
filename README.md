@@ -12,9 +12,13 @@ Built from the Hapa Versus Master Requirements v3, Design Companion v1 and Refer
 
 ## Current selected development goal
 
-The next milestone is a [bundled Electron desktop app](docs/integrations/electron-desktop-v1.md) with [P2P play and matchmaking v1](docs/integrations/p2p-matchmaking-v1.md), implemented through [Assignment 16](docs/reviews/2026-11-25-next-agent-assignment-16.md) under [human-feedback addenda 07](docs/requirements/2026-11-25-human-feedback-addendum-07.md)–[08](docs/requirements/2026-11-25-human-feedback-addendum-08.md). Target player experience: download/install/open, with game/engine/native runtime included and no system Node, npm or dev server required. The source/headless paths remain available. This is a specification/handoff, not a claim that an Electron installer, public online play or the proposed single launcher exists yet. The current peer demo below is loopback, and an unaffiliated clone still needs an approved accessible distribution of the private engine dependency.
+[Assignment 16](docs/reviews/2026-11-25-next-agent-assignment-16.md) — a [bundled Electron desktop app](docs/integrations/electron-desktop-v1.md) with [P2P play and matchmaking v1](docs/integrations/p2p-matchmaking-v1.md) under [addenda 07](docs/requirements/2026-11-25-human-feedback-addendum-07.md)–[08](docs/requirements/2026-11-25-human-feedback-addendum-08.md) — has a candidate: [Response 16](docs/reviews/2026-11-25-p2p-implementation-response-16.md). It is implemented and verified on one Mac (packaged, installed from its DMG, two installed apps playing each other over the public DHT, recovery, a headless result archive and observer). Not yet done: Developer ID signing/notarization, a run on two computers on **different** internet connections, an operated public archive and relay, an approved public engine snapshot for source builds, and CJ's acceptance. The [runbook](docs/integrations/online-desktop-runbook.md) covers install, the two-machine test and operation.
 
-For current gameplay and presentation, follow the [review index](docs/reviews/README.md) and newer addenda: the current default is `hapa_open_10x9_v3_07` with one commitment to each own plan. Some original fixture descriptions below predate those changes; the online implementation must refresh the runnable onboarding instructions against its delivered candidate.
+For current gameplay and presentation, follow the [review index](docs/reviews/README.md) and newer addenda: the current default is `hapa_open_10x9_v3_07` with one commitment to each own plan.
+
+## Play (desktop app)
+
+Open **Hapa Versus.app** (macOS Apple Silicon; from the DMG). **Play on this computer** starts a local match against the heuristic bot with no network and no other Hapa apps. **Play online → Join lobby** shows available players: **Challenge** one, **Open a table** (and copy its invitation), or **Join by invitation**. Each player controls only their own seat; Ready commits your plan once; closing the app is never a concession and reopening returns you to the match. Finished matches are verified from the signed moves and saved on your computer, then shared with a result archive when one is reachable. Player data lives in `~/Library/Application Support/Hapa Versus/`, never inside the app.
 
 ## Start a visible local match
 
@@ -57,6 +61,12 @@ window, then movement and combat play back → the next Tick mints.
 | `npm run experiment -- --profiles a,b --seeds 1-6 --ticks 250` | a batch across profiles with seat swaps; report + every replay under `.data/experiments/` |
 | `npm run peers -- --seed 2` | a **peer-verified** match: two OS processes, two identities, two Hypercore logs, a 127.0.0.1 socket |
 | `npm run replay -- file.replay.json` | recompute a recorded match; report the first diverging Tick or the verified result |
+| `npm run play` | the desktop app from source (Electron Forge start; serves the built game at `app://versus/`) |
+| `npm run desktop:package` · `npm run desktop:make` | build `out/Hapa Versus-darwin-arm64/Hapa Versus.app` · the DMG and ZIP (signed/notarized only when Apple credentials are set) |
+| `npm run desktop:smoke` | launch the packaged app twice with no Node on PATH: a local match renders, the native store reopens, the bridge refuses unknown operations |
+| `node tools/hapa/desktop-journey.mjs --work /abs/dir` | packaged online journey on one machine: lobby, challenge, reload, quit/relaunch, second launch, peer-process kill, concession, archive observer |
+| `npm run online -- --data /abs/dir --name N [--bot] [--auto-accept] [--challenge N] [--open-table] [--join-invite code] [--observe]` | a headless online peer using the same runtime (test identities only) |
+| `npm run lobby:serve -- --data /abs/dir` | the headless public result archive / directory |
 | `npm run art:sync [-- --store path --copy]` | optional: link Minor Arcana faces from the Hapa Tarot Deck (Hapa Avatar Builder's `tarot-store.json`, read-only) into the ignored `public/renditions/`; ranks without a face keep the procedural placeholder, and play is identical either way |
 
 **Diagnostic fixtures.** The setup screen's *Diagnostic fixtures* list (or `?autostart=1&fixture=corner`,
