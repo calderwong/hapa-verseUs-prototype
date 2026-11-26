@@ -1,0 +1,96 @@
+{
+  "schema": "hapa-versus-review-evidence-identity/v1",
+  "reviewedHead": "82002e87dcd9540544c4b6db02d1e81c39a4dbbf",
+  "candidate": "532643846f815106f7e33551099d02008e03c4d2",
+  "earlierLongJourneyCandidate": "38730734a7ab085820790d6876a69b6797003024",
+  "earlierToCandidateChanges": [
+    {
+      "path": "README.md",
+      "status": "modified"
+    },
+    {
+      "path": "docs/integrations/online-desktop-runbook.md",
+      "status": "added"
+    },
+    {
+      "path": "forge.config.cjs",
+      "status": "modified"
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "status": "modified"
+    },
+    {
+      "path": "tools/hapa/desktop-manifest.mjs",
+      "status": "added"
+    }
+  ],
+  "networkRulesChangesInThatRange": [],
+  "reportedArtifacts": {
+    "dmg": {
+      "file": "Hapa Versus.dmg",
+      "bytes": 124323478,
+      "sha256": "c60544071b5c4e66fdfc6ec594f3b925a11edf91db5b5d816fc587d685cfc314"
+    },
+    "zip": {
+      "file": "Hapa Versus-darwin-arm64-0.1.0.zip",
+      "bytes": 126323430,
+      "sha256": "d6e40372c69a894b5f50f229937d23f6caa74beea1604a1ae1ebb05a995cdc43"
+    },
+    "appAsar": {
+      "sha256": "357c7f2c627b3be42d6c9453d6dadcd9a1e7aa6620a04382c189574d4198b3e4",
+      "bytes": 11750040
+    }
+  },
+  "artifactBytesIndependentlyDownloadedOrInspected": false,
+  "submittedClaims": {
+    "built": "yes (Electron Forge make, this Mac)",
+    "signed": "ad-hoc only (com.hapa.versus, consistent deep signature); no Developer ID available on this Mac (only a local self-signed identity)",
+    "notarized": "no",
+    "gatekeeper": "rejected (spctl), as expected for an unsigned/un-notarized app",
+    "published": "no (artifacts exist only in the ignored out/ folder of this checkout)",
+    "installed": "from the DMG into a scratch Applications folder on the build Mac (not /Applications, not a clean machine)",
+    "differentNetwork": "not run",
+    "acceptedByCJ": "no"
+  },
+  "releaseCollectionObserved": {
+    "count": 0,
+    "dateLosAngeles": "2026-11-25"
+  },
+  "repositoryCapturesReviewed": [
+    {
+      "file": "01-lobby-joined.jpg",
+      "sha": "655f50859e620faf3817bf46fe9e28c8f96a53c6",
+      "expected": "655f50859e620faf3817bf46fe9e28c8f96a53c6",
+      "matches": true,
+      "bytes": 153345
+    },
+    {
+      "file": "08-result-cal.jpg",
+      "sha": "f674cb95ae58cf28f93f4cddf011d593a704ed2e",
+      "expected": "f674cb95ae58cf28f93f4cddf011d593a704ed2e",
+      "matches": true,
+      "bytes": 129774
+    },
+    {
+      "file": "02-roster-opponent-available.jpg",
+      "sha": "eda6e70477c0c75cbb7f8efa2ef45819c785df1c",
+      "expected": "eda6e70477c0c75cbb7f8efa2ef45819c785df1c",
+      "matches": true,
+      "bytes": 157982
+    },
+    {
+      "file": "04-ready-committing-vs-remote.jpg",
+      "sha": "50f7e93c57a154519106499f5e663c939fec1223",
+      "expected": "50f7e93c57a154519106499f5e663c939fec1223",
+      "matches": true,
+      "bytes": 304978
+    }
+  ],
+  "currentSourcePushed": true,
+  "notes": [
+    "Response 16 writing-time no-push wording is historical; implementation and report are in the reviewed main head.",
+    "Submitted native/installed evidence is implementer evidence. Review probes and capture inspection are separately identified.",
+    "No new image was published by this review; existing repository images were read and blob-checked."
+  ]
+}

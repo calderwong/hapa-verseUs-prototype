@@ -230,3 +230,17 @@ The package must include the game/engine/native peer runtime and approved starte
 
 Operations are in the [runbook](online-desktop-runbook.md).
 
+
+## Review 16 (25 November 2026) — candidate needs connected-path corrections
+
+[Review 16](../reviews/2026-11-25-desktop-p2p-review-16.md) reviews `82002e8`, implementation `5326438`, against the selected desktop/P2P contracts. The source and submitted installed-local evidence establish substantial foundation work, but Assignment 16 is not complete. [Assignment 17](../reviews/2026-11-25-next-agent-assignment-17.md) is the next coding batch.
+
+- Public-result import lacks the selected authenticated prefix/final commitment boundary; a unilateral receipt-context rewrite can remove a counted result as disputed. Canonical imported identity binding also needs independent validation.
+- A terminal-save crash window has no restart repair for the missing result/outbox.
+- The desktop UI never fetches archived public profiles; configured archives are counted but not dialed, and the live directory path is incomplete.
+- Accepted/starting reservations can leave the player stuck without a recovery/leave action.
+- Ready does not freeze pending edits, and view replacement can retain a stale pending flag. Worker exit before startup Ready can strand IPC.
+- Online mode removes the local MusicDeck/Soundtrack. Preserve local owner-backed playback without assigning Red to a stranger.
+- The package filter removes explicitly allowed notice files.
+
+Five focused source-level probe groups and scope limits are recorded in the [review evidence](../reviews/evidence/2026-11-25/review-16/README.md). No new native Mac, distinct-network, operated-service or human acceptance claim is made by the reviewer. Signing/notarization, accessible artifact/source distribution, independent-network play, configured operated services and the Harbor app-origin dependency remain distinct gates. Browser online, direct Rematch, diagnostics and remaining lifecycle/platform evidence stay visible as incomplete selected scope. The reviewer did not read/update Overwatch; reconcile Response 16's reported HV-67 on the owner board.

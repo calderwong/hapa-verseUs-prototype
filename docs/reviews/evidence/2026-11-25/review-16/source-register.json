@@ -1,0 +1,498 @@
+{
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "reviewedCommit": "82002e87dcd9540544c4b6db02d1e81c39a4dbbf",
+  "implementationCandidate": "532643846f815106f7e33551099d02008e03c4d2",
+  "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "gitBlob": "44b2bebd2d19110e57f1aa5493558b227e27cdf3",
+      "sha256": "4abace8416c679f518586059792d3b4eb6d5e043d9d075e513de7ef510fb34b0",
+      "bytes": 7235,
+      "verified": true
+    },
+    {
+      "path": "NOTICE.md",
+      "gitBlob": "87527c888d90d1458ec839d4c4ee9010282d0738",
+      "sha256": "fa3069b3d6b5620ba567a2b49279d53362f6b478830c4bc69336c3a123f1add9",
+      "bytes": 409,
+      "verified": true
+    },
+    {
+      "path": "README.md",
+      "gitBlob": "e64833dc79972b3387e27a802b9f0a0f9d2c7b51",
+      "sha256": "4e851315f1614361e314a6d14b7a783f2eca8ac54573fc0065970d482cc9e6a4",
+      "bytes": 12633,
+      "verified": true
+    },
+    {
+      "path": "desktop/entitlements.mac.plist",
+      "gitBlob": "f1da9742868e59d79a5cb976275005bd5e33774b",
+      "sha256": "5e2113d6e08c2853a86e8fd5708bac01dfaacc93de4b62b982c8b7359166ab18",
+      "bytes": 521,
+      "verified": true
+    },
+    {
+      "path": "desktop/main.mjs",
+      "gitBlob": "0bbe2fd23a2e918e2402a87f018902f52ffc4635",
+      "sha256": "4abc16cd41ca3051832183c8c57bdee737d691d1a881520c4c885a385ee1a18a",
+      "bytes": 16368,
+      "verified": true
+    },
+    {
+      "path": "desktop/network.json",
+      "gitBlob": "6f5da01076dbc3681a61c192aa3fc65814bef60b",
+      "sha256": "776d81b9cc987f3ce2743a8f2354f157e5d832e1e9d88796bf2b8e3cf5704be7",
+      "bytes": 542,
+      "verified": true
+    },
+    {
+      "path": "desktop/peer-host.mjs",
+      "gitBlob": "9ff2601e3ab6e1cbb1f5cd24a618302f93f34b71",
+      "sha256": "46782f62812b7de6f1e8f083127b8011a24d16e2721d6d351481a67219b8be81",
+      "bytes": 1761,
+      "verified": true
+    },
+    {
+      "path": "desktop/preload.cjs",
+      "gitBlob": "84a3baf040f46921300f27d8f5e51a88bbd5e65f",
+      "sha256": "ef990ddac76c3af2c4d2ef5bb1b5088d6ee8e51aef97cbbd257239ea56fdc5b3",
+      "bytes": 1165,
+      "verified": true
+    },
+    {
+      "path": "desktop/smoke.mjs",
+      "gitBlob": "90bb5b5e468b99feaad14ad7466d13302d5f5158",
+      "sha256": "073c55ddc7068891c0b51ec219aff87f2b60893b25d0658d5549a96b6f26f30c",
+      "bytes": 11772,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/IMPLEMENTATION_CHECKPOINT.md",
+      "gitBlob": "c9b7706d3614db8229e89543a3c044940eb78d1a",
+      "sha256": "5069ca715154c5298350143ec3764f2d4156fe101ce88b5992c5aa6b5d477f60",
+      "bytes": 17250,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/README.md",
+      "gitBlob": "f84816388477d0904d71706fcad8d7a3f5b58dc2",
+      "sha256": "abaa5f01552d03079c91be81d1f09d0a8f1c77d97a863ef614a7a53bba1b58a7",
+      "bytes": 6570,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/electron-desktop-v1.md",
+      "gitBlob": "88b25240260c3a62b0c298222dd429041a5d8e5f",
+      "sha256": "47edf4aa44272739768584e28d61f02084b38965b8d968e7df269b75ee188002",
+      "bytes": 25712,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/engine-runtime-manifest.json",
+      "gitBlob": "7d02a45fcef250ac9ae479019b0e1ae74c4780a5",
+      "sha256": "f6f961383d8b4dfa3713f805ce4d105181a031d9322e35722d60e2e422397db3",
+      "bytes": 17212,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/online-desktop-runbook.md",
+      "gitBlob": "103469002afd18d1b7bc4f99ec2641d99d250e6d",
+      "sha256": "c32bfae18d62e88766ff5e1db98089990727b6dbabb5950b8210d84ef7cbf3b7",
+      "bytes": 9813,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/p2p-matchmaking-v1.md",
+      "gitBlob": "fc74f706ab3e917d12d05d6f314cfd87edce3389",
+      "sha256": "fd6edd18f72496bd6338b2aca93a98f1b2dfc00844d3c3c950f969cdcedf3fc7",
+      "bytes": 59191,
+      "verified": true
+    },
+    {
+      "path": "docs/requirements/2026-11-25-human-feedback-addendum-08.md",
+      "gitBlob": "d78e52561218d2f80b1f785d898bd9fb6281c282",
+      "sha256": "ab1855c57357dff60cc5c0b78db8689974ccf3ec81ee0a59c6783069d336751d",
+      "bytes": 4659,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/2026-11-25-next-agent-assignment-16.md",
+      "gitBlob": "cb4a9cb49325ce571a9569a526436b80618d3f43",
+      "sha256": "76c31872b70f64c8bd588057924044963b2380ac784a167830d0c681b112e93e",
+      "bytes": 18136,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/2026-11-25-p2p-implementation-response-16.md",
+      "gitBlob": "f29b43814ab515c5db3c1a61a06123fb90bff96a",
+      "sha256": "76e901d14e6f105e91edc2f4b33747c960f60e9b86f7f323af1725b3de1a40bd",
+      "bytes": 23827,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/README.md",
+      "gitBlob": "e02750905ad6328666a857366eae374d72782815",
+      "sha256": "f9fc45216d79d445d7acd2b3ae35ffe15ff2e24845840a417a4a638989f1fcda",
+      "bytes": 26643,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/README.md",
+      "gitBlob": "90d40be84fc90471d499ab30b26862503bb37573",
+      "sha256": "47be7f4ebf630221f84873952934cf73068c71ac7eed744ba8813688eb5fffa8",
+      "bytes": 1526,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/artifacts.json",
+      "gitBlob": "098ac5444f1457b8703fc02d5d121aafb3ff5a22",
+      "sha256": "4733c5b65ef69c2dc89cf94662d6e00b6235133faab73255a804a0e4292cbf06",
+      "bytes": 2040,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/headless-network-runs.json",
+      "gitBlob": "6e602372047fce2069f09d9b34ff63be6afde469",
+      "sha256": "4dae41078dd745ffb5030ce22b8f2632da8ebe57191083e38d5fbcd0bce26714",
+      "bytes": 7505,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/installed-content-manifest.json",
+      "gitBlob": "35b9d419c64a74a8a37238a79e703b833ab144c5",
+      "sha256": "8b1ac5613743efecfdd4956bad3dcff63af8faa22ee8f8eb645e44ee32b33d86",
+      "bytes": 6970,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/installed-human-vs-human.json",
+      "gitBlob": "181d702c963f7b3f0a625fdf9ad70e7be63fe8ec",
+      "sha256": "51b7383a842d5d0950d0306282852e98e52594b0f4a517c283e2a744ba458dd3",
+      "bytes": 5493,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/installed-journey.json",
+      "gitBlob": "2c5ee594cc35895bb7b5366e5831bedd448a008c",
+      "sha256": "e74cc2f075007921f1472f01e16bd5b3f21c0f1f535b572fde32f4822edbe7bb",
+      "bytes": 3429,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/installed-response-choices.json",
+      "gitBlob": "c0fd34011a2d89454f91918b9891dbc040e7717f",
+      "sha256": "c7751f9d67da082ca774ce179dc5bf28bae5b7062afa56ecc30205c09b103cda",
+      "bytes": 1694,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/installed-smoke.json",
+      "gitBlob": "e61f0a3d548bcace89791ab13d1e6897d878623e",
+      "sha256": "fd8ddd5b16c17735dde4b7580a5e438270d15d07dec8f4684797a9def0843815",
+      "bytes": 3729,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/npm-check-summary.txt",
+      "gitBlob": "4b1d5d5c69e8986145a0163c990063133a2cc406",
+      "sha256": "7f31df4ecf13a25f2efd7ea20fff3ad0dd92ad768b31624a808e92db54a0cffb",
+      "bytes": 331,
+      "verified": true
+    },
+    {
+      "path": "fixtures/hapa/content.js",
+      "gitBlob": "6210462fdcb3121da79527149d02a3cfe989f408",
+      "sha256": "fad8f8627b891d0ce72b608500776f03e9117ab5134a0cbb8992cfa71299dd42",
+      "bytes": 9785,
+      "verified": true
+    },
+    {
+      "path": "fixtures/hapa/profiles.js",
+      "gitBlob": "80a566f9e7e76b185756b04cfc58d31348ddd352",
+      "sha256": "9e05207a1b7c66d57b5ee9627633f83ce2b3c27c93893290f6b372a3b0670c68",
+      "bytes": 13609,
+      "verified": true
+    },
+    {
+      "path": "forge.config.cjs",
+      "gitBlob": "0e49cb42f208e8dacada5d259e05e1de9a5e3c19",
+      "sha256": "92ff890face57c244c21cbc01becfc4787b5e65de9dcd8df53d2332eb9389579",
+      "bytes": 6339,
+      "verified": true
+    },
+    {
+      "path": "package.json",
+      "gitBlob": "35656f7769578c130c58ac4fc973e896dbc90557",
+      "sha256": "529a0ea287c4834118e01ed5c361da11fd0e62a7cfe547adc4041318356ca727",
+      "bytes": 2107,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/controllers/heuristic-bot.js",
+      "gitBlob": "c47e59bc65bad1bf92486f4b0ee1557cdc991027",
+      "sha256": "e151e704c193e618603c595774cfb490f0ccc403ad1a13ac5ae60ee6b7dd7506",
+      "bytes": 12267,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/host/owner-routes.js",
+      "gitBlob": "21626bc97db39b41105940a59ddc1f2c498b24c7",
+      "sha256": "687528ab3c00351f2a3552213fbeb013f9f9e4c827349f718e980da075ccd90a",
+      "bytes": 2879,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/compat.js",
+      "gitBlob": "97980c550783195c4b96255ffd9e501dceebdf20",
+      "sha256": "5353ff9ca971ac4d68b05106b671214b98ed038416bca8d3c62db9e1ed379ece",
+      "bytes": 4643,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/control.js",
+      "gitBlob": "04ab9a44df1abd9ed78cd9e480d1991dc9b42455",
+      "sha256": "d2612449efa063cf80bcd01a01f34976e2ecc045706b4a92126b83280d2bb7a7",
+      "bytes": 2689,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/identity.js",
+      "gitBlob": "3a9e00b33b0034d93b096614507216c87292934c",
+      "sha256": "131145c10ce1fa97fb3874de059d043c3db4540e1db7f2ec93ed587edcace153",
+      "bytes": 2483,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/lobby.js",
+      "gitBlob": "5d49bd0c8bf5c115abe08846d029bcff4fee394c",
+      "sha256": "60c02dca93e6149f7c9d0a6e1ae7a4d999c2a9af604f13262ed1dd9b69a86f58",
+      "bytes": 13074,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/online-match.js",
+      "gitBlob": "48d72fb5c06b755b2acc9bfa9b3a6911d7f6a177",
+      "sha256": "4f8980153d8e544da3d390a9a30fc3f6ba0e93b2ac5c7a489ee5ffd53a9886ba",
+      "bytes": 20648,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/result-index.js",
+      "gitBlob": "30257a4a0c9cf123f26b4e37284c6796a209e4b9",
+      "sha256": "7c548423b5003e8d4109e2d12439a3913f9ba4123dd4cec6447713a53b4bea18",
+      "bytes": 5650,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/results.js",
+      "gitBlob": "405872133acf3f96ad6d1f393d1c0926cc505ccd",
+      "sha256": "4ffbb266f4833d2b0dfe3709e421b800cae112e522711c5382963ddb99f79d9b",
+      "bytes": 10962,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/runtime.js",
+      "gitBlob": "bdd66fafe631394f03284150dfc5d9a9baad2996",
+      "sha256": "b733079a8a906740dbe6692a2e5ea7b1895d5baaf9e9ec5a36eb184c7905885a",
+      "bytes": 40870,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/store.js",
+      "gitBlob": "8cb36e124a9f028697cbb49e7a4e6e363657a230",
+      "sha256": "08dd63d7742c96e9fede2b7020855cedc60be11ee59670be312316cf7ad0be01",
+      "bytes": 2983,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "gitBlob": "60f13d9ce7f110b25b49db8d6764d3963a6e27c8",
+      "sha256": "446bf829c813b5812c5c8982b9005e0391ab52e18eae03afa3f5e4e2a6f3a2ca",
+      "bytes": 238963,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "gitBlob": "2254ff12c0a00773a4ead5c29c1ce61369f9a48b",
+      "sha256": "d59662a0697511d0726da0cd47d53a89486dd614c197c90498a99f7a8bb36ec3",
+      "bytes": 20048,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/online.js",
+      "gitBlob": "4c7c6986e8203973615579aa7e3982a3d7c33da9",
+      "sha256": "9a4f1bdd5819084d167d47c418b497df62fc5225cb1f7e9573db1b8fbcf3860d",
+      "bytes": 13608,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/table.js",
+      "gitBlob": "2eff4e6feb6b5dae019dff8e143ad8f224805fe8",
+      "sha256": "50aa4926b5295e26164108d5f9c0daa2748318207a2e1e44cb0187f870b2ff18",
+      "bytes": 13112,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/protocol/admission.js",
+      "gitBlob": "f5a018bad7dd68665d830bba7fa99ddae0a8f267",
+      "sha256": "e63fefb47421528e5f1c571863bf8a0ad3811a60c4b10afeffdebe447b39a2d9",
+      "bytes": 3779,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/protocol/agreement.js",
+      "gitBlob": "433a18642d1fdcbc95331e11260d53be806806c7",
+      "sha256": "3b3ad11ab7d8846847b8d2544f138cf8616af51b9aa989b35b70da1e3c1a6939",
+      "bytes": 5870,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/protocol/messages.js",
+      "gitBlob": "016d693e1bd64aeba1ea419b61c8513f8fc54a14",
+      "sha256": "1ea03bded273a6d6ff8ea54b298b62d1c0c9ab18a6ef90d5ba27064a078ef795",
+      "bytes": 2672,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/combat.js",
+      "gitBlob": "616fd71ad996705040273626e8173a9d9cf1ff31",
+      "sha256": "2ddec8be90bf6f5d1b5697c38458dc23c95f9ab3d4acd4cff1f8a73a838a01c6",
+      "bytes": 34982,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/context.js",
+      "gitBlob": "1917c727398bb6876076c2b50a4f5a31b710fa37",
+      "sha256": "174378bebde9a109a6e37f756bc1d3016dd56f7cd00899b288e94648cff177ac",
+      "bytes": 1279,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/economy.js",
+      "gitBlob": "69bd738628033da81c3567505f323102a6a4ba63",
+      "sha256": "f8b3146fad8b0ded3719dd2ca6ff35e1df1272cf66c6836f1836d2392d970d0b",
+      "bytes": 10922,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/effects.js",
+      "gitBlob": "bbe100edf65d7cc39f9635887d4382ebe8febc9c",
+      "sha256": "55d9f014a2b96a6ef2f625ef316b021bc2b9841588895c5bebefb4880a11f0e8",
+      "bytes": 2611,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/encoding.js",
+      "gitBlob": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+      "sha256": "58fcb62ee318ab6b461a01f6cc108d650807595e1dc2722c2ba8023c7af0396e",
+      "bytes": 8381,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/geometry.js",
+      "gitBlob": "af789f61c43b103255cb963e87a2e63fa2968fd4",
+      "sha256": "697e76131856ca6f507e27a3209607c4cba0a441a7a7912932d5ca60d669745f",
+      "bytes": 2964,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/inspection.js",
+      "gitBlob": "c89810284640d3d339ea260ed87403e828220ed8",
+      "sha256": "00b34aab8eb53d23a4ec22d35e07d00421b70865e5ed2d5320d1845df87fb1b7",
+      "bytes": 9980,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/match.js",
+      "gitBlob": "25b0f7ccf494ea19462438f52c429cc65ef934d2",
+      "sha256": "54379e9b5753bd47b27d7442fd5648e3e5532e8a3cb729ed6846a9cd1df8ffce",
+      "bytes": 31260,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/movement.js",
+      "gitBlob": "b84811f70e69cbdf692ef7aa24e7a56e88410fc0",
+      "sha256": "cc21d82f9631434d747688b7465442b7dfc2ecdd861c6053a7f51b73086ce6a0",
+      "bytes": 43392,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/session.js",
+      "gitBlob": "184e6f3b4c44c0f1554175f81ebe0ada5cb3e7a0",
+      "sha256": "2cb108dfe24ece759d1c48273774796c7828085560529107ea58a3be9555e51d",
+      "bytes": 4827,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/state.js",
+      "gitBlob": "a82081f88ef37642dc7215fd84fd1329f55e0978",
+      "sha256": "7773be2054ec1b6ca0409a67bdb413c85333c9fb6ea170e83a71fc02e42d1bb8",
+      "bytes": 8073,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/stats.js",
+      "gitBlob": "cadd071551c4d6b8e7ab26e66d450cbd5de50287",
+      "sha256": "e90ee437594d2a320ce5b69afecde18fe22096506974aea58bd2b0db929c9143",
+      "bytes": 10431,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/terrain.js",
+      "gitBlob": "7cbf8196e47dd2d35525af4bd87b7758fcc514d2",
+      "sha256": "f0cc09dd9c554346403bd9703068b16f18f0adb23d1fd5841c5e6b0737f7fd00",
+      "bytes": 12226,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/validate.js",
+      "gitBlob": "c81527d9ab27496bc92c4e64daa153539d20af98",
+      "sha256": "48423a0666ce8684aa2e60a4a3012a7ca80a6e361ee44c8441dd63270ac2d1fd",
+      "bytes": 6638,
+      "verified": true
+    },
+    {
+      "path": "tests/hapa/online.test.js",
+      "gitBlob": "2511429dcf83d96ae3f41bfa0da02d48989a75e5",
+      "sha256": "d7aae5f8a786cbd67c57013a09a6413995faad0f1dda35c6150ceca5f4c4580b",
+      "bytes": 11109,
+      "verified": true
+    },
+    {
+      "path": "tools/hapa/desktop-manifest.mjs",
+      "gitBlob": "cc4067e78be132f386231a6b37736ebbba723833",
+      "sha256": "cb0470d6238c54f00f636f81d9fd1b1a20bb471131d33852a28ceafec5784879",
+      "bytes": 5391,
+      "verified": true
+    },
+    {
+      "path": "tools/hapa/engine-closure.mjs",
+      "gitBlob": "c2ace2ff70ca27dfc83cd707d1de65a1faf70d82",
+      "sha256": "70b989b3584e1b4a64526763362288b3c81a217cfa0c77746f54e2547eee7ae4",
+      "bytes": 3594,
+      "verified": true
+    },
+    {
+      "path": "tools/hapa/lobby-serve.mjs",
+      "gitBlob": "45299a06461bc11f75a5492fc76db7d3e717c389",
+      "sha256": "83fe0e8439feed08ed1fa49108ecdabf2858cc22b0d7d526425cacb9f150adcd",
+      "bytes": 2117,
+      "verified": true
+    },
+    {
+      "path": "tools/hapa/online.mjs",
+      "gitBlob": "10fece74ccecc36b2c4c3924d8329349b849416b",
+      "sha256": "4aa26176663690a700280bbcb62592fc80d581a2da1de0809c42a1dd3307fc44",
+      "bytes": 5464,
+      "verified": true
+    },
+    {
+      "path": "vite.config.js",
+      "gitBlob": "1bde1b0b159582194effbecac4abd82fc8199853",
+      "sha256": "7323fe804e3d212168d1f915d1ebf537f92eae34d8d92459b2976125fbfd740b",
+      "bytes": 4458,
+      "verified": true
+    }
+  ]
+}

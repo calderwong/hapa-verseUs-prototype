@@ -1,0 +1,129 @@
+{
+  "schema": "hapa-versus-review-probes/v1",
+  "reviewedCommit": "82002e87dcd9540544c4b6db02d1e81c39a4dbbf",
+  "limits": "Focused source-level review probes. No native Electron/Hypercore, public DHT, cross-machine or UI execution by reviewer; substitutions are stated per probe.",
+  "groups": {
+    "publicResultTrust": {
+      "sourceCommit": "82002e87dcd9540544c4b6db02d1e81c39a4dbbf",
+      "method": "Unmodified blob-verified verifier/index/rules; real Ed25519 via Node crypto adapter; no native storage/network exercised",
+      "originalVerified": true,
+      "counterfeitVerified": true,
+      "winnerRecordsAndSessionUnchanged": true,
+      "modifiedBy": "losing participant only",
+      "fieldsChanged": [
+        "one own receipt.phaseId",
+        "one own receipt.priorStateHash",
+        "its own signature"
+      ],
+      "sameComputedOutcome": true,
+      "initialStatus": "added",
+      "attackStatus": "disputed",
+      "winnerBefore": {
+        "wins": 1,
+        "losses": 0,
+        "draws": 0,
+        "completed": 1,
+        "decisive": 1,
+        "winRate": 1
+      },
+      "winnerAfter": null,
+      "disputedAfter": 1
+    },
+    "completionRecovery": {
+      "sourceCommit": "82002e87dcd9540544c4b6db02d1e81c39a4dbbf",
+      "method": "Actual startup selector run against simulated durable complete-progress / absent-result crash cut point; no process-kill or native recovery claimed",
+      "completedSessionPresent": true,
+      "resultAndOutboxAbsentAtStart": true,
+      "recoveryAttempts": 0,
+      "resultAndOutboxStillAbsent": true
+    },
+    "setupRecovery": {
+      "source": {
+        "revision": "82002e87dcd9540544c4b6db02d1e81c39a4dbbf",
+        "path": "src/hapa/network/runtime.js",
+        "sha256": "b733079a8a906740dbe6692a2e5ea7b1895d5baaf9e9ec5a36eb184c7905885a"
+      },
+      "scope": "Actual PeerRuntime orchestration methods; storage/network/crypto imports stubbed; no native/network/browser execution",
+      "accepted": {
+        "phase": "accepted",
+        "availability": "joining",
+        "events": [
+          {
+            "type": "lobby",
+            "kind": "startSlow",
+            "challengeId": "11111111111111111111111111111111"
+          }
+        ],
+        "attemptedRecovery": {
+          "challenge.cancel": "no such pending challenge",
+          "table.close": "no open table",
+          "match.leave": "no such active match"
+        },
+        "afterLeaveLobby": {
+          "phase": "accepted",
+          "availability": "joining",
+          "persistedPhase": "accepted"
+        }
+      },
+      "starting": {
+        "elapsedMs": 119000,
+        "phase": "starting",
+        "availability": "joining",
+        "events": []
+      },
+      "archiveJoin": {
+        "syncCalls": 0,
+        "outboxCalls": 1
+      },
+      "desktopResultRetrievalReferences": {
+        "onlineJs": 0,
+        "appJs": 0
+      }
+    },
+    "readyBoundary": {
+      "sourceCommit": "82002e87dcd9540544c4b6db02d1e81c39a4dbbf",
+      "method": "Extracted exact UI methods; delayed mock host, stubbed rendering/rule validation; no Electron/network execution",
+      "editableWhileCommitting": true,
+      "changedAfterReady": true,
+      "hostCommitted": [],
+      "uiShownCommitted": [
+        {
+          "type": "concede"
+        }
+      ],
+      "generationReplacement": {
+        "pendingAfterOldAck": true,
+        "totalHostReadyCallsAfterTryingAgain": 1
+      },
+      "ok": true
+    },
+    "desktopBoundaries": {
+      "source": "82002e87dcd9540544c4b6db02d1e81c39a4dbbf",
+      "kind": "source-boundary probes; Electron dependencies stubbed, not a native launch",
+      "packaging": {
+        "/NOTICE.md": {
+          "ignored": true
+        },
+        "/LICENSES.md": {
+          "ignored": true
+        },
+        "/docs/integrations/engine-runtime-manifest.json": {
+          "ignored": true
+        },
+        "/desktop/main.mjs": {
+          "ignored": false
+        },
+        "/node_modules/hypercore/LICENSE": {
+          "ignored": false
+        }
+      },
+      "workerBoot": {
+        "workerInstances": 2,
+        "recoveredWorkerReady": true,
+        "requestSentBeforeBootExitSettled": false,
+        "freshRequestAfterRecoverySettled": true,
+        "bootWaitHasDeadline": false
+      }
+    }
+  }
+}

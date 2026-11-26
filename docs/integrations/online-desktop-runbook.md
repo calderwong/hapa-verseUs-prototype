@@ -3,6 +3,8 @@
 **Date:** 25 November 2026. **Applies to:** the Assignment 16 candidate (see [Response 16](../reviews/2026-11-25-p2p-implementation-response-16.md)).
 This runbook covers what exists, how to run it, and the steps still owned by an operator or by CJ. It does not claim that any public service is running.
 
+**Current review status:** [Review 16](../reviews/2026-11-25-desktop-p2p-review-16.md) found source defects beyond the external release gates. [Assignment 17](../reviews/2026-11-25-next-agent-assignment-17.md) corrects result trust/finalization, setup/Ready/host recovery, desktop profile retrieval/configured service discovery, online local music and packaged notices. In the reviewed candidate, the headless observer can fetch records but the ordinary desktop observer does not; configured archive entries are not dialed; an interrupted start can remain stuck. Apply the corrected candidate and its evidence when performing the completion journeys below. The original one-Mac evidence remains a prototype attachment, not proof these findings are closed.
+
 ## 1. Player install (macOS Apple Silicon)
 
 1. Get `Hapa Versus.dmg` (or the `.zip`) for `darwin-arm64` and check its SHA-256 against the release record.

@@ -1,0 +1,113 @@
+{
+  "schema": "hapa-versus-review-recovery/v1",
+  "reviewDate": "2026-11-25",
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "remoteHeadBeforePublication": "82002e87dcd9540544c4b6db02d1e81c39a4dbbf",
+  "implementationCandidate": "532643846f815106f7e33551099d02008e03c4d2",
+  "branchesObserved": [
+    "main"
+  ],
+  "releasesObserved": 0,
+  "originalStagedFileCount": 11,
+  "originalStagedManifestMatches": 11,
+  "sourceRegisterEntries": 70,
+  "sourceRegisterEntriesMatchingRemoteTree": 70,
+  "sourceCopiesHashVerified": 70,
+  "originallyAbsentReviewPaths": [
+    "docs/reviews/2026-11-25-desktop-p2p-review-16.md",
+    "docs/reviews/2026-11-25-next-agent-assignment-17.md",
+    "docs/reviews/evidence/2026-11-25/review-16/README.md",
+    "docs/reviews/evidence/2026-11-25/review-16/probe-results.json",
+    "docs/reviews/evidence/2026-11-25/review-16/source-register.json",
+    "docs/reviews/evidence/2026-11-25/review-16/submitted-build-identity.json"
+  ],
+  "repeatedDiagnosticGroups": [
+    "publicResultTrust",
+    "completionRecovery",
+    "setupRecovery",
+    "readyBoundary",
+    "desktopBoundaries"
+  ],
+  "diagnosticOutcome": "All five groups reproduced the original recorded behavior at matching pinned source. These are defect reproductions, not repaired acceptance results.",
+  "limits": [
+    "No game implementation changed.",
+    "No native Electron or Hypercore execution, public DHT, installed-Mac or separate-network playtest was performed in recovery.",
+    "The result probe uses real Ed25519 through a Node crypto adapter; other native, network, host, storage or rendering dependencies are substituted as documented in README.md.",
+    "Installer bytes were not downloaded; artifact identities remain implementer-submitted evidence.",
+    "Local Mac grounding and Overwatch were unavailable; no board update or CJ acceptance is claimed."
+  ],
+  "handoffCorrections": [
+    "Current copyable instruction selects Assignment 17.",
+    "Review 15 live observations labeled historical.",
+    "Review 16 recovery provenance and this verification receipt added.",
+    "Response 16 and Review 16 chronology linked in review index."
+  ],
+  "recoveredStagedManifest": [
+    {
+      "path": "README.md",
+      "bytes": 12955,
+      "sha256": "783eec832d3a9d49dff6e25a6cdfdff8a001cb187d3fbe948a09b550b4f1b206",
+      "gitBlob": "e9e3492323bb9b5d11f24efabc75c25ce8e0985b"
+    },
+    {
+      "path": "docs/integrations/IMPLEMENTATION_CHECKPOINT.md",
+      "bytes": 19257,
+      "sha256": "caca6e5d18c8e8a0a72f4fe47f7469912c9489ff2a9fd44c1de75a711ed6fc83",
+      "gitBlob": "42f47a21c989a3ed9eeb7c4d7ed4501f03b960d0"
+    },
+    {
+      "path": "docs/integrations/README.md",
+      "bytes": 7432,
+      "sha256": "27825eb12d3317c1e5a1455ba61b3d44b5a6ccbe9a2a156fb213fabfcc3aa3e5",
+      "gitBlob": "c2e98c80325b8fad27017350493063e6a45deed5"
+    },
+    {
+      "path": "docs/integrations/online-desktop-runbook.md",
+      "bytes": 10570,
+      "sha256": "b8528fb9d4cba933d170f877af0a4259a0531c7861b99f86aae74254de3d62cc",
+      "gitBlob": "7873ca0fa812ab2116f7b1c08f04218c07c34879"
+    },
+    {
+      "path": "docs/reviews/2026-11-25-desktop-p2p-review-16.md",
+      "bytes": 22910,
+      "sha256": "c677d13e95937550ed2b8ab17fef184931b56adb74cc6d638a78ebfef12eccd0",
+      "gitBlob": "5c13f1f39fba5651afa9d336e650669e4162d776"
+    },
+    {
+      "path": "docs/reviews/2026-11-25-next-agent-assignment-17.md",
+      "bytes": 15050,
+      "sha256": "738ee4de9b16f931c16bf40936a9d2c8cb49d9fefa1f0884fd9d6055fb883f7e",
+      "gitBlob": "d9aba0a52ba199ad3daf30e40d6b7bc6550e79a8"
+    },
+    {
+      "path": "docs/reviews/README.md",
+      "bytes": 26395,
+      "sha256": "e75190d28b9dc1eb4e68caec0006746da9d04b3188a07c09e6d582e340b44883",
+      "gitBlob": "a86146ae08416ac72d69148c5c031246e6a22b56"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/review-16/README.md",
+      "bytes": 4683,
+      "sha256": "7ed795d19bf5a9b26bc2e2397bd11263b6856a449405a4af36b2695c48aece06",
+      "gitBlob": "ec076aec438950bbd8621fe3b10e44fcbfd50373"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/review-16/probe-results.json",
+      "bytes": 4273,
+      "sha256": "0af7ecc3e283c9a2cd3424cb470f86109a9687846212112741079da9108031f3",
+      "gitBlob": "cb56291e4321eb9b66f93042aadd6a9178738ed2"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/review-16/source-register.json",
+      "bytes": 17983,
+      "sha256": "fb3f3ed71a2196970131c3aec741d267d6808c74c4b8f7283b2e41c17ba2f4da",
+      "gitBlob": "82664ac2e3c3b4ed9290a9c701d3732683a7f48b"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/review-16/submitted-build-identity.json",
+      "bytes": 3333,
+      "sha256": "2f5d54b5117f9c42b51b506107db3f0b390a4bb9b8f07dafd8907e7429cd53d1",
+      "gitBlob": "e4068b1b5f0a87d31a73b3c030a85a8651f1ad51"
+    }
+  ]
+}
