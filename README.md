@@ -12,15 +12,15 @@ Built from the Hapa Versus Master Requirements v3, Design Companion v1 and Refer
 
 ## Current selected development goal
 
-The [bundled Electron / P2P milestone](docs/reviews/2026-11-25-next-agent-assignment-16.md) has an installed local candidate: [Response 16](docs/reviews/2026-11-25-p2p-implementation-response-16.md), implementation `5326438`. [Review 16](docs/reviews/2026-11-25-desktop-p2p-review-16.md) confirms substantial progress and identifies eight concrete corrections in result trust/finalization, visible profiles/discovery, setup recovery, Ready/host recovery, local music and packaged notices. **Next: [Assignment 17 — Finish the installed multiplayer journey and make its records dependable](docs/reviews/2026-11-25-next-agent-assignment-17.md).**
+The [bundled Electron / P2P milestone](docs/reviews/2026-11-25-next-agent-assignment-16.md) has an installed local candidate: [Response 16](docs/reviews/2026-11-25-p2p-implementation-response-16.md), implementation `5326438`. **Next: [the three-pass coding handoff](docs/reviews/2026-11-26-three-pass-coding-handoff.md)** selected by CJ. It combines [Review 16 / Assignment 17](docs/reviews/2026-11-25-next-agent-assignment-17.md), the core [visual and animation brief](docs/reviews/2026-11-26-visual-animation-feature-brief.md), and [Review 17](docs/reviews/2026-11-26-open-ended-review-17.md). Complete dependable installed play, decisions and records, then fit the selected Hapa presentation as one candidate. These review publications add findings and instructions; the implementation remains unchanged.
 
-This is not yet a publicly delivered multiplayer release. The reported DMG is ad-hoc sealed; signing/notarization, a clean second Mac, genuine different-network play, operated directory/archive and relay services, accessible engine source distribution and CJ's acceptance remain distinct gates. The [runbook](docs/integrations/online-desktop-runbook.md) describes the candidate and operator steps; read it with Review 16's source corrections.
+This is not yet a publicly delivered multiplayer release. The reported DMG is ad-hoc sealed; signing/notarization, a clean second Mac, genuine different-network play, operated directory/archive and relay services, accessible engine source distribution and CJ's acceptance remain distinct gates. The [runbook](docs/integrations/online-desktop-runbook.md) describes the candidate and operator steps; read it with Review 16 and Review 17's source corrections.
 
 For current gameplay and presentation, follow the [review index](docs/reviews/README.md) and newer addenda: the current default is `hapa_open_10x9_v3_07` with one commitment to each own plan.
 
 ## Play (desktop app)
 
-The following describes the prototype player path. Review 16 records current recovery/result limitations; no downloadable release is published by this review.
+The following describes the prototype player path. Review 16 and Review 17 record current rules, recovery, result and presentation limitations; no downloadable release is published by these reviews.
 
 Open **Hapa Versus.app** (macOS Apple Silicon; from the DMG). **Play on this computer** starts a local match against the heuristic bot with no network and no other Hapa apps. **Play online → Join lobby** shows available players: **Challenge** one, **Open a table** (and copy its invitation), or **Join by invitation**. Each player controls only their own seat; Ready commits your plan once; closing the app is never a concession and reopening returns you to the match. Finished matches are verified from the signed moves and saved on your computer, then shared with a result archive when one is reachable. Player data lives in `~/Library/Application Support/Hapa Versus/`, never inside the app.
 

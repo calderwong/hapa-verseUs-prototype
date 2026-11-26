@@ -4,6 +4,10 @@
 records what is built, which owners it attaches to, the defaults CJ selected and what is still loose.
 CJ's acceptance is separate from technical completion and is not recorded here on his behalf.
 
+## Current continuation — 26 November 2026
+
+CJ has selected the [three-pass coding handoff](../reviews/2026-11-26-three-pass-coding-handoff.md): Review 16 / Assignment 17, the core visual and animation follow-on, and [open-ended Review 17](../reviews/2026-11-26-open-ended-review-17.md). It coordinates rules/content admission, durable decisions and the public view, recovery/results/discovery/finalization, local online music/notices and the selected Hapa presentation. Reconcile newer local work before implementing and use Loose Screws to fit one candidate. The latest reported implementation remains `5326438`; this note records selected work, not delivery or acceptance. Historical implementation entries and external gates below remain evidence of their stated revisions.
+
 ## Defaults CJ selected (not re-asked)
 
 | Area | Default |
@@ -233,7 +237,7 @@ Operations are in the [runbook](online-desktop-runbook.md).
 
 ## Review 16 (25 November 2026) — candidate needs connected-path corrections
 
-[Review 16](../reviews/2026-11-25-desktop-p2p-review-16.md) reviews `82002e8`, implementation `5326438`, against the selected desktop/P2P contracts. The source and submitted installed-local evidence establish substantial foundation work, but Assignment 16 is not complete. [Assignment 17](../reviews/2026-11-25-next-agent-assignment-17.md) is the next coding batch.
+[Review 16](../reviews/2026-11-25-desktop-p2p-review-16.md) reviews `82002e8`, implementation `5326438`, against the selected desktop/P2P contracts. The source and submitted installed-local evidence establish substantial foundation work, but Assignment 16 is not complete. [Assignment 17](../reviews/2026-11-25-next-agent-assignment-17.md) supplied its coding batch; those requirements are now carried forward by the [three-pass handoff](../reviews/2026-11-26-three-pass-coding-handoff.md).
 
 - Public-result import lacks the selected authenticated prefix/final commitment boundary; a unilateral receipt-context rewrite can remove a counted result as disputed. Canonical imported identity binding also needs independent validation.
 - A terminal-save crash window has no restart repair for the missing result/outbox.

@@ -1,0 +1,40 @@
+{
+  "reviewBaseline": "d113216c8473cf8fc1809e7720cd7a09ad76fa6b",
+  "node": "v24.22.3",
+  "method": "Exact source methods evaluated with explicit stubs around storage, signatures, rules generator and presentation. Tests orchestration only; no browser, native Hypercore, network, frame timing or resource measurement.",
+  "responseBoundary": {
+    "injectedFault": "choice journal append rejects",
+    "appendCalls": 1,
+    "pendingChoiceAfterFailure": null,
+    "authorityResolverCalled": false,
+    "retryError": {
+      "code": "NO_CHOICE",
+      "message": "no response choice is waiting"
+    },
+    "rendererAdvanced": true,
+    "playbackStarted": true,
+    "rendererReturned": true,
+    "toast": "Your response was not recorded: injected journal append failure"
+  },
+  "completedAuthorityLifecycle": {
+    "model": "Fake authority/storage handles measure calls from unchanged PeerRuntime methods; no native resources allocated.",
+    "opened": [
+      "fixture-match-1",
+      "fixture-match-2",
+      "fixture-match-3"
+    ],
+    "saved": [
+      "fixture-match-1",
+      "fixture-match-2",
+      "fixture-match-3"
+    ],
+    "closeCallsBeforeShutdown": [],
+    "closeCallsAfterShutdown": [
+      "fixture-match-3"
+    ],
+    "replacedAuthoritiesNeverClosed": [
+      "fixture-match-1",
+      "fixture-match-2"
+    ]
+  }
+}

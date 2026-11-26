@@ -1,0 +1,58 @@
+{
+  "sourceCommit": "d113216c8473cf8fc1809e7720cd7a09ad76fa6b",
+  "method": "Actual OnlineClient and extracted app methods, fake rendering/publish helpers and synthetic already-authenticated runtime events. No network, browser, native-store or game-rule acceptance claim.",
+  "futureTickProjection": {
+    "circumstance": "Presentation held on Tick 4 while authority delivers remote Tick 5 revision 2 and Ready; then renderer opens Tick 5.",
+    "deliveredEvents": [
+      {
+        "kind": "remotePlan",
+        "count": 5,
+        "revision": 2
+      },
+      {
+        "kind": "remoteReady",
+        "count": 5,
+        "revision": 2
+      }
+    ],
+    "delayedView": {
+      "commands": [],
+      "revision": 0,
+      "remoteReady": false,
+      "clientRemoteCache": null
+    },
+    "sameEventsDeliveredAtCurrentTick": {
+      "commands": [
+        {
+          "type": "set_destination",
+          "partyId": "B.castle",
+          "target": {
+            "column": 9,
+            "row": 7
+          }
+        }
+      ],
+      "revision": 2,
+      "remoteReady": true
+    }
+  },
+  "disputedControls": {
+    "status": "disputed",
+    "gates": {
+      "human": true,
+      "busy": false,
+      "frozen": false,
+      "current": false,
+      "invalid": 0,
+      "stale": false,
+      "edit": true,
+      "ready": true
+    },
+    "toasts": [
+      "The match is paused: fixture receipt mismatch"
+    ],
+    "rendererCallsMatchLeave": false,
+    "runtimeExportsMatchLeave": true,
+    "lobbyReturnCondition": "v.match && v.match.status === 'active'"
+  }
+}

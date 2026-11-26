@@ -1,0 +1,86 @@
+{
+  "reviewBaseline": "d113216c8473cf8fc1809e7720cd7a09ad76fa6b",
+  "sourceIdentityNote": "The source register verifies this baseline run. Record the actual checkout when rerunning.",
+  "nodeVersion": "v24.22.3",
+  "method": "Explicitly prepared ordinary-cast, response and imported-content diagnostic scenarios; actual unmodified rules/content adapter; no browser, native peer or remote match.",
+  "duplicateBurn": {
+    "spellCost": {
+      "red": 2
+    },
+    "uniqueFuelCards": 1,
+    "fuelMana": {
+      "red": 1
+    },
+    "honestAccepted": false,
+    "honestErrors": [
+      {
+        "index": 0,
+        "type": "play_ability",
+        "error": "cannot pay 2 red from the Mana pool"
+      }
+    ],
+    "repeatedAccepted": true,
+    "sourceStateUnchangedByValidation": true,
+    "burnedSameCardEvents": 2,
+    "postResolutionFuelState": "burned",
+    "payments": [
+      {
+        "assigned": [
+          {
+            "requirement": "red",
+            "color": "red",
+            "amount": 2
+          }
+        ],
+        "cost": {
+          "red": 2
+        }
+      }
+    ],
+    "damage": [
+      {
+        "recipient": "B.target.s5",
+        "damage": 2000000,
+        "cardId": "probe.cast"
+      }
+    ],
+    "responseVariant": {
+      "honest": {
+        "counterAnnounced": false,
+        "burnedFuelEvents": 0,
+        "counteredOriginal": false,
+        "spellDamageEvents": 1,
+        "rejected": [
+          "cannot pay 2 blue from the Mana pool"
+        ],
+        "fuelState": "available"
+      },
+      "repeated": {
+        "counterAnnounced": true,
+        "burnedFuelEvents": 2,
+        "counteredOriginal": true,
+        "spellDamageEvents": 0,
+        "rejected": [],
+        "fuelState": "burned"
+      }
+    }
+  },
+  "missingOperationField": {
+    "missingField": "damage.power",
+    "contentValidation": {
+      "ok": true,
+      "errors": []
+    },
+    "bundleImportAccepted": true,
+    "planAccepted": true,
+    "resolutionError": null,
+    "fingerprintError": "non-finite number at $.members.B.target.s5.hp",
+    "targetHpIsFinite": false,
+    "damageEvents": [
+      {
+        "damageIsFinite": false,
+        "recipient": "B.target.s5"
+      }
+    ]
+  }
+}

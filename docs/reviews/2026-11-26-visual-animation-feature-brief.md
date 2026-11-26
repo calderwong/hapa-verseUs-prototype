@@ -1,8 +1,10 @@
 # Visual and animation feature brief — 26 November 2026
 
-Companion to the [visual review](2026-11-26-visual-animation-review.md), requested by CJ as an additional review pass. This is the recommended shape of the next visual implementation, alongside the still-current [Assignment 17](2026-11-25-next-agent-assignment-17.md). It supplies working defaults without declaring new gameplay rules or replacing the desktop/P2P completion scope.
+Companion to the [visual review](2026-11-26-visual-animation-review.md), requested by CJ as an additional review pass. It supplies working defaults alongside [Assignment 17](2026-11-25-next-agent-assignment-17.md), without declaring new gameplay rules or replacing the desktop/P2P completion scope.
 
-This publication completes the requested review. The implementation groups below are recommended follow-on scope for CJ's next selected visual milestone; Assignment 17 remains the active coding handoff.
+**Selection update — 26 November 2026:** CJ subsequently requested a prompt for the same coding agent to pick up the last three review passes. The [three-pass coding handoff](2026-11-26-three-pass-coding-handoff.md) now selects this brief's core implementation groups together with Review 16 / Assignment 17 and Review 17. Preserve the existing scene and interaction while applying those refinements; the earlier instruction to avoid a new visual redesign does not exclude this newly selected work. Conditional trials and optional flourishes remain labelled below.
+
+**Original publication status:** the visual review was complete and these groups were recommended follow-on scope, with Assignment 17 then the active coding handoff. The selection update above records CJ's newer continuation request; it does not claim implementation or visual acceptance.
 
 ## Intended result
 

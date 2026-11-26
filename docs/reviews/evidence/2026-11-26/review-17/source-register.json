@@ -1,0 +1,431 @@
+{
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "reviewBaseline": "d113216c8473cf8fc1809e7720cd7a09ad76fa6b",
+  "implementationCandidate": "532643846f815106f7e33551099d02008e03c4d2",
+  "enginePin": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "profile": "hapa_open_10x9_v3_07",
+  "date": "2026-11-26",
+  "timezone": "America/Los_Angeles",
+  "method": "Pinned source; one real-rules/content diagnostic and two exact-source orchestration diagnostics with explicit stubs. No live browser, Electron, native fault, network or performance observation.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "gitBlobSha": "44b2bebd2d19110e57f1aa5493558b227e27cdf3",
+      "sha256": "4abace8416c679f518586059792d3b4eb6d5e043d9d075e513de7ef510fb34b0",
+      "size": 7235,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "README.md",
+      "gitBlobSha": "e9e3492323bb9b5d11f24efabc75c25ce8e0985b",
+      "sha256": "783eec832d3a9d49dff6e25a6cdfdff8a001cb187d3fbe948a09b550b4f1b206",
+      "size": 12955,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "desktop/main.mjs",
+      "gitBlobSha": "0bbe2fd23a2e918e2402a87f018902f52ffc4635",
+      "sha256": "4abc16cd41ca3051832183c8c57bdee737d691d1a881520c4c885a385ee1a18a",
+      "size": 16368,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "desktop/peer-host.mjs",
+      "gitBlobSha": "9ff2601e3ab6e1cbb1f5cd24a618302f93f34b71",
+      "sha256": "46782f62812b7de6f1e8f083127b8011a24d16e2721d6d351481a67219b8be81",
+      "size": 1761,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "docs/integrations/IMPLEMENTATION_CHECKPOINT.md",
+      "gitBlobSha": "42f47a21c989a3ed9eeb7c4d7ed4501f03b960d0",
+      "sha256": "caca6e5d18c8e8a0a72f4fe47f7469912c9489ff2a9fd44c1de75a711ed6fc83",
+      "size": 19257,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "docs/integrations/online-desktop-runbook.md",
+      "gitBlobSha": "7873ca0fa812ab2116f7b1c08f04218c07c34879",
+      "sha256": "b8528fb9d4cba933d170f877af0a4259a0531c7861b99f86aae74254de3d62cc",
+      "size": 10570,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "docs/integrations/p2p-matchmaking-v1.md",
+      "gitBlobSha": "fc74f706ab3e917d12d05d6f314cfd87edce3389",
+      "sha256": "fd6edd18f72496bd6338b2aca93a98f1b2dfc00844d3c3c950f969cdcedf3fc7",
+      "size": 59191,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "docs/reviews/2026-11-25-desktop-p2p-review-16.md",
+      "gitBlobSha": "cca090e508147c041b45d6a16ee8f23af0cc01bf",
+      "sha256": "aedf39b220310bede408d9ac2fade7dcadbf26ece509fca1a1b47364f7a62b76",
+      "size": 23764,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "docs/reviews/2026-11-25-next-agent-assignment-17.md",
+      "gitBlobSha": "d9aba0a52ba199ad3daf30e40d6b7bc6550e79a8",
+      "sha256": "738ee4de9b16f931c16bf40936a9d2c8cb49d9fefa1f0884fd9d6055fb883f7e",
+      "size": 15050,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "docs/reviews/2026-11-26-visual-animation-feature-brief.md",
+      "gitBlobSha": "4c971b0967be62d82a5e1986c9fb1d33ea1a5a43",
+      "sha256": "7bf192da31214a7571c30b538b711ecdb1d4c132632e4785423aab611976fee8",
+      "size": 13990,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "docs/reviews/2026-11-26-visual-animation-review.md",
+      "gitBlobSha": "e46a1fd1e0f8f3770c50cf6c041710fb13895236",
+      "sha256": "e765b0bfb1e7591df5b3f8fbe5d11316e8e8e3595f208c554644a40178eb0234",
+      "size": 28410,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "docs/reviews/README.md",
+      "gitBlobSha": "b89a62363d3a0eedc2723a550aa33bc4a0fb545d",
+      "sha256": "779ffd6cc0309dec88ec5bfd1cfb07c49643950af03c8f26e3dfb754cde6c62c",
+      "size": 28827,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "docs/workflows/LOOSE_SCREWS.md",
+      "gitBlobSha": "949fdd2c37f30fba591ba32535e1f32e66c94ef7",
+      "sha256": "1600060555f0e9cc7330ba05020c0e13dead356d0ec56e2d8f164bfb93601e87",
+      "size": 19476,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "fixtures/hapa/content.js",
+      "gitBlobSha": "6210462fdcb3121da79527149d02a3cfe989f408",
+      "sha256": "fad8f8627b891d0ce72b608500776f03e9117ab5134a0cbb8992cfa71299dd42",
+      "size": 9785,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "fixtures/hapa/profiles.js",
+      "gitBlobSha": "80a566f9e7e76b185756b04cfc58d31348ddd352",
+      "sha256": "9e05207a1b7c66d57b5ee9627633f83ce2b3c27c93893290f6b372a3b0670c68",
+      "size": 13609,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "fixtures/hapa/scenarios.js",
+      "gitBlobSha": "71e3208c1b2992e3632a758227123370db8c8262",
+      "sha256": "37b7521f7e069fbc13eba1126bdc5a1755560e0e717f3a535e6dd04d953b4419",
+      "size": 4065,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "forge.config.cjs",
+      "gitBlobSha": "0e49cb42f208e8dacada5d259e05e1de9a5e3c19",
+      "sha256": "92ff890face57c244c21cbc01becfc4787b5e65de9dcd8df53d2332eb9389579",
+      "size": 6339,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "package.json",
+      "gitBlobSha": "35656f7769578c130c58ac4fc973e896dbc90557",
+      "sha256": "529a0ea287c4834118e01ed5c361da11fd0e62a7cfe547adc4041318356ca727",
+      "size": 2107,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/adapters/content.js",
+      "gitBlobSha": "5d5132c773b0440eb0472a06b89d436a1a83ea07",
+      "sha256": "25d542ebdb529694296e874344c68a9177ad2cdf789cfaa57290f3310991ebc9",
+      "size": 8266,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/adapters/profile-lab.js",
+      "gitBlobSha": "0882b539020ef123499b9cfddfca628092ae1320",
+      "sha256": "07e44d7ea745e5958784b40503d04fe00884e94ea4b694e36d03818f15377031",
+      "size": 8345,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/host/owner-routes.js",
+      "gitBlobSha": "21626bc97db39b41105940a59ddc1f2c498b24c7",
+      "sha256": "687528ab3c00351f2a3552213fbeb013f9f9e4c827349f718e980da075ccd90a",
+      "size": 2879,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/network/compat.js",
+      "gitBlobSha": "97980c550783195c4b96255ffd9e501dceebdf20",
+      "sha256": "5353ff9ca971ac4d68b05106b671214b98ed038416bca8d3c62db9e1ed379ece",
+      "size": 4643,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/network/identity.js",
+      "gitBlobSha": "3a9e00b33b0034d93b096614507216c87292934c",
+      "sha256": "131145c10ce1fa97fb3874de059d043c3db4540e1db7f2ec93ed587edcace153",
+      "size": 2483,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/network/lobby.js",
+      "gitBlobSha": "5d49bd0c8bf5c115abe08846d029bcff4fee394c",
+      "sha256": "60c02dca93e6149f7c9d0a6e1ae7a4d999c2a9af604f13262ed1dd9b69a86f58",
+      "size": 13074,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/network/online-match.js",
+      "gitBlobSha": "48d72fb5c06b755b2acc9bfa9b3a6911d7f6a177",
+      "sha256": "4f8980153d8e544da3d390a9a30fc3f6ba0e93b2ac5c7a489ee5ffd53a9886ba",
+      "size": 20648,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/network/result-index.js",
+      "gitBlobSha": "30257a4a0c9cf123f26b4e37284c6796a209e4b9",
+      "sha256": "7c548423b5003e8d4109e2d12439a3913f9ba4123dd4cec6447713a53b4bea18",
+      "size": 5650,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/network/results.js",
+      "gitBlobSha": "405872133acf3f96ad6d1f393d1c0926cc505ccd",
+      "sha256": "4ffbb266f4833d2b0dfe3709e421b800cae112e522711c5382963ddb99f79d9b",
+      "size": 10962,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/network/runtime.js",
+      "gitBlobSha": "bdd66fafe631394f03284150dfc5d9a9baad2996",
+      "sha256": "b733079a8a906740dbe6692a2e5ea7b1895d5baaf9e9ec5a36eb184c7905885a",
+      "size": 40870,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/network/store.js",
+      "gitBlobSha": "8cb36e124a9f028697cbb49e7a4e6e363657a230",
+      "sha256": "08dd63d7742c96e9fede2b7020855cedc60be11ee59670be312316cf7ad0be01",
+      "size": 2983,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "gitBlobSha": "60f13d9ce7f110b25b49db8d6764d3963a6e27c8",
+      "sha256": "446bf829c813b5812c5c8982b9005e0391ab52e18eae03afa3f5e4e2a6f3a2ca",
+      "size": 238963,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/presentation/editor.js",
+      "gitBlobSha": "465e1b533ebdbf3870e90a6449169e031ed32d52",
+      "sha256": "4300a58d694da6a1dc5080af3a91c39f2e8a87b0dea145f2e31e9c48d985df41",
+      "size": 10693,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/presentation/lab.js",
+      "gitBlobSha": "32572122bd34b430eca24febebf16baabc8e6a4d",
+      "sha256": "a58107a45ef23a00e77b67c11f71f844e31ea5da8b1fbf9a9eb10ca6dd67dfb3",
+      "size": 9729,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/presentation/local-content.js",
+      "gitBlobSha": "30fd2c59fd32728bf960c94169832411df061853",
+      "sha256": "a30ba83629480024329b706f443f1cea438a9f5709df3cef053cd6fa6a5ee80a",
+      "size": 2090,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/presentation/online.js",
+      "gitBlobSha": "4c7c6986e8203973615579aa7e3982a3d7c33da9",
+      "sha256": "9a4f1bdd5819084d167d47c418b497df62fc5225cb1f7e9573db1b8fbcf3860d",
+      "size": 13608,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/protocol/admission.js",
+      "gitBlobSha": "f5a018bad7dd68665d830bba7fa99ddae0a8f267",
+      "sha256": "e63fefb47421528e5f1c571863bf8a0ad3811a60c4b10afeffdebe447b39a2d9",
+      "size": 3779,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/combat.js",
+      "gitBlobSha": "616fd71ad996705040273626e8173a9d9cf1ff31",
+      "sha256": "2ddec8be90bf6f5d1b5697c38458dc23c95f9ab3d4acd4cff1f8a73a838a01c6",
+      "size": 34982,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/context.js",
+      "gitBlobSha": "1917c727398bb6876076c2b50a4f5a31b710fa37",
+      "sha256": "174378bebde9a109a6e37f756bc1d3016dd56f7cd00899b288e94648cff177ac",
+      "size": 1279,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/economy.js",
+      "gitBlobSha": "69bd738628033da81c3567505f323102a6a4ba63",
+      "sha256": "f8b3146fad8b0ded3719dd2ca6ff35e1df1272cf66c6836f1836d2392d970d0b",
+      "size": 10922,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/effects.js",
+      "gitBlobSha": "bbe100edf65d7cc39f9635887d4382ebe8febc9c",
+      "sha256": "55d9f014a2b96a6ef2f625ef316b021bc2b9841588895c5bebefb4880a11f0e8",
+      "size": 2611,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/encoding.js",
+      "gitBlobSha": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+      "sha256": "58fcb62ee318ab6b461a01f6cc108d650807595e1dc2722c2ba8023c7af0396e",
+      "size": 8381,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/geometry.js",
+      "gitBlobSha": "af789f61c43b103255cb963e87a2e63fa2968fd4",
+      "sha256": "697e76131856ca6f507e27a3209607c4cba0a441a7a7912932d5ca60d669745f",
+      "size": 2964,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/match.js",
+      "gitBlobSha": "25b0f7ccf494ea19462438f52c429cc65ef934d2",
+      "sha256": "54379e9b5753bd47b27d7442fd5648e3e5532e8a3cb729ed6846a9cd1df8ffce",
+      "size": 31260,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/movement.js",
+      "gitBlobSha": "b84811f70e69cbdf692ef7aa24e7a56e88410fc0",
+      "sha256": "cc21d82f9631434d747688b7465442b7dfc2ecdd861c6053a7f51b73086ce6a0",
+      "size": 43392,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/session.js",
+      "gitBlobSha": "184e6f3b4c44c0f1554175f81ebe0ada5cb3e7a0",
+      "sha256": "2cb108dfe24ece759d1c48273774796c7828085560529107ea58a3be9555e51d",
+      "size": 4827,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/state.js",
+      "gitBlobSha": "a82081f88ef37642dc7215fd84fd1329f55e0978",
+      "sha256": "7773be2054ec1b6ca0409a67bdb413c85333c9fb6ea170e83a71fc02e42d1bb8",
+      "size": 8073,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/terrain.js",
+      "gitBlobSha": "7cbf8196e47dd2d35525af4bd87b7758fcc514d2",
+      "sha256": "f0cc09dd9c554346403bd9703068b16f18f0adb23d1fd5841c5e6b0737f7fd00",
+      "size": 12226,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    },
+    {
+      "path": "src/hapa/rules/validate.js",
+      "gitBlobSha": "c81527d9ab27496bc92c4e64daa153539d20af98",
+      "sha256": "48423a0666ce8684aa2e60a4a3012a7ca80a6e361ee44c8441dd63270ac2d1fd",
+      "size": 6638,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source/reference"
+    }
+  ],
+  "actualRulesDiagnosticClosure": [
+    "fixtures/hapa/content.js",
+    "fixtures/hapa/profiles.js",
+    "fixtures/hapa/scenarios.js",
+    "src/hapa/adapters/content.js",
+    "src/hapa/rules/combat.js",
+    "src/hapa/rules/context.js",
+    "src/hapa/rules/economy.js",
+    "src/hapa/rules/effects.js",
+    "src/hapa/rules/encoding.js",
+    "src/hapa/rules/geometry.js",
+    "src/hapa/rules/match.js",
+    "src/hapa/rules/movement.js",
+    "src/hapa/rules/state.js",
+    "src/hapa/rules/terrain.js",
+    "src/hapa/rules/validate.js"
+  ],
+  "diagnostics": {
+    "response-lifecycle-probe.json": {
+      "sha256": "f3c3f49a64926411fda0d8a01c39aad9dfb3887d2344dfcd957a91278af59da3",
+      "size": 1329
+    },
+    "response-lifecycle-probe.mjs": {
+      "sha256": "995442ef6936dbf2a300dd5f11f13d2b7290d18a1d1ffa939c699c962aee0d73",
+      "size": 5740
+    },
+    "rules-content-probe.json": {
+      "sha256": "84d5b474544422de34a48638fa67ff8f4601f573ec3301c266574854adca192d",
+      "size": 2191
+    },
+    "rules-content-probe.mjs": {
+      "sha256": "b4ebe0feff69eea26caa9ddd58f480295171546b06e502278ed12616946abc3c",
+      "size": 7250
+    },
+    "view-state-probe.json": {
+      "sha256": "bddac102e83ad6eb4f9c93b587b99a17232039f43385086dad4eeff42c926de7",
+      "size": 1553
+    },
+    "view-state-probe.mjs": {
+      "sha256": "797f07c04ae2bf9461c78ba0497d55187b6ef521a4e038c7cde587bde8565cd0",
+      "size": 5555
+    }
+  }
+}
