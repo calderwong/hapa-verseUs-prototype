@@ -1993,7 +1993,9 @@ export class VersusApp {
     const sum = summarize(this.session.events, this.state);
     const REASON = { commander_died: 'the Commander fell', capital_captured: 'a party center entered the Capital', conceded: 'conceded' };
     const crest = (seat) => h('span', { class: `crest ${seat.toLowerCase()}` }, seat);
-    const headline = o.result === 'draw' ? 'Draw' : o.result === 'win' ? 'Victory' : 'Unfinished';
+    // an online seat sees the result from its own side; the local/hotseat sheet keeps its neutral wording
+    const mine = this.onlineMatch?.seat;
+    const headline = o.result === 'draw' ? 'Draw' : o.result === 'win' ? (mine ? (o.winner === mine ? 'Victory' : 'Defeat') : 'Victory') : 'Unfinished';
     const stat = (label, a, b) => h('tr', {}, h('td', {}, label), h('td', {}, String(a)), h('td', {}, String(b)));
     this._overlayDismiss = false;
     this.el.overlay.replaceChildren(h('div', { class: 'card-sheet result' },
