@@ -1,0 +1,46 @@
+{
+ "schema": "hapa-versus-artifacts/v1",
+ "candidate": {
+  "source": "7cc30a141672ffedf5093bfd5695a39dca0532a5",
+  "dirty": false,
+  "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "profile": "hapa_open_10x9_v3_07",
+  "online": "hapa-versus-online/v2",
+  "results": "hapa-versus-result/v2",
+  "electron": "45.3.0",
+  "forge": "8.0.1",
+  "buildInfo": {
+   "source": "7cc30a141672ffedf5093bfd5695a39dca0532a5",
+   "dirty": false,
+   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+   "builtAt": "2026-11-26T21:58:27.341Z",
+   "target": "darwin-arm64"
+  }
+ },
+ "artifacts": {
+  "dmg": {
+   "bytes": 124525677,
+   "sha256": "bf261869328e89bc6c35bb76c6d46f1c3822a35e55bb24dd92991b06553616ee"
+  },
+  "zip": {
+   "bytes": 126353449,
+   "sha256": "c209e168cd9ea50fd4da5eb66874b6c99b94adae12a02937b751b06b850de930"
+  },
+  "appAsar": {
+   "bytes": 12388671,
+   "sha256": "c03f4b835446779fa007bfc4bd6e6db7b60cdbb80bfbd8a4944062de44669817"
+  }
+ },
+ "claims": {
+  "implemented": "yes",
+  "testedLocally": "yes (one Mac)",
+  "packaged": "yes",
+  "signed": "ad-hoc only; no Developer ID",
+  "notarized": "no",
+  "installedElsewhere": "no (installed from the DMG into a scratch folder on the build Mac)",
+  "internetVerified": "no (one Mac, one connection)",
+  "operated": "no archive/relay/directory host",
+  "published": "no (local out/ only)",
+  "acceptedByCJ": "no"
+ }
+}

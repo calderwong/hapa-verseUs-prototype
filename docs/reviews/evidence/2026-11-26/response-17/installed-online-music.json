@@ -1,0 +1,254 @@
+{
+ "kind": "two installed apps (f4448e9; music/online code identical to 7cc30a1) on one Mac; Cal with the local music owner configured, Bea without",
+ "cal": {
+  "ok": true,
+  "script": "online",
+  "ms": 27488,
+  "about": {
+   "app": "Hapa Versus",
+   "version": "0.1.0",
+   "packaged": true,
+   "electron": "45.3.0",
+   "chrome": "156.0.8078.96",
+   "node": "24.22.2",
+   "platform": "darwin",
+   "arch": "arm64",
+   "network": "test-mus-1795730127",
+   "build": {
+    "source": "f4448e993ba346d936d6f14548ac93ef252b4212",
+    "dirty": false,
+    "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "builtAt": "2026-11-26T21:54:51.131Z",
+    "target": "darwin-arm64"
+   },
+   "peer": {
+    "runtime": "hapa-versus-peer-runtime/0.2.0",
+    "fingerprint": "bfec-35b5-c24b"
+   },
+   "name": "Hapa Versus"
+  },
+  "me": "bfec-35b5-c24b",
+  "seat": "A",
+  "opponent": "Bea",
+  "outcome": {
+   "result": "win",
+   "winner": "B",
+   "loser": "A",
+   "tick": 7,
+   "reasons": [
+    {
+     "seat": "A",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:daaa4076e28f40330224818e4f45eb745e3dc72957661342167c6eaea11286bc",
+  "ticksAgreed": 7,
+  "viewMatchesAgreed": true,
+  "readyClicks": 7,
+  "choicesAnswered": 0,
+  "readyAckMs": {
+   "n": 7,
+   "median": 48,
+   "p95": 86,
+   "max": 86
+  },
+  "reloaded": false,
+  "music": {
+   "before": {
+    "deck": true,
+    "status": "ready",
+    "remotePlate": "Bea",
+    "avatar": false
+   },
+   "after": {
+    "status": "playing",
+    "now": null,
+    "action": "pause"
+   }
+  },
+  "feeds": {
+   "own": {
+    "length": 22,
+    "fork": 0
+   },
+   "remote": {
+    "length": 22,
+    "read": 22,
+    "fork": 0
+   }
+  },
+  "log": [
+   {
+    "t": 507,
+    "step": "join",
+    "joinBtn": true
+   },
+   {
+    "t": 3761,
+    "step": "opponentSeen",
+    "ok": true
+   },
+   {
+    "t": 3786,
+    "step": "challenged"
+   },
+   {
+    "t": 8258,
+    "step": "tableOpen",
+    "seat": "A",
+    "opponent": "Bea",
+    "tick": 1,
+    "seats": {
+     "A": "human",
+     "B": "remote"
+    }
+   },
+   {
+    "t": 25577,
+    "step": "concede",
+    "tick": 7
+   },
+   {
+    "t": 25890,
+    "step": "result",
+    "outcome": {
+     "result": "win",
+     "winner": "B",
+     "loser": "A",
+     "tick": 7,
+     "reasons": [
+      {
+       "seat": "A",
+       "reason": "conceded"
+      }
+     ]
+    }
+   }
+  ],
+  "consoleWarnings": 0
+ },
+ "bea": {
+  "ok": true,
+  "script": "online",
+  "ms": 28950,
+  "about": {
+   "app": "Hapa Versus",
+   "version": "0.1.0",
+   "packaged": true,
+   "electron": "45.3.0",
+   "chrome": "156.0.8078.96",
+   "node": "24.22.2",
+   "platform": "darwin",
+   "arch": "arm64",
+   "network": "test-mus-1795730127",
+   "build": {
+    "source": "f4448e993ba346d936d6f14548ac93ef252b4212",
+    "dirty": false,
+    "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "builtAt": "2026-11-26T21:54:51.131Z",
+    "target": "darwin-arm64"
+   },
+   "peer": {
+    "runtime": "hapa-versus-peer-runtime/0.2.0",
+    "fingerprint": "8e62-b4c1-9550"
+   },
+   "name": "Hapa Versus"
+  },
+  "me": "8e62-b4c1-9550",
+  "seat": "B",
+  "opponent": "Cal",
+  "outcome": {
+   "result": "win",
+   "winner": "B",
+   "loser": "A",
+   "tick": 7,
+   "reasons": [
+    {
+     "seat": "A",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:daaa4076e28f40330224818e4f45eb745e3dc72957661342167c6eaea11286bc",
+  "ticksAgreed": 7,
+  "viewMatchesAgreed": true,
+  "readyClicks": 7,
+  "choicesAnswered": 0,
+  "readyAckMs": {
+   "n": 7,
+   "median": 57,
+   "p95": 72,
+   "max": 72
+  },
+  "reloaded": false,
+  "music": {
+   "before": {
+    "deck": true,
+    "status": "unavailable",
+    "remotePlate": "Cal",
+    "avatar": false
+   },
+   "after": {
+    "status": "unavailable",
+    "now": null,
+    "action": "none"
+   }
+  },
+  "feeds": {
+   "own": {
+    "length": 22,
+    "fork": 0
+   },
+   "remote": {
+    "length": 22,
+    "read": 22,
+    "fork": 0
+   }
+  },
+  "log": [
+   {
+    "t": 161,
+    "step": "join",
+    "joinBtn": true
+   },
+   {
+    "t": 5615,
+    "step": "challengeReceived",
+    "ok": true
+   },
+   {
+    "t": 5644,
+    "step": "accepted"
+   },
+   {
+    "t": 6387,
+    "step": "tableOpen",
+    "seat": "B",
+    "opponent": "Cal",
+    "tick": 1,
+    "seats": {
+     "B": "human",
+     "A": "remote"
+    }
+   },
+   {
+    "t": 27353,
+    "step": "result",
+    "outcome": {
+     "result": "win",
+     "winner": "B",
+     "loser": "A",
+     "tick": 7,
+     "reasons": [
+      {
+       "seat": "A",
+       "reason": "conceded"
+      }
+     ]
+    }
+   }
+  ],
+  "consoleWarnings": 2
+ }
+}

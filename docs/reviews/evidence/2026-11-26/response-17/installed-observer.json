@@ -1,0 +1,40 @@
+{
+ "kind": "fresh installed app (7cc30a1) configured with the archive identity/transport key; both match authors offline; ordinary UI only (Join lobby → Player records → Profile)",
+ "ok": true,
+ "script": "observe",
+ "ms": 4765,
+ "about": {
+  "app": "Hapa Versus",
+  "version": "0.1.0",
+  "packaged": true,
+  "electron": "45.3.0",
+  "chrome": "156.0.8078.96",
+  "node": "24.22.2",
+  "platform": "darwin",
+  "arch": "arm64",
+  "network": "test-desk-mwy3ac1l",
+  "build": {
+   "source": "7cc30a141672ffedf5093bfd5695a39dca0532a5",
+   "dirty": false,
+   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+   "builtAt": "2026-11-26T21:58:27.341Z",
+   "target": "darwin-arm64"
+  },
+  "peer": {
+   "runtime": "hapa-versus-peer-runtime/0.2.0",
+   "fingerprint": "a9b2-8f47-6c54"
+  },
+  "name": "Hapa Versus"
+ },
+ "me": "a9b2-8f47-6c54",
+ "archive": "Result archive: Hapa Archive connected — finished matches are shared and verifiable while their players are offline.",
+ "records": [
+  "○Bram · not connected1 verified match · archive (Hapa Archive)Profile",
+  "○Cal · not connected1 verified match · archive (Hapa Archive)Profile"
+ ],
+ "profiles": [
+  "← Back to the lobby\nBRAM\n\nFingerprint 5481-1487-8a91 · hv1:…\n\nSynced from Hapa Archive just now.\n\nBucket\tW–L–D\tWin rate\nhuman vs bot\t1–0–0\t100% of 1\nRecent verified matches\nwin vs Cal · 15 Ticks · human vs bot",
+  "← Back to the lobby\nCAL\n\nFingerprint 9e1e-666b-0876 · hv1:…\n\nSynced from Hapa Archive just now.\n\nBucket\tW–L–D\tWin rate\nhuman vs bot\t0–1–0\t0% of 1\nRecent verified matches\nloss vs Bram · 15 Ticks · human vs bot"
+ ],
+ "consoleWarnings": 0
+}

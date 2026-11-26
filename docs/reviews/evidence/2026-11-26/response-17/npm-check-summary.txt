@@ -1,0 +1,8 @@
+npm run check on 7cc30a141672ffedf5093bfd5695a39dca0532a5 (clean source; untracked evidence only): exit 0
+ℹ tests 174
+ℹ pass 174
+ℹ fail 0
+✔ bot-versus-bot smoke match (1430 ms)
+✔ two-process peer-verified match (3238 ms)
+✔ build (514 ms)
+new suites: content-payments (5), online (4, v2 evidence), online-recovery (4), online-native (2, real Hypercore + local HyperDHT), playback-boundary (1)

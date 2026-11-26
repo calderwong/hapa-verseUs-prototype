@@ -1,0 +1,141 @@
+{
+ "kind": "candidate 3392fe2 installed from its DMG (online/runtime/rules source identical to 7cc30a1; later commits changed only the journey automation and a record-view null fix); headless archive + declared-bot opponent; public DHT; test network",
+ "network": "test-desk-mwy3ac1l",
+ "app": "<scratch> Versus.app",
+ "steps": [
+  {
+   "name": "launch-1",
+   "exit": 0,
+   "seat": "A",
+   "opponent": "Bram",
+   "readyClicks": 5,
+   "reloaded": true,
+   "readyAckMs": {
+    "n": 5,
+    "median": 59,
+    "p95": 73,
+    "max": 73
+   },
+   "log": [
+    "join",
+    "opponentSeen",
+    "challenged",
+    "tableOpen",
+    "reload",
+    "reattached"
+   ],
+   "quitMidMatch": true
+  },
+  {
+   "name": "second-instance",
+   "exit": 0,
+   "seconds": 0.137,
+   "wroteSmoke": false
+  },
+  {
+   "name": "kill-peer-utility",
+   "killed": true
+  },
+  {
+   "name": "launch-2",
+   "exit": 0,
+   "ok": true,
+   "outcome": {
+    "result": "win",
+    "winner": "B",
+    "loser": "A",
+    "tick": 15,
+    "reasons": [
+     {
+      "seat": "A",
+      "reason": "capital_captured",
+      "partyId": "B.mount.C4",
+      "capital": {
+       "column": 5,
+       "row": 1
+      }
+     }
+    ]
+   },
+   "ticksAgreed": 15,
+   "viewMatchesAgreed": true,
+   "readyClicks": 11,
+   "choices": 0,
+   "feeds": {
+    "own": {
+     "length": 46,
+     "fork": 0
+    },
+    "remote": {
+     "length": 46,
+     "read": 46,
+     "fork": 0
+    }
+   },
+   "log": [
+    "resumedMatch",
+    "tableOpen",
+    "result"
+   ],
+   "runtimeRestartSeen": 2
+  },
+  {
+   "name": "opponent",
+   "result": {
+    "matchId": "hv-3ed7620677d71da47d1dec52462e1d03",
+    "outcome": {
+     "result": "win",
+     "winner": "B",
+     "loser": "A",
+     "tick": 15,
+     "reasons": [
+      {
+       "seat": "A",
+       "reason": "capital_captured",
+       "partyId": "B.mount.C4",
+       "capital": {
+        "column": 5,
+        "row": 1
+       }
+      }
+     ]
+    },
+    "finalHash": "sha256:8a91b7d9e915d975a601276a5893afbc66fc3e3450bcac0b39b0c6ea6a1b3563",
+    "ticks": 15,
+    "me": "Bram"
+   },
+   "sameFinalHash": true,
+   "archived": true
+  },
+  {
+   "name": "installed-observer",
+   "ok": false
+  }
+ ],
+ "sameIdentityAcrossLaunches": true,
+ "ok": false,
+ "about": {
+  "app": "Hapa Versus",
+  "version": "0.1.0",
+  "packaged": true,
+  "electron": "45.3.0",
+  "chrome": "156.0.8078.96",
+  "node": "24.22.2",
+  "platform": "darwin",
+  "arch": "arm64",
+  "network": "test-desk-mwy3ac1l",
+  "build": {
+   "source": "3392fe2dc463f41d587a2ff35b189d96187c6932",
+   "dirty": false,
+   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+   "builtAt": "2026-11-26T21:52:46.555Z",
+   "target": "darwin-arm64"
+  },
+  "peer": {
+   "runtime": "hapa-versus-peer-runtime/0.2.0",
+   "fingerprint": "9e1e-666b-0876"
+  },
+  "name": "Hapa Versus"
+ },
+ "note": "The journey runner's own observer step failed on a script race (clicked before the Join button rendered); the corrected installed observer was rerun on 7cc30a1 against the same archive store: installed-observer.json."
+}

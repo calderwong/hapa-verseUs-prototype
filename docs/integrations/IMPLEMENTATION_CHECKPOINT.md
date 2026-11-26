@@ -248,3 +248,20 @@ Operations are in the [runbook](online-desktop-runbook.md).
 - The package filter removes explicitly allowed notice files.
 
 Five focused source-level probe groups and scope limits are recorded in the [review evidence](../reviews/evidence/2026-11-25/review-16/README.md). No new native Mac, distinct-network, operated-service or human acceptance claim is made by the reviewer. Signing/notarization, accessible artifact/source distribution, independent-network play, configured operated services and the Harbor app-origin dependency remain distinct gates. Browser online, direct Rematch, diagnostics and remaining lifecycle/platform evidence stay visible as incomplete selected scope. The reviewer did not read/update Overwatch; reconcile Response 16's reported HV-67 on the owner board.
+
+## Response 17 (26 November 2026) — three passes, current checkpoint
+
+[Response 17](../reviews/2026-11-26-three-pass-implementation-response-17.md); candidate `7cc30a1` (DMG `bf261869…`).
+
+**Combined outcome:** an installed play-and-record journey with:
+- attested v2 results and crash-safe finalization;
+- recoverable setup, an exact Ready and durable responses;
+- the opponent's latest public state retained for a lagging view;
+- a dispute/leave route, owned teardown, configured archives and in-app profiles;
+- local music online and packaged notices;
+- the presentation corrections VA-01–04 and the core visual pass.
+
+**Remaining selected scope:** browser online adapter, Rematch, diagnostics export, lifecycle/platform checks, installed witnesses for the fault cases, and the rest of VA-06.
+
+**Blockers:** signing, a second Mac on another connection, operated hosts, the engine snapshot, and Harbor's app origin.
+
