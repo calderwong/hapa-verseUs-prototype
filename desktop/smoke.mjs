@@ -160,8 +160,10 @@ async function observe(o) {
   const t0 = Date.now();
   const status = await o.peer.ready;
   await loaded(o);
-  await until(o, `!!document.querySelector('.online-panel')`, 30_000);
+  // the panel renders its Join button once the lobby state arrives: wait for it before clicking
+  await until(o, `!![...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join lobby') || !!document.querySelector('.online-me')`, 30_000);
   await js(o, `(() => { const i = document.querySelector('.online-panel input[type=text]'); const b = [...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join lobby'); if (i && b) { i.value = ${JSON.stringify(process.env.HAPA_VERSUS_SMOKE_NAME || 'Olu')}; i.dispatchEvent(new Event('input')); b.click(); } })()`);
+  await until(o, `!!document.querySelector('.online-me')`, 30_000);
   const archive = await until(o, `(() => { const p = [...document.querySelectorAll('.online-panel p')].find(p => /Result archive: .* connected/.test(p.textContent)); return p ? p.textContent : null; })()`, 120_000, 500);
   await shot(o, '01-observer-lobby');
   await js(o, `[...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Player records').click()`);
