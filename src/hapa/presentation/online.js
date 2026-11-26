@@ -29,28 +29,52 @@ export class OnlineClient {
   constructor(host) {
     this.host = host;
     this.listeners = new Set();
-    this.match = null; // { matchId, seat, count queues }
+    this.match = null; // the bound match's projection
+    this.projections = new Map(); // matchId → projection, recorded from the first event (closes the snapshot/subscription race)
     this.off = host.onEvent((e) => this._event(e));
   }
 
   call(op, args = {}) { return this.host.call(op, args); }
   on(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
 
-  /** Track one match: queues per Tick for locked pairs, choices and agreed receipts. */
-  bind(snapshot) {
-    const m = this.match = { matchId: snapshot.matchId, seat: snapshot.seat, locked: new Map(), choices: new Map(), agreed: new Map(), waiters: new Set(), remote: null, status: snapshot.status, connection: snapshot.connection };
-    const cur = snapshot.current;
-    if (cur?.locked) m.locked.set(cur.count, cur.locked);
-    for (const [i, c] of (cur?.choices ?? []).entries()) m.choices.set(`${cur.count}:${i}`, c);
+  _projection(matchId) {
+    let m = this.projections.get(matchId);
+    if (!m) {
+      // retained per Tick (review 17, R17-04): locked pairs, choices, agreed receipts and the
+      // opponent's latest public plan/Ready, so a view that is behind still shows them when it catches up
+      m = { matchId, seat: null, locked: new Map(), choices: new Map(), agreed: new Map(), remote: new Map(), waiters: new Set(), status: 'active', connection: 'waiting' };
+      this.projections.set(matchId, m);
+      if (this.projections.size > 4) this.projections.delete(this.projections.keys().next().value);
+    }
     return m;
   }
 
+  /** Bind the view to one match, merging the snapshot with anything already received. */
+  bind(snapshot) {
+    const m = this._projection(snapshot.matchId);
+    Object.assign(m, { seat: snapshot.seat, status: snapshot.status, connection: snapshot.connection, disputed: snapshot.disputed ?? null });
+    const cur = snapshot.current;
+    if (cur?.locked && !m.locked.has(cur.count)) m.locked.set(cur.count, cur.locked);
+    for (const [i, c] of (cur?.choices ?? []).entries()) if (!m.choices.has(`${cur.count}:${i}`)) m.choices.set(`${cur.count}:${i}`, c);
+    if (cur?.remote) this._remote(m, cur.count, cur.remote.revision, cur.remote.commands, cur.remote.ready);
+    this.match = m;
+    return m;
+  }
+
+  _remote(m, count, revision, commands, ready) {
+    const prev = m.remote.get(count);
+    if (!prev || revision > prev.revision || (revision === prev.revision && ready && !prev.ready)) m.remote.set(count, { revision, commands, ready: !!ready || !!prev?.ready });
+    for (const k of m.remote.keys()) if (k < count - 3) m.remote.delete(k); // bounded
+  }
+
   _event(e) {
-    const m = this.match;
-    if (e.type === 'match' && m && e.matchId === m.matchId) {
+    if (e.type === 'match' && e.matchId) {
+      const m = this._projection(e.matchId);
       if (e.kind === 'locked') m.locked.set(e.count, { plans: e.plans, hashes: e.hashes });
       else if (e.kind === 'choice') m.choices.set(`${e.count}:${e.index}`, { seat: e.seat, choiceId: e.choiceId, answer: e.answer });
       else if (e.kind === 'tickAgreed') m.agreed.set(e.count, { hash: e.hash, outcome: e.outcome });
+      else if (e.kind === 'remotePlan') this._remote(m, e.count, e.revision, e.commands, false);
+      else if (e.kind === 'remoteReady') this._remote(m, e.count, e.revision, e.commands, true);
       else if (e.kind === 'connection') m.connection = e.state;
       else if (e.kind === 'disputed') { m.status = 'disputed'; m.disputed = e.reason; }
       else if (e.kind === 'complete') m.status = 'complete';
@@ -63,8 +87,8 @@ export class OnlineClient {
     const m = this.match;
     return new Promise((resolve, reject) => {
       const check = () => {
-        if (this.match !== m) { m.waiters.delete(check); reject(new Error('match replaced')); return; }
-        if (m.status === 'disputed') { m.waiters.delete(check); reject(new Error(`disputed: ${m.disputed}`)); return; }
+        if (this.match !== m) { m.waiters.delete(check); reject(Object.assign(new Error('match replaced'), { code: 'REPLACED' })); return; }
+        if (m.status === 'disputed') { m.waiters.delete(check); reject(Object.assign(new Error(`disputed: ${m.disputed}`), { code: 'DISPUTED' })); return; }
         const v = pred(m);
         if (v) { m.waiters.delete(check); resolve(v); }
       };
@@ -80,6 +104,25 @@ export class OnlineClient {
   draft(count, commands) { return this.call('match.draft', { matchId: this.match.matchId, count, commands }); }
   ready(count, commands) { return this.call('match.ready', { matchId: this.match.matchId, count, commands, requestId: `${this.match.matchId}:${count}:ready` }); }
   choice(count, choiceId, answer) { return this.call('match.choice', { matchId: this.match.matchId, count, choiceId, answer }); }
+
+  /** What the authority has recorded for one of this seat's choices (after a failed or lost reply). */
+  async recordedChoice(count, index, choiceId) {
+    const known = this.match?.choices.get(`${count}:${index}`);
+    if (known?.choiceId === choiceId) return known;
+    const snap = await this.call('match.get').catch(() => null);
+    if (!snap || snap.matchId !== this.match?.matchId) return null;
+    const c = snap.current?.count === count ? snap.current.choices?.[index] : null;
+    return c?.choiceId === choiceId ? c : null;
+  }
+
+  /** The authority's durable Ready for a Tick, if any (after a failed or lost Ready reply). */
+  async committedReady(count) {
+    const snap = await this.call('match.get').catch(() => null);
+    if (!snap || snap.matchId !== this.match?.matchId) return null;
+    if (snap.current?.count === count && snap.current.own.ready) return { commands: snap.current.own.commands, revision: snap.current.ownReady?.revision ?? snap.current.own.revision, hash: snap.current.ownReady?.hash ?? null };
+    const done = snap.history?.find((t) => t.tick === count);
+    return done ? { commands: done.plans[snap.seat], revision: null, hash: null, resolved: true } : null;
+  }
 }
 
 /** A session object for the existing table, built from the agreed manifest (no new authority). */
@@ -111,6 +154,17 @@ export function onlinePanel(app) {
   }
   const client = app.online ??= new OnlineClient(host);
   let view = null, busy = false, note = '';
+  let sub = null; // { kind: 'profile', data } | { kind: 'records', data } — inline record views
+  const openProfile = async (playerId, label) => {
+    sub = { kind: 'profile', label, data: null }; draw();
+    try { sub = { kind: 'profile', label, data: await client.call('profile.get', { playerId }) }; } catch (e) { sub = { kind: 'profile', label, error: hostMessage(e) }; }
+    draw();
+  };
+  const openRecords = async () => {
+    sub = { kind: 'records', data: null }; draw();
+    try { sub = { kind: 'records', data: await client.call('directory.list') }; } catch (e) { sub = { kind: 'records', error: hostMessage(e) }; }
+    draw();
+  };
   const name = h('input', { type: 'text', maxlength: '32', 'aria-label': 'Your display name', placeholder: 'Your name' });
   const paste = h('input', { type: 'text', 'aria-label': 'Paste an invitation code', placeholder: 'Paste an invitation (hvinv1.…)' });
   const act = async (fn) => { if (busy) return; busy = true; draw(); try { view = await fn(); note = ''; } catch (e) { note = e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, ''); } busy = false; draw(); };
@@ -120,6 +174,7 @@ export function onlinePanel(app) {
     const v = view;
     const rows = [];
     rows.push(h('h2', {}, 'Play online'));
+    if (sub) { box.replaceChildren(...rows, recordView(sub, { back: () => { sub = null; draw(); }, open: openProfile })); return; }
     if (!v?.joined) {
       if (v && !name.value) name.value = v.me.label;
       rows.push(h('p', { class: 'small' }, 'Join the public lobby to find players. Your name, availability and finished match evidence (moves, choices and result — never chat, voice or music) are shared with the lobby so anyone can verify records.'),
@@ -133,7 +188,10 @@ export function onlinePanel(app) {
         v.me.manual === 'available' ? h('button', { disabled: busy, onclick: () => act(() => client.call('setAvailability', { availability: 'busy' })) }, 'Set Busy') : h('button', { disabled: busy, onclick: () => act(() => client.call('setAvailability', { availability: 'available' })) }, 'Set Available'),
         h('button', { class: 'linkish', disabled: busy, onclick: () => act(() => client.call('lobby.leave')) }, 'Leave lobby')),
         h('p', { class: 'dim small', role: 'status' }, conn));
-      if (v.match && v.match.status === 'active') rows.push(h('div', { class: 'row' }, h('span', {}, `Your match against ${v.match.opponent} is in progress.`), h('button', { class: 'primary', onclick: () => app.resumeOnline() }, 'Return to the table')));
+      if (v.match && (v.match.status === 'active' || v.match.status === 'disputed')) rows.push(h('div', { class: 'row' },
+        h('span', {}, v.match.status === 'disputed' ? `Your match against ${v.match.opponent} is paused: its records disagree.` : `Your match against ${v.match.opponent} is in progress.`),
+        h('button', { class: 'primary', onclick: () => app.resumeOnline() }, v.match.status === 'disputed' ? 'View the match' : 'Return to the table'),
+        v.match.status === 'disputed' ? h('button', { disabled: busy, onclick: () => { if (window.confirm('Leave this match? It stays recorded as unfinished/disputed; this is not a concession.')) act(() => client.call('match.leave', { matchId: v.match.matchId }).then(() => client.call('lobby.list'))); } }, 'Leave this match') : null));
       const r = v.reservation;
       if (!r && v.me.availability === 'available') rows.push(h('div', { class: 'row' },
         h('button', { disabled: busy, title: 'Anyone compatible in the lobby (or holding your invitation) can take the other seat; hosting is your consent', onclick: () => act(() => client.call('table.open')) }, 'Open a table'),
@@ -142,19 +200,30 @@ export function onlinePanel(app) {
         h('button', { onclick: () => navigator.clipboard?.writeText(r.invite).then(() => { note = 'Invitation copied. It names your table and expires in 5 minutes; it does not get through firewalls by itself.'; draw(); }) }, 'Copy invitation'),
         h('button', { disabled: busy, onclick: () => act(() => client.call('table.close')) }, 'Close table')));
       if (r?.phase === 'offered') rows.push(h('div', { class: 'row challenge-out' }, h('span', {}, `Challenge sent to ${r.opponent} · waiting for an answer`), h('button', { disabled: busy, onclick: () => act(() => client.call('challenge.cancel', { challengeId: r.challengeId })) }, 'Cancel')));
-      else if (r && r.phase !== 'active' && r.phase !== 'open') rows.push(h('p', { class: 'small', role: 'status' }, `Starting a match with ${r.opponent}…`));
+      else if (r && r.phase !== 'active' && r.phase !== 'open') rows.push(r.stalled
+        ? h('div', { class: 'row challenge-out', role: 'alert' },
+          h('span', {}, `The match with ${r.opponent} has not started: ${r.otherLeft ? 'they left this attempt' : 'no progress from the other player'}.`),
+          h('button', { disabled: busy, onclick: () => act(() => client.call('setup.retry', { challengeId: r.challengeId })) }, 'Retry'),
+          h('button', { disabled: busy, onclick: () => act(() => client.call('setup.leave', { challengeId: r.challengeId })) }, 'Leave this attempt'))
+        : h('p', { class: 'small', role: 'status' }, `Starting a match with ${r.opponent}…`));
       for (const x of v.incoming) rows.push(h('div', { class: 'row challenge-in', role: 'alert' },
         h('span', {}, h('b', {}, x.label), ` (${x.fingerprint}, ${x.controller === 'bot' ? 'declared bot' : 'human'}) challenges you · bundled ${v.compat.profileId}`),
         h('button', { class: 'primary', disabled: busy, onclick: () => act(() => client.call('challenge.respond', { challengeId: x.challengeId, accept: true })) }, 'Accept'),
         h('button', { disabled: busy, onclick: () => act(() => client.call('challenge.respond', { challengeId: x.challengeId, accept: false })) }, 'Decline')));
-      const archives = v.roster.filter((p) => p.role === 'archive');
-      rows.push(h('p', { class: 'dim small' }, archives.length ? `Result archive: ${archives.map((a) => a.label).join(', ')} connected — finished matches are shared and verifiable while you are offline.` : 'No result archive connected: finished matches are saved on this computer and shared when an archive is reachable.'),
-        h('p', { class: 'small' }, h('b', {}, 'Your verified record: '), recordText(v.record)));
+      const services = v.services ?? [];
+      const up = services.filter((x) => x.connected), configured = services.filter((x) => x.configured);
+      rows.push(h('p', { class: 'dim small' }, up.length ? `Result archive: ${up.map((a) => a.label).join(', ')} connected — finished matches are shared and verifiable while their players are offline.` : configured.length ? `Result archive ${configured.map((a) => a.label).join(', ')} is configured but not reachable now; results are saved here and shared later.` : 'No result archive connected: finished matches are saved on this computer and shared when an archive is reachable.'),
+        h('div', { class: 'row' }, h('span', { class: 'small' }, h('b', {}, 'Your verified record (known here): '), recordText(v.record)),
+          h('button', { class: 'linkish', onclick: () => openProfile(v.me.participantId, v.me.label) }, 'My profile'),
+          h('button', { class: 'linkish', onclick: () => openRecords() }, 'Player records')));
       const players = v.roster.filter((p) => p.role !== 'archive');
       rows.push(players.length
         ? h('ul', { class: 'roster-online' }, ...players.map((p) => h('li', {},
           h('span', { class: `avail ${p.availability}`, title: AVAIL_TEXT[p.availability] }, AVAIL_GLYPH[p.availability] ?? '○'),
-          h('span', { class: 'who' }, h('b', {}, p.label), h('span', { class: 'dim small' }, ` ${p.fingerprint} · ${p.controller === 'bot' ? 'declared bot' : 'human'} · ${AVAIL_TEXT[p.availability] ?? p.availability}${p.compatible ? '' : ' · different rules build'} · ${recordText(p.record)}`)),
+          h('span', { class: 'who' },
+            h('span', { class: 'who-line' }, h('b', {}, p.label), ` · ${AVAIL_TEXT[p.availability] ?? p.availability}`),
+            h('span', { class: 'who-line dim small' }, `${p.controller === 'bot' ? 'declared bot' : 'human'} · ${p.compatible ? recordText(p.record) : 'different rules build'}`)),
+          h('button', { class: 'linkish', title: `Verified record and recent matches for ${p.label}`, onclick: () => openProfile(p.playerId, p.label) }, 'Profile'),
           p.table
             ? h('button', { disabled: busy || !p.compatible || !!r || v.me.availability !== 'available', title: `Take the open seat at ${p.label}'s table`, onclick: () => act(() => client.call('table.join', { playerId: p.playerId, challengeId: p.table })) }, 'Join table')
             : h('button', { disabled: busy || !p.compatible || p.availability !== 'available' || !!r || v.me.availability !== 'available', title: !p.compatible ? 'This player uses a different rules build' : p.availability !== 'available' ? `${p.label} is ${AVAIL_TEXT[p.availability]}` : `Challenge ${p.label} with the bundled preset`, onclick: () => act(() => client.call('challenge', { playerId: p.playerId })) }, 'Challenge'))))
@@ -165,10 +234,50 @@ export function onlinePanel(app) {
   };
   const unsub = client.on((e) => {
     if (!box.isConnected) { unsub(); clearInterval(timer); return; }
-    if (e.type === 'lobby') { if (e.kind === 'challengeDeclined') note = `${e.by} ${e.reason === 'busy' ? 'is busy' : e.reason === 'incompatible' ? 'uses a different rules build' : 'declined'}.`; if (e.kind === 'startFailed') note = `The match could not start: ${e.reason}`; refresh(); }
+    if (e.type === 'lobby') { if (e.kind === 'challengeDeclined') note = `${e.by} ${e.reason === 'busy' ? 'is busy' : e.reason === 'incompatible' ? 'uses a different rules build' : 'declined'}.`; if (e.kind === 'startFailed') note = `The match could not start: ${e.reason}`; if (e.kind === 'setupStalled') note = ''; refresh(); }
     if (e.type === 'match' && e.kind === 'opened') { unsub(); clearInterval(timer); app.resumeOnline(); }
   });
   const timer = setInterval(() => { if (!box.isConnected) { clearInterval(timer); unsub(); return; } refresh(); }, 3000);
   refresh();
   return box;
 }
+
+const hostMessage = (e) => String(e?.message ?? e).replace(/^Error invoking remote method '[^']+': (Error: )?/, '');
+const SYNC_TEXT = {
+  'archive-unavailable': 'No archive reachable now — showing only results verified on this computer.',
+  deferred: 'Not synced while your match is in progress — showing results verified on this computer.',
+};
+
+/** Inline profile / player-records views (R16-03): verified totals by bucket, recent games, honest sync state. */
+function recordView(sub, { back, open }) {
+  const wrap = h('div', { class: 'record-view' }, h('button', { class: 'linkish', onclick: back }, '← Back to the lobby'));
+  if (sub.error) { wrap.append(h('p', { class: 'warn small' }, sub.error)); return wrap; }
+  if (!sub.data) { wrap.append(h('p', { class: 'small', role: 'status' }, sub.kind === 'profile' ? `Checking ${sub.label ?? 'this player'}’s verified record…` : 'Looking up player records…')); return wrap; }
+  if (sub.kind === 'records') {
+    const d = sub.data;
+    wrap.append(h('h3', {}, 'Player records'),
+      h('p', { class: 'dim small' }, d.deferred ? 'Archive lookup paused while your match is in progress.' : d.archives ? 'Players with verified matches known here or at the connected archive. They may be offline.' : 'No archive reachable now: players with verified matches on this computer.'),
+      d.items.length ? h('ul', { class: 'roster-online' }, ...d.items.map((x) => h('li', {},
+        h('span', { class: `avail ${x.availability}` }, x.connected ? '●' : '○'),
+        h('span', { class: 'who' }, h('span', { class: 'who-line' }, h('b', {}, x.label), ` · ${x.connected ? AVAIL_TEXT[x.availability] ?? x.availability : 'not connected'}`), h('span', { class: 'who-line dim small' }, `${x.results} verified match${x.results === 1 ? '' : 'es'} · ${x.source}`)),
+        h('button', { class: 'linkish', onclick: () => open(x.playerId, x.label) }, 'Profile')))) : h('p', { class: 'small' }, 'No verified matches are known yet.'));
+    return wrap;
+  }
+  const d = sub.data;
+  const sync = d.sync.state === 'synced' ? `Synced from ${d.sync.sources.join(', ')} just now${d.sync.refused ? ` · ${d.sync.refused} copy refused` : ''}.` : SYNC_TEXT[d.sync.state] ?? '';
+  const buckets = Object.entries(d.stats.buckets);
+  wrap.append(h('h3', {}, d.label ?? sub.label ?? 'Player'),
+    h('p', { class: 'dim small' }, `Fingerprint ${d.fingerprint} · `, h('code', { title: d.playerId }, d.playerId.slice(0, 20) + '…')),
+    h('p', { class: 'small', role: 'status' }, sync),
+    buckets.length ? h('table', { class: 'result-stats' }, h('tr', {}, h('th', {}, 'Bucket'), h('th', {}, 'W–L–D'), h('th', {}, 'Win rate')),
+      ...buckets.map(([k, b]) => h('tr', {}, h('td', {}, k.replace(/-/g, ' ')), h('td', {}, `${b.wins}–${b.losses}–${b.draws}`), h('td', {}, b.decisive ? `${Math.round(b.winRate * 100)}% of ${b.decisive}` : '—'))))
+      : h('p', { class: 'small' }, d.checkedZero ? 'Checked: no verified matches at the connected archive or here.' : 'No verified matches known here yet.'),
+    d.stats.disputed ? h('p', { class: 'small warn' }, `${d.stats.disputed} disputed match${d.stats.disputed > 1 ? 'es' : ''} excluded from totals.`) : null,
+    d.recent.items.length ? h('div', {}, h('h4', {}, 'Recent verified matches'), h('ul', { class: 'recent-list' }, ...d.recent.items.map((it) => {
+      const seat = it.players.A.participantId === d.playerId ? 'A' : 'B', opp = it.players[seat === 'A' ? 'B' : 'A'];
+      const res = it.disputed ? 'disputed' : it.outcome.result === 'draw' ? 'draw' : it.outcome.winner === seat ? 'win' : 'loss';
+      return h('li', {}, `${res} vs ${opp.label} · ${it.ticks} Ticks · ${it.bucket.replace(/-/g, ' ')}`);
+    }))) : null);
+  return wrap;
+}
+

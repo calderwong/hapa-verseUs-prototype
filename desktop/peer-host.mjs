@@ -14,7 +14,7 @@ port.on('message', async (e) => {
   const m = e.data;
   if (m?.type === 'init' && !runtime) {
     try {
-      runtime = new PeerRuntime({ root: m.root, networkId: m.networkId, host: 'electron-utility', relayThrough: m.network?.relayThrough ?? null, relayEndpoints: m.network?.relayEndpoints ?? [], log: (s) => process.stdout.write(`${s}\n`), onEvent: (event) => send({ type: 'event', event }) });
+      runtime = new PeerRuntime({ root: m.root, networkId: m.networkId, host: 'electron-utility', relayThrough: m.network?.relayThrough ?? null, relayEndpoints: m.network?.relayEndpoints ?? [], archives: m.network?.archives ?? [], log: (s) => process.stdout.write(`${s}\n`), onEvent: (event) => send({ type: 'event', event }) });
       const status = await runtime.open();
       send({ type: 'ready', status });
       // a player who joined the lobby before rejoins it (the saved online preference); local play never waits on it

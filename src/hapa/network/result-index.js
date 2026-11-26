@@ -85,6 +85,17 @@ export class ResultIndex {
     return { total: out.length, items: out.slice(offset, offset + Math.min(limit, 50)) };
   }
 
+  /** Players appearing in verified results here (label from their evidence), paginated. */
+  players({ offset = 0, limit = 50 } = {}) {
+    const m = new Map();
+    for (const e of this.entries.values()) {
+      if (e.disputed) continue;
+      for (const s of ['A', 'B']) { const p = e.verified[0].players[s]; const x = m.get(p.participantId) ?? { playerId: p.participantId, label: p.label, results: 0 }; x.results++; m.set(p.participantId, x); }
+    }
+    const items = [...m.values()].sort((a, b) => b.results - a.results || a.playerId.localeCompare(b.playerId));
+    return { total: items.length, items: items.slice(offset, offset + Math.min(limit, 200)) };
+  }
+
   /** A player's verified record by bucket: wins, losses, draws, completed, win rate over decisive games. */
   stats(playerId) {
     const buckets = {};

@@ -21,6 +21,7 @@ import { HeuristicBot } from '../../src/hapa/controllers/heuristic-bot.js';
 import { presetManifest, initialStateHash, rulesImplementation, compatibility, ONLINE_PROTOCOL } from '../../src/hapa/network/compat.js';
 import { signBody } from '../../src/hapa/network/control.js';
 import { buildBundle, verifyBundle } from '../../src/hapa/network/results.js';
+import { prefixRoot } from '../../src/hapa/network/prefix.js';
 import { ResultIndex } from '../../src/hapa/network/result-index.js';
 import { playerIdOf } from '../../src/hapa/network/identity.js';
 
@@ -31,8 +32,22 @@ function player(label) {
 }
 const pub = (p) => ({ participantId: p.participantId, identityKind: p.identityKind, label: p.label, signingKeyId: p.signingKeyId, publicKey: p.publicKey });
 
+const raw = (rec) => b4a.from(JSON.stringify(rec)); // Hypercore's JSON value encoding
+/** Both players' terminal attestations over the exact prefixes (as OnlineMatch writes them). */
+function attest(descriptor, records, ids, outcome, finalHash) {
+  const blocks = { A: records.A.map(raw), B: records.B.map(raw) };
+  const prefixes = {};
+  for (const s of ['A', 'B']) prefixes[s] = { key: descriptor.feeds[s], fork: 0, length: blocks[s].length, root: prefixRoot(blocks[s]) };
+  const attestations = {};
+  for (const s of ['A', 'B']) {
+    const rec = signRecord(ids[s], { type: 'closing', matchId: descriptor.matchId, authorSequence: records[s].length + 1, count: records[s].at(-1).body.count, phaseId: 'closing', priorStateHash: records[s].at(-1).body.priorStateHash, payload: { v: 2, finalHash, outcome, descriptorHash: fingerprint(descriptor), prefixes } });
+    attestations[s] = { index: records[s].length, block: raw(rec) };
+  }
+  return { prefixes, blocks, attestations };
+}
+
 /** Play a bot match and write both seats' signed records in the live authority's order. */
-function playRecorded({ seed = 3, matchId = `hv-${'ab'.repeat(16)}`, tamper = null, ids = { A: player('Ada'), B: player('Bram') }, botSeeds = [11, 12] } = {}) {
+function playRecorded({ seed = 3, matchId = `hv-${'ab'.repeat(16)}`, tamper = null, ids = { A: player('Ada'), B: player('Bram') }, botSeeds = [11, 12], session = null } = {}) {
   const manifest = presetManifest({ matchId, seed, players: { A: pub(ids.A), B: pub(ids.B) }, controllers: { A: { type: 'bot', revision: 'heuristic-bot/0.2.0' }, B: { type: 'bot', revision: 'heuristic-bot/0.2.0' } } });
   const descriptor = { online: ONLINE_PROTOCOL, network: 'test-unit', matchId, challengeHash: fingerprint({ c: 1 }), acceptHash: fingerprint({ a: 1 }), manifestHash: fingerprint(manifest), initialStateHash: initialStateHash(manifest), rulesImplementation: rulesImplementation(), compat: compatibility().id,
     players: { A: { participantId: ids.A.participantId, publicKey: ids.A.publicKey }, B: { participantId: ids.B.participantId, publicKey: ids.B.publicKey } },
@@ -63,8 +78,10 @@ function playRecorded({ seed = 3, matchId = `hv-${'ab'.repeat(16)}`, tamper = nu
     for (const s of ['A', 'B']) pubRec(s, 'receipt', count, 'receipt', prior, { stateHash: stateFingerprint(state), outcome: state.outcome ?? null, lockedPair: ag.locked.hashes });
   }
   if (tamper) tamper(records, ids);
-  const bundle = buildBundle({ session: { descriptor, sigs, manifest }, records, calculation: { outcome: state.outcome, finalStateHash: stateFingerprint(state) } });
-  return { ids, manifest, descriptor, records, bundle, outcome: state.outcome };
+  const sess = session ?? { descriptor, sigs, manifest };
+  const evidence = attest(sess.descriptor, records, ids, state.outcome, stateFingerprint(state));
+  const bundle = buildBundle({ session: sess, evidence });
+  return { ids, manifest, descriptor, records, bundle, evidence, outcome: state.outcome, finalHash: stateFingerprint(state) };
 }
 
 const base = playRecorded();
@@ -87,13 +104,10 @@ test('record admission: the agreed author, this match, its feed position and a b
   assert.equal(admitRecord(other.records.A[0], { matchId: other.descriptor.matchId, author: other.ids.A, index: 0, maxCount: 10_000 }).ok, true);
 });
 
-test('result verification recomputes the match and never trusts a claimed outcome', () => {
+test('result verification recomputes the match from authenticated prefixes and both terminal attestations', () => {
   const v = verifyBundle(base.bundle);
   assert.equal(v.ok, true, v.reason);
   assert.deepEqual(v.outcome, base.outcome);
-  const forged = structuredClone(base.bundle);
-  forged.calculation.outcome = { ...base.outcome, winner: base.outcome.winner === 'A' ? 'B' : 'A' };
-  assert.match(verifyBundle(forged).reason, /claimed outcome differs/);
   const wrongContext = structuredClone(base.bundle);
   wrongContext.session.descriptor.network = 'elsewhere';
   assert.equal(verifyBundle(wrongContext).ok, false);
@@ -101,11 +115,38 @@ test('result verification recomputes the match and never trusts a claimed outcom
   unsigned.session.sigs.B = '0'.repeat(128);
   assert.match(verifyBundle(unsigned).reason, /consent of seat B/);
   const truncated = structuredClone(base.bundle);
-  truncated.transcript.B.records.pop(); truncated.transcript.B.length--;
+  truncated.transcript.B.blocks.pop(); truncated.transcript.B.length--;
   assert.equal(verifyBundle(truncated).ok, false);
   const unsupported = structuredClone(base.bundle);
   unsupported.session.descriptor.rulesImplementation = 'sha256:' + '0'.repeat(64);
   assert.equal(verifyBundle(unsupported).status, 'invalid'); // the consent no longer covers the altered descriptor
+  // identity is checked from the key itself, never from the archive that supplied it
+  const alias = structuredClone(base.bundle);
+  alias.session.descriptor.players.A.participantId = 'hv1:' + 'c'.repeat(64);
+  assert.match(verifyBundle(alias).reason, /canonical player key/);
+  // v1 evidence keeps its bytes but never inherits the verified label
+  assert.equal(verifyBundle({ ...structuredClone(base.bundle), schema: 'hapa-versus-result/v1' }).status, 'legacy');
+});
+
+test('R16-01: a unilateral rewrite of a participant\'s own receipt cannot become a different counted history', () => {
+  const lastA = base.records.A.length - 1;
+  const rewritten = signRecord(base.ids.A, { ...base.records.A[lastA].body, phaseId: 'plan' });
+  // (a) only the block changes: it no longer produces the attested root
+  const a = structuredClone(base.bundle);
+  a.transcript.A.blocks[lastA] = raw(rewritten).toString('base64');
+  assert.match(verifyBundle(a).reason, /claimed prefix root/);
+  // (b) the block, the root and its author's own attestation change: the other player's attestation still names the original
+  const b = structuredClone(base.bundle);
+  const blocksA = base.evidence.blocks.A.slice(); blocksA[lastA] = raw(rewritten);
+  b.transcript.A.blocks = blocksA.map((x) => x.toString('base64'));
+  b.transcript.A.root = prefixRoot(blocksA);
+  const prefixes = { A: { ...base.evidence.prefixes.A, root: b.transcript.A.root }, B: base.evidence.prefixes.B };
+  const myClosing = signRecord(base.ids.A, { type: 'closing', matchId: base.descriptor.matchId, authorSequence: base.records.A.length + 1, count: rewritten.body.count, phaseId: 'closing', priorStateHash: rewritten.body.priorStateHash, payload: { v: 2, finalHash: base.finalHash, outcome: base.outcome, descriptorHash: fingerprint(base.descriptor), prefixes } });
+  b.attestations.A.block = raw(myClosing).toString('base64');
+  assert.match(verifyBundle(b).reason, /seat B's attestation does not name/);
+  // (c) even when both keys sign it, a receipt outside its context is refused by replay
+  const both = playRecorded({ ids: base.ids, session: { ...base.bundle.session, manifest: base.manifest }, tamper: (recs, ids) => { const i = recs.B.length - 1; recs.B[i] = signRecord(ids.B, { ...recs.B[i].body, phaseId: 'plan' }); } });
+  assert.match(verifyBundle(both.bundle).reason, /receipt for Tick \d+ in its context/);
 });
 
 test('the result index counts a result once, quarantines forgeries and keeps real conflicts out of totals', () => {
@@ -115,9 +156,9 @@ test('the result index counts a result once, quarantines forgeries and keeps rea
     const winner = base.outcome.winner, loser = winner === 'A' ? 'B' : 'A';
     assert.equal(idx.submit(base.bundle).status, 'added');
     assert.equal(idx.submit(structuredClone(base.bundle)).status, 'duplicate');
-    const repackaged = { ...structuredClone(base.bundle), calculation: { finalStateHash: base.bundle.calculation.finalStateHash } }; // equivalent evidence, different packaging
+    const repackaged = { ...structuredClone(base.bundle), introducer: { archive: 'elsewhere' } }; // equivalent evidence, different packaging
     assert.equal(idx.submit(repackaged).status, 'duplicate');
-    const forged = structuredClone(base.bundle); forged.calculation.outcome = { result: 'draw' };
+    const forged = structuredClone(base.bundle); forged.transcript.A.root = 'f'.repeat(64);
     assert.equal(idx.submit(forged).status, 'invalid');
     const stats = () => idx.stats(base.ids[winner].participantId).buckets['bot-vs-bot'];
     assert.deepEqual([stats().wins, stats().losses, idx.stats(base.ids[loser].participantId).buckets['bot-vs-bot'].losses], [1, 0, 1]);
@@ -125,15 +166,13 @@ test('the result index counts a result once, quarantines forgeries and keeps rea
     const impostor = playRecorded({ seed: 3, matchId: base.descriptor.matchId });
     assert.equal(idx.submit(impostor.bundle).status, 'added');
     assert.equal(stats().wins, 1);
-    // a fabricated receipt does not recompute, so it cannot dispute anything
-    const conflict = structuredClone(base.bundle);
-    const lastA = conflict.transcript.A.records.at(-1);
-    conflict.transcript.A.records[conflict.transcript.A.records.length - 1] = signRecord(base.ids.A, { ...lastA.body, payload: { ...lastA.body.payload, stateHash: 'sha256:' + 'f'.repeat(64) } });
-    assert.equal(idx.submit(conflict).status, 'invalid');
+    // a unilateral receipt rewrite (with its author's re-signed attestation) cannot erase the win
+    const lastA = base.records.A.length - 1;
+    const tampered = playRecorded({ ids: base.ids, session: { ...base.bundle.session, manifest: base.manifest }, tamper: (recs, ids) => { recs.A[lastA] = signRecord(ids.A, { ...recs.A[lastA].body, payload: { ...recs.A[lastA].body.payload, stateHash: 'sha256:' + 'f'.repeat(64) } }); } });
+    assert.equal(idx.submit(tampered.bundle).status, 'invalid');
     assert.equal(stats().wins, 1);
     // a real dispute: the same signers sign two different complete transcripts for the same session
-    const twin = playRecorded({ seed: 3, matchId: base.descriptor.matchId, ids: base.ids, botSeeds: [21, 22] });
-    twin.bundle.session = base.bundle.session; // the same jointly signed descriptor (feeds/hashes identical by construction)
+    const twin = playRecorded({ seed: 3, matchId: base.descriptor.matchId, ids: base.ids, botSeeds: [21, 22], session: { ...base.bundle.session, manifest: base.manifest } });
     assert.equal(verifyBundle(twin.bundle).ok, true);
     assert.equal(idx.submit(twin.bundle).status, 'disputed');
     assert.equal(idx.stats(base.ids[winner].participantId).buckets['bot-vs-bot']?.wins ?? 0, 0);

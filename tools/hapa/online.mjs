@@ -22,7 +22,7 @@ const quiet = flag('quiet');
 
 const rt = new PeerRuntime({
   root: resolve(data), networkId: arg('network', 'public-alpha'), displayName: arg('name'), controller: flag('bot') ? 'bot' : 'human', autoAccept: flag('auto-accept'), bootstrap, host: 'headless',
-  relayThrough: arg('relay'), forceRelay: flag('force-relay'), relayEndpoints: arg('relay-endpoint') ? [arg('relay-endpoint')] : [],
+  relayThrough: arg('relay'), forceRelay: flag('force-relay'), archives: arg('archive') ? [JSON.parse(arg('archive'))] : [], relayEndpoints: arg('relay-endpoint') ? [arg('relay-endpoint')] : [],
   log: (s) => { if (!quiet) out({ log: s }); },
   onEvent: (e) => {
     if (!quiet || e.kind === 'opened' || e.kind === 'complete' || e.kind === 'disputed' || e.kind === 'challengeReceived' || e.kind === 'challengeDeclined') out({ event: e.kind, ...(e.type === 'match' ? { matchId: e.matchId, count: e.count, hash: e.hash?.slice(7, 19), reason: e.reason, outcome: e.outcome } : { from: e.from, reason: e.reason }) });

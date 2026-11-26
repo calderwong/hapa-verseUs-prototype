@@ -16,7 +16,8 @@ import { fingerprint } from '../rules/encoding.js';
 import { profileById, DEFAULT_PROFILE_ID } from '../../../fixtures/hapa/profiles.js';
 import { CATALOG } from '../../../fixtures/hapa/content.js';
 
-export const ONLINE_PROTOCOL = 'hapa-versus-online/v1';
+/** v2: terminal attestations bind authenticated feed prefixes (review 16, R16-01). v1 peers are incompatible. */
+export const ONLINE_PROTOCOL = 'hapa-versus-online/v2';
 export const LOBBY_PROTOCOL = 'hapa-versus-lobby/v1';
 
 const HERE = dirname(fileURLToPath(import.meta.url));

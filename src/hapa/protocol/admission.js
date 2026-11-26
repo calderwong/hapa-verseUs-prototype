@@ -53,7 +53,12 @@ function payloadError(b) {
     case 'ready': return Number.isSafeInteger(p.planRevision) && typeof p.planHash === 'string' ? null : 'bad ready payload';
     case 'choice': return typeof p.choiceId === 'string' && Number.isSafeInteger(p.choiceIndex) && p.answer && typeof p.answer === 'object' && typeof p.requestHash === 'string' ? null : 'bad choice payload';
     case 'receipt': return typeof p.stateHash === 'string' && p.lockedPair && typeof p.lockedPair === 'object' ? null : 'bad receipt payload';
-    case 'closing': return typeof p.finalHash === 'string' ? null : 'bad closing payload';
+    case 'closing': {
+      if (typeof p.finalHash !== 'string') return 'bad closing payload';
+      if (p.v === undefined) return null; // online v1 closing (legacy records keep their meaning)
+      const okPrefix = (x) => x && /^[0-9a-f]{64}$/.test(x.key ?? '') && Number.isSafeInteger(x.fork) && x.fork >= 0 && Number.isSafeInteger(x.length) && x.length >= 1 && /^[0-9a-f]{64}$/.test(x.root ?? '');
+      return p.v === 2 && typeof p.descriptorHash === 'string' && p.prefixes && okPrefix(p.prefixes.A) && okPrefix(p.prefixes.B) ? null : 'bad terminal attestation';
+    }
     default: return 'unknown type';
   }
 }

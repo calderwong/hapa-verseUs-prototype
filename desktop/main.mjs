@@ -92,27 +92,40 @@ async function handleApp(request) {
 }
 
 // --- the peer utility process ------------------------------------------------------------------
-const peer = { proc: null, pending: new Map(), seq: 0, restarts: [], status: null, quitting: false, ready: null };
+const peer = { proc: null, gen: 0, pending: new Map(), seq: 0, restarts: [], status: null, quitting: false, ready: null };
+const STARTUP_MS = 30_000;
 
+/**
+ * Start one worker generation (review 16, R16-06). Its readiness settles exactly once — on ready,
+ * fatal, exit or a startup timeout — and its in-flight calls are rejected with a recoverable error
+ * when it exits. Nothing is replayed to a replacement worker: a caller sees the failure and the UI
+ * offers retry or reattachment.
+ */
 function startPeer() {
+  const gen = ++peer.gen;
   const entry = join(appRoot, 'desktop', 'peer-host.mjs');
   const proc = utilityProcess.fork(entry, [], { serviceName: 'Hapa Versus Peer', stdio: 'pipe' });
   peer.proc = proc;
   proc.stdout?.on('data', (d) => process.stdout.write(`[peer] ${d}`));
   proc.stderr?.on('data', (d) => process.stderr.write(`[peer] ${d}`));
+  let settle;
   peer.ready = new Promise((resolveReady, rejectReady) => {
-    const onMsg = (m) => {
-      if (m?.type === 'ready') { peer.status = m.status; resolveReady(m.status); if (peer.restarts.length) broadcast({ type: 'runtime', state: 'ready', restarted: true }); }
-      else if (m?.type === 'fatal') rejectReady(new Error(m.error));
-      else if (m?.type === 'reply') { const p = peer.pending.get(m.id); if (p) { peer.pending.delete(m.id); m.ok ? p.resolve(m.value) : p.reject(Object.assign(new Error(m.error), { code: m.code })); } }
-      else if (m?.type === 'event') broadcast(m.event);
-    };
-    proc.on('message', onMsg);
+    let done = false;
+    settle = (err, status) => { if (done) return; done = true; clearTimeout(timer); err ? rejectReady(err) : resolveReady(status); };
+    const timer = setTimeout(() => settle(Object.assign(new Error('the peer service did not start in time'), { code: 'RUNTIME_NOT_READY' })), STARTUP_MS);
   });
-  peer.ready.catch((e) => broadcast({ type: 'runtime', state: 'failed', error: e.message }));
+  peer.ready.catch((e) => { if (gen === peer.gen) broadcast({ type: 'runtime', state: 'failed', error: e.message }); });
+  proc.on('message', (m) => {
+    if (gen !== peer.gen) return; // a stale generation's late message
+    if (m?.type === 'ready') { peer.status = m.status; settle(null, m.status); if (peer.restarts.length) broadcast({ type: 'runtime', state: 'ready', restarted: true }); }
+    else if (m?.type === 'fatal') settle(Object.assign(new Error(m.error), { code: m.code ?? 'RUNTIME_FATAL' }));
+    else if (m?.type === 'reply') { const p = peer.pending.get(m.id); if (p && p.gen === gen) { peer.pending.delete(m.id); m.ok ? p.resolve(m.value) : p.reject(Object.assign(new Error(m.error), { code: m.code })); } }
+    else if (m?.type === 'event') broadcast(m.event);
+  });
   proc.on('exit', (code) => {
-    for (const p of peer.pending.values()) p.reject(new Error('the peer runtime stopped'));
-    peer.pending.clear();
+    settle(Object.assign(new Error(`the peer service stopped before it was ready (exit ${code})`), { code: 'RUNTIME_STOPPED' }));
+    for (const [id, p] of peer.pending) if (p.gen === gen) { peer.pending.delete(id); p.reject(Object.assign(new Error('the peer service stopped; nothing was retried — check the match and try again'), { code: 'RUNTIME_STOPPED' })); }
+    if (gen !== peer.gen) return;
     peer.proc = null;
     if (peer.quitting) return;
     const now = Date.now();
@@ -125,6 +138,11 @@ function startPeer() {
   proc.postMessage({ type: 'init', root: stateRoot(), networkId: NETWORK_ID, network: networkConfig() });
 }
 
+/** Wait for the current worker generation; a failed generation gives a recoverable error, never a hang. */
+async function whenReady() {
+  try { return await peer.ready; } catch (e) { throw Object.assign(new Error(`the game's peer service is not ready: ${e.message}`), { code: e.code ?? 'RUNTIME_NOT_READY' }); }
+}
+
 /**
  * Public network configuration: the bundled desktop/network.json, optionally overridden by an
  * operator-provided userData/network.json (relay keys and endpoints, archive keys). No secrets.
@@ -134,7 +152,9 @@ function networkConfig() {
   const bundled = read(join(appRoot, 'desktop', 'network.json'))?.networks?.[NETWORK_ID] ?? {};
   const local = read(join(app.getPath('userData'), 'network.json'))?.networks?.[NETWORK_ID] ?? {};
   const relays = [...(local.relays ?? []), ...(bundled.relays ?? [])].filter((r) => /^[0-9a-f]{64}$/.test(r?.key ?? ''));
-  return { relayThrough: relays[0]?.key ?? null, relayEndpoints: relays.flatMap((r) => (typeof r.endpoint === 'string' ? [r.endpoint] : [])), relays: relays.length, archives: (local.archives ?? bundled.archives ?? []).length };
+  // configured directory/archive services: their player identity and dialable transport key (R16-03)
+  const archives = [...(local.archives ?? []), ...(bundled.archives ?? [])].filter((a) => /^hv1:[0-9a-f]{64}$/.test(a?.player ?? '') && /^[0-9a-f]{64}$/.test(a?.transport ?? '')).map((a) => ({ player: a.player, transport: a.transport, label: typeof a.label === 'string' ? a.label.slice(0, 40) : 'Archive' }));
+  return { relayThrough: relays[0]?.key ?? null, relayEndpoints: relays.flatMap((r) => (typeof r.endpoint === 'string' ? [r.endpoint] : [])), relays: relays.length, archives };
 }
 
 function callPeer(op, args, timeoutMs = 20_000) {
@@ -142,7 +162,7 @@ function callPeer(op, args, timeoutMs = 20_000) {
   const id = ++peer.seq;
   return new Promise((res, rej) => {
     const t = setTimeout(() => { peer.pending.delete(id); rej(new Error(`${op} timed out`)); }, timeoutMs);
-    peer.pending.set(id, { resolve: (v) => { clearTimeout(t); res(v); }, reject: (e) => { clearTimeout(t); rej(e); } });
+    peer.pending.set(id, { gen: peer.gen, resolve: (v) => { clearTimeout(t); res(v); }, reject: (e) => { clearTimeout(t); rej(e); } });
     peer.proc.postMessage({ type: 'call', id, op, args });
   });
 }
@@ -152,12 +172,12 @@ function broadcast(event) { if (win && !win.isDestroyed()) win.webContents.send(
 
 // Renderer → host operations. The renderer names an operation; the host validates the sender and
 // the operation name, and the runtime validates arguments, seat and generation.
-const RENDERER_OPS = new Set(['getStatus', 'setDisplayName', 'probeTransport', 'lobby.join', 'lobby.leave', 'lobby.list', 'setAvailability', 'challenge', 'challenge.cancel', 'challenge.respond', 'invite.join', 'table.open', 'table.close', 'table.join', 'match.get', 'match.draft', 'match.ready', 'match.choice', 'match.leave', 'match.resume', 'history.list', 'profile.get', 'results.list', 'results.sync']);
+const RENDERER_OPS = new Set(['getStatus', 'setDisplayName', 'probeTransport', 'lobby.join', 'lobby.leave', 'lobby.list', 'setAvailability', 'challenge', 'challenge.cancel', 'challenge.respond', 'invite.join', 'table.open', 'table.close', 'table.join', 'setup.retry', 'setup.leave', 'match.get', 'match.draft', 'match.ready', 'match.choice', 'match.leave', 'match.resume', 'history.list', 'profile.get', 'results.list', 'results.sync', 'directory.list']);
 ipcMain.handle('versus:call', async (e, msg) => {
   const frameUrl = e.senderFrame?.url ?? '';
   if (!frameUrl.startsWith(`${ORIGIN}/`) || e.senderFrame !== e.sender.mainFrame) throw new Error('refused: not the game page');
   if (!msg || typeof msg.op !== 'string' || !RENDERER_OPS.has(msg.op)) throw new Error('refused: unknown operation');
-  await peer.ready;
+  await whenReady();
   return callPeer(msg.op, msg.args ?? {});
 });
 ipcMain.handle('versus:host', async (e, msg) => {

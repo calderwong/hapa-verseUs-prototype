@@ -18,8 +18,12 @@ import { PhaseAgreement } from '../protocol/agreement.js';
 import { admitRecord } from '../protocol/admission.js';
 import { verifyBody } from './control.js';
 import { rulesImplementation, manifestError, initialStateHash, ONLINE_PROTOCOL } from './compat.js';
+import { prefixRoot } from './prefix.js';
+import b4a from 'b4a';
 
-export const RESULT_SCHEMA = 'hapa-versus-result/v1';
+/** v2 binds authenticated feed prefixes and both terminal attestations; v1 bundles are legacy. */
+export const RESULT_SCHEMA = 'hapa-versus-result/v2';
+export const LEGACY_SCHEMAS = ['hapa-versus-result/v1'];
 export const METRICS_VERSION = 'summarize_v1';
 export const MAX_BUNDLE_BYTES = 64 * 1024 * 1024;
 
@@ -27,32 +31,24 @@ export const MAX_BUNDLE_BYTES = 64 * 1024 * 1024;
 export const resultKey = (network, matchId) => `${network}/${matchId}`;
 
 /**
- * Build a bundle from a participant's store: the signed session and both feeds' records.
- * The endpoint of each feed is its final receipt (the terminal attestation); later records such as
- * `closing` are outside the transcript, so nothing after the attestation can alter the outcome.
+ * Build a v2 bundle from a participant's store: the signed session, the manifest, each seat's exact
+ * game-input prefix as raw stored blocks (key, fork, length, root) and both terminal attestations.
+ * @param {{ session: any, evidence: { prefixes: any, blocks: any, attestations: any } }} o
  */
-export function buildBundle({ session, records, calculation }) {
-  const transcript = {};
+export function buildBundle({ session, evidence }) {
+  const enc = (buf) => b4a.toString(buf, 'base64');
+  const transcript = {}, attestations = {};
   for (const s of ['A', 'B']) {
-    const recs = records[s];
-    let end = -1;
-    for (let i = recs.length - 1; i >= 0; i--) if (recs[i].body.type === 'receipt') { end = i; break; }
-    transcript[s] = { feedKey: session.descriptor.feeds[s], length: end + 1, records: recs.slice(0, end + 1) };
+    const p = evidence.prefixes[s];
+    transcript[s] = { feedKey: p.key, fork: p.fork, length: p.length, root: p.root, blocks: evidence.blocks[s].map(enc) };
+    attestations[s] = { index: evidence.attestations[s].index, block: enc(evidence.attestations[s].block) };
   }
-  return {
-    schema: RESULT_SCHEMA,
-    network: session.descriptor.network,
-    matchId: session.descriptor.matchId,
-    session: { descriptor: session.descriptor, sigs: session.sigs },
-    manifest: session.manifest,
-    transcript,
-    calculation,
-  };
+  return { schema: RESULT_SCHEMA, network: session.descriptor.network, matchId: session.descriptor.matchId, session: { descriptor: session.descriptor, sigs: session.sigs }, manifest: session.manifest, transcript, attestations };
 }
 
 /** The canonical result commitment: session, computed outcome/state and transcript boundaries. */
 export function commitmentOf(v) {
-  return fingerprint({ network: v.network, matchId: v.matchId, descriptor: v.descriptorHash, outcome: v.outcome, finalStateHash: v.finalStateHash, endpoints: v.endpoints, transcriptDigest: v.transcriptDigest });
+  return fingerprint({ network: v.network, matchId: v.matchId, descriptor: v.descriptorHash, outcome: v.outcome, finalStateHash: v.finalStateHash, prefixes: v.prefixes });
 }
 
 /**
@@ -62,40 +58,63 @@ export function commitmentOf(v) {
  */
 export function verifyBundle(bundle) {
   try {
+    if (bundle && LEGACY_SCHEMAS.includes(bundle.schema)) return bad('legacy', 'v1 evidence has no authenticated prefixes or terminal attestations; it keeps its bytes but does not count');
     if (!bundle || bundle.schema !== RESULT_SCHEMA) return bad('invalid', 'unknown result schema');
     const size = canonicalize(bundle).length;
     if (size > MAX_BUNDLE_BYTES) return bad('invalid', `bundle of ${size} bytes exceeds the cap`);
     const d = bundle.session?.descriptor, sigs = bundle.session?.sigs, manifest = bundle.manifest;
     if (!d || d.online !== ONLINE_PROTOCOL || d.network !== bundle.network || d.matchId !== bundle.matchId) return bad('invalid', 'session does not match the bundle');
-    for (const s of ['A', 'B']) if (!verifyBody('session', d, sigs?.[s], d.players?.[s]?.publicKey)) return bad('invalid', `session consent of seat ${s} is missing or invalid`);
-    if (d.rulesImplementation !== rulesImplementation()) return bad('unsupported', 'recorded with a rules implementation this build cannot verify');
+    // identity, established from the keys themselves (never from the archive that delivered it)
     const players = { A: manifest?.participants?.A, B: manifest?.participants?.B };
-    for (const s of ['A', 'B']) if (players[s]?.participantId !== d.players[s].participantId || players[s]?.publicKey !== d.players[s].publicKey) return bad('invalid', 'manifest players differ from the session');
+    for (const s of ['A', 'B']) {
+      const dp = d.players?.[s], mp = players[s];
+      if (!dp || !/^[0-9a-f]{64}$/.test(dp.publicKey ?? '') || dp.participantId !== `hv1:${dp.publicKey}`) return bad('invalid', `seat ${s} is not a canonical player key`);
+      if (!mp || mp.participantId !== dp.participantId || mp.publicKey !== dp.publicKey || mp.signingKeyId !== `ed25519:${dp.publicKey}` || mp.identityKind !== 'hapa_versus_player_key_v1') return bad('invalid', `manifest seat ${s} differs from the session identity`);
+      if (!/^[0-9a-f]{64}$/.test(d.feeds?.[s] ?? '')) return bad('invalid', `seat ${s} has no valid feed key`);
+    }
+    if (d.players.A.participantId === d.players.B.participantId || d.feeds.A === d.feeds.B) return bad('invalid', 'the two seats are not distinct');
+    for (const s of ['A', 'B']) if (!verifyBody('session', d, sigs?.[s], d.players[s].publicKey)) return bad('invalid', `session consent of seat ${s} is missing or invalid`);
+    if (d.rulesImplementation !== rulesImplementation()) return bad('unsupported', 'recorded with a rules implementation this build cannot verify');
     const me = manifestError(manifest, { matchId: d.matchId, players: { A: { ...d.players.A, signingKeyId: `ed25519:${d.players.A.publicKey}` }, B: { ...d.players.B, signingKeyId: `ed25519:${d.players.B.publicKey}` } } });
     if (me) return bad('invalid', me);
     if (fingerprint(manifest) !== d.manifestHash || initialStateHash(manifest) !== d.initialStateHash) return bad('invalid', 'manifest or initial state differs from the session');
-    // every record: admitted against its agreed author, contiguous from the feed start
-    const recs = {};
+    // each exact feed prefix: the supplied block bytes must produce the claimed Merkle root
+    const recs = {}, prefixes = {};
     for (const s of ['A', 'B']) {
       const t = bundle.transcript?.[s];
-      if (!t || t.feedKey !== d.feeds[s] || !Array.isArray(t.records) || t.records.length !== t.length || t.length < 1) return bad('invalid', `transcript of seat ${s} is missing or inconsistent`);
+      if (!t || t.feedKey !== d.feeds[s] || !Number.isSafeInteger(t.fork) || t.fork < 0 || !Array.isArray(t.blocks) || t.blocks.length !== t.length || t.length < 1 || !/^[0-9a-f]{64}$/.test(t.root ?? '')) return bad('invalid', `transcript of seat ${s} is missing or inconsistent`);
+      const raw = t.blocks.map((x) => b4a.from(String(x), 'base64'));
+      if (prefixRoot(raw) !== t.root) return bad('invalid', `seat ${s}'s blocks do not produce the claimed prefix root`);
       recs[s] = [];
-      for (let i = 0; i < t.records.length; i++) {
-        const r = admitRecord(t.records[i], { matchId: d.matchId, author: players[s], index: i, maxCount: 10_000 });
+      for (let i = 0; i < raw.length; i++) {
+        let rec;
+        try { rec = JSON.parse(b4a.toString(raw[i])); } catch { return bad('invalid', `seat ${s} block ${i} is not a record`); }
+        const r = admitRecord(rec, { matchId: d.matchId, author: players[s], index: i, maxCount: 10_000 });
         if (!r.ok) return bad('invalid', `seat ${s} record ${i}: ${r.error}`);
         recs[s].push(r.body);
       }
+      prefixes[s] = { key: t.feedKey, fork: t.fork, length: t.length, root: t.root };
     }
+    // both terminal attestations: outside their prefixes, naming this session and both prefixes
+    const att = {};
+    for (const s of ['A', 'B']) {
+      const a = bundle.attestations?.[s];
+      if (!a || a.index !== prefixes[s].length) return bad('invalid', `seat ${s}'s attestation is missing or not directly after its prefix`);
+      let rec;
+      try { rec = JSON.parse(b4a.toString(b4a.from(String(a.block), 'base64'))); } catch { return bad('invalid', `seat ${s}'s attestation is not a record`); }
+      const r = admitRecord(rec, { matchId: d.matchId, author: players[s], index: a.index, maxCount: 10_000 });
+      if (!r.ok) return bad('invalid', `seat ${s}'s attestation: ${r.error}`);
+      const p = r.body.payload;
+      if (r.body.type !== 'closing' || p.v !== 2 || p.descriptorHash !== fingerprint(d) || fingerprint(p.prefixes ?? null) !== fingerprint(prefixes)) return bad('invalid', `seat ${s}'s attestation does not name this session and both prefixes`);
+      att[s] = p;
+    }
+    if (att.A.finalHash !== att.B.finalHash || fingerprint(att.A.outcome ?? null) !== fingerprint(att.B.outcome ?? null)) return bad('invalid', 'the two attestations name different outcomes');
     const run = replayRecords(manifest, recs);
     if (!run.ok) return bad('invalid', run.reason);
-    const claimed = bundle.calculation ?? {};
     const outcome = run.outcome;
-    if (claimed.outcome !== undefined && fingerprint(claimed.outcome) !== fingerprint(outcome)) return bad('invalid', 'the claimed outcome differs from the calculated one');
-    if (claimed.finalStateHash !== undefined && claimed.finalStateHash !== run.finalStateHash) return bad('invalid', 'the claimed final state differs from the calculated one');
     if (!outcome) return bad('unfinished', 'the transcript ends without a rules-defined result');
-    const endpoints = { A: recs.A.length, B: recs.B.length };
-    const transcriptDigest = fingerprint({ A: bundle.transcript.A.records, B: bundle.transcript.B.records });
-    const v = { network: bundle.network, matchId: bundle.matchId, descriptorHash: fingerprint(d), outcome, finalStateHash: run.finalStateHash, endpoints, transcriptDigest };
+    if (fingerprint(att.A.outcome) !== fingerprint(outcome) || att.A.finalHash !== run.finalStateHash) return bad('invalid', 'the attested outcome differs from the calculated one');
+    const v = { network: bundle.network, matchId: bundle.matchId, descriptorHash: fingerprint(d), outcome, finalStateHash: run.finalStateHash, prefixes };
     return {
       ok: true, status: 'verified', key: resultKey(bundle.network, bundle.matchId), commitment: commitmentOf(v), ...v, ticks: run.ticks,
       players: { A: { participantId: d.players.A.participantId, label: players.A.label }, B: { participantId: d.players.B.participantId, label: players.B.label } },
@@ -144,7 +163,7 @@ export function replayRecords(manifest, recs) {
     while (!step.done) {
       const req = step.value;
       const b = take(req.seat);
-      if (!b || b.type !== 'choice' || b.count !== count || b.payload.choiceId !== req.choiceId || b.payload.choiceIndex !== index || b.payload.requestHash !== fingerprint(req)) return { ok: false, reason: `Tick ${count}: seat ${req.seat}'s choice ${req.choiceId} is missing or bound to another request` };
+      if (!b || b.type !== 'choice' || b.count !== count || b.phaseId !== req.choiceId || b.priorStateHash !== prior || b.payload.choiceId !== req.choiceId || b.payload.choiceIndex !== index || b.payload.requestHash !== fingerprint(req)) return { ok: false, reason: `Tick ${count}: seat ${req.seat}'s choice ${req.choiceId} is missing or bound to another request` };
       step = gen.next(b.payload.answer);
       index++;
     }
@@ -152,7 +171,7 @@ export function replayRecords(manifest, recs) {
     const hash = stateFingerprint(state);
     for (const s of ['A', 'B']) {
       const b = take(s);
-      if (!b || b.type !== 'receipt' || b.count !== count) return { ok: false, reason: `seat ${s} has no receipt for Tick ${count}` };
+      if (!b || b.type !== 'receipt' || b.count !== count || b.phaseId !== 'receipt' || b.priorStateHash !== prior) return { ok: false, reason: `seat ${s} has no receipt for Tick ${count} in its context` };
       if (b.payload.stateHash !== hash) return { ok: false, reason: `seat ${s}'s Tick ${count} receipt names a different state` };
       if (fingerprint(b.payload.lockedPair) !== fingerprint(ag.locked.hashes)) return { ok: false, reason: `seat ${s}'s Tick ${count} receipt names a different locked pair` };
       if (fingerprint(b.payload.outcome ?? null) !== fingerprint(state.outcome ?? null)) return { ok: false, reason: `seat ${s}'s Tick ${count} receipt names a different outcome` };

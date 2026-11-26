@@ -21,6 +21,7 @@ import { PhaseAgreement, agreementPolicy } from '../protocol/agreement.js';
 import { signRecord } from '../protocol/messages.js';
 import { admitRecord } from '../protocol/admission.js';
 import { writeJsonAtomic } from './store.js';
+import { feedPrefix, rawBlocks } from './prefix.js';
 
 const DRAFT_COALESCE_MS = 600;
 const MAX_INBOX = 512; // unconsumed opponent records held at once
@@ -45,6 +46,7 @@ export class OnlineMatch {
     this.inbox = [];
     this.waiters = new Set();
     this.history = [];
+    this.remoteIndex = new WeakMap(); // admitted body → its feed position (prefix endpoints)
     this.status = 'opening';
     this.connection = 'waiting';
     this._chain = Promise.resolve();
@@ -93,6 +95,7 @@ export class OnlineMatch {
       const r = admitRecord(rec, { matchId: this.matchId, author: this.opponent, index: this.remoteRead, maxCount: MAX_TICKS });
       if (!r.ok) { this._dispute(`opponent record ${this.remoteRead} refused: ${r.error}`); return; }
       this.remoteRead++;
+      this.remoteIndex.set(r.body, this.remoteRead - 1);
       this.inbox.push(r.body);
       this._wake();
     }
@@ -147,19 +150,44 @@ export class OnlineMatch {
     try {
       while (!this.state.outcome && !this.closed) await this._tick();
       if (this.closed) return;
-      const finalHash = stateFingerprint(this.state);
-      const rec = await this._ownRecorded();
-      if (rec?.type === 'closing') await this._consumeOwn(); else await this._publish('closing', this.state.tick, 'closing', { finalHash });
-      this.status = 'complete';
-      this.finalHash = finalHash;
-      this._persist({ status: 'complete', outcome: this.state.outcome, finalHash });
-      this.emit('complete', { outcome: this.state.outcome, finalHash, ticks: this.history.length });
-      this.o.onComplete?.(this);
-      this._take((b) => b.type === 'closing').then((b) => { this.remoteClosing = b.payload.finalHash; this.emit('closing', { agreed: b.payload.finalHash === finalHash }); }).catch(() => {});
+      await this._attest();
     } catch (e) {
       if (this.closed) return;
       if (!this.disputed) this._dispute(e.message);
     }
+  }
+
+  /**
+   * Terminal agreement (review 16, R16-01; online v2). Each player's game-input prefix ends at its
+   * final receipt. Both players sign a `closing` attestation *outside* those prefixes naming the
+   * session, the computed outcome/state and both prefixes (key, fork, length, Merkle root). The
+   * match is complete only when the opponent's attestation names exactly the same prefixes.
+   */
+  async _attest() {
+    const finalHash = stateFingerprint(this.state);
+    this.finalHash = finalHash;
+    this.status = 'finishing';
+    this._persist({ status: 'terminal', outcome: this.state.outcome, finalHash });
+    this.emit('terminal', { outcome: this.state.outcome, finalHash });
+    const ownLength = this.ownCursor; // just after this player's final receipt
+    if (!this.remoteFinalIndex && this.remoteFinalIndex !== 0) throw new Error('no final receipt from the opponent');
+    const pre = { [this.seat]: await feedPrefix(this.own, ownLength), [this.other]: await feedPrefix(this.remote, this.remoteFinalIndex + 1) };
+    const prefixes = { A: pre.A, B: pre.B };
+    const payload = { v: 2, finalHash, outcome: this.state.outcome, descriptorHash: fingerprint(this.descriptor), prefixes };
+    const rec = await this._ownRecorded();
+    if (rec?.type === 'closing') {
+      await this._consumeOwn();
+      if (fingerprint(rec.payload.prefixes ?? null) !== fingerprint(prefixes)) throw new Error('the recorded final attestation no longer matches the feeds');
+    } else await this._publish('closing', this.state.tick, 'closing', payload);
+    const theirs = await this._take((b) => b.type === 'closing');
+    if (theirs.payload.v !== 2 || theirs.payload.finalHash !== finalHash || fingerprint(theirs.payload.prefixes ?? null) !== fingerprint(prefixes) || fingerprint(theirs.payload.outcome ?? null) !== fingerprint(this.state.outcome)) {
+      throw new Error('the final attestations name different histories');
+    }
+    this.attestation = { prefixes, ownIndex: ownLength, remoteIndex: this.remoteIndex.get(theirs) };
+    this.status = 'complete';
+    this._persist({ status: 'attested', outcome: this.state.outcome, finalHash });
+    this.emit('complete', { outcome: this.state.outcome, finalHash, ticks: this.history.length });
+    this.o.onComplete?.(this);
   }
 
   async _tick() {
@@ -242,6 +270,7 @@ export class OnlineMatch {
       await this._publish('receipt', count, 'receipt', { stateHash: hash, outcome, lockedPair: locked.hashes });
     }
     const theirs = await this._take((b) => b.type === 'receipt' && b.count === count);
+    if (state.outcome) this.remoteFinalIndex = this.remoteIndex.get(theirs);
     if (fingerprint(theirs.payload.lockedPair) !== fingerprint(locked.hashes)) throw new Error(`Tick ${count}: the locked plan pairs differ`);
     if (theirs.payload.stateHash !== hash) throw new Error(`Tick ${count}: receipts differ (${hash.slice(7, 19)} vs ${String(theirs.payload.stateHash).slice(7, 19)})`);
     this.history.push({ tick: count, plans, choices: cur.choices.map((x) => x.answer), fingerprint: hash });
@@ -296,11 +325,12 @@ export class OnlineMatch {
   async ready(args) {
     const cur = this._check(args);
     const ag = cur.agreement;
-    if (cur.committed) return { ok: true, already: true, revision: ag.ready[this.seat]?.revision, hash: ag.ready[this.seat]?.hash };
+    if (cur.committed) return { ok: true, already: true, revision: ag.ready[this.seat]?.revision, hash: ag.ready[this.seat]?.hash, commands: ag.plans[this.seat].commands, count: cur.count };
     if (cur.committing) return cur.committing;
     clearTimeout(cur.draftTimer);
     if (Array.isArray(args.commands)) cur.draft = args.commands;
-    cur.committing = this._commit(cur).then(() => ({ ok: true, revision: ag.ready[this.seat].revision, hash: ag.ready[this.seat].hash })).finally(() => { cur.committing = null; });
+    // the reply names the exact durable commitment so the view can show precisely what was committed
+    cur.committing = this._commit(cur).then(() => ({ ok: true, revision: ag.ready[this.seat].revision, hash: ag.ready[this.seat].hash, commands: ag.plans[this.seat].commands, count: cur.count })).finally(() => { cur.committing = null; });
     return cur.committing;
   }
 
@@ -310,16 +340,31 @@ export class OnlineMatch {
     const cur = this.current;
     const pc = cur?.pendingChoice;
     if (!pc) {
+      // already recorded (e.g. a lost acknowledgment): return the recorded answer, structurally
       const done = cur?.choices.find((x) => x.choiceId === args.choiceId && x.seat === this.seat);
-      if (done) return { ok: true, already: true };
+      if (done) return { ok: true, already: true, recorded: { choiceId: done.choiceId, answer: done.answer } };
       throw Object.assign(new Error('no response choice is waiting'), { code: 'NO_CHOICE' });
     }
     if (args.count !== cur.count || args.choiceId !== pc.req.choiceId) throw Object.assign(new Error('stale choice'), { code: 'STALE_CHOICE' });
-    if (!args.answer || typeof args.answer !== 'object') throw new Error('bad answer');
-    cur.pendingChoice = null;
-    await this._publish('choice', cur.count, pc.req.choiceId, { choiceId: pc.req.choiceId, choiceIndex: pc.index, requestHash: pc.requestHash, answer: args.answer });
-    pc.resolve(args.answer);
-    return { ok: true };
+    if (!args.answer || typeof args.answer !== 'object' || Array.isArray(args.answer)) throw new Error('bad answer');
+    // one submission per choice at a time (review 17, R17-03): the choice stays pending until the
+    // exact answer is durable; a failed append leaves it pending for a usable retry
+    if (pc.submitting) {
+      if (fingerprint(args.answer) !== fingerprint(pc.submittingAnswer)) throw Object.assign(new Error('another answer to this response is being recorded'), { code: 'CHOICE_IN_FLIGHT' });
+      return pc.submitting;
+    }
+    pc.submittingAnswer = args.answer;
+    pc.submitting = this._publish('choice', cur.count, pc.req.choiceId, { choiceId: pc.req.choiceId, choiceIndex: pc.index, requestHash: pc.requestHash, answer: args.answer })
+      .then(() => {
+        if (cur.pendingChoice === pc) cur.pendingChoice = null;
+        pc.resolve(args.answer);
+        return { ok: true, recorded: { choiceId: pc.req.choiceId, answer: args.answer } };
+      }, (e) => {
+        pc.submitting = null;
+        pc.submittingAnswer = null;
+        throw Object.assign(new Error(`your response was not recorded (${e.message}); it is still waiting`), { code: 'CHOICE_NOT_RECORDED' });
+      });
+    return pc.submitting;
   }
 
   /** Everything a (re)attached view needs to reconstruct the match without simulating authority. */
@@ -337,7 +382,8 @@ export class OnlineMatch {
         own: { revision: ag.plans[this.seat].revision, commands: cur.draft ?? ag.plans[this.seat].commands, ready: !!ag.ready[this.seat] },
         remote: { revision: ag.plans[this.other].revision, commands: ag.plans[this.other].commands, ready: !!ag.ready[this.other] },
         locked: cur.locked ? { plans: { A: cur.locked.A, B: cur.locked.B }, hashes: cur.locked.hashes } : null,
-        choices: cur.choices, pendingChoice: cur.pendingChoice ? { index: cur.pendingChoice.index, request: cur.pendingChoice.req } : null,
+        choices: cur.choices, pendingChoice: cur.pendingChoice ? { index: cur.pendingChoice.index, request: cur.pendingChoice.req, submitting: !!cur.pendingChoice.submitting } : null,
+        ownReady: ag.ready[this.seat] ? { revision: ag.ready[this.seat].revision, hash: ag.ready[this.seat].hash } : null,
       } : null,
       outcome: this.state?.outcome ?? null, finalHash: this.finalHash ?? null,
       feeds: { own: { length: this.own?.length ?? 0, fork: this.own?.fork ?? 0 }, remote: { length: this.remote?.length ?? 0, read: this.remoteRead, fork: this.remote?.fork ?? 0 } },
@@ -345,10 +391,22 @@ export class OnlineMatch {
   }
 
   /** Both feeds' signed records as stored (for result evidence). */
-  async records() {
-    const read = async (core) => { const out = []; for (let i = 0; i < core.length; i++) out.push(await core.get(i)); return out; };
-    const own = await read(this.own), remote = await read(this.remote);
-    return this.seat === 'A' ? { A: own, B: remote } : { A: remote, B: own };
+  /**
+   * Evidence for the result bundle: each seat's exact game-input prefix as raw stored blocks with its
+   * descriptor, and both terminal attestations (the blocks just after each prefix).
+   */
+  async evidence() {
+    if (!this.attestation) throw new Error('the match has no agreed terminal attestation yet');
+    const { prefixes, ownIndex, remoteIndex } = this.attestation;
+    const coreOf = (seat) => (seat === this.seat ? this.own : this.remote);
+    const out = { prefixes, blocks: {}, attestations: {} };
+    for (const seat of ['A', 'B']) {
+      const core = coreOf(seat);
+      out.blocks[seat] = await rawBlocks(core, 0, prefixes[seat].length);
+      const at = seat === this.seat ? ownIndex : remoteIndex;
+      out.attestations[seat] = { index: at, block: (await rawBlocks(core, at, at + 1))[0] };
+    }
+    return out;
   }
 
   _persist(progress) {

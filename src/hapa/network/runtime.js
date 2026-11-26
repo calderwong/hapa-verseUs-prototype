@@ -64,6 +64,11 @@ export class PeerRuntime {
     this.state = 'closed';
     this.incoming = new Map(); // challengeId → { body, sig, from, receivedAt }
     this.match = null;
+    this.finishing = new Map(); // matchId → completed authority still owned until its evidence is durable
+    this.lastCompleted = null; // lightweight snapshot of the latest completed match (result view)
+    this.archives = (o.archives ?? []).filter((a) => /^hv1:[0-9a-f]{64}$/.test(a?.player ?? '') && /^[0-9a-f]{64}$/.test(a?.transport ?? ''));
+    this._profileCache = new Map(); // playerId → { at, sync }
+    this._syncInFlight = new Map();
   }
 
   emit(e) { try { this.onEvent(e); } catch (err) { this.log(`event handler: ${err.message}`); } }
@@ -75,6 +80,7 @@ export class PeerRuntime {
     this.createdIdentity = created;
     this.settings = readJson(this.store.path('settings.json'), { availability: 'available', joined: false });
     this.reservation = readJson(this.store.path('reservation.json'), null);
+    this.tombstones = readJson(this.store.path('tombstones.json'), { attempts: {} });
     this.launch = await this._recordLaunch();
     this.compat = compatibility();
     this.results = new ResultIndex(this.store.path('results'));
@@ -123,7 +129,7 @@ export class PeerRuntime {
   _presence() { const r = this.reservation; return { availability: r?.phase === 'open' ? 'available' : this.availability(), controller: this.controllerKind, label: this.identity.label, role: this.role, table: r?.phase === 'open' ? r.challengeId : null }; }
   _saveSettings() { writeJsonAtomic(this.store.path('settings.json'), this.settings); }
   _reserve(r) { this.reservation = r; if (r) writeJsonAtomic(this.store.path('reservation.json'), r); else writeJsonAtomic(this.store.path('reservation.json'), null); this.lobby?.announce(); this.emit({ type: 'lobby', kind: 'reservation', reservation: this._publicReservation() }); }
-  _publicReservation() { const r = this.reservation; return r ? { phase: r.phase, role: r.role, challengeId: r.challengeId, matchId: r.matchId ?? null, opponent: r.opponentLabel ?? null, invite: r.phase === 'open' ? r.invite : undefined } : null; }
+  _publicReservation() { const r = this.reservation; return r ? { phase: r.phase, role: r.role, challengeId: r.challengeId, matchId: r.matchId ?? null, opponent: r.opponentLabel ?? null, invite: r.phase === 'open' ? r.invite : undefined, stalled: !!r.stalled } : null; }
 
   // --- lobby ----------------------------------------------------------------------------------
   async joinLobby(args = {}) {
@@ -138,6 +144,8 @@ export class PeerRuntime {
       });
       await this.lobby.start();
       if (this.match) this.lobby.join('match', this.match.matchId);
+      // configured directory/archive services are dialled directly by their transport key (R16-03)
+      for (const a of this.archives) this.lobby.dial(a.transport);
     }
     if (!this.settings.joined) { this.settings.joined = true; this._saveSettings(); }
     this._sweepTimer ??= setInterval(() => this._sweepOffers(), 2_000);
@@ -158,10 +166,19 @@ export class PeerRuntime {
     return {
       joined: !!this.lobby, transport: this.lobby?.transport() ?? { state: 'off' }, me: { ...publicPlayer(this.identity), fingerprint: fingerprintOf(this.identity.publicKey), availability: this.availability(), manual: this.settings.availability, controller: this.controllerKind },
       roster: (this.lobby?.roster() ?? []).map((r) => ({ ...r, record: r.role === 'archive' ? null : recordLine(this.results.stats(r.playerId)) })), record: recordLine(this.results.stats(this.identity.participantId)), incoming: [...this.incoming.values()].map((x) => ({ challengeId: x.body.challengeId, from: x.body.from, label: x.fromLabel, fingerprint: fingerprintOf(keyOfPlayer(x.body.from)), controller: x.body.controller, expiresInMs: Math.max(0, OFFER_MS - (now() - x.receivedAt)) })),
-      reservation: this._publicReservation(), compat: { id: this.compat.id.slice(7, 19), profileId: this.compat.profileId, rules: this.compat.rulesImplementation.slice(7, 19) },
+      services: this._services(), reservation: this._publicReservation(), compat: { id: this.compat.id.slice(7, 19), profileId: this.compat.profileId, rules: this.compat.rulesImplementation.slice(7, 19) },
       match: this.match ? { matchId: this.match.matchId, status: this.match.status, seat: this.match.seat, opponent: this.match.opponent.label } : null,
     };
   }
+
+  /** Configured and opportunistic archives with what is actually observed about each. */
+  _services() {
+    const out = this.archives.map((a) => ({ label: a.label, player: a.player, configured: true, connected: !!this.lobby?.peers.get(a.player) }));
+    for (const p of this.lobby?.peers.values() ?? []) if (p.presence.role === 'archive' && !this.archives.some((a) => a.player === p.playerId)) out.push({ label: p.player.label, player: p.playerId, configured: false, connected: true });
+    return out;
+  }
+
+  _connectedArchives() { return [...(this.lobby?.peers.values() ?? [])].filter((p) => p.presence.role === 'archive'); }
 
   _onPeer(peer, ev) {
     if (ev === 'joined' && this.reservation) this._resendStart(peer);
@@ -188,7 +205,13 @@ export class PeerRuntime {
     const r = this.reservation;
     if (r && r.phase === 'open' && t - (r.localAt ?? 0) > TABLE_MS) { this._reserve(null); this.emit({ type: 'lobby', kind: 'tableExpired', challengeId: r.challengeId }); }
     if (r && r.phase === 'offered' && t - (r.localAt ?? 0) > OFFER_MS) { this._reserve(null); this.emit({ type: 'lobby', kind: 'challengeExpired', challengeId: r.challengeId, outgoing: true }); }
-    if (r && r.phase === 'accepted' && r.localAt && t - r.localAt > START_MS && !r.warned) { r.warned = true; this.emit({ type: 'lobby', kind: 'startSlow', challengeId: r.challengeId }); }
+    // an accepted or starting attempt that makes no progress past the setup deadline is shown as
+    // stalled with Retry and Leave; it is never freed automatically (the other side may already
+    // hold a signed session) and never becomes a loss
+    if (r && (r.phase === 'accepted' || r.phase === 'starting') && !r.stalled && Date.now() - (r.at ?? Date.now()) > START_MS) {
+      this._reserve({ ...r, stalled: true });
+      this.emit({ type: 'lobby', kind: 'setupStalled', challengeId: r.challengeId, phase: r.phase, opponent: r.opponentLabel });
+    }
   }
 
   // --- challenges -----------------------------------------------------------------------------
@@ -205,6 +228,39 @@ export class PeerRuntime {
     this.lobby.send(peer.playerId, { t: 'challenge', body, sig });
     return this.lobbyView();
   }
+
+  // --- setup recovery (review 16, R16-04) -----------------------------------------------------
+  _tombstoned(challengeId, matchId) { const a = this.tombstones.attempts; return !!(a[challengeId] || (matchId && Object.values(a).some((t) => t.matchId === matchId))); }
+
+  /** Resend this attempt's last setup message and redial the opponent; the deadline restarts. */
+  setupRetry(args) {
+    const r = this.reservation;
+    if (!r || r.challengeId !== args.challengeId || (r.phase !== 'accepted' && r.phase !== 'starting')) throw Object.assign(new Error('no such setup attempt'), { code: 'NO_ATTEMPT' });
+    if (r.opponentTransport) this.lobby?.dial(r.opponentTransport);
+    this._reserve({ ...r, stalled: false, at: Date.now() });
+    const peer = this.lobby?.peers.get(r.opponent);
+    if (peer) this._resendStart(peer);
+    return this.lobbyView();
+  }
+
+  /**
+   * Leave an interrupted setup attempt: the attempt-specific tombstone is durable before the
+   * reservation is released, so a late ACCEPT/START/STARTED for it can never revive it.
+   */
+  setupLeave(args) {
+    const r = this.reservation;
+    if (!r || r.challengeId !== args.challengeId || !['accepted', 'starting', 'offered'].includes(r.phase)) throw Object.assign(new Error('no such setup attempt'), { code: 'NO_ATTEMPT' });
+    this.tombstones.attempts[r.challengeId] = { matchId: r.matchId ?? `hv-${r.challengeId}`, phase: r.phase, opponent: r.opponent, at: new Date().toISOString() };
+    writeJsonAtomic(this.store.path('tombstones.json'), this.tombstones);
+    if (r.matchId && existsSync(this.store.path('matches', r.matchId))) writeJsonAtomic(this.store.path('matches', r.matchId, 'progress.json'), { status: 'abandoned_setup', at: new Date().toISOString() });
+    this.lobby?.send(r.opponent, { t: 'decline', challengeId: r.challengeId, reason: 'left' });
+    this._reserve(null);
+    this.emit({ type: 'lobby', kind: 'setupLeft', challengeId: r.challengeId });
+    return this.lobbyView();
+  }
+
+  /** Serialize every decision about the one reservation across its awaits (feed creation, signing). */
+  _serial(fn) { const job = (this._setupChain ?? Promise.resolve()).then(fn, fn); this._setupChain = job.catch(() => {}); return job; }
 
   /** Host an open table: consent to the first compatible player who joins (no second approval). */
   openTable() {
@@ -265,7 +321,7 @@ export class PeerRuntime {
     const feed = await this._createFeed(matchId);
     const body = { kind: 'accept', network: this.networkId, challengeId: x.body.challengeId, challengeHash: fingerprint(x.body), matchId, from: this.identity.participantId, to: x.body.from, feed, controller: this.controllerKind };
     const sig = signBody('control', body, this.identity);
-    this._reserve({ phase: 'accepted', role: 'joiner', challengeId: x.body.challengeId, challenge: x.body, matchId, feed, accept: body, acceptSig: sig, opponent: x.body.from, opponentLabel: x.fromLabel, localAt: now() });
+    this._reserve({ phase: 'accepted', role: 'joiner', challengeId: x.body.challengeId, challenge: x.body, matchId, feed, accept: body, acceptSig: sig, opponent: x.body.from, opponentLabel: x.fromLabel, opponentTransport: this.lobby?.peers.get(x.body.from)?.transportKey ?? null, localAt: now(), at: Date.now() });
     this.lobby?.send(x.body.from, { t: 'accept', body, sig });
     return this.lobbyView();
   }
@@ -298,6 +354,7 @@ export class PeerRuntime {
       case 'cancel': if (this.incoming.delete(msg.challengeId)) this.emit({ type: 'lobby', kind: 'challengeCancelled', challengeId: msg.challengeId }); return;
       case 'decline': {
         const r = this.reservation;
+        if ((r?.phase === 'accepted' || r?.phase === 'starting') && r.challengeId === msg.challengeId && r.opponent === peer.playerId) { this._reserve({ ...r, stalled: true, otherLeft: String(msg.reason ?? 'left').slice(0, 24) }); this.emit({ type: 'lobby', kind: 'setupStalled', challengeId: r.challengeId, phase: r.phase, opponent: r.opponentLabel, reason: 'the other player left this attempt' }); return; }
         if (r?.phase === 'offered' && r.challengeId === msg.challengeId && r.opponent === peer.playerId) { this._reserve(null); this.emit({ type: 'lobby', kind: 'challengeDeclined', challengeId: msg.challengeId, reason: String(msg.reason ?? 'declined').slice(0, 24), by: peer.player.label }); }
         return;
       }
@@ -311,11 +368,13 @@ export class PeerRuntime {
       case 'result': return this._onResult(peer, msg);
       case 'resultAck': return this._onResultAck(peer, msg);
       case 'results.query': return this._onResultsQuery(peer, msg);
+      case 'players.query': { const page = this.results.players({ offset: Number.isSafeInteger(msg.offset) ? msg.offset : 0, limit: 50 }); this.lobby.send(peer.playerId, { t: 'players.page', req: msg.req, total: page.total, items: page.items }); return; }
+      case 'players.page': { const q = this._requests.get(msg.req); if (q) { this._requests.delete(msg.req); q(msg); } return; }
       case 'result.get': return this._onResultGet(peer, msg);
       case 'results.page': case 'resultBundle': { const r = this._requests.get(msg.req); if (r) { this._requests.delete(msg.req); r(msg); } return; }
-      case 'accept': return this._onAccept(peer, msg);
-      case 'start': return this._onStart(peer, msg);
-      case 'started': return this._onStarted(peer, msg);
+      case 'accept': if (this._tombstoned(msg.body?.challengeId, msg.body?.matchId)) { this.lobby.send(peer.playerId, { t: 'decline', challengeId: msg.body?.challengeId, reason: 'left' }); return; } return this._serial(() => this._onAccept(peer, msg));
+      case 'start': if (this._tombstoned(null, msg.descriptor?.matchId)) return; return this._serial(() => this._onStart(peer, msg));
+      case 'started': if (this._tombstoned(null, msg.matchId)) return; return this._serial(() => this._onStarted(peer, msg));
       default: return;
     }
   }
@@ -346,7 +405,7 @@ export class PeerRuntime {
     };
     const sigA = signBody('session', descriptor, this.identity);
     writeJsonAtomic(this.store.path('matches', matchId, 'session.json'), { descriptor, manifest, sigs: { A: sigA }, seat: 'A', phase: 'starting' });
-    this._reserve({ ...r, phase: 'starting', matchId, localAt: now() });
+    this._reserve({ ...r, phase: 'starting', matchId, opponentTransport: peer.transportKey, localAt: now(), at: Date.now() });
     this.lobby.send(peer.playerId, { t: 'start', descriptor, manifest, sig: sigA });
   }
 
@@ -406,54 +465,88 @@ export class PeerRuntime {
   }
 
   // --- matches --------------------------------------------------------------------------------
-  async _openMatch(session) {
-    if (this.match && this.match.matchId === session.descriptor.matchId) return this.match;
+  async _openMatch(session, { finishing = false } = {}) {
+    const id = session.descriptor.matchId;
+    if (this.match?.matchId === id) return this.match;
+    if (this.finishing.has(id)) return this.finishing.get(id);
     for (const s of ['A', 'B']) if (!verifyBody('session', session.descriptor, session.sigs?.[s], session.descriptor.players[s].publicKey)) throw new Error(`session signature of seat ${s} is missing or invalid`);
     const controller = this.controllerKind === 'bot' ? new HeuristicBot({ seat: session.seat, seed: session.manifest.randomStream.seed * 2 + (session.seat === 'A' ? 1 : 2) }) : null;
-    const m = new OnlineMatch({ dir: this.store.path('matches', session.descriptor.matchId), identity: this.identity, session, controller, log: this.log, emit: (e) => this.emit(e), onComplete: (mm) => this._onComplete(mm) });
-    this.match = m;
+    const m = new OnlineMatch({ dir: this.store.path('matches', id), identity: this.identity, session, controller, log: this.log, emit: (e) => this.emit(e), onComplete: (mm) => this._onComplete(mm) });
+    // lifecycle ownership (R17-06): a predecessor that is still finishing is kept, never orphaned
+    if (finishing) this.finishing.set(id, m);
+    else {
+      if (this.match && this.match.status !== 'active' && this.match.status !== 'disputed') this.finishing.set(this.match.matchId, this.match);
+      this.match = m;
+    }
     await m.open();
     this.lobby?.join('match', m.matchId);
     const opp = this.lobby?.peers.get(m.opponent.participantId);
     if (opp) m.attach(opp.ctx.conn);
     this.lobby?.announce();
-    this.emit({ type: 'match', matchId: m.matchId, kind: 'opened', seat: m.seat, opponent: m.opponent.label });
+    if (!finishing) this.emit({ type: 'match', matchId: m.matchId, kind: 'opened', seat: m.seat, opponent: m.opponent.label });
     return m;
   }
 
-  /** Reopen an active match after a restart: signed session + journal replay. */
+  /**
+   * Startup reconciliation (R16-02): reopen the one active match, reopen terminal matches whose
+   * attestation or result finalization did not finish (both durable crash cuts), and repair a
+   * recorded result missing its sharing job. Journals are kept; nothing is replayed as new input.
+   */
   async _resumeMatches() {
     const dir = this.store.path('matches');
     if (!existsSync(dir)) return;
+    let active = false, finishing = 0;
     for (const id of readdirSync(dir)) {
       const s = readJson(join(dir, id, 'session.json'));
       const p = readJson(join(dir, id, 'progress.json'));
-      if (s?.phase === 'active' && s.sigs?.A && s.sigs?.B && p?.status !== 'complete' && p?.status !== 'abandoned') {
-        try { await this._openMatch(s); this.log(`resumed match ${id} as seat ${s.seat}`); } catch (e) { this.log(`could not resume ${id}: ${e.message}`); }
-        break; // one active match per identity
-      }
+      if (!s?.sigs?.A || !s?.sigs?.B || s.phase !== 'active' || this._tombstoned(null, id)) continue;
+      if (s.descriptor.online !== ONLINE_PROTOCOL) continue; // a legacy online version keeps its record; it is not resumed
+      if (p?.status === 'recorded') { if (p.key && !this.outbox[p.key]) { this.outbox[p.key] = { matchId: id, archivedBy: [] }; this._saveOutbox(); } continue; }
+      if (['abandoned', 'abandoned_setup'].includes(p?.status)) continue;
+      const terminal = p?.status === 'terminal' || p?.status === 'attested';
+      if (!terminal && active) continue;
+      if (terminal && finishing >= 4) continue;
+      try {
+        await this._openMatch(s, { finishing: terminal });
+        if (terminal) finishing++; else active = true;
+        this.log(`${terminal ? 'finishing' : 'resumed'} match ${id} as seat ${s.seat}`);
+      } catch (e) { this.log(`could not reopen ${id}: ${e.message}`); }
     }
   }
 
   _onComplete(m) {
-    this._reserve(null);
+    if (this.reservation?.matchId === m.matchId || this.match === m) this._reserve(null);
     this.lobby?.leaveTopic('match', m.matchId);
+    if (this.match === m) { this.finishing.set(m.matchId, m); }
     this.lobby?.announce();
-    this._saveResult(m).catch((e) => { this.log(`result not saved: ${e.message}`); this.emit({ type: 'match', matchId: m.matchId, kind: 'resultSaved', status: 'failed', reason: e.message }); });
+    this._finalize(m).catch((e) => { this.log(`result not saved: ${e.message}`); this.emit({ type: 'match', matchId: m.matchId, kind: 'resultSaved', status: 'failed', reason: e.message }); });
   }
 
-  // --- results: save locally first, then share with archives (idempotent outbox) ---------------
-  async _saveResult(m) {
+  /**
+   * Idempotent finalization: verified result, then its sharing job, then `recorded`. Each step is
+   * safe to repeat after a crash at any point; only then is the authority closed (once).
+   */
+  async _finalize(m) {
     const session = readJson(join(m.dir, 'session.json'));
-    const records = await m.records();
-    const bundle = buildBundle({ session, records, calculation: { terminalTick: m.state.tick, outcome: m.state.outcome, finalStateHash: m.finalHash } });
+    const bundle = buildBundle({ session, evidence: await m.evidence() });
     const r = this.results.submit(bundle, { source: 'participant' });
     if (r.status !== 'added' && r.status !== 'duplicate' && r.status !== 'disputed') throw new Error(`own evidence did not verify: ${r.reason}`);
-    this.outbox[r.key] = this.outbox[r.key] ?? { matchId: m.matchId, archivedBy: [] };
-    this._saveOutbox();
+    if (!this.outbox[r.key]) { this.outbox[r.key] = { matchId: m.matchId, archivedBy: [] }; this._saveOutbox(); }
+    writeJsonAtomic(join(m.dir, 'progress.json'), { status: 'recorded', outcome: m.state.outcome, finalHash: m.finalHash, key: r.key, commitment: r.commitment, at: new Date().toISOString() });
     this.emit({ type: 'match', matchId: m.matchId, kind: 'resultSaved', status: 'saved', key: r.key, commitment: r.commitment, record: this.results.stats(this.identity.participantId) });
     for (const p of this.lobby?.peers.values() ?? []) if (p.presence.role === 'archive') this._flushOutbox(p);
+    await this._retire(m);
     return r;
+  }
+
+  /** Close a finished authority once its evidence is durable (readers, waiters, native cores). */
+  async _retire(m) {
+    // the opponent may still need our final blocks: keep replicating briefly, then close
+    await new Promise((res) => setTimeout(res, this.o.retireDelayMs ?? 3000));
+    this.lastCompleted = m.snapshot();
+    this.finishing.delete(m.matchId);
+    if (this.match === m) this.match = null;
+    await m.close();
   }
 
   _saveOutbox() { writeJsonAtomic(this.store.path('outbox.json'), this.outbox); }
@@ -521,11 +614,49 @@ export class PeerRuntime {
     return out;
   }
 
+  /**
+   * A player's verified record (R16-03): local verified evidence plus a coalesced, cached pull from
+   * connected archives. A live match has priority, so syncing is deferred during play unless asked.
+   * The sync state says what the numbers mean: unavailable, deferred, synced (with sources) or a
+   * checked zero.
+   */
   async profile(args) {
-    if (typeof args.playerId !== 'string') throw new Error('playerId required');
-    const sync = args.sync === false ? null : await this.syncResults({ playerId: args.playerId }).catch((e) => ({ error: e.message }));
-    return { stats: this.results.stats(args.playerId), recent: this.results.list({ playerId: args.playerId, limit: 10 }), sync };
+    const pid = args.playerId;
+    if (typeof pid !== 'string' || !keyOfPlayer(pid)) throw new Error('playerId required');
+    const archives = this._connectedArchives();
+    const cached = this._profileCache.get(pid);
+    let sync;
+    if (!archives.length) sync = { state: 'archive-unavailable' };
+    else if (this.match?.status === 'active' && !args.force) sync = cached?.sync ? { ...cached.sync, stale: true } : { state: 'deferred', reason: 'a match is in progress' };
+    else if (cached && Date.now() - cached.at < 60_000 && !args.force) sync = cached.sync;
+    else {
+      let job = this._syncInFlight.get(pid);
+      if (!job) { job = this.syncResults({ playerId: pid }).finally(() => this._syncInFlight.delete(pid)); this._syncInFlight.set(pid, job); }
+      const r = await job.catch((e) => ({ error: e.message }));
+      sync = r.error ? { state: 'archive-unavailable', error: r.error } : { state: 'synced', at: new Date().toISOString(), sources: archives.map((a) => a.player.label), fetched: r.fetched, added: r.added, refused: r.refused };
+      this._profileCache.set(pid, { at: Date.now(), sync });
+      if (this._profileCache.size > 200) this._profileCache.delete(this._profileCache.keys().next().value);
+    }
+    const stats = this.results.stats(pid);
+    const recent = this.results.list({ playerId: pid, limit: 10 });
+    return { playerId: pid, fingerprint: fingerprintOf(keyOfPlayer(pid)), label: recent.items.flatMap((x) => [x.players.A, x.players.B]).find((p) => p.participantId === pid)?.label ?? null, stats, recent, sync, checkedZero: sync.state === 'synced' && recent.total === 0 };
   }
+
+  /** Players with verified records known here and at connected archives (they may be offline). */
+  async directory() {
+    const local = this.results.players({ limit: 200 }).items.map((x) => ({ ...x, source: 'this computer' }));
+    const byId = new Map(local.map((x) => [x.playerId, x]));
+    const archives = this._connectedArchives();
+    if (!(this.match?.status === 'active')) {
+      for (const a of archives) {
+        const page = await this._ask(a, { t: 'players.query', offset: 0 }).catch(() => null);
+        for (const it of page?.items ?? []) if (typeof it.playerId === 'string' && keyOfPlayer(it.playerId)) { const prev = byId.get(it.playerId); byId.set(it.playerId, { playerId: it.playerId, label: sanitizeName(it.label) || prev?.label || 'Player', results: Math.max(prev?.results ?? 0, it.results | 0), source: prev ? 'this computer and archive' : `archive (${a.player.label})` }); }
+      }
+    }
+    const online = new Map((this.lobby?.roster() ?? []).map((r) => [r.playerId, r.availability]));
+    return { archives: archives.length, deferred: this.match?.status === 'active', items: [...byId.values()].map((x) => ({ ...x, fingerprint: fingerprintOf(keyOfPlayer(x.playerId)), connected: online.has(x.playerId), availability: online.get(x.playerId) ?? 'offline' })).sort((a, b) => b.results - a.results).slice(0, 200) };
+  }
+
 
   _matchFor(args) {
     if (!this.match || (args.matchId && args.matchId !== this.match.matchId)) throw Object.assign(new Error('no such active match'), { code: 'NO_MATCH' });
@@ -535,7 +666,8 @@ export class PeerRuntime {
   async abandon(args) {
     const m = this._matchFor(args);
     if (m.status !== 'active' && m.status !== 'disputed') throw new Error('the match is not active');
-    writeJsonAtomic(join(m.dir, 'progress.json'), { status: 'abandoned', at: new Date().toISOString(), lastAgreedTick: m.history.at(-1)?.tick ?? 0 });
+    // explicit departure (never a concession): the record, the evidence so far and the reason stay
+    writeJsonAtomic(join(m.dir, 'progress.json'), { status: 'abandoned', previous: m.status, reason: m.disputed ?? null, at: new Date().toISOString(), lastAgreedTick: m.history.at(-1)?.tick ?? 0 });
     await m.close();
     this.match = null;
     this._reserve(null);
@@ -557,6 +689,7 @@ export class PeerRuntime {
       createdIdentity: !!this.createdIdentity, launch: this.launch ?? null, joined: !!this.settings?.joined,
       transport: this.lobby?.transport() ?? { state: 'off' }, availability: this.state === 'open' ? this.availability() : null,
       match: this.match ? { matchId: this.match.matchId, status: this.match.status, seat: this.match.seat } : null,
+      finishing: [...this.finishing.keys()],
       compat: this.compat ? { id: this.compat.id, profileId: this.compat.profileId, rulesImplementation: this.compat.rulesImplementation } : null,
       versions: { node: process.versions.node, electron: process.versions.electron ?? null, modules: process.versions.modules },
     };
@@ -586,14 +719,16 @@ export class PeerRuntime {
       case 'lobby.leave': return this.leaveLobby();
       case 'lobby.list': return this.lobbyView();
       case 'setAvailability': return this.setAvailability(args);
-      case 'challenge': return this.challenge(args);
+      case 'challenge': return this._serial(() => this.challenge(args));
       case 'challenge.cancel': return this.cancelChallenge(args);
-      case 'challenge.respond': return this.respond(args);
-      case 'table.open': return this.openTable();
+      case 'challenge.respond': return this._serial(() => this.respond(args));
+      case 'setup.retry': return this._serial(() => this.setupRetry(args));
+      case 'setup.leave': return this._serial(() => this.setupLeave(args));
+      case 'table.open': return this._serial(() => this.openTable());
       case 'table.close': return this.closeTable();
       case 'table.join': return this.joinTable({ playerId: args.playerId, challengeId: args.challengeId });
       case 'invite.join': return this.joinTable({ invite: args.code });
-      case 'match.get': return this.match ? this.match.snapshot() : null;
+      case 'match.get': return this.match ? this.match.snapshot() : (args.includeCompleted ? this.lastCompleted : null);
       case 'match.draft': return this._matchFor(args).draft(args);
       case 'match.ready': return this._matchFor(args).ready(args);
       case 'match.choice': return this._matchFor(args).choice(args);
@@ -610,6 +745,7 @@ export class PeerRuntime {
       case 'results.list': return this.results.list(args);
       case 'results.sync': return this.syncResults(args);
       case 'profile.get': return this.profile(args);
+      case 'directory.list': return this.directory();
       default: throw new Error(`unknown operation ${op}`);
     }
   }
@@ -618,7 +754,10 @@ export class PeerRuntime {
     if (this.state === 'closed') return;
     this.state = 'closing';
     clearInterval(this._sweepTimer);
-    await this.match?.close();
+    // drain every owned authority (active and finishing); journals stay on disk
+    const owned = new Set([this.match, ...this.finishing.values()].filter(Boolean));
+    for (const m of owned) await m.close().catch(() => {});
+    this.finishing.clear();
     await this.lobby?.stop();
     this.store?.release();
     this.state = 'closed';

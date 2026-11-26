@@ -26,6 +26,7 @@
   "dependencies": {
     "b4a": "^1.9.0",
     "compact-encoding": "3.7.1",
+    "flat-tree": "1.13.0",
     "fs-native-extensions": "1.5.4",
     "hypercore": "^11.40.4",
     "hypercore-crypto": "^3.7.0",
