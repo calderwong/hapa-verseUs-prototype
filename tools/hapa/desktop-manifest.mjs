@@ -43,6 +43,7 @@ const manifest = {
   fonts: fileList.filter((f) => /\.(woff2?|ttf)$/.test(f)).map((f) => f.split('/').pop().replace(/-[A-Za-z0-9_]{8}\.(woff2?)$/, '.$1')).filter((v, i, a) => a.indexOf(v) === i),
   unpackedNatives: unpacked,
   networkConfig: network?.networks ?? null,
+  notices: (() => { try { const b = asar.extractFile(archive, 'desktop/THIRD_PARTY_NOTICES.txt'); return { path: 'Contents/Resources/app.asar/desktop/THIRD_PARTY_NOTICES.txt', bytes: b.length, sha256: createHash('sha256').update(b).digest('hex'), entries: (b.toString().match(/^Licence:/gm) ?? []).length }; } catch { return null; } })(),
   excluded: { checked: forbidden.map(String), violations },
   signing: { adhoc: /flags=0x[0-9a-f]*\(adhoc/.test(sig) || /Signature=adhoc/.test(sig), teamIdentifier: (sig.match(/TeamIdentifier=(.*)/) ?? [])[1] ?? null, identifier: (sig.match(/Identifier=(.*)/) ?? [])[1] ?? null, deepVerify: run('codesign', ['--verify', '--deep', '--strict', app]) === '' ? 'valid' : 'invalid', gatekeeper: run('spctl', ['--assess', '--type', 'execute', app]).replace(/^.*: /, '') || 'accepted' },
   starterContent: {
@@ -52,4 +53,4 @@ const manifest = {
 };
 const out = arg('out');
 if (out) writeFileSync(resolve(out), JSON.stringify(manifest, null, 1) + '\n');
-console.log(JSON.stringify({ files: manifest.asar.files, asar: manifest.asar.sha256.slice(0, 16), natives: unpacked.length, violations: violations.length, signing: manifest.signing, build: build?.source?.slice(0, 8) }));
+console.log(JSON.stringify({ notices: manifest.notices ? `${manifest.notices.entries} entries` : 'MISSING', files: manifest.asar.files, asar: manifest.asar.sha256.slice(0, 16), natives: unpacked.length, violations: violations.length, signing: manifest.signing, build: build?.source?.slice(0, 8) }));

@@ -21,8 +21,6 @@ const ROOT = __dirname;
 // Top-level paths the packaged app may contain (everything else is ignored).
 const ALLOW = [
   /^\/package\.json$/,
-  /^\/LICENSES\.md$/,
-  /^\/NOTICE\.md$/,
   /^\/dist(\/|$)/,
   /^\/desktop(\/|$)/,
   /^\/src(\/hapa(\/(network|host|protocol|rules|controllers)(\/.*)?)?)?$/,
@@ -105,6 +103,8 @@ module.exports = {
     // the existing production build, plus a small identity record the About box and diagnostics read
     generateAssets: async () => {
       execFileSync(process.execPath, [join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js'), 'build'], { cwd: ROOT, stdio: 'inherit' });
+      // self-contained notices for exactly the bundled engine/dependencies/fonts (R16-08)
+      execFileSync(process.execPath, [join(ROOT, 'tools', 'hapa', 'notices.mjs')], { cwd: ROOT, stdio: 'inherit' });
       const info = {
         source: git('rev-parse', 'HEAD'),
         // dirty: tracked changes, or untracked files where they could enter the build (docs/evidence cannot)

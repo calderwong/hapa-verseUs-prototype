@@ -441,6 +441,15 @@ export class VersusApp {
     if (this.cam) this.cam.homeExtras = null;
     if (!this._tableUnload) { this._tableUnload = true; window.addEventListener('pagehide', () => { this.table?.dispose(); this.table = null; }); }
     const bot = ['A', 'B'].filter((s) => this.seats[s] === 'bot');
+    if (this.onlineMatch) {
+      // online: the local music surface without an Avatar; the opponent is the actual remote person
+      const humanSeat = this.onlineMatch.seat, remoteSeat = other(humanSeat);
+      const songIds = this._tableChoice?.songIds ?? [];
+      this.table = new Table({ world: this.el.world, scene: { root: this.view.root, board: { w: this.view.w, h: this.view.h, S: MEMBER_S } }, sessionId: this.session.manifest.matchId, epoch: gen, avatarSeat: remoteSeat, humanSeat, avatarId: null, opponentLabel: this.onlineMatch.opponentLabel, songIds,
+        controller: { kind: 'remote', revision: 'remote', label: 'a remote player' }, partyLabel: (id) => spokenParty(this.state, id), onLayout: () => this._syncFreeSpace(), onPanel: (which) => this._onePanel(which) });
+      this.table.start().catch((err) => console.warn('[versus] music unavailable', err));
+      return;
+    }
     if (!table?.avatarId || bot.length !== 1 || this.session.fixture) return;
     const seat = bot[0];
     const rev = this.session.manifest.controllers?.[seat]?.revision ?? 'heuristic-bot/0.2.0';

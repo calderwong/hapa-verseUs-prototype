@@ -13,3 +13,4 @@ public/renditions/
 *.key
 desktop/build-info.json
 out/
+desktop/THIRD_PARTY_NOTICES.txt

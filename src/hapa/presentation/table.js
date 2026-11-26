@@ -44,8 +44,10 @@ export class Table {
       this._music = { w: this.musicEl.offsetWidth, h: this.musicEl.offsetHeight };
     }) : null;
     this._ro?.observe(this.el); this._ro?.observe(this.musicEl);
-    this.opponent = new AvatarOpponent({ host: this.el, seat: o.avatarSeat, avatarId: o.avatarId, sessionId: o.sessionId, epoch: o.epoch, controller: o.controller });
-    this.seated = o.scene ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: 'Red' }) : null;
+    // a remote human (review 16, R16-07) gets a neutral nameplate: the local music stays, but no Avatar
+    // speaks, reacts or plays for a stranger
+    this.opponent = o.avatarId ? new AvatarOpponent({ host: this.el, seat: o.avatarSeat, avatarId: o.avatarId, sessionId: o.sessionId, epoch: o.epoch, controller: o.controller }) : new RemoteOpponent({ host: this.el, label: o.opponentLabel ?? 'Opponent' });
+    this.seated = o.scene && o.avatarId ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: 'Red' }) : null;
     this.opponent.addEventListener('rendering', (e) => this.seated?.setSource(e.detail.canvas));
     this.music = new Soundtrack({ sessionId: o.sessionId, epoch: o.epoch, listener: { library: 'cj', seat: o.humanSeat, label: 'You' }, controller: true });
     this.deck = new MusicDeck(this.music, this.musicEl, { onLayout: () => o.onLayout?.(), onOpen: () => o.onPanel?.('music') });
@@ -63,20 +65,20 @@ export class Table {
 
   async start() {
     const epoch = this.epoch;
-    const [, queue] = await Promise.all([
-      this.opponent.attach(),
-      this.music.prepare([
-        { library: 'red', participant: { seat: this.o.avatarSeat, avatarId: this.o.avatarId, label: 'Red' }, max: 3 },
-        ...(this.o.songIds?.length ? [{ library: 'cj', songIds: this.o.songIds, participant: { seat: this.o.humanSeat, label: 'You' } }] : []),
-      ]),
-    ]);
+    // online, only the local listener's own library contributes (no Avatar library, no remote audio)
+    const sources = this.o.avatarId
+      ? [{ library: 'red', participant: { seat: this.o.avatarSeat, avatarId: this.o.avatarId, label: 'Red' }, max: 3 }, ...(this.o.songIds?.length ? [{ library: 'cj', songIds: this.o.songIds, participant: { seat: this.o.humanSeat, label: 'You' } }] : [])]
+      : [{ library: 'cj', participant: { seat: this.o.humanSeat, label: 'You' }, ...(this.o.songIds?.length ? { songIds: this.o.songIds } : { max: 4 }) }];
+    const [, queue] = await Promise.all([this.opponent.attach(), this.music.prepare(sources)]);
     if (epoch !== this.epoch) return;
+    if (!this.o.avatarId) return;
     const redTracks = queue?.entries.filter((e) => e.fromLibrary === 'red').length ?? 0;
     this.opponent.say(greeting({ name: 'Red', contributedTracks: redTracks }));
   }
 
   /** Events the playback just revealed to the viewer. */
   shown(fresh) {
+    if (!this.o.avatarId) return;
     const lines = reactionsTo(fresh, { seat: this.o.avatarSeat, partyLabel: this.o.partyLabel, firstContactSeen: this.firstContactSeen });
     if (fresh.some((e) => e.type === 'contact')) this.firstContactSeen = true;
     if (lines[0]) this.opponent.say(lines[0]);
@@ -85,7 +87,7 @@ export class Table {
   /** The opponent's accepted orders this Tick (displayed public plan text). */
   orders(texts) { this.opponent.lastOrders = texts; }
 
-  result(outcome) { const l = resultLine(outcome, this.o.avatarSeat); if (l) this.opponent.say(l); }
+  result(outcome) { if (!this.o.avatarId) return; const l = resultLine(outcome, this.o.avatarSeat); if (l) this.opponent.say(l); }
 
   /** Home fit points: the seated head and shoulders (empty without a seated figure). */
   homePoints() { return this.seated ? this.seated.homePoints() : []; }
@@ -211,3 +213,25 @@ export class Table {
     this.el.remove();
   }
 }
+
+/**
+ * The opponent's place at the table when the opponent is a remote person: their actual name on a
+ * neutral nameplate and the one sound gesture the local music needs. It never speaks or reacts.
+ */
+class RemoteOpponent extends EventTarget {
+  constructor({ host, label }) {
+    super();
+    this.expanded = false;
+    this.lastOrders = [];
+    this.el = h('aside', { class: 'opp-social remote', role: 'complementary', 'aria-label': 'Your opponent' },
+      h('div', { class: 'opp-name remote-plate' }, h('span', { class: 'opp-light on', 'aria-hidden': 'true' }), h('span', { class: 'opp-label' }, label), h('span', { class: 'dim small' }, ' · online')),
+      this.sound = h('button', { class: 'opp-sound', title: 'Play your table music (browsers need one click before sound)', onclick: () => this.enableSound() }, '🔈 Music on'));
+    host.append(this.el);
+  }
+  async attach() {}
+  async enableSound() { this.sound.hidden = true; }
+  toggleConversation() {}
+  say() {}
+  dispose() { this.el.remove(); }
+}
+
