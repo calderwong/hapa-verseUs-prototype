@@ -1,0 +1,214 @@
+{
+  "schema": "hapa-versus-research-sources/v1",
+  "dateLocal": "2026-11-25",
+  "timezone": "America/Los_Angeles",
+  "baseline": {
+    "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+    "tree": "a7fa956251b36f8f3e552ad2b49e68607db47439",
+    "engineGitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72"
+  },
+  "method": "Pinned game-source review plus official Electron/Forge documentation; source application unchanged since preceding P2P plan",
+  "limits": [
+    "Documentation only; no application implementation, Electron build, native-addon proof, installer, signing/notarization or cross-network test claimed",
+    "No current Overwatch state read/updated by this reviewer",
+    "Selected macOS arm64 target is a working product default; other desktop platform support requires evidence"
+  ],
+  "gameSources": [
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "AGENTS.md",
+      "gitBlobSha": "7ca4262277cc1f89a9b6cb6391581d3b882cdffb",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/AGENTS.md"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "package.json",
+      "gitBlobSha": "7217956c327c97594241b1609233559f2f52b09f",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/package.json"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "vite.config.js",
+      "gitBlobSha": "0ec589e35b467fd57e83c4b3e644e5a993897205",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/vite.config.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": ".gitmodules",
+      "gitBlobSha": "b286dff49c41d5c362ae6ba8a2f880e355755062",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/.gitmodules"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": ".gitignore",
+      "gitBlobSha": "bac262d1c7254b88f0dd212f57941764f6d934b2",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/.gitignore"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "src/hapa/presentation/app.js",
+      "gitBlobSha": "67aaf983a39fb94675b15c2ecc3af5cf46ff082d",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/src/hapa/presentation/app.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "gitBlobSha": "2254ff12c0a00773a4ead5c29c1ce61369f9a48b",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/src/hapa/presentation/avatar-opponent.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "src/hapa/presentation/soundtrack.js",
+      "gitBlobSha": "47e24706ff5c373df830b545f9a1a37210c526f6",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/src/hapa/presentation/soundtrack.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "src/hapa/presentation/local-content.js",
+      "gitBlobSha": "30fd2c59fd32728bf960c94169832411df061853",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/src/hapa/presentation/local-content.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "src/hapa/presentation/renditions.js",
+      "gitBlobSha": "f276803031041390076138a013cc2c19bf3ec392",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/src/hapa/presentation/renditions.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "src/hapa/controllers/model-decider.js",
+      "gitBlobSha": "990b11b514f3eb8876152edf9a5d1181599e7fc7",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/src/hapa/controllers/model-decider.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "tools/hapa/check.mjs",
+      "gitBlobSha": "1c7de4acb5210c595a621d211e7ac80b515b335c",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/tools/hapa/check.mjs"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "commit": "698070be75c6b5c5b5ba8fe6e8e20851251f7baa",
+      "path": "tools/hapa/peers.mjs",
+      "gitBlobSha": "d4faa5075a7e38b240b45d26b4d467aaa5977216",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/698070be75c6b5c5b5ba8fe6e8e20851251f7baa/tools/hapa/peers.mjs"
+    }
+  ],
+  "officialSources": [
+    {
+      "id": "EL_PROCESS",
+      "url": "https://www.electronjs.org/docs/latest/tutorial/process-model",
+      "facts": "Main/renderer/utility process responsibilities; utility runs Node and supports message ports."
+    },
+    {
+      "id": "EL_UTILITY",
+      "url": "https://www.electronjs.org/docs/latest/api/utility-process",
+      "facts": "utilityProcess.fork after app readiness; Node child plus message ports; native library privilege option is explicit and disabled by default."
+    },
+    {
+      "id": "EL_SECURITY",
+      "url": "https://www.electronjs.org/docs/latest/tutorial/security/",
+      "facts": "Renderer isolation/sandbox, constrained privilege/IPC/navigation, custom protocols preferred over file scheme."
+    },
+    {
+      "id": "EL_CONTEXT",
+      "url": "https://www.electronjs.org/docs/latest/tutorial/context-isolation",
+      "facts": "Context isolation separates preload authority from page; narrow bridge required."
+    },
+    {
+      "id": "EL_ESM",
+      "url": "https://www.electronjs.org/docs/latest/tutorial/esm",
+      "facts": "Main supports Node ESM; sandboxed preload does not support ESM imports; bundle/use CJS preload rather than removing sandbox."
+    },
+    {
+      "id": "EL_NATIVE",
+      "url": "https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules",
+      "facts": "Electron/native ABI compatibility and rebuild; Forge uses electron-rebuild; validate chosen platform/architecture."
+    },
+    {
+      "id": "FORGE_UNPACK",
+      "url": "https://www.electronforge.io/config/plugins/auto-unpack-natives",
+      "facts": "Auto-unpack-natives configures native modules outside ASAR when ASAR enabled."
+    },
+    {
+      "id": "FORGE_VITE",
+      "url": "https://www.electronforge.io/config/plugins/vite",
+      "facts": "Forge Vite plugin explicitly experimental and minor versions may break; retaining current Vite build via hooks is a recommendation."
+    },
+    {
+      "id": "EL_PROTOCOL",
+      "url": "https://www.electronjs.org/docs/latest/api/protocol",
+      "facts": "Protocol belongs to Electron session; standard/secure/fetch privileges and streaming support; safe resource mapping remains app responsibility."
+    },
+    {
+      "id": "EL_APP",
+      "url": "https://www.electronjs.org/docs/latest/api/app",
+      "facts": "userData/sessionData paths; requestSingleInstanceLock scope; quit/window lifecycle differs and must be handled."
+    },
+    {
+      "id": "FORGE_MAC_SIGN",
+      "url": "https://www.electronforge.io/guides/code-signing/code-signing-macos",
+      "facts": "Direct macOS distribution signing/notarization, Forge config and protecting credentials."
+    },
+    {
+      "id": "EL_UPDATE",
+      "url": "https://www.electronjs.org/docs/latest/api/auto-updater",
+      "facts": "Built-in autoUpdater macOS/Windows only; macOS signing requirement; Linux platform strategy separate."
+    }
+  ],
+  "selectedDefaults": {
+    "shell": "Electron",
+    "packager": "Electron Forge around existing Vite build",
+    "peerHost": "main-supervised utilityProcess using shared transport-neutral runtime",
+    "preload": "sandbox-compatible CJS with narrow typed APIs",
+    "origin": "stable registered application protocol",
+    "storage": "stable app-specific OS userData; isolated development/test .data",
+    "firstDesktopTarget": "macOS arm64",
+    "updates": "manual signed replacement adequate for v1"
+  },
+  "sourceFindings": [
+    {
+      "id": "vite-proxies-not-shipped",
+      "paths": [
+        "vite.config.js"
+      ],
+      "finding": "Owner proxies live only in dev/preview; desktop host adapters required."
+    },
+    {
+      "id": "unbundled-avatar",
+      "paths": [
+        "src/hapa/presentation/avatar-opponent.js"
+      ],
+      "finding": "Harbor puppet is dynamically imported with vite-ignore; a self-contained Red visual requires a deliberately included approved snapshot."
+    },
+    {
+      "id": "origin-and-storage",
+      "paths": [
+        "src/hapa/presentation/local-content.js",
+        "src/hapa/presentation/renditions.js",
+        "src/hapa/presentation/app.js"
+      ],
+      "finding": "Root-relative URLs and localStorage require stable origin/adaptation; authoritative state moves to explicit OS data root in packaged mode."
+    },
+    {
+      "id": "private-engine",
+      "paths": [
+        ".gitmodules",
+        "src/hapa/presentation/app.js"
+      ],
+      "finding": "Required private engine must be compiled/distributed into player runtime; public source-build input remains separately required."
+    }
+  ]
+}

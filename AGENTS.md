@@ -24,7 +24,9 @@ follow the current pointer in `docs/reviews/README.md`. Addendum 03 replaces rep
 Ready acknowledgment and governs the current play loop. Addendum 04 consolidates CJ's newer
 center-travel, Pawn-absorption, two-Queen and Knight direction recorded in response 09; it
 supersedes conflicting earlier movement guidance. Preserve archived profile/protocol semantics
-as specified; do not silently reinterpret old records.
+as specified; do not silently reinterpret old records. Addenda 07–08 select P2P play and a
+bundled Electron player app through amended Assignment 16; the desktop companion governs
+packaging/storage/IPC while existing gameplay and archived records keep their meanings.
 
 The `.docx` originals stay local in `reference_documents/` (ignored: large binaries).
 
@@ -45,19 +47,26 @@ sessions, `HANDOFF.md` files and the boards.
   never import Hapa rules. Nothing goes upstream without Calder's word.
 - **Avatar Builder, Overcard, Second Brain, Overwind**: separate owners; use their contracts.
 - **Media** (card art, avatars) stays with its owner or in ignored local storage
-  (`public/renditions/`). Rules never depend on art.
-- Signing keys and peer storage live under ignored `.data/`; never commit keys.
+  (`public/renditions/`). Rules never depend on art. The selected desktop distribution may include
+  explicitly approved starter assets/runtime snapshots via an allowlisted content manifest; never
+  copy an entire private owner store or assume ignored media is distributable.
+- Development/test signing keys and peer storage live under ignored `.data/`. Packaged desktop
+  identity/match stores live under a stable app-specific OS userData directory supplied by the host;
+  never write them under the install bundle/CWD, mix them with resettable fixtures, or commit keys.
 
 ## Conventions
 
-- Plain JavaScript ES modules with JSDoc. No framework.
+- Plain JavaScript ES modules with JSDoc; no new web UI framework. Electron is the selected desktop
+  shell. Use a small CJS preload where sandboxed Electron requires it; keep the renderer isolated.
 - `src/hapa/rules` is headless: no DOM, WebGL, wall clock, `Math.random` or animation timing.
   Authoritative numbers are safe integers (1,000,000 units per member width, Supply point and HP;
   1,000 quanta per Tick); ratios are `[num, den]`.
 - Presentation (`src/hapa/presentation`) draws state and turns input into commands; it never
   changes authoritative state directly.
 - Profiles and content live in `fixtures/hapa`; values there are engineering fixtures.
-- The dev server binds 127.0.0.1 only.
+- The dev/browser server binds 127.0.0.1 only. Packaged Electron uses bundled assets and a narrow
+  typed host bridge; it must not require a running Vite server or installed system Node. Keep the
+  reusable headless peer runtime behind desktop/browser adapters, with one authority per session.
 
 ## Assembly and verification — Loose Screws
 
@@ -79,7 +88,10 @@ Final qualification still includes:
 npm run check
 ```
 
-Then play the changed connected journey at `http://127.0.0.1:5199/`. A passing check is not
+Then play the changed connected journey in the selected delivery surface. Preserve the browser
+workflow at `http://127.0.0.1:5199/`; desktop changes also require the actual packaged/installed app,
+native storage/lifecycle and selected P2P journeys described in
+[Electron desktop delivery](docs/integrations/electron-desktop-v1.md). A passing check is not
 proof of gameplay, visual quality or human acceptance. Fix related failures in batches;
 rerun affected checks and broaden for concrete remaining risk or a required gate. Report
 implementation, observed verification, unresolved gates and CJ acceptance separately.

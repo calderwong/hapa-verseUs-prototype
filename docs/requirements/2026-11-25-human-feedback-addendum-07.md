@@ -4,6 +4,8 @@
 **Owner:** CJ / Hapa.  
 **Status:** Selected product scope; implementation defaults are identified below. This document does not claim the feature is implemented or tested.
 
+**Later delivery amendment:** [Addendum 08](2026-11-25-human-feedback-addendum-08.md) adds the bundled Electron app to this same milestone. Its desktop/storage/IPC guidance supersedes earlier browser-only delivery assumptions; these P2P outcomes remain required.
+
 ## Why this work is selected
 
 CJ wants another person, on another computer and internet connection, to clone Hapa Versus, install it quickly, launch it, find other players and complete a peer-to-peer match over Hypercores. Players must be able to show whether they are available or busy, create and join challenges, and see durable match outcomes and statistics on matchmaking profiles.

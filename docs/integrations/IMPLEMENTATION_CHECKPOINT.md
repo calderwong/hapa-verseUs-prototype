@@ -198,3 +198,9 @@ CJ has selected [Addendum 07](../requirements/2026-11-25-human-feedback-addendum
 This is a planning selection against game `8036a3df0e4289ef203e54838df76ef22e053e53`, not a claim of implementation or deployed infrastructure. The local-only owner/media qualifications above remain true. Base online play must work without those optional services; their localhost APIs and tokens must never be exposed to opponents. New public Avatar associations use a safe projection rather than whole owner references. Keep remote media transport as separate owner work.
 
 The required private engine dependency needs an accessible approved distribution before an unaffiliated clone can be called playable. The existing peer smoke remains loopback evidence. Assignment 16 requires actual separate-machine/separate-network play, restart and third-observer result verification; pending operator/distribution gates must be reported honestly.
+
+## Delivery amendment — Electron (25 November 2026)
+
+CJ selected an Electron wrapper with required runtime/assets included. [Addendum 08](../requirements/2026-11-25-human-feedback-addendum-08.md), [Electron desktop delivery v1](electron-desktop-v1.md) and amended [Assignment 16](../reviews/2026-11-25-next-agent-assignment-16.md) extend the same P2P milestone. This is a planning amendment against `698070b`, not an installed-app claim.
+
+The package must include the game/engine/native peer runtime and approved starter content; use stable OS userData and a sandboxed renderer with a narrow IPC bridge. Existing Vite-only owner proxies and Harbor's unbundled Red puppet module require explicit desktop adapters/content snapshots. Private owner data/models/credentials remain optional and outside the installer. Actual relay/archive operation remains an external service fact. Qualify the real installed macOS arm64 artifact through the selected network/recovery journey before claiming the desktop promise delivered.

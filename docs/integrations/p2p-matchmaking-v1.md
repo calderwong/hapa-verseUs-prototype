@@ -7,9 +7,11 @@
 **Reviewed game:** `calderwong/hapa-verseUs-prototype@8036a3df0e4289ef203e54838df76ef22e053e53`; engine `ba838cca09ba43afceda0452b63d28df4cbf7f72`.  
 **Evidence:** [Source register](p2p-matchmaking-v1-sources.json). Source findings below are inspection findings; existing tests were not rerun for this planning publication.
 
+**Desktop amendment:** CJ subsequently selected [Addendum 08](../requirements/2026-11-25-human-feedback-addendum-08.md). [Electron desktop delivery v1](electron-desktop-v1.md) now governs the default player package, included runtime/assets, stable OS data root and desktop IPC bridge. The source/browser/headless paths remain supported. The network/game/result contracts below remain in force; this amendment does not claim an implemented installer.
+
 ## 1. The product we are building
 
-A new player clones the game, runs a short installation sequence and opens one local application. They enter a display name, join the public lobby, see who is available, challenge someone or open a table, and play that person on another internet connection. Both machines retain a replay and result. A third player can inspect their match records and verified win/loss statistics without either participant typing in a score.
+A new player downloads/installs/opens the bundled Electron application, or uses the retained source-clone path to build/launch it. They enter a display name, join the public lobby, see who is available, challenge someone or open a table, and play that person on another internet connection. Both machines retain a replay and result. A third player can inspect their match records and verified win/loss statistics without either participant typing in a score.
 
 The default installation must be independently useful. It must not depend on CJ's machine, a running Hapa Harness, paid inference, a wallet, Avatar Builder, a music node or a private memory service. Those owners add optional capabilities through existing contracts.
 
@@ -27,7 +29,7 @@ The first release is **public casual play using the current bundled rules and co
 
 ### What this milestone does not add
 
-Ranked Elo/Glicko, cash stakes, anti-cheat certification, identity/personhood verification, tournaments, spectators, hidden-information rules, global consensus, a mandatory multiwriter database, automated skill matching, internet voice/music transport, a new desktop framework or a public endpoint for local Hapa owner APIs. These are separate changes. A player may still listen to their locally available soundtrack while playing remotely.
+Ranked Elo/Glicko, cash stakes, anti-cheat certification, identity/personhood verification, tournaments, spectators, hidden-information rules, global consensus, a mandatory multiwriter database, automated skill matching, internet voice/music transport, a new web UI framework or a public endpoint for local Hapa owner APIs. Electron itself is selected by the later desktop amendment. These are separate changes. A player may still listen to their locally available soundtrack while playing remotely.
 
 ## 2. What already exists, and the gaps that matter
 
@@ -52,7 +54,7 @@ Current `Peer.open()` recreates initial game state and its constructor resets se
 
 ## 3. Architecture and responsibilities
 
-Keep the browser as the game surface and give it a persistent local Node peer runtime. The Node process owns signing keys, authoritative online sessions, network transport, logs and result verification. Both players run this same stack. There is no server that chooses legal moves or decides the winner.
+Keep the existing browser-based renderer as the game surface inside the selected Electron shell. Main supervises the same persistent Node peer runtime in a utility process; the desktop uses a narrow preload/IPC adapter, while browser development retains the authenticated loopback adapter. The Node process owns signing keys, authoritative online sessions, network transport, logs and result verification. Both players run this same stack. There is no server that chooses legal moves or decides the winner.
 
 ```mermaid
 flowchart TD
@@ -99,7 +101,7 @@ The game has no root license file in the inspected tree; the engine repository r
 
 ### Target command contract — to implement
 
-The final README should make this possible after Git and the supported Node runtime are installed:
+The primary player README must start with download/install/open, with no separately installed Git/Node/npm. The retained contributor README should also make this possible after Git and the supported Node runtime are installed:
 
 ```bash
 git clone https://github.com/calderwong/hapa-verseUs-prototype.git
@@ -110,7 +112,7 @@ npm run play
 
 These are target commands, not a claim that `play` exists today. Engine provisioning must be built into the supported distribution/launcher path or reduce to one clearly documented additional command; it cannot secretly require CJ's GitHub access. Use locked, checksum-verified artifacts, not a moving remote script.
 
-`play` supervises the local peer service and browser server, prints/opens the local URL, reports useful failures, and shuts its children down coherently. It must not require two terminals, a manually copied core key, port forwarding or a separate Hapa installation. Provide `--no-open`, a data-directory override and a local-only mode for development. Preserve the current local human-A/bot-B quick-play workflow.
+`play` launches/supervises the selected Electron desktop development path and shared peer service; `dev` retains browser development. The installed app uses its included runtime and built assets, reports useful failures and shuts its children down coherently. Browser mode may print/open its owned local URL. It must not require two terminals, a manually copied core key, port forwarding or a separate Hapa installation. Provide `--no-open`, a data-directory override and a local-only mode for development. Preserve the current local human-A/bot-B quick-play workflow.
 
 Declare and pin one supported Node release. The current Vite lock requires `^20.19.0 || >=22.12.0`; Node 22.12+ or a tested newer maintained release fits that observed minimum, but the lock's native storage dependencies still require actual installation proof. Qualify macOS Apple Silicon first and one clean Linux x64 environment; add other platforms only when verified. Report package/prebuild failures clearly rather than claiming universal support. Upstream storage includes native RocksDB; see [Hypercore storage](https://github.com/holepunchto/hypercore-storage).
 
@@ -118,7 +120,7 @@ Declare and pin one supported Node release. The current Vite lock requires `^20.
 
 1. Check required runtime/assets and data-root permissions; acquire a single-writer process lock.
 2. Create/reopen the local player identity and stores. Never reset a real identity to repair an install error.
-3. Start HTTP/WebSocket on `127.0.0.1` only, plus the peer network separately.
+3. In Electron, register the bundled application origin and typed IPC bridge, then start the supervised peer network. In browser mode only, start authenticated HTTP/WebSocket on `127.0.0.1`.
 4. Open the lobby. First use asks for a display name, with a usable generated default, and a single Join lobby action explaining that name, availability and public match evidence are shared. Subsequent launches may honor the saved online preference.
 5. Default to Available in the lobby after joining; preserve a deliberate Busy preference. When network initialization fails, keep local play accessible and show the specific online failure.
 6. Missing Harbor, Music, Harness, Overwind or other owner services disable their optional features only.
@@ -143,7 +145,7 @@ A signature from a game key proves control of that key. It does not prove a uniq
 
 Use a public-safe Avatar association projection: approved `sourceSystem`, `entityType`, `entityId`, `revision` and display label fields only, plus a separately validated public ownership proof if one exists. Do not serialize an entire owner entity reference. Strip local resolver URLs, paths, capabilities, credentials and private owner state before signing a profile, session or public result. A remote Avatar association must not call services at the receiver's localhost.
 
-Local online data belongs beneath an ignored root such as `.data/online/<networkId>/`: identity material, own public cores, active/completed match stores, retained public evidence, indexes and short operational diagnostics. This path is distinct from `.data/peers`. Apply restricted file permissions where supported; do not send private keys to the browser or other peers. Include a simple documented backup/restore path and a warning that copying the same writable identity to two live processes is unsupported. An exclusive store lock prevents local double writers.
+Packaged online data belongs beneath a stable OS application user-data root supplied by Electron main; development/test data may use an ignored root such as `.data/online/<networkId>/`. These stores contain identity material, own public cores, active/completed match stores, retained public evidence, indexes and short operational diagnostics. This path is distinct from `.data/peers`. Apply restricted file permissions where supported; do not send private keys to the browser or other peers. Include a simple documented backup/restore path and a warning that copying the same writable identity to two live processes is unsupported. An exclusive store lock prevents local double writers.
 
 A data reset is an explicit user operation. Key loss means a new unlinked game identity unless a separately defined recovery/rotation proof exists. An exported public profile is not an identity backup.
 
@@ -365,7 +367,7 @@ A checked-in public configuration can contain network ID, protocol range, direct
 
 The new trust boundary is strangers supplying data, not a reason to add a bureaucracy of review screens. Enforce controls in the runtime.
 
-- Keep UI/API listeners on loopback with Host/Origin validation and a per-launch authenticated local session (including WebSocket upgrades). Establish it through the first-party origin, for example a same-origin capability bootstrap and HttpOnly session, without placing reusable credentials in printed URLs, query strings, invitation codes or logs. No wildcard CORS; no peer-accessible debugging or owner proxy endpoints.
+- In desktop mode use the companion's sandboxed renderer, narrow IPC and validated sender frame/origin. In browser mode keep UI/API listeners on loopback with Host/Origin validation and a per-launch authenticated local session (including WebSocket upgrades). Establish it through the first-party origin, for example a same-origin capability bootstrap and HttpOnly session, without placing reusable credentials in printed URLs, query strings, invitation codes or logs. No wildcard CORS; no peer-accessible debugging or owner proxy endpoints.
 - Keep private service tokens and game signing keys in Node. Never replicate Hapa memory stores or a broad shared Corestore to lobby strangers. A Corestore namespace is not a replication ACL; allowlist cores by connection role or isolate stores.
 - Bind control-channel signatures to schema, network, sender, intended peer where applicable, fresh connection/session nonce, request ID and sequence. Domain-separate new profile/presence/challenge signatures from match records.
 - Limit schemas, depth, array sizes, names, commands, pending requests, feeds and bytes before expensive processing. Escape names as text. Use a bundled avatar/glyph fallback; do not load arbitrary remote HTML, scripts, textures or localhost URLs from profiles.
@@ -410,8 +412,8 @@ Do not spend a milestone polishing a roster while both browsers cannot play. Do 
 
 ### Final acceptance journeys
 
-1. **Stranger installation:** a clean supported machine with no CJ folders/tokens or private engine credentials obtains the documented distribution and reaches the lobby. Record runtime/OS/architecture and exact source/artifact digests. Invited-tester access is a different claim.
-2. **Remote human play:** two computers on different internet connections discover each other, toggle Busy/Available, challenge/accept, play their own seats through Ready and an owned response choice, and finish a legal match. Their receipts/replay/outcome agree. No administrative re-acknowledgment or hotseat switch appears.
+1. **Stranger installation:** a clean supported machine with no CJ folders/tokens, developer tools, running Vite server or private engine credentials installs/opens the documented Electron artifact and reaches the lobby. Verify native peer storage in that artifact; retain a separately documented source-build path. Record runtime/OS/architecture and exact source/artifact digests. Invited-tester access is a different claim.
+2. **Remote human play:** two computers running the actual packaged game on different internet connections discover each other, toggle Busy/Available, challenge/accept, play their own seats through Ready and an owned response choice, and finish a legal match. Their receipts/replay/outcome agree. No administrative re-acknowledgment or hotseat switch appears.
 3. **Recovery:** restart a real peer process after a committed Ready and during a partially answered Tick in the same bounded scenario. Reconnect under the same identity; no duplicated Card spend/mint, reopened plan or invented result. A UI refresh also reattaches correctly.
 4. **Public evidence:** publish the result, import it twice without changing totals, and restart the clients. Bring up a fresh third identity; it verifies the record and both profiles. Turn both authors off while the independent seeder remains online; the observer can still obtain the evidence.
 5. **Changed trust boundaries:** a small table-driven check covers wrong seat/session/phase, malformed/oversized data, identical duplicate, conflicting same-sequence content, fork/rollback, forged top-level replay outcome and conflicting result ID. No unauthorized state change or duplicate win occurs. Equivalent repackaging deduplicates; invalid alleged conflicts cannot erase a verified result; a new match may legitimately restart its sequence.
@@ -429,7 +431,7 @@ The defaults above let implementation proceed. These are concrete remaining deci
 
 | Grounded question | Working default and why | When it matters |
 | --- | --- | --- |
-| **A stranger can clone the public game but cannot fetch its private engine. Which exact engine runtime artifact may be distributed with the game, and under which game/asset notices?** | Prepare a minimal pinned redistributable runtime with an exact file/license manifest; preserve the private fork and history. Use an existing approved artifact if available. | Before claiming unaffiliated clone-and-run; interim invited tests may proceed with explicit access. |
+| **Which exact engine runtime/assets and notices belong in the selected Electron installer and public source-build input?** | Addendum 08 selects bundling the necessary runtime. Prepare its exact file/content/license manifest, preserve private fork/history, and raise only actual unresolved rights/access. Do not re-ask whether to add Electron. | Before claiming the artifact is distributable or an unaffiliated source build works. |
 | **Who will keep the public lobby/archive and blind relay reachable when neither player is online or a direct connection fails?** | Prefer an existing authorized always-on Hapa host, with a persistent public service identity and documented restart/retention limits. Keep service keys configurable. | Before claiming reliable default relay and authors-offline profile history; prepare the runnable service and configuration first. |
 | **Should someone who simply disconnects receive a recorded loss?** | No for casual v1. Preserve suspended/unfinished status and count only verified completed matches. The present concede command still resolves through an agreed Tick. | Only if CJ selects timed/ranked adjudication later; two peers alone cannot reliably tell failure from deliberate departure. |
 | **Should public matchmaking records include a gameplay replay so a third person can verify the scores?** | Yes for this public casual preset, with only game data and a clear lobby disclosure. No private memory, voice or music data. | A later private/unlisted mode needs distinct sharing and verification labels; it must not quietly receive the same public-verified badge. |
