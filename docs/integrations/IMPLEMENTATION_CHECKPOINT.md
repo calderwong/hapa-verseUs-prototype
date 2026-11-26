@@ -188,3 +188,13 @@ CJ's acceptance is pending for all three; it is not recorded here.
 - The Builder voice grant expires 2026-12-02 and must be renewed through Builder.
 - Harbor's current Avatar package is pinned to a snapshot of Mesh `a6fc511`. The live Mesh checkout
   holds another agent's uncommitted edit.
+
+
+
+## New selected scope — P2P matchmaking (25 November 2026)
+
+CJ has selected [Addendum 07](../requirements/2026-11-25-human-feedback-addendum-07.md) and [Assignment 16](../reviews/2026-11-25-next-agent-assignment-16.md). The standalone [P2P specification](p2p-matchmaking-v1.md) covers clone/launch, discovery/availability, challenges, remote human matches, restart recovery and verified public records, with a minimal public archive and configurable relay.
+
+This is a planning selection against game `8036a3df0e4289ef203e54838df76ef22e053e53`, not a claim of implementation or deployed infrastructure. The local-only owner/media qualifications above remain true. Base online play must work without those optional services; their localhost APIs and tokens must never be exposed to opponents. New public Avatar associations use a safe projection rather than whole owner references. Keep remote media transport as separate owner work.
+
+The required private engine dependency needs an accessible approved distribution before an unaffiliated clone can be called playable. The existing peer smoke remains loopback evidence. Assignment 16 requires actual separate-machine/separate-network play, restart and third-observer result verification; pending operator/distribution gates must be reported honestly.

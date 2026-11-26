@@ -10,6 +10,12 @@ Built from the Hapa Versus Master Requirements v3, Design Companion v1 and Refer
 (their text is in `docs/requirements/`). Work is tracked on the Overwatch board `hapa-versus`.
 **Stage:** first-pass prototype.
 
+## Current selected development goal
+
+The next milestone is [P2P play and matchmaking v1](docs/integrations/p2p-matchmaking-v1.md), implemented through [Assignment 16](docs/reviews/2026-11-25-next-agent-assignment-16.md) under [human-feedback addendum 07](docs/requirements/2026-11-25-human-feedback-addendum-07.md). This is a specification/handoff, not a claim that public online play or the proposed single launcher exists yet. The current peer demo below is loopback, and an unaffiliated clone still needs an approved accessible distribution of the private engine dependency.
+
+For current gameplay and presentation, follow the [review index](docs/reviews/README.md) and newer addenda: the current default is `hapa_open_10x9_v3_07` with one commitment to each own plan. Some original fixture descriptions below predate those changes; the online implementation must refresh the runnable onboarding instructions against its delivered candidate.
+
 ## Start a visible local match
 
 ```bash

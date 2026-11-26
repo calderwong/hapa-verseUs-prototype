@@ -1,0 +1,731 @@
+{
+  "schema": "hapa-versus-research-sources/v1",
+  "dateLocal": "2026-11-25",
+  "timezone": "America/Los_Angeles",
+  "scope": "P2P matchmaking requirements and Assignment 16; source inspection and official-document research only",
+  "baseline": {
+    "repository": "calderwong/hapa-verseUs-prototype",
+    "commit": "8036a3df0e4289ef203e54838df76ef22e053e53",
+    "tree": "6657245c1a0d58eade42fe365e3c384306689edf",
+    "engineGitlink": "ba838cca09ba43afceda0452b63d28df4cbf7f72"
+  },
+  "verificationLimits": [
+    "No new application code in this publication",
+    "No application test suite rerun for this design pass",
+    "No fresh installation, cross-network match, seeder or relay success claimed",
+    "No Overwatch state read or updated by this reviewer",
+    "Owner and upstream source facts are pinned observations; proposed contracts/timing/limits are design defaults"
+  ],
+  "repositoryMetadataObservations": [
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "private": false,
+      "visibility": "public",
+      "license": null,
+      "defaultBranch": "main"
+    },
+    {
+      "repository": "calderwong/lumina-hapa",
+      "private": true,
+      "visibility": "private",
+      "license": "MIT",
+      "defaultBranch": "hapa"
+    }
+  ],
+  "gameFindings": [
+    {
+      "id": "replay-outcome-boundary",
+      "sources": [
+        {
+          "path": "src/hapa/rules/session.js",
+          "lines": "88-101"
+        },
+        {
+          "path": "tools/hapa/history.mjs",
+          "lines": "21-24"
+        }
+      ],
+      "observation": "Verifier returns recomputed outcome/finalFingerprint but history imports untrusted top-level replay.outcome; do not reuse that trust assumption for public statistics."
+    },
+    {
+      "id": "peer-sequence-conflicts",
+      "sources": [
+        {
+          "path": "src/hapa/protocol/peer.js",
+          "lines": "77-86"
+        },
+        {
+          "path": "src/hapa/protocol/agreement.js",
+          "lines": "41-49"
+        }
+      ],
+      "observation": "Peer Set dedup drops same author+sequence conflicting content before PhaseAgreement digest conflict check."
+    },
+    {
+      "id": "peer-context-validation",
+      "sources": [
+        {
+          "path": "src/hapa/protocol/messages.js",
+          "lines": "44-51"
+        },
+        {
+          "path": "src/hapa/protocol/peer.js",
+          "lines": "147-166"
+        }
+      ],
+      "observation": "Signature binding alone plus count/type choice/receipt filters are not full match/phase/prior/schema input validation."
+    },
+    {
+      "id": "restart-not-covered",
+      "sources": [
+        {
+          "path": "src/hapa/protocol/peer.js",
+          "lines": "22-52,62-74"
+        },
+        {
+          "path": "tests/hapa/protocol.test.js",
+          "lines": "66-102"
+        },
+        {
+          "path": "tools/hapa/peers.mjs",
+          "lines": "22-24"
+        }
+      ],
+      "observation": "Peer sequence/state reset and read cursor starts zero; test reconnects live objects only; demo resets .data/peers."
+    },
+    {
+      "id": "concession-semantics",
+      "sources": [
+        {
+          "path": "src/hapa/presentation/app.js",
+          "lines": "1744-1763,1842-1852"
+        },
+        {
+          "path": "src/hapa/rules/match.js",
+          "lines": "95,247-249"
+        }
+      ],
+      "observation": "Concede is editable-plan order requiring normal Tick resolution; any-phase signed network concession needs explicit new contract."
+    },
+    {
+      "id": "clean-clone-engine",
+      "sources": [
+        {
+          "path": ".gitmodules",
+          "lines": "1-4"
+        },
+        {
+          "path": "src/hapa/presentation/app.js",
+          "lines": "10-12,323-341"
+        },
+        {
+          "path": "README.md",
+          "lines": "13-18"
+        }
+      ],
+      "observation": "Public parent requires private engine gitlink; independent clean install blocked without accessible approved runtime distribution."
+    },
+    {
+      "id": "network-contract-version",
+      "sources": [
+        {
+          "path": "src/hapa/rules/state.js",
+          "lines": "19-48"
+        },
+        {
+          "path": "fixtures/hapa/profiles.js",
+          "lines": "216-223,272"
+        },
+        {
+          "path": "src/hapa/protocol/agreement.js",
+          "lines": "1-26"
+        }
+      ],
+      "observation": "Preserve public_protocol_v1 manifest and own_plan_ready_v1 semantics; new network wrapper/version should bind exact profile/catalog/rules instead of reinterpretation."
+    }
+  ],
+  "gameSources": [
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": ".gitignore",
+      "blobSha": "bac262d1c7254b88f0dd212f57941764f6d934b2",
+      "sha256": "a62ff951a53710fdff3cd2896b862d42b4beace93a239bc183b693976a90780c",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/.gitignore"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": ".gitmodules",
+      "blobSha": "b286dff49c41d5c362ae6ba8a2f880e355755062",
+      "sha256": "3b4417b9d05d4c9515748ab5b40bb1240b019dc99e10f6a2c5925a1abee2741f",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/.gitmodules"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "README.md",
+      "blobSha": "5ff46c79de58b29a1ea1fd3894d936be08ddbc9c",
+      "sha256": "506860aedb70d8d1ac0539d17e1432af51b8d43d6b12caf75c47bc060db8f36e",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/README.md"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "docs/requirements/2026-11-23-human-feedback-addendum-04.md",
+      "blobSha": "da1f5808e91c1c089dfb37c31274cf7415914d0f",
+      "sha256": "863d7239f884f707e7b66e0d363c5a4ff616063afbf93796b6fe1f3cc2700dce",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/docs/requirements/2026-11-23-human-feedback-addendum-04.md"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "fixtures/hapa/profiles.js",
+      "blobSha": "80a566f9e7e76b185756b04cfc58d31348ddd352",
+      "sha256": "9e05207a1b7c66d57b5ee9627633f83ce2b3c27c93893290f6b372a3b0670c68",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/fixtures/hapa/profiles.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "index.html",
+      "blobSha": "fe3a37084749094d5efd0e053000d7bf736aba4c",
+      "sha256": "f941d38a327653ffce190ebd5166e632b801e0325b4a6056ec2a7ce93620b4cc",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/index.html"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "package-lock.json",
+      "blobSha": "ba2ea3c07f08e8aeb59d03ebf39bacbbd77fbcf2",
+      "sha256": "6f84aff0d901ebf7f2ed0a1f52bdbea1a6df43d5c35cddb4642e0da569371f0b",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/package-lock.json"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "package.json",
+      "blobSha": "7217956c327c97594241b1609233559f2f52b09f",
+      "sha256": "affb7667d0980754e301ab4411643cd539ff51412ea9bbdc12236efa57b5e82d",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/package.json"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/adapters/content.js",
+      "blobSha": "5d5132c773b0440eb0472a06b89d436a1a83ea07",
+      "sha256": "25d542ebdb529694296e874344c68a9177ad2cdf789cfaa57290f3310991ebc9",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/adapters/content.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/presentation/app.js",
+      "blobSha": "67aaf983a39fb94675b15c2ecc3af5cf46ff082d",
+      "sha256": "92c11255e4f0894b8263e71adc28a07186a12b3167044f22ae08dd4b7142d13f",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/presentation/app.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/presentation/dev-preset.js",
+      "blobSha": "785ca2319358af17d640f6828339e404ace1fa73",
+      "sha256": "57a5449f62f7404b3b4211b570fe8f9fcdefce0dc739a6d1b559eb64bc557334",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/presentation/dev-preset.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/presentation/local-content.js",
+      "blobSha": "30fd2c59fd32728bf960c94169832411df061853",
+      "sha256": "a30ba83629480024329b706f443f1cea438a9f5709df3cef053cd6fa6a5ee80a",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/presentation/local-content.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/presentation/renditions.js",
+      "blobSha": "f276803031041390076138a013cc2c19bf3ec392",
+      "sha256": "6d4d837a9286dca5ca5ff2bf05367dadf4e895ef10ffcd8ddb3199ad49467085",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/presentation/renditions.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/protocol/agreement.js",
+      "blobSha": "433a18642d1fdcbc95331e11260d53be806806c7",
+      "sha256": "3b3ad11ab7d8846847b8d2544f138cf8616af51b9aa989b35b70da1e3c1a6939",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/protocol/agreement.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/protocol/messages.js",
+      "blobSha": "016d693e1bd64aeba1ea419b61c8513f8fc54a14",
+      "sha256": "1ea03bded273a6d6ff8ea54b298b62d1c0c9ab18a6ef90d5ba27064a078ef795",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/protocol/messages.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/protocol/peer.js",
+      "blobSha": "12574809a85c6b6619a632a30dff93870393d517",
+      "sha256": "e0d87d1148dd8027d044a516191119777fa357ceaba87c3755afeb847b42a56a",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/protocol/peer.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/rules/context.js",
+      "blobSha": "1917c727398bb6876076c2b50a4f5a31b710fa37",
+      "sha256": "174378bebde9a109a6e37f756bc1d3016dd56f7cd00899b288e94648cff177ac",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/rules/context.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/rules/encoding.js",
+      "blobSha": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+      "sha256": "58fcb62ee318ab6b461a01f6cc108d650807595e1dc2722c2ba8023c7af0396e",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/rules/encoding.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/rules/match.js",
+      "blobSha": "25b0f7ccf494ea19462438f52c429cc65ef934d2",
+      "sha256": "54379e9b5753bd47b27d7442fd5648e3e5532e8a3cb729ed6846a9cd1df8ffce",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/rules/match.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/rules/session.js",
+      "blobSha": "184e6f3b4c44c0f1554175f81ebe0ada5cb3e7a0",
+      "sha256": "2cb108dfe24ece759d1c48273774796c7828085560529107ea58a3be9555e51d",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/rules/session.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/rules/state.js",
+      "blobSha": "a82081f88ef37642dc7215fd84fd1329f55e0978",
+      "sha256": "7773be2054ec1b6ca0409a67bdb413c85333c9fb6ea170e83a71fc02e42d1bb8",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/rules/state.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/rules/stats.js",
+      "blobSha": "cadd071551c4d6b8e7ab26e66d450cbd5de50287",
+      "sha256": "e90ee437594d2a320ce5b69afecde18fe22096506974aea58bd2b0db929c9143",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/rules/stats.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/hapa/rules/validate.js",
+      "blobSha": "c81527d9ab27496bc92c4e64daa153539d20af98",
+      "sha256": "48423a0666ce8684aa2e60a4a3012a7ca80a6e361ee44c8441dd63270ac2d1fd",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/hapa/rules/validate.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "src/versus.js",
+      "blobSha": "4a04ce47c29d1689675b77a5d6953ad5f67915a8",
+      "sha256": "eebe223a1b7713fd3c481feb17a1481c51d2849de75af0b85d05cd1c80412369",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/src/versus.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "tests/hapa/protocol.test.js",
+      "blobSha": "9cbb120f4ea9921c496f6a5bf0f8a16d2bb7771e",
+      "sha256": "fd3b00661b9431fb0c37016ba86df427b8c8796be7758c0910cddbd1c3f4786f",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/tests/hapa/protocol.test.js"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "tools/hapa/check.mjs",
+      "blobSha": "1c7de4acb5210c595a621d211e7ac80b515b335c",
+      "sha256": "5158fa650ec13fe21846a032c66d5802b5ecc41c35d5f649ca07700b3ccd98b9",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/tools/hapa/check.mjs"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "tools/hapa/history.mjs",
+      "blobSha": "943f2f926dd80ba94730c965bb17a26abc92baea",
+      "sha256": "9a9f612473d39454f6019ae7639c5ca77d42ff8f8f9d5df0442f3695972d7b3b",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/tools/hapa/history.mjs"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "tools/hapa/match.mjs",
+      "blobSha": "b57d7a8c3c4f6ce0be34d9aab10c7eebb6291093",
+      "sha256": "c35b91676887040b09373e9be1f8b25d3251269eff7bb3b735cc34f7739372b3",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/tools/hapa/match.mjs"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "tools/hapa/peer.mjs",
+      "blobSha": "12eddd65457b4fad76c8f987c55cc69dd1aa7900",
+      "sha256": "cb22fb0e16ef21a1662b495e3e8afc31e0b19bf5f0b707f838ede17a01aa1d3b",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/tools/hapa/peer.mjs"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "tools/hapa/peers.mjs",
+      "blobSha": "d4faa5075a7e38b240b45d26b4d467aaa5977216",
+      "sha256": "cde9aa32005bfbab0cf46db397fe9ab8d25be4b21c96b0332b6602970ad8444e",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/tools/hapa/peers.mjs"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "versus.html",
+      "blobSha": "f3b2e423acac300b856091b1bd7a62e31ce0937f",
+      "sha256": "67021bdcfb7f2639499547c2fc330c286b1b827371b81cd1ab67b1e81bb5641d",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/versus.html"
+    },
+    {
+      "repository": "calderwong/hapa-verseUs-prototype",
+      "ref": "8036a3df0e4289ef203e54838df76ef22e053e53",
+      "path": "vite.config.js",
+      "blobSha": "0ec589e35b467fd57e83c4b3e644e5a993897205",
+      "sha256": "5bab5a8ee9f38b3068b2c284168529f4436419f34f357a4101920d95f3aac880",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/8036a3df0e4289ef203e54838df76ef22e053e53/vite.config.js"
+    },
+    {
+      "repository": "calderwong/lumina-hapa",
+      "ref": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+      "path": "README.md",
+      "sha256": "24e675ff77047d377dc5446524727999772fa91af0c9fb2a4e1bd0d079ca6d74",
+      "url": "https://github.com/calderwong/lumina-hapa/blob/ba838cca09ba43afceda0452b63d28df4cbf7f72/README.md"
+    },
+    {
+      "repository": "calderwong/lumina-hapa",
+      "ref": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+      "path": "package.json",
+      "sha256": "24a2587611d9d8d6def9a1cafaede6192336a8a2e052562bca6753b4ff041edb",
+      "url": "https://github.com/calderwong/lumina-hapa/blob/ba838cca09ba43afceda0452b63d28df4cbf7f72/package.json"
+    },
+    {
+      "repository": "calderwong/lumina-hapa",
+      "ref": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+      "path": "src/engine/pixel/CharacterSprites.js",
+      "sha256": "583c5bbad0a32ea0c114b73d4e633196c3f1ad27d93464ac107d0f41714cc998",
+      "url": "https://github.com/calderwong/lumina-hapa/blob/ba838cca09ba43afceda0452b63d28df4cbf7f72/src/engine/pixel/CharacterSprites.js"
+    }
+  ],
+  "hapaOwnerSources": [
+    {
+      "repository": "calderwong/hapa-keys-node",
+      "commit": "6ea4195d320230ffa69289831597f6d0d4402608",
+      "path": "README.md",
+      "url": "https://github.com/calderwong/hapa-keys-node/blob/6ea4195d320230ffa69289831597f6d0d4402608/README.md",
+      "upstream_blob_sha": "1b73eb563f875fb3345785053734a6764873ca1e",
+      "local_git_blob_sha": "1b73eb563f875fb3345785053734a6764873ca1e",
+      "verified_byte_equivalent": true,
+      "local_bytes": 11813,
+      "sha256": "25c9153b045179ccb1282d4580281e4e78e7d24f1be85cd485b23865b7272992"
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "README.md",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/README.md",
+      "upstream_blob_sha": "ce926505ead8601ee54f8aa6ef4465656db2f99d",
+      "local_git_blob_sha": "ce926505ead8601ee54f8aa6ef4465656db2f99d",
+      "verified_byte_equivalent": true,
+      "local_bytes": 21191,
+      "sha256": "45ac11125f6f20eacb9afb87424e3c6cf24f330b81141565a8cfd21465ebf1fe"
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "docs/UNIVERSAL_HAPA_CARD_IDENTITY_ENVELOPE.md",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/docs/UNIVERSAL_HAPA_CARD_IDENTITY_ENVELOPE.md",
+      "upstream_blob_sha": "82daa70dd232d61a09f3f395b4565ef88b060051",
+      "local_git_blob_sha": "82daa70dd232d61a09f3f395b4565ef88b060051",
+      "verified_byte_equivalent": true,
+      "local_bytes": 1688,
+      "sha256": "5e1c87e8ce6b36ae840fd78bbf91e0afc93089af183a9f13a5d2d6bab904806c"
+    },
+    {
+      "repository": "calderwong/hapa-overwind-node",
+      "commit": "086d4fe148680de990b07d1008949ebae0f26b94",
+      "path": "docs/UNIVERSAL_HAPA_CARD_EVENT_LINEAGE_CONTRACT.md",
+      "url": "https://github.com/calderwong/hapa-overwind-node/blob/086d4fe148680de990b07d1008949ebae0f26b94/docs/UNIVERSAL_HAPA_CARD_EVENT_LINEAGE_CONTRACT.md",
+      "upstream_blob_sha": "25d5ca9d3357d57732812d924acd7681fe128774",
+      "local_git_blob_sha": "25d5ca9d3357d57732812d924acd7681fe128774",
+      "verified_byte_equivalent": true,
+      "local_bytes": 3814,
+      "sha256": "7d085ec8813de6a8154f06c5df48e7a9ba401fdc512023f39ebf6af6b72818a5"
+    },
+    {
+      "repository": "calderwong/hapa-telemetry-node",
+      "commit": "fbe3c90ef4dd14df0169f1712f2d2dc4a95df14d",
+      "path": "README.md",
+      "url": "https://github.com/calderwong/hapa-telemetry-node/blob/fbe3c90ef4dd14df0169f1712f2d2dc4a95df14d/README.md",
+      "upstream_blob_sha": "5daad0934d8238c2b25ed6c4b07d20d2d304771d",
+      "local_git_blob_sha": "5daad0934d8238c2b25ed6c4b07d20d2d304771d",
+      "verified_byte_equivalent": true,
+      "local_bytes": 15330,
+      "sha256": "fd0b42e7fcff180eca7251789a55a02b91a6ac57e48ac60e208e316b2f70da61"
+    },
+    {
+      "repository": "calderwong/hapa-overcard",
+      "commit": "38061f03551e183af6a74b2659963f6a161f53bc",
+      "path": "docs/PROTOCOL_REFERENCE.md",
+      "url": "https://github.com/calderwong/hapa-overcard/blob/38061f03551e183af6a74b2659963f6a161f53bc/docs/PROTOCOL_REFERENCE.md",
+      "upstream_blob_sha": "0c9983ff0f490b66cef9c0e0fe7dd90748dc90c1",
+      "local_git_blob_sha": "0c9983ff0f490b66cef9c0e0fe7dd90748dc90c1",
+      "verified_byte_equivalent": true,
+      "local_bytes": 4546,
+      "sha256": "96bd02f6bdfdad15c7fad29b21a9c8e372b285a3af2c96279025e11ad04d4bc6"
+    },
+    {
+      "repository": "calderwong/hapa",
+      "commit": "f54bad269e20b6e64c43f4380ce26501e6d33684",
+      "path": "README.md",
+      "url": "https://github.com/calderwong/hapa/blob/f54bad269e20b6e64c43f4380ce26501e6d33684/README.md",
+      "upstream_blob_sha": "2e8a9dfdcbb2e417c86333bb902c3566b76ef1c4",
+      "local_git_blob_sha": "2e8a9dfdcbb2e417c86333bb902c3566b76ef1c4",
+      "verified_byte_equivalent": true,
+      "local_bytes": 30498,
+      "sha256": "9a42d62ae500054f0e6a6efc0b7bb09c3d85a496692914634daf1565c6609d40"
+    },
+    {
+      "repository": "calderwong/hapa-song-registry",
+      "commit": "dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c",
+      "path": "docs/PEER_MUSIC.md",
+      "url": "https://github.com/calderwong/hapa-song-registry/blob/dadb049bdb79cc6c17e258f36e6a96c55d2a3b3c/docs/PEER_MUSIC.md",
+      "upstream_blob_sha": "048c02f87277e8d430e214881b3ad61a4a09c281",
+      "local_git_blob_sha": "048c02f87277e8d430e214881b3ad61a4a09c281",
+      "verified_byte_equivalent": true,
+      "local_bytes": 4925,
+      "sha256": "efb5c40ad4b4841756b108d071c03e4ebdca83f6022abbbe5310acefd4409a49"
+    },
+    {
+      "repository": "calderwong/hapa-roomlet",
+      "commit": "81bba498d8e1212b000064e64a96cef59786f26a",
+      "path": "README.md",
+      "url": "https://github.com/calderwong/hapa-roomlet/blob/81bba498d8e1212b000064e64a96cef59786f26a/README.md",
+      "upstream_blob_sha": "9125d9eed3914b9ef2b4b878c66a87333af8f8c8",
+      "local_git_blob_sha": "9125d9eed3914b9ef2b4b878c66a87333af8f8c8",
+      "verified_byte_equivalent": true,
+      "local_bytes": 16491,
+      "sha256": "5d20e93ade93d6e255f56136244512eb28de023530e958d47141bd598b281996"
+    },
+    {
+      "repository": "calderwong/hapa-roomlet",
+      "commit": "81bba498d8e1212b000064e64a96cef59786f26a",
+      "path": "docs/ARCHITECTURE.md",
+      "url": "https://github.com/calderwong/hapa-roomlet/blob/81bba498d8e1212b000064e64a96cef59786f26a/docs/ARCHITECTURE.md",
+      "upstream_blob_sha": "1e23f4a50c7b7d97c048bab96d991007c7c03d75",
+      "local_git_blob_sha": "1e23f4a50c7b7d97c048bab96d991007c7c03d75",
+      "verified_byte_equivalent": true,
+      "local_bytes": 5250,
+      "sha256": "b853117916ddf58df3c01ac88a52fb36978481b57a0f7e3c92b9256affadb59f"
+    },
+    {
+      "repository": "calderwong/hapa-roomlet",
+      "commit": "81bba498d8e1212b000064e64a96cef59786f26a",
+      "path": "docs/NETWORK_MATRIX.md",
+      "url": "https://github.com/calderwong/hapa-roomlet/blob/81bba498d8e1212b000064e64a96cef59786f26a/docs/NETWORK_MATRIX.md",
+      "upstream_blob_sha": "2cac0b9ccd648bad9eea304111c0a6c781977c90",
+      "local_git_blob_sha": "2cac0b9ccd648bad9eea304111c0a6c781977c90",
+      "verified_byte_equivalent": true,
+      "local_bytes": 5096,
+      "sha256": "4013eab0c26938287654692d2c18a437ce5e2b2f01ae698566f75f4ff4e47f3a"
+    },
+    {
+      "repository": "calderwong/hapa-roomlet",
+      "commit": "81bba498d8e1212b000064e64a96cef59786f26a",
+      "path": "docs/INVITE_CAPSULE_SCHEMA.md",
+      "url": "https://github.com/calderwong/hapa-roomlet/blob/81bba498d8e1212b000064e64a96cef59786f26a/docs/INVITE_CAPSULE_SCHEMA.md",
+      "upstream_blob_sha": "425f9b538a409b0f199292ca7bc13785bda21515",
+      "local_git_blob_sha": "425f9b538a409b0f199292ca7bc13785bda21515",
+      "verified_byte_equivalent": true,
+      "local_bytes": 5106,
+      "sha256": "1643bcb3e495fc1d14ad4b9f4243dba8ade59654560c5498a3dcb86f27432bf6"
+    },
+    {
+      "repository": "calderwong/hapa-roomlet",
+      "commit": "81bba498d8e1212b000064e64a96cef59786f26a",
+      "path": "docs/AUTOBASE_DECISION.md",
+      "url": "https://github.com/calderwong/hapa-roomlet/blob/81bba498d8e1212b000064e64a96cef59786f26a/docs/AUTOBASE_DECISION.md",
+      "upstream_blob_sha": "7afdc8e5efd96c706559ec88c4c1ba6a4110560d",
+      "local_git_blob_sha": "7afdc8e5efd96c706559ec88c4c1ba6a4110560d",
+      "verified_byte_equivalent": true,
+      "local_bytes": 1546,
+      "sha256": "146fdbc14931ccab1c2b073d3b574bfb617dba1770f09481e25b477cbfc36f58"
+    },
+    {
+      "repository": "calderwong/hapa-roomlet",
+      "commit": "81bba498d8e1212b000064e64a96cef59786f26a",
+      "path": "sidecar/src/room-runtime-core.js",
+      "url": "https://github.com/calderwong/hapa-roomlet/blob/81bba498d8e1212b000064e64a96cef59786f26a/sidecar/src/room-runtime-core.js",
+      "upstream_blob_sha": "87578d870b38b1773122f609ff32c1e04711447d",
+      "local_git_blob_sha": "87578d870b38b1773122f609ff32c1e04711447d",
+      "verified_byte_equivalent": true,
+      "local_bytes": 39208,
+      "sha256": "61076af8b62fbab8056030ea89897693487df99c9cd66c1198f280967ae6e87d"
+    },
+    {
+      "repository": "calderwong/hapa-crypto-node",
+      "commit": "0746707c266e913bfc6dcf8a832d65fc394aa972",
+      "path": "README.md",
+      "url": "https://github.com/calderwong/hapa-crypto-node/blob/0746707c266e913bfc6dcf8a832d65fc394aa972/README.md",
+      "upstream_blob_sha": "56c5693d3d92aab222aae095107731bb201ed326",
+      "local_git_blob_sha": "56c5693d3d92aab222aae095107731bb201ed326",
+      "verified_byte_equivalent": true,
+      "local_bytes": 10717,
+      "sha256": "b8be1e53d2f09f4040287b9e07831e1862b16fd49bd9542a1db506e66f282ffe"
+    }
+  ],
+  "officialReferences": [
+    {
+      "id": "HS1",
+      "url": "https://docs.pears.com/p2p/reference/building-blocks/hyperswarm/",
+      "facts": "32-byte topic discovery, one swarm/multiple topics, encrypted sockets, relayThrough fallback, bounded peer options; presence directory semantics are application responsibilities."
+    },
+    {
+      "id": "DHT1",
+      "url": "https://docs.pears.com/p2p/reference/building-blocks/hyperdht/",
+      "facts": "Public-key-addressed encrypted connections, bootstrap and server/connection options. Root retrieval documented against 6.37.0; use the tested lockfile rather than assuming latest-source compatibility."
+    },
+    {
+      "id": "DHT2",
+      "url": "https://github.com/holepunchto/hyperdht/blob/7b56e0442814583fd77602462e0eae3c546e17c6/README.md",
+      "facts": "Defaults public commons bootstrap; isolated networks require persistent node; UDP hole-punching works on most networks."
+    },
+    {
+      "id": "HC1",
+      "url": "https://docs.pears.com/p2p/reference/building-blocks/hypercore/",
+      "facts": "Append-only log, sparse verified reads, optional block encryption, fork/truncate APIs, signed payload contains key/treeHash/length/fork."
+    },
+    {
+      "id": "CS1",
+      "url": "https://docs.pears.com/p2p/reference/helpers/corestore/",
+      "facts": "Named core derivation, shared replication, namespaces; namespaces are not peer ACL."
+    },
+    {
+      "id": "CS2",
+      "url": "https://docs.pears.com/p2p/how-to/store-and-replicate/work-with-many-hypercores-using-corestore/",
+      "facts": "Corestore does not exchange read keys; loaded cores co-replicate; get(timeout) waits for blocks while discovery/update alone is insufficient."
+    },
+    {
+      "id": "PM1",
+      "url": "https://docs.pears.com/p2p/reference/helpers/protomux/",
+      "facts": "Versioned message-oriented channels over a framed encrypted stream, supports compact-encoding; suitable control channel."
+    },
+    {
+      "id": "RPC1",
+      "url": "https://github.com/holepunchto/rpc/blob/12e4494365759a3afe3c44b94621233903317743/README.md",
+      "facts": "@hyperswarm/rpc over DHT+Protomux; reusable existing DHT; remote key available; request/reply optional not required for match durable feeds."
+    },
+    {
+      "id": "RELAY1",
+      "url": "https://docs.pears.com/p2p/how-to/connect-to-peers/relay-connections-through-a-blind-relay/",
+      "facts": "Third reachable relay host, direct-first fallback, persistent relay key/service, packet forwarding not data retention."
+    },
+    {
+      "id": "RELAY2",
+      "url": "https://github.com/holepunchto/blind-relay",
+      "facts": "UDX over Protomux relay; pairing tokens, active/cumulative counters."
+    },
+    {
+      "id": "RELAY3",
+      "url": "https://github.com/holepunchto/blind-relay-service/blob/7c8d9ec37b6f6ca269cd7717d9de5f75e71d186b/bin.mjs",
+      "facts": "Node CLI storage and port options, Corestore-derived stable relay key, operational metrics; GitHub connector direct source."
+    },
+    {
+      "id": "OLDRELAY",
+      "url": "https://github.com/holepunchto/hyperswarm-dht-relay/blob/main/README.md",
+      "facts": "@hyperswarm/dht-relay explicitly experimental, says not production."
+    },
+    {
+      "id": "AVAIL1",
+      "url": "https://docs.pears.com/pear/explanation/availability-and-blind-peering/",
+      "facts": "Offline data availability needs at least one live seeder."
+    },
+    {
+      "id": "BLIND1",
+      "url": "https://docs.pears.com/p2p/how-to/blind-peering/keep-data-available-with-blind-peering/",
+      "facts": "blind-peering client uses existing swarm/store; blind-peer server/CLI retains cores; independent of UI."
+    },
+    {
+      "id": "HB1",
+      "url": "https://docs.pears.com/p2p/reference/building-blocks/hyperbee/",
+      "facts": "Sorted append-only B-tree backed by one core; batch/range/snapshot materialized indexes."
+    },
+    {
+      "id": "AB1",
+      "url": "https://docs.pears.com/p2p/reference/building-blocks/autobase/",
+      "facts": "Multiwriter causal ordering; may reorder previously seen records; pure deterministic apply."
+    },
+    {
+      "id": "NATIVE1",
+      "url": "https://github.com/holepunchto/rocksdb-native",
+      "facts": "Native RocksDB binding; Linux requires libatomic; package includes prebuilds but target install must be verified."
+    },
+    {
+      "id": "IP1",
+      "url": "https://docs.pears.com/p2p/explanation/peer-to-peer-demystified/",
+      "facts": "Peer IP exposure on direct connections; encryption distinct from anonymity; NAT traversal is not universal."
+    }
+  ],
+  "upstreamPackagesObserved": [
+    {
+      "repository": "holepunchto/hypercore",
+      "commit": "0729b3328cfa00212a6b95efa8dff9a193b71229",
+      "package": "hypercore",
+      "observedVersion": "11.40.5",
+      "sourceUrl": "https://github.com/holepunchto/hypercore/blob/0729b3328cfa00212a6b95efa8dff9a193b71229/package.json"
+    },
+    {
+      "repository": "holepunchto/hyperswarm",
+      "commit": "1e508a7e4a632a0fe9ab6e391cfc8a791c9b5014",
+      "package": "hyperswarm",
+      "observedVersion": "4.17.2",
+      "sourceUrl": "https://github.com/holepunchto/hyperswarm/blob/1e508a7e4a632a0fe9ab6e391cfc8a791c9b5014/package.json"
+    },
+    {
+      "repository": "holepunchto/hyperdht",
+      "commit": "7b56e0442814583fd77602462e0eae3c546e17c6",
+      "package": "hyperdht",
+      "observedVersion": "6.37.0",
+      "sourceUrl": "https://github.com/holepunchto/hyperdht/blob/7b56e0442814583fd77602462e0eae3c546e17c6/package.json"
+    },
+    {
+      "repository": "holepunchto/corestore",
+      "commit": "0939467fe027dcf91268f70d24769b5e1a3d714b",
+      "package": "corestore",
+      "observedVersion": "7.16.1",
+      "sourceUrl": "https://github.com/holepunchto/corestore/blob/0939467fe027dcf91268f70d24769b5e1a3d714b/package.json"
+    },
+    {
+      "repository": "holepunchto/hypercore-storage",
+      "commit": "dc65f66e9821271420f554816c4b02a4dceb6e05",
+      "package": "hypercore-storage",
+      "observedVersion": "3.4.0",
+      "sourceUrl": "https://github.com/holepunchto/hypercore-storage/blob/dc65f66e9821271420f554816c4b02a4dceb6e05/package.json"
+    },
+    {
+      "repository": "holepunchto/rpc",
+      "commit": "12e4494365759a3afe3c44b94621233903317743",
+      "package": "@hyperswarm/rpc",
+      "observedVersion": "3.5.1",
+      "sourceUrl": "https://github.com/holepunchto/rpc/blob/12e4494365759a3afe3c44b94621233903317743/package.json"
+    }
+  ],
+  "versionPolicy": "Observed upstream package versions are not upgrade instructions. Preserve tested game lockfile unless a demonstrated compatibility requirement changes it.",
+  "designReview": "Existing-game, ecosystem-boundary and stack/protocol reviews reconciled match-scoped sequence keys, public-safe Avatar projections, authenticated conflict admission, non-circular verifiable terminal prefixes and local bridge credential delivery."
+}

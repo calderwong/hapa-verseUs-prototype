@@ -1,9 +1,12 @@
-# Avatar and music integrations
+# Integrations and online play
 
-The selected music/coastal milestone has completed its current correction pass and is ready for CJ's playtest. Current user direction, game requirements, review evidence, Overwatch task state and CJ's acceptance remain authoritative.
+CJ's next selected feature is standalone P2P play and matchmaking. [Assignment 16](../reviews/2026-11-25-next-agent-assignment-16.md) implements the [network specification](p2p-matchmaking-v1.md) and [Addendum 07](../requirements/2026-11-25-human-feedback-addendum-07.md). The earlier music/coastal correction milestone remains closed in Review 15's scope and available for CJ's playtest. Current user direction, game requirements, review evidence, Overwatch task state and CJ's acceptance remain authoritative.
 
 | Record | Status | Purpose |
 | --- | --- | --- |
+| [P2P play and matchmaking v1](p2p-matchmaking-v1.md) | Current selected network design; not an implemented-runtime claim | Architecture, fresh installation, identity/presence/challenges, remote match/recovery, public verification/statistics and operational gates |
+| [Assignment 16](../reviews/2026-11-25-next-agent-assignment-16.md) | Current bounded implementation handoff | Assemble the connected online player journey, tighten, qualify with real network evidence and stop |
+| [Addendum 07](../requirements/2026-11-25-human-feedback-addendum-07.md) / [source register](p2p-matchmaking-v1-sources.json) | CJ scope and inspected evidence | Baseline `8036a3d`, official upstream references and existing Hapa contracts; distinguish recommendations from observations |
 | [Review 15](../reviews/2026-11-25-ui-design-review-15.md) | Current review; source `73c62bd` | Both selected layout/lifecycle findings close; move the candidate to CJ playtesting |
 | [Review 14](../reviews/2026-11-25-ui-design-review-14.md) / [Assignment 15](../reviews/2026-11-25-next-agent-assignment-15.md) | Answered by Response 15 and closed in Review 15 scope | Resize/roster composition and dormant effect-texture disposal; retained as history |
 | [Review 13](../reviews/2026-11-25-ui-design-review-13.md) / [Assignment 14](../reviews/2026-11-25-next-agent-assignment-14.md) | Historical handoff, answered by Response 14 | Six-item completion pass and its original diagnostic evidence |
@@ -23,4 +26,5 @@ The selected music/coastal milestone has completed its current correction pass a
 
 Follow [the review index](../reviews/README.md) and [Loose Screws](../workflows/LOOSE_SCREWS.md). The current soundtrack is local to one browser. Response 13 delivers retained-library playback UI using the inspected owner, with subsequent corrections in Responses 14–15 and scoped closure in Review 15. It does not establish remote synchronized listening, re-sharing/export or complete cross-session listening history. Preserve the existing seated opponent and source/owner boundaries while changing the authored environment around the match.
 
-The next action is an ordinary human playtest. Preserve lower-priority ideas and historical qualifications, but do not automatically start a new coding or scenery-polish cycle.
+The next coding action is Assignment 16 because CJ has now selected online play. Preserve the delivered music/scene candidate. Remote music synchronization, song transfer and voice streaming are separate owner integrations, not silently included in the game transport milestone. The current source has a loopback peer demonstration, not the new remote-player product.
+
