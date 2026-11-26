@@ -107,7 +107,8 @@ module.exports = {
       execFileSync(process.execPath, [join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js'), 'build'], { cwd: ROOT, stdio: 'inherit' });
       const info = {
         source: git('rev-parse', 'HEAD'),
-        dirty: (git('status', '--porcelain') ?? '').length > 0,
+        // dirty: tracked changes, or untracked files where they could enter the build (docs/evidence cannot)
+        dirty: (git('status', '--porcelain', '--untracked-files=all') ?? '').split('\n').filter(Boolean).some((l) => !l.startsWith('??') || /^\?\? (src|desktop|fixtures|public|vendor)\/|^\?\? (package(-lock)?\.json|vite\.config\.js|versus\.html|index\.html|forge\.config\.cjs)$/.test(l)),
         engine: git('-C', 'vendor/lumina', 'rev-parse', 'HEAD'),
         builtAt: new Date().toISOString(),
         target: `${process.env.HAPA_TARGET_PLATFORM ?? process.platform}-${process.env.HAPA_TARGET_ARCH ?? process.arch}`,
