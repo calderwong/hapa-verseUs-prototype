@@ -128,3 +128,18 @@ spctl --assess --type execute -vv "out/Hapa Versus-darwin-arm64/Hapa Versus.app"
 ## 7. Engine distribution
 
 The installed app already contains the compiled engine code it needs (inside `dist/`). An unaffiliated **source** build still needs the private `vendor/lumina` submodule. [engine-runtime-manifest.json](engine-runtime-manifest.json) lists the exact 105 engine files (3.3 MB, revision `ba838cc…`, MIT licence) the game imports. The engine owner can approve publishing a revision-pinned archive of exactly those files; nothing has been published.
+
+## 8. Changes in Response 17 (26 November 2026)
+
+- **Configured archive.** Clients dial a configured archive directly. `network.json` (bundled `desktop/network.json` or the user-data override) lists it by identity and transport key; `npm run lobby:serve` prints both in its `serving` line:
+  ```json
+  { "networks": { "public-alpha": { "archives": [ { "player": "hv1:<64 hex>", "transport": "<64 hex>", "label": "Hapa Archive" } ] } } }
+  ```
+  The lobby says whether a configured archive is connected, configured but unreachable, or absent.
+- **Records in the app.** **Player records** lists players with verified matches known here or at a connected archive (they may be offline); **Profile** shows W–L–D per bucket (human vs human, human vs bot, bot vs bot), win rate with its denominator, recent verified matches and the sync source. Syncing is coalesced, cached for a minute and deferred while your own match is in progress.
+- **Interrupted start.** If a match does not start within 30 seconds of accepting, the lobby shows **Retry** and **Leave this attempt**. Leaving records the attempt as abandoned before freeing your slot; late messages from it are ignored. Nothing becomes a loss.
+- **Leaving a match.** Match menu → **Leave this match** (also offered on the paused/disputed sheet and in the lobby). The record and its evidence stay as unfinished; it is not a concession and records no loss.
+- **Evidence v2.** Finished matches end with both players' signed attestations of each feed's exact prefix (key, fork, length, Merkle root). Result bundles carry the raw prefix blocks and both attestations; a verifier recomputes the root and every Tick. Online protocol `hapa-versus-online/v2`: v1 peers are incompatible; v1 result bundles are kept but reported as `legacy` and never counted.
+- **Finishing after a crash.** A completed match is re-finished at the next launch from its journals (attestation, verified result, sharing job), exactly once.
+- **Notices.** `Contents/Resources/app.asar/desktop/THIRD_PARTY_NOTICES.txt` lists the game notice, the compiled engine (revision and MIT text), the packages compiled into the game and every production package in the app.
+- **Tester additions for the two-Mac session (§3):** after finishing, open **Player records** and each **Profile** on a third Mac with both players quit; on one Mac, accept a challenge and quit the other side before the table opens to see **Retry / Leave this attempt**; during play, open the match menu and confirm **Leave this match** is offered (do not use it in the counted game).

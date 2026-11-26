@@ -95,6 +95,12 @@ async function online(o) {
   if (!opened) return { ok: false, script: 'online', error: 'match never opened', log };
   await sleep(1500);
   await shot(o, '03-table');
+  // local music during online play (R16-07): the deck is present without an Avatar; the one sound
+  // gesture starts it when a music owner is configured
+  const musicBefore = await js(o, `(() => { const v = window.__versus; return { deck: !!document.querySelector('.table-music'), status: v.table?.music?.status ?? null, remotePlate: document.querySelector('.opp-social.remote .opp-label')?.textContent ?? null, avatar: !!document.querySelector('.opp-social:not(.remote)') }; })()`);
+  await js(o, `document.querySelector('.opp-social.remote .opp-sound')?.click()`);
+  await sleep(4000);
+  const music = { before: musicBefore, after: await js(o, `(() => { const m = window.__versus.table?.music; return m ? { status: m.status, now: m.current?.title ?? m.nowPlaying?.title ?? null, action: m.primaryAction?.() ?? null } : null; })()`) };
   const ticks = [];
   let reloaded = false, lastTick = 0, choices = 0, stalls = 0;
   for (;;) {
@@ -137,7 +143,7 @@ async function online(o) {
   const page = await js(o, `(() => { const v = window.__versus; return { replay: v.session.replay.ticks.map(t => t.fingerprint), outcome: v.state.outcome ?? null }; })()`);
   const agreed = (snap?.history ?? []).map((t) => t.fingerprint);
   const viewMatchesAgreed = agreed.length > 0 && page.replay.length === agreed.length && page.replay.every((f, i) => f === agreed[i]);
-  return { ok: viewMatchesAgreed && !!snap?.outcome, script: 'online', ms: Date.now() - t0, about: o.about(), me: status.player?.fingerprint, seat: snap?.seat, opponent: snap?.opponent?.label, outcome: snap?.outcome, finalHash: snap?.finalHash, ticksAgreed: agreed.length, viewMatchesAgreed, readyClicks: ticks.length, choicesAnswered: choices, readyAckMs: summarize(ticks.map((t) => t.readyAckMs)), reloaded, feeds: snap?.feeds, ticks: ticks.slice(0, 40), log };
+  return { ok: viewMatchesAgreed && !!snap?.outcome, script: 'online', ms: Date.now() - t0, about: o.about(), me: status.player?.fingerprint, seat: snap?.seat, opponent: snap?.opponent?.label, outcome: snap?.outcome, finalHash: snap?.finalHash, ticksAgreed: agreed.length, viewMatchesAgreed, readyClicks: ticks.length, choicesAnswered: choices, readyAckMs: summarize(ticks.map((t) => t.readyAckMs)), reloaded, music, feeds: snap?.feeds, ticks: ticks.slice(0, 40), log };
 }
 
 function summarize(xs) {
