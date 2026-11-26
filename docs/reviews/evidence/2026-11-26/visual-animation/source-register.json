@@ -1,0 +1,499 @@
+{
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "reviewBaseline": "bd66817326c6966d28c73b4cc06a144551077a1b",
+  "implementationCandidate": "532643846f815106f7e33551099d02008e03c4d2",
+  "profile": "hapa_open_10x9_v3_07",
+  "reviewDate": "2026-11-26",
+  "reviewDateTimezone": "America/Los_Angeles",
+  "method": "Pinned source and historical submitted stills; one real-rules headless presentation probe. No fresh live runtime, GPU, installed-app or frame-rate evidence.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "gitBlobSha": "44b2bebd2d19110e57f1aa5493558b227e27cdf3",
+      "sha256": "4abace8416c679f518586059792d3b4eb6d5e043d9d075e513de7ef510fb34b0",
+      "size": 7235,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "docs/integrations/dusk-island-table-and-music-v1.md",
+      "gitBlobSha": "9ab2b6ac8e8f7b5540a30214a5f960d46939a45f",
+      "sha256": "32b324fe94db169716d29b21ae9551d755c066581e67816f01162e105ae21361",
+      "size": 31554,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "docs/requirements/2026-11-24-human-feedback-addendum-05.md",
+      "gitBlobSha": "407c06cb3a70271f6a75eb241f56d957c8e28b2e",
+      "sha256": "81b6efb74ba18f9372cb2288dea45ddc2144d9822965934b4bf737e59ca326a9",
+      "size": 15775,
+      "verifiedAgainstPinnedTree": true,
+      "role": "design authority/reference"
+    },
+    {
+      "path": "docs/requirements/2026-11-25-human-feedback-addendum-06.md",
+      "gitBlobSha": "c02f758525fa3567f9592a5ca132c1d03c290869",
+      "sha256": "1367b87998f224737a5e0c7429fe7cedabea35fa083eb385eabe29fb1e4d85c3",
+      "size": 6730,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "docs/requirements/design-companion-v1.txt",
+      "gitBlobSha": "72a3384a8e9e3a01b79c1f46a0860824cc77fe18",
+      "sha256": "bc5565264821208c3cf95e5958e584a84cc5d0515e6b88fd1e2fd3c5c89d89f2",
+      "size": 132038,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "docs/requirements/references-master-v1.txt",
+      "gitBlobSha": "772ea1eca7f29533032e70c7695977d1f95a3e01",
+      "sha256": "28de3c9272c2f714cf93be6dbee84aec08df7fd134e784e2edf33631919724b2",
+      "size": 174884,
+      "verifiedAgainstPinnedTree": true,
+      "role": "design authority/reference"
+    },
+    {
+      "path": "docs/workflows/LOOSE_SCREWS.md",
+      "gitBlobSha": "949fdd2c37f30fba591ba32535e1f32e66c94ef7",
+      "sha256": "1600060555f0e9cc7330ba05020c0e13dead356d0ec56e2d8f164bfb93601e87",
+      "size": 19476,
+      "verifiedAgainstPinnedTree": true,
+      "role": "workflow or runtime context"
+    },
+    {
+      "path": "fixtures/hapa/content.js",
+      "gitBlobSha": "6210462fdcb3121da79527149d02a3cfe989f408",
+      "sha256": "fad8f8627b891d0ce72b608500776f03e9117ab5134a0cbb8992cfa71299dd42",
+      "size": 9785,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "fixtures/hapa/profiles.js",
+      "gitBlobSha": "80a566f9e7e76b185756b04cfc58d31348ddd352",
+      "sha256": "9e05207a1b7c66d57b5ee9627633f83ce2b3c27c93893290f6b372a3b0670c68",
+      "size": 13609,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "fixtures/hapa/scenarios.js",
+      "gitBlobSha": "71e3208c1b2992e3632a758227123370db8c8262",
+      "sha256": "37b7521f7e069fbc13eba1126bdc5a1755560e0e717f3a535e6dd04d953b4419",
+      "size": 4065,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "package.json",
+      "gitBlobSha": "35656f7769578c130c58ac4fc973e896dbc90557",
+      "sha256": "529a0ea287c4834118e01ed5c361da11fd0e62a7cfe547adc4041318356ca727",
+      "size": 2107,
+      "verifiedAgainstPinnedTree": true,
+      "role": "workflow or runtime context"
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "gitBlobSha": "60f13d9ce7f110b25b49db8d6764d3963a6e27c8",
+      "sha256": "446bf829c813b5812c5c8982b9005e0391ab52e18eae03afa3f5e4e2a6f3a2ca",
+      "size": 238963,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "gitBlobSha": "2254ff12c0a00773a4ead5c29c1ce61369f9a48b",
+      "sha256": "d59662a0697511d0726da0cd47d53a89486dd614c197c90498a99f7a8bb36ec3",
+      "size": 20048,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/board-view.js",
+      "gitBlobSha": "5415a112267eaeb407fb0e3a2bd4043ca13e6142",
+      "sha256": "23ede152f74f12c4c1e4369815c8507d8f58b7876a1c35926815aa20849c7ea5",
+      "size": 53138,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/camera.js",
+      "gitBlobSha": "bb05c2de37f853e31c5b3f868baa7c0859f86203",
+      "sha256": "1723754c44f0a72e683a3facadacadd2610363b25fcd66579845863588c21a8a",
+      "size": 14754,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/card-drag.js",
+      "gitBlobSha": "5476caf2f6dfa0b3c9052e86c76ab459ca411633",
+      "sha256": "74d4d31c57641cc2079ce1dc6ec2143d30cc541c4094d71c56246c6389b3b07b",
+      "size": 11959,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/firepit.js",
+      "gitBlobSha": "99eadd54d09ee74f7ebbfa45b2588a6d65af576b",
+      "sha256": "a645daf0660e96265fa64f1ab3ebe034a7ac012e6ced92c3d60494100e266c07",
+      "size": 11711,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/fx.js",
+      "gitBlobSha": "8eb183cc2215e043944f234d3cce5ebd300f4d20",
+      "sha256": "86a6a1f16ec8bf204f3d361730f5878600a58c8252f3d6a05f786bb0e27a28c6",
+      "size": 11292,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/inspect.js",
+      "gitBlobSha": "dde7d87ad7d47b55f020c5aa61c5f4ab36918570",
+      "sha256": "f5f282d8c0f03850a7e20a15512a803cff3226551bcdac3e91fc09792caff586",
+      "size": 11494,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/member-glyphs.js",
+      "gitBlobSha": "6a5b2d42ba4c0cb44570a0874a1647cfd4640a60",
+      "sha256": "777926d8bd0999741e201785cacc736e6799ab6295008c24f30283843b77a586",
+      "size": 13807,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/member-labels.js",
+      "gitBlobSha": "dd0f73d09e7589df9657df8b888b5bc4e075996e",
+      "sha256": "11f881d1bff4d1f9137bd32f9b5c4e1fed7e388987f99c721ea8950ae2b0e22b",
+      "size": 25685,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/music-signal.js",
+      "gitBlobSha": "5972a736aebf27794cf8ecabf94f4eeafdfaf77a",
+      "sha256": "1269f8b58f13c569fc1ef8692633e67d8285548d7ba55c05768193dfc4f1e993",
+      "size": 7968,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/online.js",
+      "gitBlobSha": "4c7c6986e8203973615579aa7e3982a3d7c33da9",
+      "sha256": "9a4f1bdd5819084d167d47c418b497df62fc5225cb1f7e9573db1b8fbcf3860d",
+      "size": 13608,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/pieces.js",
+      "gitBlobSha": "52c846c1bb7c800f8941b1d0d2a316aa6352eef6",
+      "sha256": "578a9061dc1ef863cc44278b0d6819a66ac95c65e2b377dc2f645b07e0482d73",
+      "size": 10097,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/playback.js",
+      "gitBlobSha": "abf4b70776e7327ff421aae3accfa2ef33e0e926",
+      "sha256": "9f95ee5238c8e96165b095391cbe7dc718fe1963379bcf6fc82ac18cb8c13ff1",
+      "size": 3892,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/reactions.js",
+      "gitBlobSha": "581b33d0321d8f126eb85e49a1ce214c2009c589",
+      "sha256": "9c85e82ed8b2cce464ecc82ce7bd6e72b8af1411695d3600cbe7f8443501cbfb",
+      "size": 6561,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/scenery.js",
+      "gitBlobSha": "f377c43a6a6ba2af08d34a8536614ede443dc239",
+      "sha256": "3e6df2c4fecc8aab363d1c02abc3f5c2c4d987c4d805afc4011cb04485a7a017",
+      "size": 42190,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/seated-avatar.js",
+      "gitBlobSha": "1d0417ecda9c38b7963b5d2813e11537eabc36c3",
+      "sha256": "96f4dcba586d904072fc05de48b40f8ce22fc9c2d06613055a22e685fd70c04b",
+      "size": 12641,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/sound.js",
+      "gitBlobSha": "be181135d404d31a63962e71f328a97a3caf9df0",
+      "sha256": "b945ed1fb7531299de7c7d8b3c9f1b0f736c809e13de58804011a6aac8afa85d",
+      "size": 2947,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/soundtrack.js",
+      "gitBlobSha": "47e24706ff5c373df830b545f9a1a37210c526f6",
+      "sha256": "24072501c3020b0002ea078c3669db4ee0f84b1a22b67a40140d9d58deeb8351",
+      "size": 38527,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/table.js",
+      "gitBlobSha": "2eff4e6feb6b5dae019dff8e143ad8f224805fe8",
+      "sha256": "50aa4926b5295e26164108d5f9c0daa2748318207a2e1e44cb0187f870b2ff18",
+      "size": 13112,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/terrain-view.js",
+      "gitBlobSha": "23b980d0e6a5f07b5c8acd30c3b244342868da96",
+      "sha256": "3a44f13343f64c9354f9bdd03dea3b87ebbe12eb33c221a0b053fbf39fcc8a8f",
+      "size": 15236,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/territory-diorama.js",
+      "gitBlobSha": "acf7aa44e0a3fb2812b0383cc8b2ffc6efb7a469",
+      "sha256": "fe69938bb91897a995247648e6f6c91c4e6a79d261e9bf2c7b963f6d6eca23ea",
+      "size": 23040,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/presentation/versus.css",
+      "gitBlobSha": "0b8cd33480ac4f79c25b58bf8c79bb5d4ed2df78",
+      "sha256": "80279070e99645bb662bfb4163f32a7d28cbfb77e89a80cf8534b0999771b36f",
+      "size": 66549,
+      "verifiedAgainstPinnedTree": true,
+      "role": "reviewed source"
+    },
+    {
+      "path": "src/hapa/rules/combat.js",
+      "gitBlobSha": "616fd71ad996705040273626e8173a9d9cf1ff31",
+      "sha256": "2ddec8be90bf6f5d1b5697c38458dc23c95f9ab3d4acd4cff1f8a73a838a01c6",
+      "size": 34982,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/context.js",
+      "gitBlobSha": "1917c727398bb6876076c2b50a4f5a31b710fa37",
+      "sha256": "174378bebde9a109a6e37f756bc1d3016dd56f7cd00899b288e94648cff177ac",
+      "size": 1279,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/economy.js",
+      "gitBlobSha": "69bd738628033da81c3567505f323102a6a4ba63",
+      "sha256": "f8b3146fad8b0ded3719dd2ca6ff35e1df1272cf66c6836f1836d2392d970d0b",
+      "size": 10922,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/effects.js",
+      "gitBlobSha": "bbe100edf65d7cc39f9635887d4382ebe8febc9c",
+      "sha256": "55d9f014a2b96a6ef2f625ef316b021bc2b9841588895c5bebefb4880a11f0e8",
+      "size": 2611,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/encoding.js",
+      "gitBlobSha": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+      "sha256": "58fcb62ee318ab6b461a01f6cc108d650807595e1dc2722c2ba8023c7af0396e",
+      "size": 8381,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/geometry.js",
+      "gitBlobSha": "af789f61c43b103255cb963e87a2e63fa2968fd4",
+      "sha256": "697e76131856ca6f507e27a3209607c4cba0a441a7a7912932d5ca60d669745f",
+      "size": 2964,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/inspection.js",
+      "gitBlobSha": "c89810284640d3d339ea260ed87403e828220ed8",
+      "sha256": "00b34aab8eb53d23a4ec22d35e07d00421b70865e5ed2d5320d1845df87fb1b7",
+      "size": 9980,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/match.js",
+      "gitBlobSha": "25b0f7ccf494ea19462438f52c429cc65ef934d2",
+      "sha256": "54379e9b5753bd47b27d7442fd5648e3e5532e8a3cb729ed6846a9cd1df8ffce",
+      "size": 31260,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/movement.js",
+      "gitBlobSha": "b84811f70e69cbdf692ef7aa24e7a56e88410fc0",
+      "sha256": "cc21d82f9631434d747688b7465442b7dfc2ecdd861c6053a7f51b73086ce6a0",
+      "size": 43392,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/session.js",
+      "gitBlobSha": "184e6f3b4c44c0f1554175f81ebe0ada5cb3e7a0",
+      "sha256": "2cb108dfe24ece759d1c48273774796c7828085560529107ea58a3be9555e51d",
+      "size": 4827,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/state.js",
+      "gitBlobSha": "a82081f88ef37642dc7215fd84fd1329f55e0978",
+      "sha256": "7773be2054ec1b6ca0409a67bdb413c85333c9fb6ea170e83a71fc02e42d1bb8",
+      "size": 8073,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/stats.js",
+      "gitBlobSha": "cadd071551c4d6b8e7ab26e66d450cbd5de50287",
+      "sha256": "e90ee437594d2a320ce5b69afecde18fe22096506974aea58bd2b0db929c9143",
+      "size": 10431,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/terrain.js",
+      "gitBlobSha": "7cbf8196e47dd2d35525af4bd87b7758fcc514d2",
+      "sha256": "f0cc09dd9c554346403bd9703068b16f18f0adb23d1fd5841c5e6b0737f7fd00",
+      "size": 12226,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    },
+    {
+      "path": "src/hapa/rules/validate.js",
+      "gitBlobSha": "c81527d9ab27496bc92c4e64daa153539d20af98",
+      "sha256": "48423a0666ce8684aa2e60a4a3012a7ca80a6e361ee44c8441dd63270ac2d1fd",
+      "size": 6638,
+      "verifiedAgainstPinnedTree": true,
+      "role": "diagnostic input"
+    }
+  ],
+  "engineRepository": "calderwong/lumina-hapa",
+  "engineCommit": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "engineFiles": [
+    {
+      "path": "src/engine/sprite/Sprite3D.js",
+      "gitBlobSha": "7de6f33d9f484470369d6444286aeaa9b35cdbc3",
+      "sha256": "1bf90d5debaecb355f884ad2cbed58c048d4782794a7708186a0f2a5d4e2062d",
+      "size": 43449,
+      "gitBlobVerified": true,
+      "locallyReverified": true
+    },
+    {
+      "path": "src/engine/pixel/CharacterSprites.js",
+      "gitBlobSha": "535917360c6c15e293727487d81a62d52106bfd9",
+      "sha256": "583c5bbad0a32ea0c114b73d4e633196c3f1ad27d93464ac107d0f41714cc998",
+      "size": 178974,
+      "gitBlobVerified": true,
+      "locallyReverified": true
+    }
+  ],
+  "captures": [
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-14/01-home-desktop.jpg",
+      "gitBlobSha": "e243d7b399b0e0d6deeca1114ee8bcf4a1d2130a",
+      "size": 59995,
+      "encoding": "jpeg",
+      "evidenceKind": "Submitted still; no fresh runtime observation",
+      "retrievedAtCommit": "bd66817326c6966d28c73b4cc06a144551077a1b"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-14/03-close-formation.jpg",
+      "gitBlobSha": "4ae28b89b991587abe19866367ae27665c75edaf",
+      "size": 70922,
+      "encoding": "jpeg",
+      "evidenceKind": "Submitted still; no fresh runtime observation",
+      "retrievedAtCommit": "bd66817326c6966d28c73b4cc06a144551077a1b"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-13/02-low-orbit-table.jpg",
+      "gitBlobSha": "0e759229665895eb5c5cab7844773cd9ff2744e0",
+      "size": 66503,
+      "encoding": "jpeg",
+      "evidenceKind": "Submitted still; no fresh runtime observation",
+      "retrievedAtCommit": "bd66817326c6966d28c73b4cc06a144551077a1b"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-13/05-excavation-band-minus3.jpg",
+      "gitBlobSha": "64e63fe94c8dbcaf35400d581339f332a118e246",
+      "size": 76131,
+      "encoding": "jpeg",
+      "evidenceKind": "Submitted still; no fresh runtime observation",
+      "retrievedAtCommit": "bd66817326c6966d28c73b4cc06a144551077a1b"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-15/02-narrowed-700-music-kept-orders-collapsed.jpg",
+      "gitBlobSha": "3165d241f22b3c6e5631720e296c31b92095401b",
+      "size": 118793,
+      "encoding": "jpeg",
+      "evidenceKind": "Submitted still; no fresh runtime observation",
+      "retrievedAtCommit": "bd66817326c6966d28c73b4cc06a144551077a1b"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/02-roster-opponent-available.jpg",
+      "gitBlobSha": "eda6e70477c0c75cbb7f8efa2ef45819c785df1c",
+      "size": 157982,
+      "encoding": "jpeg",
+      "evidenceKind": "Submitted still; no fresh runtime observation",
+      "retrievedAtCommit": "bd66817326c6966d28c73b4cc06a144551077a1b"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/04-ready-committing-vs-remote.jpg",
+      "gitBlobSha": "50f7e93c57a154519106499f5e663c939fec1223",
+      "size": 304978,
+      "encoding": "jpeg",
+      "evidenceKind": "Submitted still; no fresh runtime observation",
+      "retrievedAtCommit": "bd66817326c6966d28c73b4cc06a144551077a1b"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/07-installed-local-match-owners-absent.jpg",
+      "gitBlobSha": "3a11e2e26a328896d5ce57f4491640aa9f042d9e",
+      "size": 275569,
+      "encoding": "jpeg",
+      "evidenceKind": "Submitted still; no fresh runtime observation",
+      "retrievedAtCommit": "bd66817326c6966d28c73b4cc06a144551077a1b"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-25/response-16/08-result-cal.jpg",
+      "gitBlobSha": "f674cb95ae58cf28f93f4cddf011d593a704ed2e",
+      "size": 129774,
+      "encoding": "jpeg",
+      "evidenceKind": "Submitted still; no fresh runtime observation",
+      "retrievedAtCommit": "bd66817326c6966d28c73b4cc06a144551077a1b"
+    }
+  ],
+  "diagnostics": {
+    "timeline-end-probe.mjs": {
+      "sha256": "ddbf271ece66c93c58b3a2e3b6b60dbc46de006b5a7f7dea8c47a83fc22216f0",
+      "size": 3456
+    },
+    "timeline-end-probe.json": {
+      "sha256": "b3854aaa589a50128be0ac2b785ecbef273d5de0c1783ad9d9678ef652104b60",
+      "size": 1175
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "reviewBaseline": "bd66817326c6966d28c73b4cc06a144551077a1b",
+  "sourceIdentityNote": "The accompanying register verifies the baseline run. Record the actual checkout when rerunning this diagnostic.",
+  "method": "Real rules resolve a legal movement and formation-turn Tick; unchanged playback helper; source-identical trace callback. No browser/GPU execution.",
+  "nodeVersion": "v24.22.3",
+  "acceptedCommands": [
+    {
+      "type": "set_destination",
+      "partyId": "A.test.castle",
+      "target": {
+        "column": 1,
+        "row": 4
+      }
+    },
+    {
+      "type": "change_formation",
+      "partyId": "A.test.turn",
+      "facing": "E"
+    }
+  ],
+  "frames": 51,
+  "lastFrameQuantum": 1000,
+  "totalEvents": 8,
+  "playbackEndEventPrefix": 5,
+  "eventsOmittedFromPlaybackDispatch": [
+    {
+      "type": "supply_spent",
+      "id": "fixture-scenario:11"
+    },
+    {
+      "type": "formation_changed",
+      "id": "fixture-scenario:12"
+    },
+    {
+      "type": "tick_finished",
+      "id": "fixture-scenario:13"
+    }
+  ],
+  "positionsChanged": true,
+  "formationFacing": {
+    "before": "N",
+    "resolved": "E"
+  },
+  "terminalPrefixComplete": false
+}
