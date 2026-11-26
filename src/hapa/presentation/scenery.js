@@ -157,7 +157,12 @@ function flagTexture(seed) {
       const v = 92 + Math.floor(rng() * 9), warm = Math.floor(rng() * 5);
       g.fillStyle = `rgb(${v + warm - 4},${v},${v - 5})`;
       wrap((dx) => g.fillRect(x + 1 + dx, y0, w - 2, y1 - y0)); // wrap horizontally
-      for (let i = 0; i < 18; i++) { g.fillStyle = rng() < 0.5 ? 'rgba(255,250,235,0.03)' : 'rgba(0,0,0,0.045)'; const px = x + 3 + rng() * (w - 8), py = y0 + 2 + rng() * (y1 - y0 - 4), pw = 4 + rng() * 14, ph = 1 + rng() * 3; wrap((dx) => g.fillRect(px + dx, py, pw, ph)); }
+      // broad planes (a lighter and a darker wash per stone) instead of many specks (VA-06 trial)
+      g.fillStyle = 'rgba(255,250,235,0.035)'; wrap((dx) => g.fillRect(x + 2 + dx, y0 + 2, (w - 4) * (0.4 + rng() * 0.4), (y1 - y0) * 0.45));
+      g.fillStyle = 'rgba(0,0,0,0.05)'; wrap((dx) => g.fillRect(x + 2 + dx + (w - 4) * 0.5, y0 + (y1 - y0) * 0.55, (w - 4) * 0.5, (y1 - y0) * 0.4));
+      // sparse worn edges: a lit top edge and an inked foot, broken where the stone is chipped
+      if (rng() < 0.7) { g.fillStyle = 'rgba(230,226,210,0.10)'; wrap((dx) => g.fillRect(x + 2 + dx + rng() * 6, y0 + 1, (w - 8) * (0.5 + rng() * 0.5), 1)); }
+      g.fillStyle = 'rgba(20,22,20,0.18)'; wrap((dx) => g.fillRect(x + 1 + dx, y1 - 2, w - 2, 1));
       // moss in the joint under some stones, feathered into the stone's foot
       if (rng() < 0.45) {
         const mx = x + rng() * w * 0.6, mw = 10 + rng() * 26;
@@ -189,20 +194,46 @@ function mossTexture(seed) {
   return t;
 }
 
-/** A small directional-grain cedar texture (procedural; no gloss). */
+/**
+ * Cedar in the Hapa brush-pixel treatment (visual review VA-06, bounded trial): a 256×64 painted
+ * texture with a few purposeful value clusters rather than noise — long tapering directional grain,
+ * an occasional knot with its rings, inked board joins with a lit edge, and sparse warm highlights.
+ * No gloss; nearest filtering keeps the pixel structure crisp at close range.
+ */
 function cedarTexture(seed) {
-  const cv = document.createElement('canvas'); cv.width = 128; cv.height = 32;
+  const W = 256, H = 64, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d');
   const rng = brushRng(seed);
-  g.fillStyle = '#76513a'; g.fillRect(0, 0, 128, 32);
-  for (let i = 0; i < 90; i++) {
-    const y = Math.floor(rng() * 32), x = Math.floor(rng() * 128);
-    g.fillStyle = rng() < 0.5 ? 'rgba(40,22,12,0.28)' : 'rgba(190,140,100,0.14)';
-    g.fillRect(x, y, 18 + rng() * 60, 1);
+  const RAMP = ['#4f3424', '#64412c', '#76513a', '#8a6146', '#a07656']; // dark → light cedar cluster
+  const boards = [0, 21, 43, 64];
+  for (let b = 0; b < boards.length - 1; b++) {
+    const y0 = boards[b], y1 = boards[b + 1];
+    g.fillStyle = RAMP[2 + (b % 2 ? 0 : 0)]; g.fillRect(0, y0, W, y1 - y0);
+    // broad value planes along the board (two or three long washes, not speckle)
+    for (let k = 0; k < 3; k++) { g.fillStyle = k === 1 ? RAMP[3] : RAMP[1]; g.globalAlpha = 0.35; g.fillRect(rng() * W, y0 + 2 + rng() * (y1 - y0 - 6), 60 + rng() * 120, 3 + rng() * 5); }
+    g.globalAlpha = 1;
+    // directional grain: long strokes that taper (two passes so they wrap seamlessly)
+    for (let i = 0; i < 26; i++) {
+      const y = y0 + 1 + Math.floor(rng() * (y1 - y0 - 2)), x = Math.floor(rng() * W), len = 40 + rng() * 150, dark = rng() < 0.62;
+      g.fillStyle = dark ? RAMP[0] : RAMP[4];
+      g.globalAlpha = dark ? 0.55 : 0.32;
+      for (const dx of [0, -W]) { g.fillRect(x + dx, y, len, 1); g.fillRect(x + dx + len * 0.15, y + (rng() < 0.5 ? 1 : -1), len * 0.55, 1); }
+    }
+    g.globalAlpha = 1;
+    // an occasional knot with rings, the grain bending round it
+    if (rng() < 0.6) {
+      const kx = 20 + rng() * (W - 40), ky = (y0 + y1) / 2 + (rng() - 0.5) * 6;
+      for (let r = 6; r >= 1; r -= 1.5) { g.strokeStyle = r > 3 ? RAMP[1] : RAMP[0]; g.lineWidth = 1; g.beginPath(); g.ellipse(kx, ky, r * 2.2, r * 0.8, 0, 0, Math.PI * 2); g.stroke(); }
+      g.fillStyle = RAMP[0]; g.fillRect(kx - 1, ky - 1, 2, 2);
+    }
+    // the join: a selective ink line with a lit edge below it
+    g.fillStyle = 'rgba(28,14,6,0.85)'; g.fillRect(0, y0, W, 1);
+    g.fillStyle = 'rgba(190,140,98,0.35)'; g.fillRect(0, y0 + 1, W, 1);
   }
-  g.fillStyle = 'rgba(20,10,5,0.35)'; for (const y of [0, 15]) g.fillRect(0, y, 128, 1); // board seams
+  // sparse warm highlights (rubbed edges), clustered rather than scattered
+  for (let i = 0; i < 6; i++) { const x = rng() * W, y = rng() * H; g.fillStyle = 'rgba(214,170,120,0.22)'; g.fillRect(x, y, 8 + rng() * 18, 1); }
   const t = new THREE.CanvasTexture(cv);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = THREE.NearestFilter; t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = THREE.NearestFilter; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   return t;
 }
 
