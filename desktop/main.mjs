@@ -193,7 +193,7 @@ function createWindow() {
   });
   win.on('closed', () => { win = null; });
   if (SMOKE_OUT) win.webContents.on('console-message', (e) => { if (smokeConsole.length < 80 && e.level !== 'debug') smokeConsole.push(`${e.level}: ${String(e.message).slice(0, 300)}`); });
-  const start = process.env.HAPA_VERSUS_START || 'versus.html?autostart=1&a=human&b=bot';
+  const start = process.env.HAPA_VERSUS_START || (SMOKE_OUT && !process.env.HAPA_VERSUS_SMOKE_SCRIPT ? 'versus.html?autostart=1&a=human&b=bot' : 'versus.html');
   win.loadURL(`${ORIGIN}/${start}`);
   return win;
 }
@@ -238,29 +238,11 @@ app.on('before-quit', (e) => {
   p.postMessage({ type: 'shutdown' });
 });
 
-// --- packaged smoke (focused attachment evidence; writes only into the given directory) ---------
+// --- packaged smoke / journey automation (evidence only; writes only into the given directory) ----
+// Loaded only when HAPA_VERSUS_SMOKE_OUT names an absolute directory; inert otherwise.
 const smokeConsole = [];
-function writeSmoke(obj) { mkdirSync(SMOKE_OUT, { recursive: true }); writeFileSync(join(SMOKE_OUT, 'smoke.json'), JSON.stringify(obj, null, 1)); }
-
 async function runSmoke() {
-  const t0 = Date.now();
-  const status = await peer.ready;
-  const transport = await callPeer('probeTransport', {}, 30_000);
-  if (win.webContents.isLoading()) await new Promise((r) => win.webContents.once('did-finish-load', r));
-  let page = null, lastPending = null, smokeDiag = null;
-  for (let i = 0; i < 60; i++) {
-    page = await win.webContents.executeJavaScript(`(() => { const v = window.__versus; const s = v?.session?.state; const canvas = document.querySelector('canvas'); return s ? { tick: s.tick, phase: s.phase, parties: Object.values(s.parties).filter(p => p.alive).length, seats: v.seats ?? null, canvas: canvas ? [canvas.width, canvas.height] : null, bridge: typeof window.hapaDesktop, bridgeKeys: window.hapaDesktop ? Object.keys(window.hapaDesktop) : [], nodeInPage: typeof require !== 'undefined' || typeof process !== 'undefined', origin: location.origin, title: document.title } : { pending: true, ready: document.readyState, href: location.href, body: document.body?.innerHTML.length ?? -1, resources: performance.getEntriesByType('resource').map(r => r.name.split('/').pop() + ':' + (r.responseStatus ?? '?')).slice(0, 12), hasVersus: typeof window.__versus }; })()`);
-    if (page?.pending) { lastPending = page; page = null; if (i === 3) smokeDiag = await win.webContents.executeJavaScript(`(async () => { const src = document.querySelector('script[type=module]')?.src; const f = await fetch(src).then(r => r.status + ' ' + r.headers.get('content-type')).catch(e => 'fetch ' + e.message); const m = await import(src).then(() => 'import ok').catch(e => 'import ' + e.message); return { src, f, m }; })()`); }
-    if (page && page.canvas) break;
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  await new Promise((r) => setTimeout(r, 2500));
-  const image = await win.webContents.capturePage();
-  mkdirSync(SMOKE_OUT, { recursive: true });
-  writeFileSync(join(SMOKE_OUT, 'local-match.png'), image.toPNG());
-  const bridge = await win.webContents.executeJavaScript(`window.hapaDesktop.call('getStatus').then(s => ({ ok: true, state: s.state, launch: s.launch, fingerprint: s.player?.fingerprint, hasSecret: JSON.stringify(s).includes('secretKey') })).catch(e => ({ ok: false, error: e.message }))`);
-  const refused = await win.webContents.executeJavaScript(`window.hapaDesktop.call('deleteEverything').then(() => 'accepted').catch(e => e.message)`);
-  const owners = await win.webContents.executeJavaScript(`Promise.all(['/capabilities','/music/cj/songs?q=x','/harness/game-status'].map(u => fetch(u).then(r => r.status).catch(e => 'error ' + e.message)))`);
-  writeSmoke({ ok: !!(page?.canvas && status.launch && transport.destroyed && bridge.ok && !bridge.hasSecret), ms: Date.now() - t0, about: about(), userData: '(redacted: OS userData)', dataInsideBundle: stateRoot().startsWith(appRoot), status: { state: status.state, launch: status.launch, createdIdentity: status.createdIdentity, versions: status.versions, fingerprint: status.player?.fingerprint }, transport, page, bridge, refusedUnknownOp: refused, ownerRoutes: owners, console: smokeConsole, lastPending, diag: smokeDiag });
-  app.quit();
+  const { runSmoke: run } = await import('./smoke.mjs');
+  await run({ app, win, peer, callPeer, about, stateRoot, appRoot, out: SMOKE_OUT, consoleLines: smokeConsole, script: process.env.HAPA_VERSUS_SMOKE_SCRIPT || 'local' });
 }
+function writeSmoke(obj) { mkdirSync(SMOKE_OUT, { recursive: true }); writeFileSync(join(SMOKE_OUT, 'smoke.json'), JSON.stringify(obj, null, 1)); }

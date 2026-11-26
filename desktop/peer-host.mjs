@@ -15,7 +15,10 @@ port.on('message', async (e) => {
   if (m?.type === 'init' && !runtime) {
     try {
       runtime = new PeerRuntime({ root: m.root, networkId: m.networkId, host: 'electron-utility', log: (s) => process.stdout.write(`${s}\n`), onEvent: (event) => send({ type: 'event', event }) });
-      send({ type: 'ready', status: await runtime.open() });
+      const status = await runtime.open();
+      send({ type: 'ready', status });
+      // a player who joined the lobby before rejoins it (the saved online preference); local play never waits on it
+      if (status.joined || status.match) runtime.joinLobby({}).catch((err) => send({ type: 'event', event: { type: 'lobby', kind: 'transport', transport: { state: 'failed', error: err.message } } }));
     } catch (err) {
       send({ type: 'fatal', error: err.message, code: err.code });
       setTimeout(() => process.exit(err.code === 'STORE_LOCKED' ? 3 : 1), 50);

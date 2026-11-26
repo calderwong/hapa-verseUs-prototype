@@ -740,3 +740,21 @@ button.opp-hit:hover:not(:disabled) { background: transparent; border: 0; box-sh
 .table-setup { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; padding: 6px 8px; border: 1px dashed var(--line); border-radius: 6px; }
 .table-setup .chip { padding: 0 6px; margin: 0 3px; font-size: 12px; }
 .table-results { display: flex; flex-direction: column; align-items: flex-start; }
+
+/* --- Play online (assignment 16): the lobby section of the setup sheet and the table status ------- */
+.online-panel { border: 1px solid var(--line, #5a4a3a); border-radius: 8px; padding: 10px 12px; margin: 10px 0 14px; background: rgba(255, 240, 210, 0.04); }
+.online-panel h2, .setup .local-heading { font-size: 1.05rem; margin: 0 0 6px; }
+.online-panel .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+.online-panel input[type=text] { min-width: 14em; }
+.online-panel .avail { font-size: 0.9em; padding: 1px 8px; border-radius: 10px; border: 1px solid currentColor; }
+.online-panel .avail.available { color: #9fdc8a; }
+.online-panel .avail.busy, .online-panel .avail.joining { color: #e8c46a; }
+.online-panel .avail.in-match, .online-panel .avail.reconnecting { color: #e89a7a; }
+.online-panel .roster-online { list-style: none; margin: 6px 0 0; padding: 0; max-height: 14em; overflow: auto; }
+.online-panel .roster-online li { display: flex; gap: 8px; align-items: center; padding: 4px 0; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.online-panel .roster-online li .avail { border: none; padding: 0; }
+.online-panel .roster-online li .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.online-panel .challenge-in { background: rgba(232, 182, 72, 0.12); border-radius: 6px; padding: 6px 8px; }
+.online-panel .warn { color: #f0a080; }
+.online-opp { font-size: 0.9em; white-space: nowrap; }
+.online-opp.reconnecting { color: #f0a080; }

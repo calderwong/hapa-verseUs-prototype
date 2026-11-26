@@ -53,6 +53,7 @@ import { openLab, anyProfile, labProfiles } from './lab.js';
 import { localCatalog, localDecks } from './local-content.js';
 import { PhaseAgreement, agreementPolicy } from '../protocol/agreement.js';
 import { readPreset, savePreset, clearPreset, resolveLaunch, launchURL, describeConfig, ROLE_NAME as CONTROLLER_NAME } from './dev-preset.js';
+import { desktopHost, OnlineClient, onlinePanel, sessionFromManifest, replayHistory } from './online.js';
 
 const U = 1e6;
 const reducedMotionPref = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -71,6 +72,8 @@ const stateWord = (state, p) => (p?.blockedBy && p.destination && state.parties[
 /** Attributes that make a click-driven element a keyboard button too (Enter / Space; review UX-14). */
 const kbd = (fn, label) => ({ tabindex: '0', role: 'button', ...(label ? { 'aria-label': label } : {}), onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); fn(e); } } });
 const cap = (x) => (x ? x[0].toUpperCase() + x.slice(1) : x);
+/** A host bridge error without Electron's invoke wrapper text. */
+const hostMessage = (e) => String(e?.message ?? e).replace(/^Error invoking remote method '[^']+': (Error: )?/, '');
 const FACES_ALL = ['front', 'left', 'right', 'rear', 'above', 'below'];
 const listWords = (xs) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 /** A Card effect's readable name from its definition id (`fixture.bound_standard@1` → "Bound Standard"). */
@@ -252,6 +255,8 @@ export class VersusApp {
       h('div', { class: 'title-emblems', 'aria-hidden': 'true' }, ...['red', 'purple', 'blue', 'black', 'rainbow', 'white', 'orange', 'yellow', 'green'].map((c) => h('img', { src: emblemURL(c, 18), alt: '' }))),
       h('h1', {}, 'Hapa Versus'),
       h('p', { class: 'lede' }, 'Two armies on a nine-column battlefield. Each Tick the highlighted columns mint public Minor Arcana from the territory you hold: spend a card as Supply to move, burn it for colored Mana, or play its attached ability. Win by moving a party center into the enemy Capital or killing the enemy Commander.'),
+      onlinePanel(this),
+      h('h2', { class: 'local-heading' }, 'Play on this computer'),
       h('div', { class: 'form' },
         h('label', { class: 'wide' }, 'Profile', profileSel),
         h('label', {}, 'Seat A (low rows)', seatSel('A', eff.seats?.A ?? 'human')),
@@ -320,7 +325,7 @@ export class VersusApp {
       search, results);
   }
 
-  async startMatch({ profileId = DEFAULT_PROFILE_ID, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null, table = this._tableChoice ?? { avatarId: 'red-reaper', songIds: [] } }) {
+  async startMatch({ profileId = DEFAULT_PROFILE_ID, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null, table = this._tableChoice ?? { avatarId: 'red-reaper', songIds: [] }, online = null }) {
     // the new match owns everything from here: the previous match's pending response, playback and
     // continuation are detached so a late answer cannot write into this session (review 03, R3-02)
     const gen = this.generation = (this.generation ?? 0) + 1;
@@ -332,7 +337,24 @@ export class VersusApp {
     await loadRenditions(); // optional local card faces; placeholders otherwise
     if (gen !== this.generation) return; // a newer New match replaced this one while loading
     const fx = fixture ? UI_FIXTURES[fixture] : null;
-    if (fx) {
+    this._onlineUnsub?.();
+    this._onlineUnsub = null;
+    this.onlineMatch = null;
+    if (online) {
+      // an online match: the agreed manifest and history from the local peer runtime (the authority);
+      // the opponent seat is remote — never a local bot, never Red speaking for a stranger
+      this.session = sessionFromManifest(online.manifest);
+      replayHistory(this.session, online.history);
+      const mine = online.seat, theirs = other(mine);
+      seats = { [mine]: 'human', [theirs]: 'remote' };
+      seed = online.manifest.randomStream.seed;
+      profileId = online.manifest.profile.id;
+      table = null;
+      this.onlineMatch = this.online.bind(online);
+      this.onlineMatch.opponentLabel = online.opponent.label;
+      this._onlineSnap = online;
+      this._onlineUnsub = this.online.on((e) => this._onOnlineEvent(e, gen));
+    } else if (fx) {
       // a labeled diagnostic fixture: its state is prepared directly, not reached by ordinary play
       this.session = createFixtureSession(fx.build(), { id: fixture, title: fx.title });
     } else {
@@ -476,6 +498,7 @@ export class VersusApp {
     for (const s of ['A', 'B']) if (this.bots[s] && !this.deciders?.[s]) { this.plans[s] = this.bots[s].plan(this.state, this.ctx); this.rev[s] = 1; this._publish(s, 'plan'); this._syncDraftMana(s); }
     for (const s of ['A', 'B']) if (this.bots[s] && !this.deciders?.[s]) { this._publish(s, 'ready'); this.ready[s] = {}; }
     for (const s of ['A', 'B']) if (this.deciders?.[s]) this._modelPlan(s);
+    if (this.onlineMatch) this._applyOnlineTick();
     if (this.table) { const st = this.state; this.table.orders(this.plans[this.table.o.avatarSeat].map((c) => ({ type: c.type, party: c.partyId ? spokenParty(st, c.partyId) : null, column: c.target?.column ?? null, ability: c.type === 'play_ability' ? activeCatalog.cards[st.cards[c.cardId]?.abilityId]?.title ?? null : null }))); }
     this.view.setActiveColumns(this.state.activeColumns);
     this.view.sync(this.state);
@@ -599,6 +622,7 @@ export class VersusApp {
     this.rev[seat] += 1;
     if (!this._publish(seat, 'plan').ok) { this.plans[seat] = prev; this.rev[seat] -= 1; this._toast('That plan revision was refused', true); this._renderAll(); return false; }
     this._syncDraftMana(seat);
+    if (this.onlineMatch && seat === this.onlineMatch.seat) this.online.draft(this.state.tick, cmds).catch((e) => this._toast(`Your plan change was not shared: ${hostMessage(e)}`, true));
     // the legacy pair-acknowledgment profile: bots re-acknowledge the new pair (own-plan Ready needs nothing)
     if (this.agreement.policy === 'pair_acknowledgment_v3') for (const s of ['A', 'B']) if (this.bots[s] && s !== seat && !this._deciding?.[s]) this._publish(s, 'ready');
     this._renderAll();
@@ -619,6 +643,74 @@ export class VersusApp {
 
   _readyValid(seat) { return !!this.agreement?.current(seat); }
 
+  // --- online seat (the local peer runtime is the authority) -----------------------------------
+  /**
+   * Journey aid for the debug page (?debug): a heuristic plan for the viewing seat, entered as one
+   * ordinary plan revision through the same path as a player's edits (it is never a hidden controller).
+   */
+  _devPlanWithBot() {
+    const seat = this.viewSeat;
+    if (!this._can(seat).edit) return 'not editable';
+    this._devBot ??= new HeuristicBot({ seat, seed: 7 });
+    const cmds = this._devBot.plan(this.state, this.ctx);
+    return this._setPlan(seat, cmds) ? `${cmds.length} orders` : 'refused';
+  }
+
+  /** Open or reattach to the runtime's active online match (also after a page reload). */
+  async resumeOnline() {
+    const host = desktopHost();
+    if (!host) return false;
+    this.online ??= new OnlineClient(host);
+    const snap = await this.online.call('match.get').catch(() => null);
+    if (!snap || (snap.status !== 'active' && snap.status !== 'complete' && snap.status !== 'disputed')) return false;
+    this._closeSheet({ restore: false });
+    this.el.overlay.hidden = true;
+    await this.startMatch({ online: snap });
+    if (snap.status === 'disputed') this._toast(`This match is paused: ${snap.disputed}`, true);
+    return true;
+  }
+
+  /** Bring a newly opened online Tick up to the runtime's view: committed plans, the opponent's public plan. */
+  _applyOnlineTick() {
+    const om = this.onlineMatch, snap = this._onlineSnap, me = om.seat, opp = other(me);
+    const cur = snap?.current;
+    if (cur && cur.count === this.state.tick) {
+      if (cur.own.revision > 0 || cur.own.commands.length) { this.plans[me] = cur.own.commands; this.rev[me] = Math.max(1, cur.own.revision); this._publish(me, 'plan'); this._syncDraftMana(me); }
+      if (cur.own.ready) { this._publish(me, 'ready'); this.ready[me] = {}; }
+      if (cur.remote.revision > 0) { this.plans[opp] = cur.remote.commands; this.rev[opp] = cur.remote.revision; this._publish(opp, 'plan'); }
+      if (cur.remote.ready) { this._publish(opp, 'ready'); this.ready[opp] = {}; }
+    }
+    this._onlineSnap = null; // later Ticks follow events
+    if (om.locked.get(this.state.tick)) setTimeout(() => this._tryResolve(), 0);
+  }
+
+  _onOnlineEvent(e, gen) {
+    if (gen !== this.generation || e.type !== 'match' || e.matchId !== this.onlineMatch?.matchId) return;
+    const me = this.onlineMatch.seat, opp = other(me), tick = this.state?.tick;
+    if (e.kind === 'remotePlan' && e.count === tick && !this.resolving && !this.agreement?.ready?.[opp] && e.revision > (this.rev[opp] ?? 0)) {
+      this.plans[opp] = e.commands; this.rev[opp] = e.revision; this._publish(opp, 'plan'); this._syncDraftMana(opp); this._renderAll();
+    } else if (e.kind === 'remoteReady' && e.count === tick && !this.agreement?.ready?.[opp]) {
+      if (e.revision > (this.rev[opp] ?? 0)) { this.plans[opp] = e.commands; this.rev[opp] = e.revision; this._publish(opp, 'plan'); }
+      this._publish(opp, 'ready'); this.ready[opp] = {}; this._renderAll();
+    } else if (e.kind === 'locked' && e.count === tick) this._tryResolve();
+    else if (e.kind === 'connection') { this._renderAll(); if (e.state === 'reconnecting') this._toast(`Connection to ${this.onlineMatch.opponentLabel} lost — reconnecting. Your committed plan is saved.`, true); }
+    else if (e.kind === 'disputed') { this._toast(`The match is paused: ${e.reason}`, true); this._renderAll(); }
+  }
+
+  /** Ready in an online match: the runtime appends it durably first; only then is it shown as committed. */
+  _pressReadyOnline(seat) {
+    if (this._readyPending) return;
+    const count = this.state.tick, gen = this.generation;
+    this._readyPending = true;
+    this._renderAll();
+    this.online.ready(count, this.plans[seat]).then(() => {
+      if (gen !== this.generation || this.state.tick !== count) return;
+      if (!this.agreement.ready[seat]) { this._publish(seat, 'ready'); this.ready[seat] = { seen: { A: this.plans.A.map(cmdKey), B: this.plans.B.map(cmdKey) } }; }
+      this.sound?.play('confirm', { volume: 0.6 });
+    }).catch((e) => { if (gen === this.generation) this._toast(`Ready was not committed: ${hostMessage(e)}`, true); })
+      .finally(() => { if (gen === this.generation) { this._readyPending = false; this._renderAll(); } });
+  }
+
   /**
    * Ready (first press) freezes the viewing seat's plan and acknowledges the current pair; after the
    * opponent revises, the same action acknowledges the updated pair. Refused while busy (resolving,
@@ -629,6 +721,7 @@ export class VersusApp {
     const seat = this.viewSeat;
     if (this._can(seat).invalid) { const e = this._planErrors(seat)[0]; this._toast(`Ready is blocked: order ${e.index + 1} (${describeCmd(this.state, this.plans[seat][e.index])}) — ${e.error}`, true); this._toggleOrders(true); return; }
     if (!this._can(seat).ready) return; // duplicate clicks, a held key or a stale callback: no second effect
+    if (this.onlineMatch) return this._pressReadyOnline(seat);
     const r = this._publish(seat, 'ready');
     if (!r.ok) { this._renderAll(); return; }
     this.sound?.play('confirm', { volume: 0.6 });
@@ -650,13 +743,23 @@ export class VersusApp {
   /** Resolve once both acknowledgments name the current pair; a latch makes it single-entry. */
   async _tryResolve() {
     if (this.resolving || this._resolvedTick === this.state.tick) return; // one resolution per Tick
-    if (!this.agreement?.locked) return this._renderAll();
+    if (this.onlineMatch ? !this.onlineMatch.locked.get(this.state.tick) : !this.agreement?.locked) return this._renderAll();
     const gen = this.generation;
+    const count = this.state.tick;
     this._resolvedTick = this.state.tick;
     this.resolving = true;
     let done = false;
     try { done = await this._resolveAgreed(); } finally { if (gen === this.generation) this.resolving = false; }
     if (!done || gen !== this.generation) return; // detached by New match: the old Tick never continues
+    if (this.onlineMatch) {
+      // the runtime's agreed receipt opens the next Tick; this view's replay must reach the same state
+      this._waitingAgreed = true; this._renderAll();
+      let agreed;
+      try { agreed = await this.online.waitAgreed(count); } catch (e) { if (gen === this.generation) { this._waitingAgreed = false; this._toast(`The match is paused: ${hostMessage(e)}`, true); this._renderAll(); } return; }
+      this._waitingAgreed = false;
+      if (gen !== this.generation) return;
+      if (agreed.hash !== stateFingerprint(this.state)) { this._toast(`This view's replay of Tick ${count} differs from the agreed receipt; reopening the match from its record`, true); this.resumeOnline(); return; }
+    }
     if (this.state.outcome) this._showResult();
     else this._newTick();
   }
@@ -672,7 +775,8 @@ export class VersusApp {
     const before = clone(state);
     const accepted = {};
     // the exact locked pair, not whatever the drafts hold now
-    for (const s of ['A', 'B']) accepted[s] = validatePlan(state, ctx, s, this.agreement.locked[s]).accepted;
+    const lockedPlans = this.onlineMatch ? this.onlineMatch.locked.get(state.tick).plans : this.agreement.locked;
+    for (const s of ['A', 'B']) accepted[s] = validatePlan(state, ctx, s, lockedPlans[s]).accepted;
     // trace member positions during simulation (presentation only)
     const frames = [];
     const snap = (q, evLen) => frames.push({ q, pos: snapshot(state), evLen });
@@ -687,7 +791,20 @@ export class VersusApp {
     while (!step.done) {
       const req = step.value;
       let answer;
-      if (this.deciders?.[req.seat]) answer = await this.deciders[req.seat].respond(this, this.bots[req.seat], req);
+      if (this.onlineMatch) {
+        // choices come from their owning seat through the runtime; a recorded one is never asked again
+        const om = this.onlineMatch, count = state.tick, idx = answers.length;
+        const rec = om.choices.get(`${count}:${idx}`);
+        if (rec) answer = rec.answer;
+        else if (req.seat === om.seat) {
+          answer = (await this._askResponse(req)) ?? { pass: true };
+          if (owner !== this.generation) return false;
+          try { await this.online.choice(count, req.choiceId, answer); } catch (e) { if (!/already/.test(e.message)) { this._toast(`Your response was not recorded: ${hostMessage(e)}`, true); } }
+        } else {
+          this._waitingRemoteChoice = req; this._renderAll();
+          try { answer = (await this.online.waitChoice(count, idx)).answer; } finally { this._waitingRemoteChoice = null; }
+        }
+      } else if (this.deciders?.[req.seat]) answer = await this.deciders[req.seat].respond(this, this.bots[req.seat], req);
       else if (this.bots[req.seat]) answer = this.bots[req.seat].choose(req, state, ctx);
       else answer = await this._askResponse(req);
       if (owner !== this.generation) return false;
@@ -715,6 +832,8 @@ export class VersusApp {
     this.resolving = false;
     pc?.resolve({ pass: true, detached: true });
     pb?.resolve();
+    this._onlineUnsub?.();
+    this._onlineUnsub = null;
     // outstanding model requests are cancelled; their generation fence still applies to any late reply
     for (const d of Object.values(this.deciders ?? {})) d.dispose();
     this.table?.dispose();
@@ -1703,9 +1822,10 @@ export class VersusApp {
     this.el.navBtn = h('button', { class: 'strip-btn', 'aria-expanded': String(document.body.classList.contains('roster-open')), 'aria-controls': 'roster', title: 'Parties and Cards (N)', onclick: () => this._toggleRoster() }, '☰ Parties & Cards');
     this.el.matchbar.replaceChildren(...[
       h('div', { class: `crest ${me.toLowerCase()}`, title: `You are seat ${me}` }, me, h('small', {}, this.seats[me] === 'bot' ? 'bot' : 'you')),
+      this.onlineMatch ? h('div', { class: `online-opp ${this.onlineMatch.connection}`, title: `Online match ${this.onlineMatch.matchId}` }, 'vs ', h('b', {}, this.onlineMatch.opponentLabel), this.onlineMatch.connection === 'reconnecting' ? ' · reconnecting' : this.onlineMatch.connection === 'waiting' ? ' · connecting' : '') : null,
       h('div', { class: 'tick' }, this.session.fixture ? h('span', { class: 'fixture-tag', title: 'This state was prepared directly as a diagnostic fixture; it did not emerge from ordinary play.' }, 'FIXTURE') : null, h('b', {}, term('tick', `Tick ${s.tick}`)), ' · ', r.period === 'prologue' ? 'Prologue' : term('round', `Round ${r.round}`)),
       h('div', { class: 'active' }, term('active', 'Active'), ' ', ...s.activeColumns.map((c) => h('span', { class: 'colchip' }, `C${this.ctx.geo.toLocal(me, c, 1).column}`))),
-      h('div', { class: 'phase', role: 'status' }, this.playback ? 'Resolving…' : this.pendingChoice ? `Response · ${this.pendingChoice.req.seat} to act` : s.outcome ? 'Match over' : can.stale ? 'Acknowledge the changed pair' : can.current ? `Committed — ${this._readyValid(other(me)) ? 'resolving' : `waiting for ${other(me)}`}` : this.watch ? `Bots · ${{ run: 'running', pause: 'paused', step: 'stepping', stop: 'stopped' }[this.auto?.mode] ?? ''}` : 'Planning'),
+      h('div', { class: 'phase', role: 'status' }, this.playback ? 'Resolving…' : this.pendingChoice ? `Response · ${this.pendingChoice.req.seat} to act` : this._waitingRemoteChoice ? `Response · waiting for ${this.onlineMatch?.opponentLabel ?? other(me)}` : this._waitingAgreed ? 'Confirming the Tick…' : s.outcome ? 'Match over' : can.stale ? 'Acknowledge the changed pair' : can.current ? `Committed — ${this._readyValid(other(me)) ? 'resolving' : `waiting for ${other(me)}`}` : this.watch ? `Bots · ${{ run: 'running', pause: 'paused', step: 'stepping', stop: 'stopped' }[this.auto?.mode] ?? ''}` : 'Planning'),
       h('div', { class: 'cmds', title: 'Commander health (the match ends if one falls)' }, ...['A', 'B'].map((seat) => { const c = cmd(seat); return h('span', { class: `cmdhp ${seat.toLowerCase()}` }, `${seat}★ ${c?.alive ? `${pts(c.hp)}/${pts(c.maxHp)}` : 'fallen'}`); })),
       this.el.navBtn, this.el.ordersBtn, this.el.readyBig, this._autoControls(),
       h('div', { class: 'speed' }, h('label', {}, h('span', { class: 'sr' }, 'Playback speed '), h('select', { 'aria-label': 'Playback speed', onchange: (e) => (this.speed = Number(e.target.value)) }, ...[0.5, 1, 2, 4].map((v) => h('option', { value: v, selected: v === this.speed }, `${v}×`))))),
@@ -1879,7 +1999,7 @@ export class VersusApp {
         stat('Mana burned', sum.manaBurned.A, sum.manaBurned.B),
         stat('Members lost', sum.casualties.A, sum.casualties.B)),
       h('p', { class: 'dim small' }, `First contact on Tick ${sum.firstEngagementTick ?? '—'} · ${sum.engagements} contacts · ${sum.merges} merges · damage ${+sum.damage.physical.toFixed(1)} Physical / ${+sum.damage.magic.toFixed(1)} Magic. The replay recomputes this match exactly (npm run replay -- file.json).`),
-      h('div', { class: 'row center' }, h('button', { onclick: () => (this.el.overlay.hidden = true) }, 'Inspect the board'), h('button', { onclick: () => this._downloadReplay() }, 'Download replay'), h('button', { class: 'primary', onclick: () => this.showSetup() }, 'New match'))));
+      h('div', { class: 'row center' }, h('button', { onclick: () => (this.el.overlay.hidden = true) }, 'Inspect the board'), h('button', { onclick: () => this._downloadReplay() }, 'Download replay'), h('button', { class: 'primary', onclick: () => this.showSetup() }, this.onlineMatch ? 'Return to lobby' : 'New match'))));
     this.el.overlay.hidden = false;
     this.sound?.play(o.result === 'win' ? 'levelup' : 'close', { volume: 0.6 });
     if (this._resultSaid !== this.generation) { this._resultSaid = this.generation; this.table?.result(o); }
@@ -2052,6 +2172,8 @@ export class VersusApp {
     if (this.pendingChoice) return { state: 'choice', main: 'Response window', sub: `${this.pendingChoice.req.seat} to respond or pass`, pinned: 'Response window open' };
     if (!c.human) return { state: 'watch', main: '', sub: '', pinned: `${me} is a bot` };
     if (c.stale) return { state: 'ack', main: 'Acknowledge updated plan ▶', sub: `Your plan is frozen · review ${opp}'s changes (NEW / REMOVED)`, pinned: `Acknowledge updated plan (${me})` };
+    if (this._readyPending) return { state: 'waiting', main: 'Committing…', sub: 'Saving your Ready', pinned: 'Committing your Ready' };
+    if (c.current && this.onlineMatch) { const who = this.onlineMatch.opponentLabel; const away = this.onlineMatch.connection === 'reconnecting'; return { state: 'waiting', main: `Ready · waiting for ${who}`, sub: away ? `Your plan is committed · reconnecting to ${who}` : `Your plan is committed · ${who} is planning`, pinned: `Ready ✓ · committed (${me})` }; }
     if (c.current) return { state: 'waiting', main: `Waiting for ${opp}…`, sub: `Your plan is frozen · ${opp} is planning`, pinned: `Ready ✓ · frozen (${me})` };
     if (c.invalid) return { state: 'blocked', main: `Fix ${c.invalid} order${c.invalid > 1 ? 's' : ''}`, sub: 'Open Orders: repair or remove the invalid orders before Ready', pinned: 'Ready blocked by invalid orders' };
     return n
