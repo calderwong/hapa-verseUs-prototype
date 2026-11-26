@@ -204,3 +204,29 @@ The required private engine dependency needs an accessible approved distribution
 CJ selected an Electron wrapper with required runtime/assets included. [Addendum 08](../requirements/2026-11-25-human-feedback-addendum-08.md), [Electron desktop delivery v1](electron-desktop-v1.md) and amended [Assignment 16](../reviews/2026-11-25-next-agent-assignment-16.md) extend the same P2P milestone. This is a planning amendment against `698070b`, not an installed-app claim.
 
 The package must include the game/engine/native peer runtime and approved starter content; use stable OS userData and a sandboxed renderer with a narrow IPC bridge. Existing Vite-only owner proxies and Harbor's unbundled Red puppet module require explicit desktop adapters/content snapshots. Private owner data/models/credentials remain optional and outside the installer. Actual relay/archive operation remains an external service fact. Qualify the real installed macOS arm64 artifact through the selected network/recovery journey before claiming the desktop promise delivered.
+
+## Response 16 (25 November 2026) — desktop app and P2P play
+
+[Response 16](../reviews/2026-11-25-p2p-implementation-response-16.md), candidate `5326438`.
+
+**Delivered:**
+- An Electron 45.3.0 / Forge 8.0.1 macOS arm64 app: `app://versus`, a sandboxed renderer with a CJS bridge, and the peer runtime in a utility process, with data under OS userData.
+- A Hyperswarm lobby with authenticated HELLO, presence, signed challenges, open tables, invitations and a jointly signed session.
+- Journal-replay recovery.
+- Verified public results with a headless archive (`lobby:serve`).
+- Shared owner routes (`src/hapa/host/owner-routes.js`, used by Vite and the desktop through `owners.json`).
+
+**Owner notes:**
+- Music and Harbor capabilities forward in the desktop app.
+- Red stays text-only there, because Harbor's renderer accepts only http(s) mount URLs; this needs Harbor's change or an approved snapshot.
+- No owner repository was changed.
+
+**Open:**
+- Developer ID signing and notarization.
+- A different-network run.
+- Operated archive and relay hosts.
+- The public engine snapshot ([engine-runtime-manifest.json](engine-runtime-manifest.json)).
+- CJ's acceptance.
+
+Operations are in the [runbook](online-desktop-runbook.md).
+

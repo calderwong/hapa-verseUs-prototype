@@ -1,0 +1,213 @@
+{
+ "schema": "hapa-versus-desktop-content/v1",
+ "app": {
+  "bundleId": "com.hapa.versus",
+  "version": "0.1.0",
+  "executable": "Hapa Versus",
+  "electron": "45.3.0"
+ },
+ "build": {
+  "source": "532643846f815106f7e33551099d02008e03c4d2",
+  "dirty": false,
+  "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "builtAt": "2026-11-26T03:17:18.912Z",
+  "target": "darwin-arm64"
+ },
+ "asar": {
+  "sha256": "357c7f2c627b3be42d6c9453d6dadcd9a1e7aa6620a04382c189574d4198b3e4",
+  "bytes": 11750040,
+  "files": 613
+ },
+ "groups": {
+  "/desktop": 9,
+  "/dist/assets": 29,
+  "/dist/index.html": 1,
+  "/dist/versus.html": 1,
+  "/fixtures": 4,
+  "/node_modules/.package-lock.json": 1,
+  "/node_modules/@hyperswarm/secret-stream": 5,
+  "/node_modules/adaptive-timeout": 3,
+  "/node_modules/b4a": 11,
+  "/node_modules/bare-addon-resolve": 4,
+  "/node_modules/bare-ansi-escapes": 4,
+  "/node_modules/bare-assert": 5,
+  "/node_modules/bare-buffer": 16,
+  "/node_modules/bare-events": 6,
+  "/node_modules/bare-fs": 9,
+  "/node_modules/bare-host-parser": 4,
+  "/node_modules/bare-inspect": 6,
+  "/node_modules/bare-module-resolve": 4,
+  "/node_modules/bare-path": 11,
+  "/node_modules/bare-semver": 8,
+  "/node_modules/bare-stream": 6,
+  "/node_modules/bare-type": 6,
+  "/node_modules/bare-url": 9,
+  "/node_modules/big-sparse-array": 5,
+  "/node_modules/bits-to-bytes": 3,
+  "/node_modules/blind-relay": 4,
+  "/node_modules/bogon": 6,
+  "/node_modules/compact-encoding": 6,
+  "/node_modules/compact-encoding-bitfield": 3,
+  "/node_modules/compact-encoding-net": 8,
+  "/node_modules/device-file": 3,
+  "/node_modules/dht-rpc": 10,
+  "/node_modules/events-universal": 6,
+  "/node_modules/fast-fifo": 4,
+  "/node_modules/fd-lock": 3,
+  "/node_modules/flat-tree": 3,
+  "/node_modules/fs-native-extensions": 9,
+  "/node_modules/generate-object-property": 5,
+  "/node_modules/generate-string": 3,
+  "/node_modules/hypercore": 31,
+  "/node_modules/hypercore-crypto": 3,
+  "/node_modules/hypercore-errors": 3,
+  "/node_modules/hypercore-id-encoding": 3,
+  "/node_modules/hypercore-storage": 15,
+  "/node_modules/hyperdht": 28,
+  "/node_modules/hyperdht-address": 5,
+  "/node_modules/hyperschema": 10,
+  "/node_modules/hyperswarm": 8,
+  "/node_modules/index-encoder": 8,
+  "/node_modules/is-options": 5,
+  "/node_modules/is-property": 4,
+  "/node_modules/kademlia-routing-table": 3,
+  "/node_modules/nanoassert": 6,
+  "/node_modules/nat-sampler": 5,
+  "/node_modules/noise-curve-ed": 3,
+  "/node_modules/noise-handshake": 8,
+  "/node_modules/protomux": 3,
+  "/node_modules/queue-tick": 6,
+  "/node_modules/quickbit-native": 7,
+  "/node_modules/quickbit-universal": 4,
+  "/node_modules/random-array-iterator": 5,
+  "/node_modules/ready-resource": 3,
+  "/node_modules/record-cache": 6,
+  "/node_modules/refcounter": 4,
+  "/node_modules/require-addon": 5,
+  "/node_modules/resolve-reject-promise": 4,
+  "/node_modules/resource-on-exit": 4,
+  "/node_modules/rocksdb-native": 16,
+  "/node_modules/safety-catch": 4,
+  "/node_modules/scope-lock": 3,
+  "/node_modules/shuffled-priority-queue": 6,
+  "/node_modules/signal-promise": 4,
+  "/node_modules/simdle-native": 7,
+  "/node_modules/simdle-universal": 5,
+  "/node_modules/sodium-native": 7,
+  "/node_modules/sodium-secretstream": 4,
+  "/node_modules/sodium-universal": 29,
+  "/node_modules/streamx": 4,
+  "/node_modules/teex": 5,
+  "/node_modules/text-decoder": 5,
+  "/node_modules/time-ordered-set": 3,
+  "/node_modules/timeout-refresh": 8,
+  "/node_modules/udx-native": 11,
+  "/node_modules/unordered-set": 5,
+  "/node_modules/unslab": 3,
+  "/node_modules/which-runtime": 3,
+  "/node_modules/xache": 3,
+  "/node_modules/z32": 6,
+  "/package.json": 1,
+  "/src/hapa/controllers": 1,
+  "/src/hapa/host": 1,
+  "/src/hapa/network": 9,
+  "/src/hapa/protocol": 4,
+  "/src/hapa/rules": 14
+ },
+ "fonts": [
+  "cinzel-latin-600-normal.woff",
+  "cinzel-latin-600-normal.woff2",
+  "cinzel-latin-ext-600-normal.woff2",
+  "cinzel-latin-ext-600-normal.woff",
+  "crimson-pro-latin-400-normal.woff2",
+  "crimson-pro-latin-400-normal.woff",
+  "crimson-pro-latin-ext-400-normal.woff2",
+  "crimson-pro-latin-ext-400-normal.woff",
+  "crimson-pro-vietnamese-400-normal.woff2",
+  "crimson-pro-vietnamese-400-normal.woff",
+  "pixelify-sans-cyrillic-400-normal.woff",
+  "pixelify-sans-latin-400-normal.woff2",
+  "pixelify-sans-latin-400-normal.woff",
+  "pixelify-sans-latin-ext-400-normal.woff",
+  "pixelify-sans-latin-ext-400-normal.woff2"
+ ],
+ "unpackedNatives": [
+  {
+   "path": "node_modules/fs-native-extensions/prebuilds/darwin-arm64/fs-native-extensions.node",
+   "bytes": 73464,
+   "sha256": "17e3f8bc455b1013aa103fa9aafc83d86cb4c66df403487f8b94add055421028"
+  },
+  {
+   "path": "node_modules/quickbit-native/prebuilds/darwin-arm64/quickbit-native.node",
+   "bytes": 82104,
+   "sha256": "e75e138b7c157ab81fc456d6fa0b67174c948a584f82b712043105ee894565f8"
+  },
+  {
+   "path": "node_modules/rocksdb-native/prebuilds/darwin-arm64/rocksdb-native.node",
+   "bytes": 8330176,
+   "sha256": "dc085eb9484a8df686af9e5baee677ee4ac4e490d0ddff8bcda4fd88dc64ac18"
+  },
+  {
+   "path": "node_modules/simdle-native/prebuilds/darwin-arm64/simdle-native.node",
+   "bytes": 155584,
+   "sha256": "387e0dc161f8d8414e9499ae06e2424b69fd54e043e4be63b4b8d6e19a62b027"
+  },
+  {
+   "path": "node_modules/sodium-native/prebuilds/darwin-arm64/sodium-native.node",
+   "bytes": 678944,
+   "sha256": "967889d03bbd7df6d98c52472687c23fec2f23f2300ec4c1440af25352556f5f"
+  },
+  {
+   "path": "node_modules/udx-native/prebuilds/darwin-arm64/udx-native.node",
+   "bytes": 194656,
+   "sha256": "5c61cb5cdb89ebd018090220ba26da062dc414583622a92a15553dfb883eb117"
+  }
+ ],
+ "networkConfig": {
+  "public-alpha": {
+   "lobby": "hapa-versus-lobby/v1",
+   "online": "hapa-versus-online/v1",
+   "bootstrap": "hyperdht-public-defaults",
+   "relays": [],
+   "archives": []
+  }
+ },
+ "excluded": {
+  "checked": [
+   "/\\/dist\\/renditions\\//",
+   "/identity\\.json$/",
+   "/transport\\.json$/",
+   "/owners\\.json$/",
+   "/\\.env/",
+   "/api-token/",
+   "/operator\\.token/",
+   "/\\.key$/",
+   "/\\/\\.data\\//",
+   "/\\/reference_documents\\//",
+   "/\\/vendor\\/lumina\\//",
+   "/\\/docs\\//"
+  ],
+  "violations": []
+ },
+ "signing": {
+  "adhoc": true,
+  "teamIdentifier": "not set",
+  "identifier": "com.hapa.versus",
+  "deepVerify": "valid",
+  "gatekeeper": "rejected"
+ },
+ "starterContent": {
+  "included": [
+   "procedural unit kit, scenery and fallback Card faces (code)",
+   "Luminati engine runtime compiled into dist/ (MIT; see engine-runtime-manifest.json)",
+   "three.js (MIT, compiled into dist/)",
+   "fonts above (SIL OFL via @fontsource)",
+   "app icon generated by tools/hapa/make-icon.py"
+  ],
+  "notIncluded": [
+   "Card renditions from public/renditions (owner media; excluded by the allowlist)",
+   "Red renderer/Avatar snapshot (awaits an approved distribution; Harbor serves it when configured)",
+   "music libraries, voice, models, Harness, Overwind, Second Brain (optional owners)"
+  ]
+ }
+}

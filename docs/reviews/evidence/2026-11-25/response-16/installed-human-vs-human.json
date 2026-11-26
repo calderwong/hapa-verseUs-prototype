@@ -1,0 +1,292 @@
+{
+ "kind": "two installed copies of build 5326438 on the same Mac, separate data roots, playing each other through the real lobby/challenge/accept UI (DOM clicks); public DHT; test network",
+ "cal": {
+  "ok": true,
+  "script": "online",
+  "ms": 29788,
+  "about": {
+   "app": "Hapa Versus",
+   "version": "0.1.0",
+   "packaged": true,
+   "electron": "45.3.0",
+   "chrome": "156.0.8078.96",
+   "node": "24.22.2",
+   "platform": "darwin",
+   "arch": "arm64",
+   "network": "test-hh2-1795663085",
+   "build": {
+    "source": "532643846f815106f7e33551099d02008e03c4d2",
+    "dirty": false,
+    "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "builtAt": "2026-11-26T03:17:18.912Z",
+    "target": "darwin-arm64"
+   },
+   "peer": {
+    "runtime": "hapa-versus-peer-runtime/0.2.0",
+    "fingerprint": "1137-290c-834f"
+   },
+   "name": "Hapa Versus"
+  },
+  "me": "1137-290c-834f",
+  "seat": "A",
+  "opponent": "Bea",
+  "outcome": {
+   "result": "win",
+   "winner": "B",
+   "loser": "A",
+   "tick": 11,
+   "reasons": [
+    {
+     "seat": "A",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:027b2454b8b99ba45e7114fb13b38fb191634fa7ef544b636e0e1d24c6ce556e",
+  "ticksAgreed": 11,
+  "viewMatchesAgreed": true,
+  "readyClicks": 11,
+  "choicesAnswered": 0,
+  "readyAckMs": {
+   "n": 11,
+   "median": 58,
+   "p95": 97,
+   "max": 97
+  },
+  "reloaded": false,
+  "feeds": {
+   "own": {
+    "length": 34,
+    "fork": 0
+   },
+   "remote": {
+    "length": 34,
+    "read": 34,
+    "fork": 0
+   }
+  },
+  "log": [
+   {
+    "t": 490,
+    "step": "join",
+    "joinBtn": true
+   },
+   {
+    "t": 3558,
+    "step": "opponentSeen",
+    "ok": true
+   },
+   {
+    "t": 3587,
+    "step": "challenged"
+   },
+   {
+    "t": 7525,
+    "step": "tableOpen",
+    "seat": "A",
+    "opponent": "Bea",
+    "tick": 1,
+    "seats": {
+     "A": "human",
+     "B": "remote"
+    }
+   },
+   {
+    "t": 27695,
+    "step": "concede",
+    "tick": 11
+   },
+   {
+    "t": 28192,
+    "step": "result",
+    "outcome": {
+     "result": "win",
+     "winner": "B",
+     "loser": "A",
+     "tick": 11,
+     "reasons": [
+      {
+       "seat": "A",
+       "reason": "conceded"
+      }
+     ]
+    }
+   }
+  ],
+  "ticksSample": [
+   {
+    "tick": 1,
+    "planned": "3 orders",
+    "readyAckMs": 64,
+    "label": "Resolving…"
+   },
+   {
+    "tick": 2,
+    "planned": "3 orders",
+    "readyAckMs": 58,
+    "label": "Ready · waiting for BeaYour plan is committed · Bea is planning"
+   },
+   {
+    "tick": 3,
+    "planned": "3 orders",
+    "readyAckMs": 80,
+    "label": "Resolving…"
+   },
+   {
+    "tick": 4,
+    "planned": "3 orders",
+    "readyAckMs": 42,
+    "label": "Ready · waiting for BeaYour plan is committed · Bea is planning"
+   },
+   {
+    "tick": 5,
+    "planned": "1 orders",
+    "readyAckMs": 64,
+    "label": "Resolving…"
+   }
+  ],
+  "consoleWarnings": 0
+ },
+ "bea": {
+  "ok": true,
+  "script": "online",
+  "ms": 32650,
+  "about": {
+   "app": "Hapa Versus",
+   "version": "0.1.0",
+   "packaged": true,
+   "electron": "45.3.0",
+   "chrome": "156.0.8078.96",
+   "node": "24.22.2",
+   "platform": "darwin",
+   "arch": "arm64",
+   "network": "test-hh2-1795663085",
+   "build": {
+    "source": "532643846f815106f7e33551099d02008e03c4d2",
+    "dirty": false,
+    "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "builtAt": "2026-11-26T03:17:18.912Z",
+    "target": "darwin-arm64"
+   },
+   "peer": {
+    "runtime": "hapa-versus-peer-runtime/0.2.0",
+    "fingerprint": "6775-b664-2b7c"
+   },
+   "name": "Hapa Versus"
+  },
+  "me": "6775-b664-2b7c",
+  "seat": "B",
+  "opponent": "Cal",
+  "outcome": {
+   "result": "win",
+   "winner": "B",
+   "loser": "A",
+   "tick": 11,
+   "reasons": [
+    {
+     "seat": "A",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:027b2454b8b99ba45e7114fb13b38fb191634fa7ef544b636e0e1d24c6ce556e",
+  "ticksAgreed": 11,
+  "viewMatchesAgreed": true,
+  "readyClicks": 11,
+  "choicesAnswered": 0,
+  "readyAckMs": {
+   "n": 11,
+   "median": 49,
+   "p95": 103,
+   "max": 103
+  },
+  "reloaded": false,
+  "feeds": {
+   "own": {
+    "length": 34,
+    "fork": 0
+   },
+   "remote": {
+    "length": 34,
+    "read": 34,
+    "fork": 0
+   }
+  },
+  "log": [
+   {
+    "t": 163,
+    "step": "join",
+    "joinBtn": true
+   },
+   {
+    "t": 6633,
+    "step": "challengeReceived",
+    "ok": true
+   },
+   {
+    "t": 6664,
+    "step": "accepted"
+   },
+   {
+    "t": 7342,
+    "step": "tableOpen",
+    "seat": "B",
+    "opponent": "Cal",
+    "tick": 1,
+    "seats": {
+     "B": "human",
+     "A": "remote"
+    }
+   },
+   {
+    "t": 31050,
+    "step": "result",
+    "outcome": {
+     "result": "win",
+     "winner": "B",
+     "loser": "A",
+     "tick": 11,
+     "reasons": [
+      {
+       "seat": "A",
+       "reason": "conceded"
+      }
+     ]
+    }
+   }
+  ],
+  "ticksSample": [
+   {
+    "tick": 1,
+    "planned": "3 orders",
+    "readyAckMs": 49,
+    "label": "Ready · waiting for CalYour plan is committed · Cal is planning"
+   },
+   {
+    "tick": 2,
+    "planned": "3 orders",
+    "readyAckMs": 73,
+    "label": "Resolving…"
+   },
+   {
+    "tick": 3,
+    "planned": "3 orders",
+    "readyAckMs": 41,
+    "label": "Ready · waiting for CalYour plan is committed · Cal is planning"
+   },
+   {
+    "tick": 4,
+    "planned": "3 orders",
+    "readyAckMs": 70,
+    "label": "Resolving…"
+   },
+   {
+    "tick": 5,
+    "planned": "1 orders",
+    "readyAckMs": 46,
+    "label": "Ready · waiting for CalYour plan is committed · Cal is planning"
+   }
+  ],
+  "consoleWarnings": 0
+ }
+}

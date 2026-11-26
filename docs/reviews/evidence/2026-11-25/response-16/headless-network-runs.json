@@ -1,0 +1,377 @@
+{
+ "kind": "headless peers (tools/hapa/online.mjs, lobby-serve) on this one Mac; public HyperDHT bootstrap; isolated test-* networks. Attachment evidence, NOT different-network evidence",
+ "publicDhtBotMatch": {
+  "A": {
+   "matchId": "hv-5bd88093846a47793855886d91357c1f",
+   "outcome": {
+    "result": "win",
+    "winner": "A",
+    "loser": "B",
+    "tick": 24,
+    "reasons": [
+     {
+      "seat": "B",
+      "reason": "commander_died",
+      "memberId": "B.C5.m5"
+     }
+    ]
+   },
+   "finalHash": "sha256:414a354992301128bbe135e54aa0fd2e62052d3b9fc714027e7d976d261af441",
+   "ticks": 24,
+   "me": "Ada"
+  },
+  "B": {
+   "matchId": "hv-5bd88093846a47793855886d91357c1f",
+   "outcome": {
+    "result": "win",
+    "winner": "A",
+    "loser": "B",
+    "tick": 24,
+    "reasons": [
+     {
+      "seat": "B",
+      "reason": "commander_died",
+      "memberId": "B.C5.m5"
+     }
+    ]
+   },
+   "finalHash": "sha256:414a354992301128bbe135e54aa0fd2e62052d3b9fc714027e7d976d261af441",
+   "ticks": 24,
+   "me": "Bram"
+  }
+ },
+ "hardKillRecovery": {
+  "note": "B SIGKILLed after 7 agreed Ticks with its Tick-8 Ready already committed, restarted on the same store; B re-signed nothing it had committed (7 new Ready commits for Ticks 9-15)",
+  "A": {
+   "matchId": "hv-6a60cbea40b2f6eb24e6a23cf59676ca",
+   "outcome": {
+    "result": "win",
+    "winner": "B",
+    "loser": "A",
+    "tick": 15,
+    "reasons": [
+     {
+      "seat": "A",
+      "reason": "capital_captured",
+      "partyId": "B.mount.C4",
+      "capital": {
+       "column": 5,
+       "row": 1
+      }
+     }
+    ]
+   },
+   "finalHash": "sha256:31cd3d96d74cd55d2a1859c219104eb5e27d034c5b52315e30d114c9da1ec5a8",
+   "ticks": 15,
+   "me": "Ada"
+  },
+  "B_restart": [
+   {
+    "ready": {
+     "fingerprint": "dc0b-0b6c-9a0a",
+     "label": "Bram",
+     "controller": "bot",
+     "launch": 1,
+     "resumed": {
+      "matchId": "hv-6a60cbea40b2f6eb24e6a23cf59676ca",
+      "status": "active",
+      "seat": "B"
+     }
+    }
+   },
+   {
+    "RESULT": {
+     "matchId": "hv-6a60cbea40b2f6eb24e6a23cf59676ca",
+     "outcome": {
+      "result": "win",
+      "winner": "B",
+      "loser": "A",
+      "tick": 15,
+      "reasons": [
+       {
+        "seat": "A",
+        "reason": "capital_captured",
+        "partyId": "B.mount.C4",
+        "capital": {
+         "column": 5,
+         "row": 1
+        }
+       }
+      ]
+     },
+     "finalHash": "sha256:31cd3d96d74cd55d2a1859c219104eb5e27d034c5b52315e30d114c9da1ec5a8",
+     "ticks": 15,
+     "me": "Bram"
+    }
+   }
+  ]
+ },
+ "archiveObserver": {
+  "A": [
+   {
+    "RESULT": {
+     "matchId": "hv-e247ef5055b59b22a51824af5c314f5d",
+     "outcome": {
+      "result": "win",
+      "winner": "B",
+      "loser": "A",
+      "tick": 21,
+      "reasons": [
+       {
+        "seat": "A",
+        "reason": "capital_captured",
+        "partyId": "B.mount.C6",
+        "capital": {
+         "column": 5,
+         "row": 1
+        }
+       }
+      ]
+     },
+     "finalHash": "sha256:21870b3579e68428869a061c523204e651a3d7c4cd28575280f2936cc0115906",
+     "ticks": 21,
+     "me": "Ada"
+    }
+   },
+   {
+    "ARCHIVED": {
+     "by": "Hapa Archive",
+     "status": "added"
+    }
+   }
+  ],
+  "B": [
+   {
+    "RESULT": {
+     "matchId": "hv-e247ef5055b59b22a51824af5c314f5d",
+     "outcome": {
+      "result": "win",
+      "winner": "B",
+      "loser": "A",
+      "tick": 21,
+      "reasons": [
+       {
+        "seat": "A",
+        "reason": "capital_captured",
+        "partyId": "B.mount.C6",
+        "capital": {
+         "column": 5,
+         "row": 1
+        }
+       }
+      ]
+     },
+     "finalHash": "sha256:21870b3579e68428869a061c523204e651a3d7c4cd28575280f2936cc0115906",
+     "ticks": 21,
+     "me": "Bram"
+    }
+   },
+   {
+    "ARCHIVED": {
+     "by": "Hapa Archive",
+     "status": "duplicate"
+    }
+   }
+  ],
+  "observerAfterAuthorsExited": {
+   "archives": [
+    "Hapa Archive"
+   ],
+   "firstSync": {
+    "archives": 1,
+    "fetched": 1,
+    "added": 1,
+    "duplicate": 0,
+    "refused": 0,
+    "disputed": 0
+   },
+   "secondSync": {
+    "archives": 1,
+    "fetched": 0,
+    "added": 0,
+    "duplicate": 1,
+    "refused": 0,
+    "disputed": 0
+   },
+   "results": 1,
+   "profiles": [
+    {
+     "label": "Ada",
+     "fingerprint": "a80b-8bfa",
+     "buckets": {
+      "bot-vs-bot": {
+       "wins": 0,
+       "losses": 1,
+       "draws": 0,
+       "completed": 1,
+       "decisive": 1,
+       "winRate": 0
+      }
+     },
+     "disputed": 0
+    },
+    {
+     "label": "Bram",
+     "fingerprint": "97ba-d996",
+     "buckets": {
+      "bot-vs-bot": {
+       "wins": 1,
+       "losses": 0,
+       "draws": 0,
+       "completed": 1,
+       "decisive": 1,
+       "winRate": 1
+      }
+     },
+     "disputed": 0
+    }
+   ]
+  },
+  "observerRestart": {
+   "archives": 1,
+   "fetched": 0,
+   "added": 0,
+   "duplicate": 1,
+   "refused": 0,
+   "disputed": 0
+  }
+ },
+ "invitation": {
+  "host": {
+   "matchId": "hv-c71a447051ca3ca2a79330c188583b9e",
+   "outcome": {
+    "result": "win",
+    "winner": "A",
+    "loser": "B",
+    "tick": 42,
+    "reasons": [
+     {
+      "seat": "B",
+      "reason": "commander_died",
+      "memberId": "B.C5.m5"
+     }
+    ]
+   },
+   "finalHash": "sha256:686806bc55d7d9939f3c50b7b46aea1d6a70c6f9ab6a9ebc7ca6cef85ea5f799",
+   "ticks": 42,
+   "me": "Host"
+  },
+  "guest": [
+   {
+    "joined": true
+   },
+   {
+    "RESULT": {
+     "matchId": "hv-c71a447051ca3ca2a79330c188583b9e",
+     "outcome": {
+      "result": "win",
+      "winner": "A",
+      "loser": "B",
+      "tick": 42,
+      "reasons": [
+       {
+        "seat": "B",
+        "reason": "commander_died",
+        "memberId": "B.C5.m5"
+       }
+      ]
+     },
+     "finalHash": "sha256:686806bc55d7d9939f3c50b7b46aea1d6a70c6f9ab6a9ebc7ca6cef85ea5f799",
+     "ticks": 42,
+     "me": "Guest"
+    }
+   }
+  ],
+  "lateJoiner": {
+   "joinError": "that table is no longer open"
+  }
+ },
+ "localBlindRelay": {
+  "note": "blind-relay@2.2.2 Server on this Mac (port 49777); both peers forced through it; path observed from the connection endpoint",
+  "A": [
+   {
+    "PATHS": [
+     {
+      "label": "Bram",
+      "path": "relayed"
+     }
+    ]
+   },
+   {
+    "RESULT": {
+     "matchId": "hv-cd4687c3ee7b510a8f99a6151bbe17e0",
+     "outcome": {
+      "result": "win",
+      "winner": "A",
+      "loser": "B",
+      "tick": 33,
+      "reasons": [
+       {
+        "seat": "B",
+        "reason": "commander_died",
+        "memberId": "B.C5.m5"
+       }
+      ]
+     },
+     "finalHash": "sha256:9cbd63a5ec9f1a6f81471e16dd7dab04c914bfe92d06524e5c89663a363453bd",
+     "ticks": 33,
+     "me": "Ada"
+    }
+   }
+  ],
+  "B": [
+   {
+    "PATHS": [
+     {
+      "label": "Ada",
+      "path": "relayed"
+     }
+    ]
+   },
+   {
+    "RESULT": {
+     "matchId": "hv-cd4687c3ee7b510a8f99a6151bbe17e0",
+     "outcome": {
+      "result": "win",
+      "winner": "A",
+      "loser": "B",
+      "tick": 33,
+      "reasons": [
+       {
+        "seat": "B",
+        "reason": "commander_died",
+        "memberId": "B.C5.m5"
+       }
+      ]
+     },
+     "finalHash": "sha256:9cbd63a5ec9f1a6f81471e16dd7dab04c914bfe92d06524e5c89663a363453bd",
+     "ticks": 33,
+     "me": "Bram"
+    }
+   }
+  ],
+  "relayStats": {
+   "stats": {
+    "sessions": {
+     "accepted": 2,
+     "opened": 2,
+     "closed": 2,
+     "active": 0
+    },
+    "pairings": {
+     "requested": 2,
+     "matched": 1,
+     "cancelled": 0,
+     "pending": 0,
+     "active": 0
+    },
+    "streams": {
+     "opened": 2,
+     "closed": 2,
+     "errors": 1,
+     "active": 0
+    }
+   }
+  }
+ }
+}

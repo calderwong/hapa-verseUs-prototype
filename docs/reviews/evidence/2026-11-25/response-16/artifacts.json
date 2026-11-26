@@ -1,0 +1,54 @@
+{
+ "schema": "hapa-versus-artifacts/v1",
+ "candidate": {
+  "source": "532643846f815106f7e33551099d02008e03c4d2",
+  "dirty": false,
+  "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "target": "darwin-arm64",
+  "electron": "45.3.0",
+  "electronNode": "24.22.2",
+  "forge": "8.0.1",
+  "buildInfo": {
+   "source": "532643846f815106f7e33551099d02008e03c4d2",
+   "dirty": false,
+   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+   "builtAt": "2026-11-26T03:17:18.912Z",
+   "target": "darwin-arm64"
+  }
+ },
+ "artifacts": {
+  "dmg": {
+   "file": "Hapa Versus.dmg",
+   "bytes": 124323478,
+   "sha256": "c60544071b5c4e66fdfc6ec594f3b925a11edf91db5b5d816fc587d685cfc314"
+  },
+  "zip": {
+   "file": "Hapa Versus-darwin-arm64-0.1.0.zip",
+   "bytes": 126323430,
+   "sha256": "d6e40372c69a894b5f50f229937d23f6caa74beea1604a1ae1ebb05a995cdc43"
+  },
+  "appAsar": {
+   "sha256": "357c7f2c627b3be42d6c9453d6dadcd9a1e7aa6620a04382c189574d4198b3e4",
+   "bytes": 11750040
+  }
+ },
+ "buildHost": {
+  "os": "ProductName: macOS ProductVersion: 26.2 BuildVersion: 25C56",
+  "arch": "arm64"
+ },
+ "claims": {
+  "built": "yes (Electron Forge make, this Mac)",
+  "signed": "ad-hoc only (com.hapa.versus, consistent deep signature); no Developer ID available on this Mac (only a local self-signed identity)",
+  "notarized": "no",
+  "gatekeeper": "rejected (spctl), as expected for an unsigned/un-notarized app",
+  "published": "no (artifacts exist only in the ignored out/ folder of this checkout)",
+  "installed": "from the DMG into a scratch Applications folder on the build Mac (not /Applications, not a clean machine)",
+  "differentNetwork": "not run",
+  "acceptedByCJ": "no"
+ },
+ "earlierEvidenceBuild": {
+  "source": "38730734a7ab085820790d6876a69b6797003024",
+  "note": "installed-journey and response-choice runs used this candidate; it differs from 5326438 in app content only by the online result headline (Victory/Defeat) and the build-info dirty rule",
+  "appAsarSha256": "69bd96e4c7c80307f95b0b50b76b49e05525b9badedbbdadb83ee186f7bc4a98"
+ }
+}

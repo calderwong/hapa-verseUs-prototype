@@ -1,0 +1,86 @@
+{
+ "kind": "three installed copies (candidate build 38730734) against headless declared bots; desk1 answered four owned response windows through the response panel",
+ "runs": [
+  {
+   "run": 1,
+   "ok": true,
+   "ticksAgreed": 41,
+   "viewMatchesAgreed": true,
+   "choicesAnswered": 4,
+   "outcome": {
+    "result": "win",
+    "winner": "A",
+    "loser": "B",
+    "tick": 41,
+    "reasons": [
+     {
+      "seat": "B",
+      "reason": "commander_died",
+      "memberId": "B.C5.m5"
+     }
+    ]
+   },
+   "finalHash": "sha256:1ba153652ec4a724209c7c8182f1f0b2790f87a9f74e4e585de7cfffaca3b8ba",
+   "readyAckMs": {
+    "n": 41,
+    "median": 44,
+    "p95": 80,
+    "max": 120
+   }
+  },
+  {
+   "run": 2,
+   "ok": true,
+   "ticksAgreed": 22,
+   "viewMatchesAgreed": true,
+   "choicesAnswered": 0,
+   "outcome": {
+    "result": "win",
+    "winner": "B",
+    "loser": "A",
+    "tick": 22,
+    "reasons": [
+     {
+      "seat": "A",
+      "reason": "commander_died",
+      "memberId": "A.C5.m5"
+     }
+    ]
+   },
+   "finalHash": "sha256:60e0ef10b1bbc0b2a3b939fe9f60152b628541a7b00dc2ddb862d4e3cd6acff6",
+   "readyAckMs": {
+    "n": 22,
+    "median": 52,
+    "p95": 79,
+    "max": 138
+   }
+  },
+  {
+   "run": 3,
+   "ok": true,
+   "ticksAgreed": 22,
+   "viewMatchesAgreed": true,
+   "choicesAnswered": 0,
+   "outcome": {
+    "result": "win",
+    "winner": "B",
+    "loser": "A",
+    "tick": 22,
+    "reasons": [
+     {
+      "seat": "A",
+      "reason": "commander_died",
+      "memberId": "A.C5.m5"
+     }
+    ]
+   },
+   "finalHash": "sha256:0d4b6cca0279c3ad60690a60b2171e5ecd971f0ea7a8eceddf96e898c4cc06d6",
+   "readyAckMs": {
+    "n": 22,
+    "median": 58,
+    "p95": 123,
+    "max": 140
+   }
+  }
+ ]
+}

@@ -1,0 +1,8 @@
+npm run check on 532643846f815106f7e33551099d02008e03c4d2 (clean): exit 0
+ℹ tests 161
+ℹ pass 161
+ℹ fail 0
+✔ bot-versus-bot smoke match (1471 ms)
+✔ two-process peer-verified match (3321 ms)
+✔ build (495 ms)
+new suites: tests/hapa/online.test.js (admission, result verification, result index) — 3 tests, included above
