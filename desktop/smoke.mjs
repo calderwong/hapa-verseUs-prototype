@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function runSmoke(o) {
   mkdirSync(o.out, { recursive: true });
   o.win.webContents.on('console-message', (e) => { if (o.consoleLines.length < 120 && (e.level === 'warning' || e.level === 'error')) o.consoleLines.push(`${e.level}: ${String(e.message).slice(0, 300)}`); });
-  const result = o.script === 'online' ? await online(o) : await local(o);
+  const result = o.script === 'online' ? await online(o) : o.script === 'observe' ? await observe(o) : await local(o);
   writeFileSync(join(o.out, 'smoke.json'), JSON.stringify({ ...result, console: o.consoleLines }, null, 1));
   o.app.quit();
 }
@@ -74,11 +74,11 @@ async function online(o) {
     await until(o, `!!document.querySelector('.online-me')`, 30_000);
     await shot(o, '01-lobby');
     if (opponent) {
-      const seen = await until(o, `(() => { const li = [...document.querySelectorAll('.roster-online li')].find(li => li.querySelector('.who b')?.textContent === ${JSON.stringify(opponent)}); const b = li?.querySelector('button'); return b && !b.disabled ? true : null; })()`, 180_000, 500);
+      const seen = await until(o, `(() => { const li = [...document.querySelectorAll('.roster-online li')].find(li => li.querySelector('.who b')?.textContent === ${JSON.stringify(opponent)}); const b = li && [...li.querySelectorAll('button')].find((x) => x.textContent === 'Challenge'); return b && !b.disabled ? true : null; })()`, 180_000, 500);
       note({ step: 'opponentSeen', ok: !!seen });
       if (!seen) return { ok: false, script: 'online', error: `opponent ${opponent} not available`, log };
       await shot(o, '02-roster');
-      await js(o, `[...document.querySelectorAll('.roster-online li')].find(li => li.querySelector('.who b')?.textContent === ${JSON.stringify(opponent)}).querySelector('button').click()`);
+      await js(o, `[...[...document.querySelectorAll('.roster-online li')].find(li => li.querySelector('.who b')?.textContent === ${JSON.stringify(opponent)}).querySelectorAll('button')].find((x) => x.textContent === 'Challenge').click()`);
       note({ step: 'challenged' });
     } else {
       const got = await until(o, `!!document.querySelector('.challenge-in button.primary')`, 240_000, 500);
@@ -145,3 +145,32 @@ function summarize(xs) {
   const s = [...xs].sort((a, b) => a - b);
   return { n: s.length, median: s[Math.floor(s.length / 2)], p95: s[Math.min(s.length - 1, Math.floor(s.length * 0.95))], max: s.at(-1) };
 }
+
+/**
+ * A fresh installed observer (R16-03): join the lobby through the UI, wait for the configured
+ * archive, open Player records, then each player's Profile, and read what the ordinary UI shows.
+ */
+async function observe(o) {
+  const t0 = Date.now();
+  const status = await o.peer.ready;
+  await loaded(o);
+  await until(o, `!!document.querySelector('.online-panel')`, 30_000);
+  await js(o, `(() => { const i = document.querySelector('.online-panel input[type=text]'); const b = [...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join lobby'); if (i && b) { i.value = ${JSON.stringify(process.env.HAPA_VERSUS_SMOKE_NAME || 'Olu')}; i.dispatchEvent(new Event('input')); b.click(); } })()`);
+  const archive = await until(o, `(() => { const p = [...document.querySelectorAll('.online-panel p')].find(p => /Result archive: .* connected/.test(p.textContent)); return p ? p.textContent : null; })()`, 120_000, 500);
+  await shot(o, '01-observer-lobby');
+  await js(o, `[...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Player records').click()`);
+  const records = await until(o, `(() => { const li = [...document.querySelectorAll('.record-view .roster-online li')]; return li.length ? li.map(l => l.textContent) : null; })()`, 60_000, 500);
+  await shot(o, '02-player-records');
+  const profiles = [];
+  for (let i = 0; i < (records?.length ?? 0); i++) {
+    await js(o, `[...document.querySelectorAll('.record-view .roster-online li')][${i}].querySelector('button').click()`);
+    const text = await until(o, `(() => { const v = document.querySelector('.record-view'); return v && v.querySelector('h3') && !/Checking/.test(v.textContent) ? v.innerText : null; })()`, 60_000, 400);
+    profiles.push(text);
+    if (i === 0) await shot(o, '03-profile');
+    await js(o, `[...document.querySelectorAll('.record-view button')].find(b => /Back to the lobby/.test(b.textContent)).click()`);
+    await js(o, `[...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Player records').click()`);
+    await until(o, `document.querySelectorAll('.record-view .roster-online li').length > 0`, 30_000, 300);
+  }
+  return { ok: !!archive && profiles.length >= 2 && profiles.every((p) => /W–L–D/.test(p) && /Synced from/.test(p)), script: 'observe', ms: Date.now() - t0, about: o.about(), me: status.player?.fingerprint, archive, records, profiles };
+}
+

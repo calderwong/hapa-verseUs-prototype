@@ -20,7 +20,7 @@ const rt = new PeerRuntime({ root: resolve(data), networkId: arg('network', 'pub
   log: (s) => out({ log: s }), onEvent: (e) => { if (e.type === 'results' || e.kind === 'roster') out({ event: e.kind, key: e.key, status: e.status, peers: e.roster?.length }); } });
 const st = await rt.open();
 await rt.joinLobby({});
-out({ serving: { fingerprint: st.player.fingerprint, network: rt.networkId, results: rt.results.list({}).total } });
+out({ serving: { fingerprint: st.player.fingerprint, player: st.player.participantId, transport: rt.lobby.swarm.keyPair.publicKey.toString('hex'), network: rt.networkId, results: rt.results.list({}).total } });
 setInterval(() => out({ status: { peers: rt.lobby?.peers.size ?? 0, results: rt.results.list({}).total, transport: rt.lobby?.transport().state } }), 60_000).unref();
 const stop = async () => { await rt.close(); process.exit(0); };
 process.on('SIGINT', stop);

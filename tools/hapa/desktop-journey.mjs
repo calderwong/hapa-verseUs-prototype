@@ -17,7 +17,7 @@
  *  5. both authors stop; a fresh observer retrieves and verifies the result from the archive.
  */
 import { spawn, execFileSync } from 'node:child_process';
-import { readFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import { readFileSync, mkdirSync, existsSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i > 0 ? process.argv[i + 1] : d; };
@@ -92,16 +92,21 @@ step('opponent', { result: oppResult ? JSON.parse(oppResult).RESULT : null, same
 opp.kill('SIGTERM');
 await sleep(2000);
 
-// 5. both authors offline; a fresh observer reads the archive
-const obs = headless('tools/hapa/online.mjs', ['--data', join(work, 'observer'), '--name', 'Olu', '--network', NET, '--observe', '--quiet', '--exit-on-complete']);
-await new Promise((r) => obs.on('exit', r));
-const observed = (obs.log().match(/\{"OBSERVED":.*\}/) ?? [null])[0];
-step('observer', observed ? JSON.parse(observed).OBSERVED : { error: obs.log().slice(-300) });
+// 5. both authors offline; a fresh *installed* observer reads the archive through the ordinary UI,
+// with the archive configured by identity and transport key (R16-03)
+const serving = JSON.parse((archive.log().match(/\{"at":[^\n]*"serving":\{[^\n]*\}\}/) ?? ['null'])[0])?.serving;
+const obsDir = join(work, 'observer-desk');
+mkdirSync(obsDir, { recursive: true });
+if (serving) writeFileSync(join(obsDir, 'network.json'), JSON.stringify({ networks: { [NET]: { archives: [{ player: serving.player, transport: serving.transport, label: 'Hapa Archive' }] } } }));
+const LO = launch('observer', { HAPA_VERSUS_DATA_DIR: obsDir, HAPA_VERSUS_SMOKE_SCRIPT: 'observe', HAPA_VERSUS_SMOKE_NAME: 'Olu' }, { timeout: 300_000 });
+await LO.done;
+const so = smoke(LO.out);
+step('installed-observer', { ok: so?.ok, archive: so?.archive, records: so?.records, profiles: so?.profiles?.map((p) => p.split('\n').slice(0, 8).join(' | ')) });
 archive.kill('SIGTERM');
 
 const ident = (s) => s?.about?.peer?.fingerprint;
 report.sameIdentityAcrossLaunches = !!(ident(s1) && ident(s1) === ident(s2));
-report.ok = !!(s1 && report.sameIdentityAcrossLaunches && s2?.ok && s2.viewMatchesAgreed && s2bcode === 0 && !smoke(L2b.out) && observed && JSON.parse(observed).OBSERVED.results >= 1);
+report.ok = !!(s1 && report.sameIdentityAcrossLaunches && s2?.ok && s2.viewMatchesAgreed && s2bcode === 0 && !smoke(L2b.out) && so?.ok);
 report.about = s2?.about;
 console.log(JSON.stringify(report, null, 1));
 process.exit(report.ok ? 0 : 1);

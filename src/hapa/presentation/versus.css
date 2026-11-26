@@ -774,3 +774,16 @@ button.opp-hit:hover:not(:disabled) { background: transparent; border: 0; box-sh
   .cardview .cv-top { grid-template-columns: 168px 1fr; gap: 12px; }
   .peek-body .cardview .inspect-face { width: 168px; height: 224px; }
 }
+/* compact match bar (VA-05): below ~900 px the secondary status yields first so Ready, Orders,
+   navigation, help, sound and the match menu stay on screen; a long remote name is bounded */
+#matchbar .online-opp { max-width: 18ch; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 900px) {
+  #matchbar { gap: 6px; }
+  #matchbar .cmds, #matchbar .speed { display: none; }
+  #matchbar .ready-big .rb-sub { display: none; }
+  #matchbar .online-opp { max-width: 10ch; }
+}
+@media (max-width: 760px) {
+  #matchbar .active, #matchbar .phase { display: none; }
+  #matchbar .strip-btn { padding-left: 6px; padding-right: 6px; }
+}
