@@ -924,11 +924,9 @@ export class VersusApp {
   /** Play back a resolved Tick: members follow the traced trajectories; casualties fall at their event. */
   _play(before, frames, events, moments = []) {
     const startPos = snapshot(before);
-    const all = timeline(startPos, frames, events.length, eventsBeforeMovement(events));
+    const all = timeline(startPos, frames, events.length, eventsBeforeMovement(events), snapshot(this.state));
     const duration = (this.watch ? 0.9 : 1.4) / this.speed;
-    const moving = new Set();
-    for (const m of Object.values(this.state.members)) { const a = startPos[m.id], b = [m.x, m.y]; if (a && (a[0] !== b[0] || a[1] !== b[1])) moving.add(m.id); }
-    this.view.setWalking(moving);
+    this.view.setWalking(new Set()); // gait follows the displayed segment, frame by frame (VA-03)
     for (const t of this.view.supplyTokens?.values() ?? []) t.visible = false; // they return at their new places after playback
     this.view.syncPlanLinks(this.state, []); // the planned relationship ends where the resolved landing begins
     return new Promise((resolve) => {
@@ -993,8 +991,16 @@ export class VersusApp {
     const k = Math.min(1, pb.t / pb.duration);
     // one pose for the moment; BoardView.sync alone decides what is visible from it (R2-01)
     const { pos, evLen } = poseAt(pb.all, k * 1000, bandY);
-    this.view.sync(this.state, k >= 1 ? null : pos);
     if (evLen > pb.shown) { const fresh = pb.events.slice(pb.shown, evLen); this._spawnHits(fresh); this.sound?.events(fresh); this.table?.shown(fresh); pb.shown = evLen; this._renderEvents(); }
+    // the board reads the same displayed moment as inspection (VA-02): membership, facing, terrain
+    // and tasks as of the events shown, with positions interpolated on that moment
+    if (k < 1) {
+      const moving = new Set();
+      if (pb.prevPos) for (const [id, e] of Object.entries(pos)) { const p0 = pb.prevPos[id]; if (p0 && e[2] && (p0[0] !== e[0] || p0[1] !== e[1])) moving.add(id); }
+      pb.prevPos = pos;
+      this.view.setWalking(moving);
+      this.view.sync(this._displayState(), pos);
+    }
     if (k >= 1) {
       this.playback = null;
       this.view.setWalking(new Set());
@@ -1753,7 +1759,10 @@ export class VersusApp {
     // the setting responds to the music actually playing (read-only; never a rule, camera or target)
     const music = this.table?.music;
     this.scenery?.update(dt, music ? { frame: music.sample(dt, { accentGap: music.settings.response === 'expressive' ? 3 : 6 }), response: music.settings.response, still: music.still, busy: !!(this.cardDrag?.active || this.cam?.dragging || this.tool) } : { frame: null, response: 'off', still: reducedMotionPref(), busy: false });
-    this.view.update(dt, this.engine.camera);
+    // battle bodies and transient effects share the playback clock (VA-03): a paused Tick holds its
+    // poses and marks; at 0.5×–4× they run with the playback. Ambient scenery keeps its own clock.
+    const pb = this.playback;
+    this.view.update(pb ? (pb.paused ? 0 : dt * (this.speed ?? 1)) : dt, this.engine.camera);
     if (this.table) this.table.update(this.engine.camera, { width: this.el.world.clientWidth, height: this.el.world.clientHeight });
     this.view.viewportH = this.engine.renderer.domElement.clientHeight;
     const busy = !!(this.cardDrag?.active || this.cam?.dragging || this.tool);
@@ -2870,7 +2879,8 @@ export class VersusApp {
       list.push({ partyId: p.id, owner: p.owner, piece: pieceOf(p), target: p.destination, band: bandAt(p, p.destination), status });
     }
     const hov = this.inspect.transientSubject, pin = this.inspect.pinnedSubject;
-    const emphasis = hov?.kind === 'party' ? hov.id : pin?.kind === 'party' ? pin.id : null;
+    const partyOf = (x) => (x?.kind === 'party' || x?.kind === 'hint' ? x.id : null);
+    const emphasis = partyOf(hov) ?? partyOf(pin);
     this.view.syncIntents(list, emphasis);
   }
 

@@ -35,9 +35,12 @@ export function snapshot(state) {
  * @param {Record<string, FrameEntry>} start @param {Frame[]} frames @param {number} eventCount @param {number} [before]
  * @returns {Frame[]}
  */
-export function timeline(start, frames, eventCount, before = 0) {
+export function timeline(start, frames, eventCount, before = 0, end = null) {
   const all = [{ q: 0, pos: start, evLen: Math.min(before, frames[0]?.evLen ?? eventCount) }, ...frames];
-  if (all.length === 1) all.push({ q: 1000, pos: start, evLen: eventCount });
+  // a complete terminal boundary (VA-01): the last frame always carries every accepted event and the
+  // final pose, even when the movement trace ended before the Tick's final rules operations
+  const last = all.at(-1);
+  if (all.length === 1 || last.evLen < eventCount || last.q < 1000) all.push({ q: 1000, pos: end ?? last.pos, evLen: eventCount });
   return all;
 }
 

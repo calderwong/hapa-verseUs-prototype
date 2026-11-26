@@ -506,7 +506,8 @@ export class BoardView {
       const f = spr.userData.facing;
       const v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[f] ?? [0, -1];
       spr.faceVector(v[0], v[1]);
-      const want = `${spr.userData.walking ? 'walk' : 'idle'}_${spr.direction}`;
+      // reduced motion keeps positions informative without a compulsory walk cycle
+      const want = `${spr.userData.walking && !still ? 'walk' : 'idle'}_${spr.direction}`;
       if (spr.animation !== want) spr.play(want, { keepPhase: true });
       spr.update(dt, camera);
     }
