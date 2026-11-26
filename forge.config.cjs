@@ -91,6 +91,17 @@ module.exports = {
     }),
   ],
   hooks: {
+    // Without a configured Developer ID, seal the whole bundle with one consistent ad-hoc signature
+    // (packaging edits Info.plist after Electron's own ad-hoc signature). This is not a release
+    // signature: Gatekeeper still treats the app as unidentified until it is signed and notarized.
+    postPackage: async (_config, result) => {
+      if (process.env.APPLE_SIGN_IDENTITY || result.platform !== 'darwin') return;
+      for (const dir of result.outputPaths) {
+        const appPath = join(dir, 'Hapa Versus.app');
+        execFileSync('codesign', ['--force', '--deep', '--sign', '-', '--identifier', 'com.hapa.versus', appPath], { stdio: 'inherit' });
+        execFileSync('codesign', ['--verify', '--deep', '--strict', appPath], { stdio: 'inherit' });
+      }
+    },
     // the existing production build, plus a small identity record the About box and diagnostics read
     generateAssets: async () => {
       execFileSync(process.execPath, [join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js'), 'build'], { cwd: ROOT, stdio: 'inherit' });
