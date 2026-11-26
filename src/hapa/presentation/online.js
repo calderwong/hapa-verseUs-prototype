@@ -250,9 +250,11 @@ const SYNC_TEXT = {
 
 /** Inline profile / player-records views (R16-03): verified totals by bucket, recent games, honest sync state. */
 function recordView(sub, { back, open }) {
-  const wrap = h('div', { class: 'record-view' }, h('button', { class: 'linkish', onclick: back }, '← Back to the lobby'));
-  if (sub.error) { wrap.append(h('p', { class: 'warn small' }, sub.error)); return wrap; }
-  if (!sub.data) { wrap.append(h('p', { class: 'small', role: 'status' }, sub.kind === 'profile' ? `Checking ${sub.label ?? 'this player'}’s verified record…` : 'Looking up player records…')); return wrap; }
+  const box = h('div', { class: 'record-view' }, h('button', { class: 'linkish', onclick: back }, '← Back to the lobby'));
+  const wrap = { append: (...kids) => box.append(...kids.filter((k) => k != null && k !== false)) }; // DOM append would print "null"
+  const done = () => box;
+  if (sub.error) { wrap.append(h('p', { class: 'warn small' }, sub.error)); return done(); }
+  if (!sub.data) { wrap.append(h('p', { class: 'small', role: 'status' }, sub.kind === 'profile' ? `Checking ${sub.label ?? 'this player'}’s verified record…` : 'Looking up player records…')); return done(); }
   if (sub.kind === 'records') {
     const d = sub.data;
     wrap.append(h('h3', {}, 'Player records'),
@@ -261,7 +263,7 @@ function recordView(sub, { back, open }) {
         h('span', { class: `avail ${x.availability}` }, x.connected ? '●' : '○'),
         h('span', { class: 'who' }, h('span', { class: 'who-line' }, h('b', {}, x.label), ` · ${x.connected ? AVAIL_TEXT[x.availability] ?? x.availability : 'not connected'}`), h('span', { class: 'who-line dim small' }, `${x.results} verified match${x.results === 1 ? '' : 'es'} · ${x.source}`)),
         h('button', { class: 'linkish', onclick: () => open(x.playerId, x.label) }, 'Profile')))) : h('p', { class: 'small' }, 'No verified matches are known yet.'));
-    return wrap;
+    return done();
   }
   const d = sub.data;
   const sync = d.sync.state === 'synced' ? `Synced from ${d.sync.sources.join(', ')} just now${d.sync.refused ? ` · ${d.sync.refused} copy refused` : ''}.` : SYNC_TEXT[d.sync.state] ?? '';
@@ -278,6 +280,6 @@ function recordView(sub, { back, open }) {
       const res = it.disputed ? 'disputed' : it.outcome.result === 'draw' ? 'draw' : it.outcome.winner === seat ? 'win' : 'loss';
       return h('li', {}, `${res} vs ${opp.label} · ${it.ticks} Ticks · ${it.bucket.replace(/-/g, ' ')}`);
     }))) : null);
-  return wrap;
+  return done();
 }
 
