@@ -1,0 +1,27 @@
+{
+  "commit": "73c62bd539e76c19c2c31c50962028f04fdf1788",
+  "report": "docs/reviews/2026-11-25-ui-design-response-15.md",
+  "matched": 3,
+  "total": 3,
+  "limit": "Matches published bytes, not running local process/browser identity.",
+  "files": [
+    {
+      "path": "src/hapa/presentation/app.js",
+      "reportedSha256": "92c11255e4f0894b8263e71adc28a07186a12b3167044f22ae08dd4b7142d13f",
+      "fetchedSha256": "92c11255e4f0894b8263e71adc28a07186a12b3167044f22ae08dd4b7142d13f",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/fx.js",
+      "reportedSha256": "86a6a1f16ec8bf204f3d361730f5878600a58c8252f3d6a05f786bb0e27a28c6",
+      "fetchedSha256": "86a6a1f16ec8bf204f3d361730f5878600a58c8252f3d6a05f786bb0e27a28c6",
+      "match": true
+    },
+    {
+      "path": "src/hapa/presentation/board-view.js",
+      "reportedSha256": "23ede152f74f12c4c1e4369815c8507d8f58b7876a1c35926815aa20849c7ea5",
+      "fetchedSha256": "23ede152f74f12c4c1e4369815c8507d8f58b7876a1c35926815aa20849c7ea5",
+      "match": true
+    }
+  ]
+}

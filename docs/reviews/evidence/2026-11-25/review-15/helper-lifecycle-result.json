@@ -1,0 +1,94 @@
+{
+  "schema": "hapa.versus.response15.helper-lifecycle.v1",
+  "source": [
+    {
+      "path": "src/hapa/presentation/board-view.js",
+      "gitBlobSha": "5415a112267eaeb407fb0e3a2bd4043ca13e6142"
+    },
+    {
+      "path": "src/hapa/presentation/fx.js",
+      "gitBlobSha": "8eb183cc2215e043944f234d3cce5ebd300f4d20"
+    },
+    {
+      "path": "src/hapa/presentation/resources.js",
+      "gitBlobSha": "6a6451b5442fbe664755fc18c01c2000fa4be0f6"
+    }
+  ],
+  "method": "Actual HitFX, resources and BoardView.dispose with Review 14's Three/canvas fixtures; texture handles kept by the probe.",
+  "limitations": "No real renderer, GPU measurement, browser or network.",
+  "cases": [
+    {
+      "case": "A: effect expired before teardown",
+      "burstReferencesWhileActive": 14,
+      "beforeTeardown": {
+        "items": 0,
+        "children": 0
+      },
+      "firstBoardDisposal": {
+        "geometries": 0,
+        "materials": 0,
+        "textures": 0,
+        "lights": 0,
+        "sprites": 0,
+        "fx": {
+          "items": 0,
+          "textures": 3
+        }
+      },
+      "secondBoardDisposal": null,
+      "secondHelperDisposal": null,
+      "helperTextures": {
+        "burst": {
+          "disposeCalls": 1
+        },
+        "rune": {
+          "disposeCalls": 1
+        },
+        "arrow": {
+          "disposeCalls": 1
+        }
+      },
+      "activePartMaterialsDisposedOnce": true,
+      "helperReferencesCleared": true,
+      "detachedFromBoard": true
+    },
+    {
+      "case": "B: effect still running at teardown",
+      "burstReferencesWhileActive": 14,
+      "beforeTeardown": {
+        "items": 1,
+        "children": 16
+      },
+      "firstBoardDisposal": {
+        "geometries": 0,
+        "materials": 0,
+        "textures": 0,
+        "lights": 0,
+        "sprites": 0,
+        "fx": {
+          "items": 1,
+          "textures": 3
+        }
+      },
+      "secondBoardDisposal": null,
+      "secondHelperDisposal": null,
+      "helperTextures": {
+        "burst": {
+          "disposeCalls": 1
+        },
+        "rune": {
+          "disposeCalls": 1
+        },
+        "arrow": {
+          "disposeCalls": 1
+        }
+      },
+      "activePartMaterialsDisposedOnce": true,
+      "helperReferencesCleared": true,
+      "detachedFromBoard": true
+    }
+  ],
+  "sharedSpriteQuadDisposeCalls": 0,
+  "pass": true,
+  "networkRequests": 0
+}
