@@ -96,6 +96,44 @@ export function validateProfile(p, catalog) {
   return { ok: errors.length === 0, errors };
 }
 
+// --- executable operation schemas (review 17, R17-02) ---------------------------------------------
+// The installed resolver's contract for each operation payload. A Card's hash proves which bytes it
+// has, not that they are executable: every field the resolver reads is required, typed and bounded
+// here, before storage or match admission (content numbers are canonical integers). Unusual but valid values stay allowed (no balance check).
+const FACE_NAMES = ['front', 'left', 'right', 'rear', 'above', 'below'];
+const CHANNELS = ['physical', 'magic'];
+const int = (lo, hi) => (v) => (Number.isSafeInteger(v) && v >= lo && v <= hi ? null : `an integer from ${lo} to ${hi}`);
+const oneOf = (xs) => (v) => (xs.includes(v) ? null : `one of ${xs.join(', ')}`);
+const faces = (v) => (Array.isArray(v) && v.length >= 1 && v.length <= 6 && new Set(v).size === v.length && v.every((f) => FACE_NAMES.includes(f)) ? null : `a non-empty list of distinct faces (${FACE_NAMES.join(', ')})`);
+const text = (v) => (typeof v === 'string' && v.length >= 1 && v.length <= 32 ? null : 'a short text value');
+export const OPERATION_SCHEMAS = Object.freeze({
+  damage: { required: { hits: int(1, 12), power: int(1, 1000), channel: oneOf(CHANNELS), incomingFace: oneOf(FACE_NAMES) }, optional: {} },
+  counter: { required: {}, optional: {} },
+  formation_immediate: { required: {}, optional: {} },
+  place_row_enchantment: { required: {}, optional: { row: int(1, 20) } },
+  mint_row_multiplier: { required: { factor: int(1, 10) }, optional: { stage: text } },
+  protection_modifier: { required: { channel: oneOf(CHANNELS), faces, amount: int(-1000, 1000), scope: oneOf(['bound_party', 'column_parties']) }, optional: { stage: text } },
+  excavate: { required: {}, optional: {} },
+  fill: { required: {}, optional: {} },
+});
+
+/** Field errors for one operation payload against the installed schema (empty when executable). */
+export function operationErrors(defId, index, op) {
+  const where = `${defId}: operation ${index + 1}`;
+  if (!op || typeof op !== 'object' || Array.isArray(op)) return [`${where}: not an object`];
+  const schema = OPERATION_SCHEMAS[op.type];
+  if (!schema) return [];
+  const out = [];
+  for (const [field, check] of Object.entries(schema.required)) {
+    if (!(field in op)) { out.push(`${where} (${op.type}): missing required field "${field}"`); continue; }
+    const e = check(op[field]);
+    if (e) out.push(`${where} (${op.type}): field "${field}" must be ${e}`);
+  }
+  for (const [field, check] of Object.entries(schema.optional)) if (field in op) { const e = check(op[field]); if (e) out.push(`${where} (${op.type}): field "${field}" must be ${e}`); }
+  for (const field of Object.keys(op)) if (field !== 'type' && !(field in schema.required) && !(field in schema.optional)) out.push(`${where} (${op.type}): unsupported field "${field}"`);
+  return out;
+}
+
 /**
  * Content validation: every Card uses only installed operations, has its targeting fields and a
  * creator; IDs are unique. Unsupported operations are named before play.
@@ -112,8 +150,10 @@ export function validateContent(catalog) {
       if (!def.lineage?.creator?.id) errors.push(`${def.id}: missing creator`);
       if (group === 'cards') {
         if (key !== def.id) errors.push(`${def.id}: catalog key "${key}" differs from its id`);
-        for (const op of def.operations ?? []) {
-          if (!ops[op.type]) errors.push(`${def.id}: unsupported operation "${op.type}"`);
+        if (!Array.isArray(def.operations ?? [])) errors.push(`${def.id}: operations must be a list`);
+        for (const [i, op] of (Array.isArray(def.operations) ? def.operations : []).entries()) {
+          if (!ops[op?.type]) errors.push(`${def.id}: unsupported operation "${op?.type}"`);
+          errors.push(...operationErrors(def.id, i, op));
         }
         if (def.category === 'spell' && !def.target) errors.push(`${def.id}: a Spell needs a target selector`);
         if (def.cost?.mana) for (const [c, n] of Object.entries(def.cost.mana)) if (!(Number.isInteger(n) && n >= 0)) errors.push(`${def.id}: bad ${c} cost`);

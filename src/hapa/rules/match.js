@@ -115,11 +115,16 @@ function abilityError(state, ctx, seat, cmd, timing) {
   if (!actor || actor.owner !== seat || !actor.alive || actor.retired) return 'choose a living friendly party as the source';
   if (def.actor?.activeColumnRequired && !state.activeColumns.includes(actor.region.column)) return `the source party's column C${actor.region.column} is not active`;
   const burns = cmd.burns ?? [];
+  // one consumption per Card instance (review 17, R17-01): the whole fuel list is checked before
+  // anything is consumed — its shape, distinct ids, ownership, availability and bank presence
+  if (!Array.isArray(burns) || burns.length > 9 || burns.some((id) => typeof id !== 'string')) return 'burns must be a list of up to 9 Card ids';
+  if (new Set(burns).size !== burns.length) return 'a Card can be burned only once in one payment';
   if (burns.includes(card.id)) return 'a card cannot pay its own cost by burning itself';
   const pool = { ...state.players[seat].pool };
   for (const id of burns) {
     const b = state.cards[id];
     if (!b || b.owner !== seat || b.state !== 'available') return `burn ${id}: card not available`;
+    if (state.players[seat].bank.minor[String(b.column)] !== b.id) return `burn ${id}: card is not in your bank`;
     for (const [c, n] of Object.entries(b.mana)) pool[c] = (pool[c] ?? 0) + n;
   }
   if (!planPayment(pool, def.cost?.mana ?? {})) return `cannot pay ${fmtMana(def.cost.mana)} from the Mana pool`;
@@ -195,7 +200,11 @@ export function projectPlan(state, ctx, seat, commands) {
 
 /** Pay a colored cost: burns first, then the planned assignment. */
 function pay(state, ctx, events, seat, card, burns, cost) {
-  for (const id of burns ?? []) burnCard(state, events, seat, state.cards[id], 'payment');
+  // defensive once-only accounting at the shared boundary: validation already refused these, so a
+  // repeated or unavailable fuel here is an invariant failure, raised before any state changes
+  const fuel = burns ?? [];
+  if (new Set(fuel).size !== fuel.length || fuel.some((id) => state.cards[id]?.state !== 'available' || state.cards[id]?.owner !== seat)) throw new Error(`payment invariant: fuel for ${card.id} is repeated or unavailable`);
+  for (const id of fuel) burnCard(state, events, seat, state.cards[id], 'payment');
   const pool = state.players[seat].pool;
   const plan = planPayment(pool, cost ?? {});
   state.players[seat].pool = Object.fromEntries(Object.entries(plan.remaining).filter(([, n]) => n > 0));

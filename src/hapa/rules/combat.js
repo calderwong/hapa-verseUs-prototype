@@ -337,6 +337,8 @@ export function applyCardHit(state, ctx, events, { source, cardId, recipientId, 
   const r = state.members[recipientId];
   const { total, sources } = individualProtection(state, ctx, r, channel, face);
   const damage = residual(U, power, [1, 1], total);
+  // admitted content guarantees a finite power; fail loudly before touching authoritative state
+  if (!Number.isSafeInteger(damage)) throw new Error(`card damage from ${cardId} is not a finite safe amount`);
   const rec = { kind: 'card', source, cardId, recipient: r.id, channel, face, power, ratio: [1, 1], protection: total, sources, damage };
   if (ctx.profile.combat.health === 'party_pool') {
     const P = state.parties[r.homeParty];
