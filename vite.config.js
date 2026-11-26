@@ -1,12 +1,14 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { readFileSync } from 'node:fs';
+import { HARBOR_PATHS, readToken } from './src/hapa/host/owner-routes.js';
 
 const ROOT = import.meta.dirname;
 const PORT = 5199;
 
 // --- Owner host clients (docs/integrations/IMPLEMENTATION_CHECKPOINT.md) --------------------------
+// The route table is shared with the packaged desktop host (src/hapa/host/owner-routes.js); the
+// defaults below are the contributor's development owners, configurable by environment.
 // This dev server is the local host backend for two owners. It forwards their routes and adds each
 // owner's bearer token server-side, read from the token file the owner writes, so no token reaches
 // page code. Both owners listen on loopback only; an owner that is not running simply leaves its
@@ -18,7 +20,6 @@ const PORT = 5199;
 //    seat's library) and `red` (Red's own library). Only its bearer peer routes are forwarded.
 const HARBOR = process.env.HAPA_HARBOR_URL ?? 'http://127.0.0.1:8862';
 const HARBOR_ROOT = process.env.HAPA_HARBOR_ROOT ?? resolve(homedir(), 'Documents/Codex/2026-06-29/can/work/hapa-harbor-storefront');
-const HARBOR_PATHS = ['/v1', '/capabilities', '/app', '/skill', '/projects', '/assets', '/puppet', '/core', '/tools/preview'];
 // Hapa Harness (participant-game view, Milestone C): its bearer token is read from its state root.
 const HARNESS = process.env.HAPA_HARNESS_URL ?? 'http://127.0.0.1:61290';
 const HARNESS_STATE = process.env.HAPA_HARNESS_VERSUS_STATE ?? resolve(homedir(), '.hapa-harness-versus');
@@ -26,8 +27,6 @@ const LIBRARIES = {
   cj: { url: process.env.HAPA_MUSIC_CJ_URL ?? 'http://127.0.0.1:8811', tokenFile: process.env.HAPA_MUSIC_CJ_TOKEN ?? resolve(homedir(), 'Desktop/hapa-song-registry/data/api-token') },
   red: { url: process.env.HAPA_MUSIC_RED_URL ?? 'http://127.0.0.1:8801', tokenFile: process.env.HAPA_MUSIC_RED_TOKEN ?? resolve(homedir(), '.hapa-music-libraries/red-reaper/api-token') },
 };
-
-const readToken = (file) => { try { return readFileSync(file, 'utf8').trim(); } catch { return null; } };
 
 /** Only this page may use a forwarded token: refuse requests another site's page started. */
 function crossSite(req) {

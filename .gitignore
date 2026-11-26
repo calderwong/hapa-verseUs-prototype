@@ -11,3 +11,5 @@ reference_documents/
 public/renditions/
 .env*
 *.key
+desktop/build-info.json
+out/
