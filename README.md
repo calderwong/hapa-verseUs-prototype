@@ -12,15 +12,17 @@ Built from the Hapa Versus Master Requirements v3, Design Companion v1 and Refer
 
 ## Current selected development goal
 
-The [bundled Electron / P2P milestone](docs/reviews/2026-11-25-next-agent-assignment-16.md) has an installed local candidate: [Response 16](docs/reviews/2026-11-25-p2p-implementation-response-16.md), implementation `5326438`. **Next: [the three-pass coding handoff](docs/reviews/2026-11-26-three-pass-coding-handoff.md)** selected by CJ. It combines [Review 16 / Assignment 17](docs/reviews/2026-11-25-next-agent-assignment-17.md), the core [visual and animation brief](docs/reviews/2026-11-26-visual-animation-feature-brief.md), and [Review 17](docs/reviews/2026-11-26-open-ended-review-17.md). Complete dependable installed play, decisions and records, then fit the selected Hapa presentation as one candidate. These review publications add findings and instructions; the implementation remains unchanged.
+The [bundled Electron / P2P milestone](docs/reviews/2026-11-25-next-agent-assignment-16.md) has a newer installed local candidate: [Response 17](docs/reviews/2026-11-26-three-pass-implementation-response-17.md), implementation `7cc30a1`, pushed with report `b2a31f4`. **Next: [Assignment 18](docs/reviews/2026-11-26-next-agent-assignment-18.md)** following [Review 18](docs/reviews/2026-11-26-readiness-review-18.md). Preserve the completed corrections from [the three-pass handoff](docs/reviews/2026-11-26-three-pass-coding-handoff.md), restore the expected default Avatar, and close the remaining decision/recovery/result and presentation gaps as one candidate.
 
-This is not yet a publicly delivered multiplayer release. The reported DMG is ad-hoc sealed; signing/notarization, a clean second Mac, genuine different-network play, operated directory/archive and relay services, accessible engine source distribution and CJ's acceptance remain distinct gates. The [runbook](docs/integrations/online-desktop-runbook.md) describes the candidate and operator steps; read it with Review 16 and Review 17's source corrections.
+**Readiness:** the representative-local and desktop/P2P human playtest/QE handoff is held pending Review 18's concrete corrections. Fresh local supply/Ready/absorption and compact controls work; the observed default Avatar falls back after an owner `/capabilities 502`. The running local demo did not expose a source revision. This review publication adds instructions/evidence and does not change product code.
+
+This is not yet a publicly delivered multiplayer release. Signing/notarization, separate hardware/networks, operated services, approved engine/Avatar distribution and CJ's acceptance remain separate gates. They are distinct from a narrowly scoped local-playtest recommendation and from still-unbuilt selected features. The [runbook](docs/integrations/online-desktop-runbook.md) describes the candidate/operator steps; read it with Review 18 before treating a journey as qualified.
 
 For current gameplay and presentation, follow the [review index](docs/reviews/README.md) and newer addenda: the current default is `hapa_open_10x9_v3_07` with one commitment to each own plan.
 
 ## Play (desktop app)
 
-The following describes the prototype player path. Review 16 and Review 17 record current rules, recovery, result and presentation limitations; no downloadable release is published by these reviews.
+The following describes the intended prototype player path. Review 18 records the remaining observed recovery, result and presentation limitations; no downloadable release is published by these reviews.
 
 Open **Hapa Versus.app** (macOS Apple Silicon; from the DMG). **Play on this computer** starts a local match against the heuristic bot with no network and no other Hapa apps. **Play online → Join lobby** shows available players: **Challenge** one, **Open a table** (and copy its invitation), or **Join by invitation**. Each player controls only their own seat; Ready commits your plan once; closing the app is never a concession and reopening returns you to the match. Finished matches are verified from the signed moves and saved on your computer, then shared with a result archive when one is reachable. Player data lives in `~/Library/Application Support/Hapa Versus/`, never inside the app.
 
@@ -70,7 +72,7 @@ window, then movement and combat play back → the next Tick mints.
 | `npm run desktop:smoke` | launch the packaged app twice with no Node on PATH: a local match renders, the native store reopens, the bridge refuses unknown operations |
 | `node tools/hapa/desktop-journey.mjs --work /abs/dir` | packaged online journey on one machine: lobby, challenge, reload, quit/relaunch, second launch, peer-process kill, concession, archive observer |
 | `npm run online -- --data /abs/dir --name N [--bot] [--auto-accept] [--challenge N] [--open-table] [--join-invite code] [--observe]` | a headless online peer using the same runtime (test identities only) |
-| `npm run lobby:serve -- --data /abs/dir` | the headless result archive; configured service dialing/live directory completion is tracked in Review 16 |
+| `npm run lobby:serve -- --data /abs/dir` | the headless result archive; configured dialing is implemented, with remaining archive/directory scope tracked in Review 18 |
 | `npm run art:sync [-- --store path --copy]` | optional: link Minor Arcana faces from the Hapa Tarot Deck (Hapa Avatar Builder's `tarot-store.json`, read-only) into the ignored `public/renditions/`; ranks without a face keep the procedural placeholder, and play is identical either way |
 
 **Diagnostic fixtures.** The setup screen's *Diagnostic fixtures* list (or `?autostart=1&fixture=corner`,

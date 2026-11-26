@@ -1,0 +1,59 @@
+{
+  "sourceRef": "b2a31f45baed1b70f0e1777eba93fe0267b09a5b",
+  "method": "Exact-source presentation methods and one exact frame-delta statement, with synthetic events and stubbed pose/render/view dependencies. No live browser/GPU/native claim. Assertions reproduce historical failures.",
+  "terrain": {
+    "ruleShapedCell": {
+      "x": 3,
+      "y": 4,
+      "band": -1
+    },
+    "ruleShapedCalls": [],
+    "nonRuleRegionControlCalls": [
+      {
+        "at": {
+          "x": 2000000,
+          "y": -1,
+          "z": -6000000
+        },
+        "dig": true
+      }
+    ]
+  },
+  "terminalGear": {
+    "atEnd": {
+      "playback": null,
+      "gearVisible": false,
+      "animation": "attack1_down",
+      "syncs": 1,
+      "resolved": 1
+    },
+    "planning": {
+      "playback": null,
+      "gearVisible": false,
+      "animation": "idle_down",
+      "syncs": 1,
+      "resolved": 1
+    }
+  },
+  "midPlaybackSpeed": {
+    "before": {
+      "speed": 1,
+      "duration": 1.4,
+      "quantum": 71.42857142857144,
+      "bodyEffectDelta": 0.1
+    },
+    "after": {
+      "speed": 4,
+      "duration": 1.4,
+      "quantum": 142.8571428571429,
+      "bodyEffectDelta": 0.4
+    },
+    "quantumDeltaAfterChange": 71.42857142857144
+  },
+  "execution": {
+    "runtime": "functions.exec V8 isolate",
+    "functionBodyExecuted": true,
+    "nodeFilesystemWrapperExecuted": false,
+    "scope": "Exact-source methods with synthetic inputs and stubbed presentation dependencies; no browser, GPU, native storage or performance observation."
+  }
+}

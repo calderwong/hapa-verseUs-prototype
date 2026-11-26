@@ -1,0 +1,484 @@
+{
+  "reviewedRepository": "calderwong/hapa-verseUs-prototype",
+  "reviewedHead": "b2a31f45baed1b70f0e1777eba93fe0267b09a5b",
+  "reviewedTree": "be67769b606389a0c5d4e035d8890c2287586dba",
+  "implementationCandidate": "7cc30a141672ffedf5093bfd5695a39dca0532a5",
+  "priorPublication": "00e403afeef5a6d961c337f254765a75b622f037",
+  "enginePin": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "profile": "hapa_open_10x9_v3_07",
+  "sourceVerification": "For every listed source, recomputed SHA-1 of Git blob header plus UTF-8 bytes and matched both fetch_file and recursive pinned tree; SHA-256 also recorded. Source retrieved through GitHub connector. No local checkout execution is implied.",
+  "sourceFiles": [
+    {
+      "path": "AGENTS.md",
+      "gitBlobSha": "44b2bebd2d19110e57f1aa5493558b227e27cdf3",
+      "sha256": "4abace8416c679f518586059792d3b4eb6d5e043d9d075e513de7ef510fb34b0",
+      "size": 7235,
+      "verified": true
+    },
+    {
+      "path": "desktop/main.mjs",
+      "gitBlobSha": "67fc91a4bc9fa1d7b8fdfb6e414251f941ba259d",
+      "sha256": "6b8dbd1b9e1a3d2baefa07ff3db3220c43c6b813c1d81a38bfd0a4f5af321b94",
+      "size": 18246,
+      "verified": true
+    },
+    {
+      "path": "desktop/peer-host.mjs",
+      "gitBlobSha": "208fc14e5ca704bd8dca4d77751cc0459b7cdc49",
+      "sha256": "e97ed3b3b9e1cac23ab0e61820d35cf9a8df75fca37180fcab8c52f5967a10af",
+      "size": 1798,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/IMPLEMENTATION_CHECKPOINT.md",
+      "gitBlobSha": "cf58a90d41323e2648d308240d1ade7bb99bcc4d",
+      "sha256": "72cb525aeed215b59e26e8d275d3a0fb48194762930dd693cb70ca77fdcc535f",
+      "size": 21089,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/online-desktop-runbook.md",
+      "gitBlobSha": "3ee88475a888d933227fd747e527475097ac5aa8",
+      "sha256": "433cc0cbb0ca3274498026d9ffb5e7195d4e90043554899f8d07f17ca9f5b8be",
+      "size": 13142,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/2026-11-26-three-pass-coding-handoff.md",
+      "gitBlobSha": "a56f8249f7767a955e3ccebad8c6ba6faed9f939",
+      "sha256": "dd67a1ac1e1a28d7a63f97fedc7d804c39186d6371fc0e5b2f590db09b484473",
+      "size": 11577,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/2026-11-26-three-pass-implementation-response-17.md",
+      "gitBlobSha": "9449a233ee049ae7e40653da7a256d0a330b1d82",
+      "sha256": "3b175bd0cd5f7b8f284de07cb05f34386a5144222bb02d58aa60d96af6b9ad98",
+      "size": 21127,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/2026-11-26-visual-animation-feature-brief.md",
+      "gitBlobSha": "d9a03ad5e47fbf987958b3091a74f80f8340d5b7",
+      "sha256": "d5373064f0efeddffdba1882c021c1a909186e3876d8233c86c003c08db77f10",
+      "size": 14561,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/2026-11-26-visual-animation-review.md",
+      "gitBlobSha": "e46a1fd1e0f8f3770c50cf6c041710fb13895236",
+      "sha256": "e765b0bfb1e7591df5b3f8fbe5d11316e8e8e3595f208c554644a40178eb0234",
+      "size": 28410,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-26/response-17/installed-journey.json",
+      "gitBlobSha": "bcd56b845c18045562c5e9662aecb48a636754b9",
+      "sha256": "44c22d85ea4f95ccf1413575e52f4ddad93508aeacfc9142cce93ae0a8692e74",
+      "size": 3011,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-26/response-17/README.md",
+      "gitBlobSha": "7939b56fbed66d70103ade10ace93218f2c9870f",
+      "sha256": "d8d8a247e2748faeb05de61b59bb560bec2ac8a9e63c0586b1dc625c102df178",
+      "size": 1423,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/README.md",
+      "gitBlobSha": "ad33d8a45d55f70f0be32c2cfcae2113815dad52",
+      "sha256": "73a1f4fea0e19611880d407f8328a651cf68176084260ebebfcdc6b825dc2761",
+      "size": 31708,
+      "verified": true
+    },
+    {
+      "path": "docs/workflows/LOOSE_SCREWS.md",
+      "gitBlobSha": "949fdd2c37f30fba591ba32535e1f32e66c94ef7",
+      "sha256": "1600060555f0e9cc7330ba05020c0e13dead356d0ec56e2d8f164bfb93601e87",
+      "size": 19476,
+      "verified": true
+    },
+    {
+      "path": "forge.config.cjs",
+      "gitBlobSha": "c1ab092a411544d6f181aa0bbc8e5bd9e59d201b",
+      "sha256": "9d04edcfa57c0288fba98cbbb7f7eb7fbf07a7d79eb1e787a4e4c8190846a4c1",
+      "size": 6505,
+      "verified": true
+    },
+    {
+      "path": "package.json",
+      "gitBlobSha": "b53c95503d277883146b362e774f32a1ce1a036f",
+      "sha256": "9adef56517ea3d454408d5cd4105955fe34c03b9eef70d8252d50594df7627bb",
+      "size": 2134,
+      "verified": true
+    },
+    {
+      "path": "README.md",
+      "gitBlobSha": "e777ae91ee674ea56b99a67e25122cc05326ebc7",
+      "sha256": "cd7533ccfa18af03c4e50b6e9622fc59265a817510937f863abd6e81b1b46900",
+      "size": 13171,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/host/owner-routes.js",
+      "gitBlobSha": "21626bc97db39b41105940a59ddc1f2c498b24c7",
+      "sha256": "687528ab3c00351f2a3552213fbeb013f9f9e4c827349f718e980da075ccd90a",
+      "size": 2879,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/compat.js",
+      "gitBlobSha": "c3e732f0e6b6553f21058b1cb672cd25b7518376",
+      "sha256": "01bbf163001b7b5c6222a3b3d50048e420139e9121a8e5c9b04647ed8da6017f",
+      "size": 4757,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/online-match.js",
+      "gitBlobSha": "79306d56da69f210493623dd75114cc4c7e36d28",
+      "sha256": "a97acb7817a6e601dc5daee749f1df3f4d347a8f839685703852ddde13f26887",
+      "size": 24496,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/prefix.js",
+      "gitBlobSha": "619dd04c2aa24861de77f33f7a3687e37085c1cb",
+      "sha256": "f66f5b574f075f59da2a2b8b8d2dc3129d9b263d2aa546c577098b5a942bf87c",
+      "size": 1714,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/result-index.js",
+      "gitBlobSha": "a4b00248b5d41493362bce0cc00c17e0d60edda7",
+      "sha256": "e97a0ee6a62b08768b6085120c7e1256fc5b6111b7c371b9b527ab581f42352d",
+      "size": 6317,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/results.js",
+      "gitBlobSha": "307f73429f8cbfac9bd7257e33ccf8648f53116f",
+      "sha256": "f031ec47082147c7fc64e9c5ac0a13ae7151e557eab5189093f02ad3fb147756",
+      "size": 13479,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/network/runtime.js",
+      "gitBlobSha": "8cfe3b001191801b74103feb4839f534860557b0",
+      "sha256": "4cb38af0fb30808f04e83f436e6cd4c4e98e2271c7ceb619f59f2e46cec3c904",
+      "size": 51818,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "gitBlobSha": "f10c4324fb78535d5347737c38200d994d5c3540",
+      "sha256": "aa4ce726ac6f546fd4ef8ca1861706dfef47fa108fc5c5cc233f9d2480aa1282",
+      "size": 248474,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "gitBlobSha": "2254ff12c0a00773a4ead5c29c1ce61369f9a48b",
+      "sha256": "d59662a0697511d0726da0cd47d53a89486dd614c197c90498a99f7a8bb36ec3",
+      "size": 20048,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/board-view.js",
+      "gitBlobSha": "0b844150778e2089fbae3a92bd1e76ca4b660e37",
+      "sha256": "7e7b0dc451b0b02f7e7d282d9ef06e41b8660a544dcf898239a8c18ba586d714",
+      "size": 54642,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/fx.js",
+      "gitBlobSha": "d4d9fa676611a2b84221f1982aac1a6d29e1dc2a",
+      "sha256": "6d00a1a1cdfc4968e29ca3e08fd2105f902ea2dc1ab5b5e23a9d057123ae9cf0",
+      "size": 15721,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/gear.js",
+      "gitBlobSha": "3bc9eba662ded2f3bd9e8575de530eba0aae9ffb",
+      "sha256": "fade11e69602192a39d0d1799c21e7c0bc884ad3722f94004f1488b18c893b7d",
+      "size": 4943,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/online.js",
+      "gitBlobSha": "ad1af21761cf625c59464c37424f1d63e4e275dd",
+      "sha256": "87b3b18a4b12ce87d7dd1b8b3391c80ef428a7df58edeaad33db3101dbdd8140",
+      "size": 22851,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/playback.js",
+      "gitBlobSha": "58f5ae87f7816e00c9ced44bde9ce182d601d554",
+      "sha256": "25ae61c45ef8bb29764651b2109bee9bd247f883cf959493f4fbe7ba3520ebed",
+      "size": 4180,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/seated-avatar.js",
+      "gitBlobSha": "1d0417ecda9c38b7963b5d2813e11537eabc36c3",
+      "sha256": "96f4dcba586d904072fc05de48b40f8ce22fc9c2d06613055a22e685fd70c04b",
+      "size": 12641,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/table.js",
+      "gitBlobSha": "057bde7a62ed7bf0628b08b0ce8f1787a5259cff",
+      "sha256": "e0fe5c337ace6d0e8ddb362ad047992675288bffd883f5d5670669132b487922",
+      "size": 14749,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/versus.css",
+      "gitBlobSha": "d303599317b9a2913ad35a04ce7a848054b9af09",
+      "sha256": "ef232b9d13e977abf2d3307acf7b828cdf68ed3facab75e06b355e03a4605076",
+      "size": 68379,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/combat.js",
+      "gitBlobSha": "a2c6349e3737b656cd83e6721b63f9073126b6f4",
+      "sha256": "652c88486589db49aa190a5c63bd90b5364a61ef45ae64fb5db77fc0efdfa168",
+      "size": 35191,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/match.js",
+      "gitBlobSha": "d1693d3a57424a838d4b46ffb3e2879a77a18617",
+      "sha256": "2a5bcf81e1228c973e2f9b4ad5463ea37fdfef4c4f2e93f45dfe137a250cf8a5",
+      "size": 32255,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/terrain.js",
+      "gitBlobSha": "7cbf8196e47dd2d35525af4bd87b7758fcc514d2",
+      "sha256": "f0cc09dd9c554346403bd9703068b16f18f0adb23d1fd5841c5e6b0737f7fd00",
+      "size": 12226,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/rules/validate.js",
+      "gitBlobSha": "c07118c6088c9308359231ba10bb694682416535",
+      "sha256": "f8a4699089b25c3be121c7cc50558e7d0c5ff29ac216ba80f47a5ad62ff1bb4e",
+      "size": 9723,
+      "verified": true
+    },
+    {
+      "path": "tests/hapa/content-payments.test.js",
+      "gitBlobSha": "23dca5d646c21b4fe95c6f4d9157e5af4eb15d24",
+      "sha256": "38e8479c9832316ea0d53846e48f1657b5e33983a2e973207eb2ecd7509e4af3",
+      "size": 6843,
+      "verified": true
+    },
+    {
+      "path": "tests/hapa/online-native.test.js",
+      "gitBlobSha": "25ebce84dbe2fc85fe48690db2c063a9aa51de8c",
+      "sha256": "4eb7bc88e8ad54815effbb87aa7e90e44bae93c523ac4adc36449dbd881cd197",
+      "size": 6280,
+      "verified": true
+    },
+    {
+      "path": "tests/hapa/online-recovery.test.js",
+      "gitBlobSha": "ac1257ac04b641abc3e964b53f27401e231dfcc6",
+      "sha256": "32c3665311714948034fa8081847fe42f051b83dd0cf6be10c030f2ec2a12e6d",
+      "size": 7934,
+      "verified": true
+    },
+    {
+      "path": "tests/hapa/online.test.js",
+      "gitBlobSha": "ac3ad65e4596a2028abb8d908cb48dde976d8552",
+      "sha256": "14b1d4527920656a838b5e5d745bbc11f0fcfb064df2fd90633a068ce8c290c6",
+      "size": 14396,
+      "verified": true
+    },
+    {
+      "path": "tests/hapa/playback-boundary.test.js",
+      "gitBlobSha": "6c4d9084aaae0f32683ddaddba83a68b5faee995",
+      "sha256": "b8d15fba71316c1d6c4874aa8cc0c4b299b921e66fbc941fb233a92c9ab00edc",
+      "size": 2782,
+      "verified": true
+    },
+    {
+      "path": "tools/hapa/notices.mjs",
+      "gitBlobSha": "7f0d021ffe89992d5e8b2e883f76cce97cb52d23",
+      "sha256": "50e87d4b00a2c57f87a3b5e4a94a1d66657c2c682fc3d45411ff318c5bc09f37",
+      "size": 3118,
+      "verified": true
+    },
+    {
+      "path": "vite.config.js",
+      "gitBlobSha": "1bde1b0b159582194effbecac4abd82fc8199853",
+      "sha256": "7323fe804e3d212168d1f915d1ebf537f92eae34d8d92459b2976125fbfd740b",
+      "size": 4458,
+      "verified": true
+    }
+  ],
+  "submittedCaptureInspected": {
+    "path": "docs/reviews/evidence/2026-11-26/response-17/b1-combat-paused-poses.jpg",
+    "gitBlobSha": "25ba1b3043478be1c42f6c93d1e55dbb0bf2af4c",
+    "sourceRef": "b2a31f45baed1b70f0e1777eba93fe0267b09a5b",
+    "kind": "previous coding-agent submission, visually inspected this review",
+    "sha256": "f5df47685b406afa9fc19695eec6256847b83143f84a468632c1fca4b5ef2af1",
+    "size": 87332,
+    "verified": true
+  },
+  "freshCaptureVerification": [
+    {
+      "key": "entrance",
+      "path": "01-entrance-default-red.jpg",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "4e83f80b44050aad79283b7acc8cba2a2968f046",
+      "sha256": "46e1acd73dc332563c6c3513906b74e2e605d2b280aa57d3f43ecc55b9f5a41e",
+      "size": 83816
+    },
+    {
+      "key": "default_home",
+      "path": "02-default-home-avatar-fallback.jpg",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "f3090673033b28c6b54a3ce89b07e8737f9a8e23",
+      "sha256": "c1103e3148a40e4b1f3b0d05cc03af71bf44f7bcd4bd237c7aa62956ce5f5cc4",
+      "size": 260198
+    },
+    {
+      "key": "card_actions",
+      "path": "03-card-inspection-actions.jpg",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "49715441374bc03dc742023b619af951a728cdc4",
+      "sha256": "3986a5e58aaf442b3339cc33520a05a46c3a7608678ff4da05bc696e78278457",
+      "size": 272161
+    },
+    {
+      "key": "absorption_settled",
+      "path": "04-absorption-settled.jpg",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "57b3c2d27007dafb5262fb50243ad188b73e00e6",
+      "sha256": "8dedffd969019c893e2cf5bc58593d54fa70065da6d00f74337fa2bf3618dfab",
+      "size": 259856
+    },
+    {
+      "key": "close_absorption",
+      "path": "05-absorption-close.jpg",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "bf1c22efc52589b1961bf4b52b21e20e6116fdbb",
+      "sha256": "94d7ce570704d5064461aca91bbb62ea704429f82140ddafd62f2d35b94ff8c4",
+      "size": 331722
+    },
+    {
+      "key": "compact",
+      "path": "06-compact-header.jpg",
+      "viewportCss": {
+        "width": 960,
+        "height": 720
+      },
+      "pixelDimensions": {
+        "width": 960,
+        "height": 720
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "b56475084c6d30e612dceb979f485ada43ef2170",
+      "sha256": "2e5298f43f853e227a55be6a5af29952b48585b785eeca169f79f8055e5777b2",
+      "size": 128638
+    }
+  ],
+  "diagnosticExecution": {
+    "runtime": "functions JavaScript V8 isolate",
+    "nodeCliWrappersExecuted": false,
+    "nativeTestsRunByReviewer": false,
+    "productTestsRunByReviewer": false,
+    "notes": "Complete diagnostic bodies executed against these exact source strings. Synthetic/stub boundaries are described in each result and README. Scripts assert historical failures, with an additional actual validator positive/refusal check."
+  },
+  "diagnosticArtifacts": [
+    {
+      "path": "decision-recovery-probe.mjs",
+      "gitBlobSha": "15f3c16f4a20b33a3e2960f7574806de735a812a",
+      "sha256": "c5175d0807b2e7528479c52cd310eb3ca1ac05ae85c213d1dbedaf7717dbcb0c",
+      "size": 11355
+    },
+    {
+      "path": "decision-recovery-probe.json",
+      "gitBlobSha": "9db795d341bd44987893fc537cafc3c11591fbb7",
+      "sha256": "e5bb864c62a347a371ec917fdb8ad919528209ff62b624892291bb9f42b5b00c",
+      "size": 3052
+    },
+    {
+      "path": "records-recovery-probe.mjs",
+      "gitBlobSha": "73a4e2ca9f9a5c090cc537c0ceaa6444a472947c",
+      "sha256": "b5fcea8fb677969b4e60279106aaba2eb8afe8a457b6161ce97cdc6b97205ca6",
+      "size": 8057
+    },
+    {
+      "path": "records-recovery-probe.json",
+      "gitBlobSha": "bd7407cc4d37e11ae007c977fc83d6581fd46a13",
+      "sha256": "93e3614137f822c87d0f9d8efe2cfc95672a6ad45315667d176855a9aa1f4bb4",
+      "size": 3138
+    },
+    {
+      "path": "visual-presentation-probe.mjs",
+      "gitBlobSha": "038f281aa2af215508256356f905c6f7ee82353b",
+      "sha256": "8545a6a7fab965d04085a3d8a011cc8cbe4b4fa5afe6f3d0679f2cb11a887e93",
+      "size": 6271
+    },
+    {
+      "path": "visual-presentation-probe.json",
+      "gitBlobSha": "b3094adc4e635357ce0973fa319ba5a5fc6ea4cd",
+      "sha256": "e67d6e5434619567a63e2735b25ea7ada89762c154c47563d3a37a36b0f7f59e",
+      "size": 1537
+    }
+  ]
+}

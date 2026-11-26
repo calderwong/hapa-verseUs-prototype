@@ -1,0 +1,112 @@
+{
+  "baseline": "b2a31f45baed1b70f0e1777eba93fe0267b09a5b",
+  "method": "Exact current classes/methods with controlled events, host replies, persistence and timers. No native, browser or real network execution.",
+  "snapshotStatus": {
+    "before": {
+      "status": "disputed",
+      "disputed": "authenticated histories differ"
+    },
+    "after": {
+      "status": "active",
+      "disputed": null
+    },
+    "blocked": false,
+    "edit": true,
+    "ready": true
+  },
+  "uncertainReady": {
+    "during": {
+      "pending": true,
+      "edit": false
+    },
+    "afterTimeout": {
+      "pending": false,
+      "edit": true,
+      "ready": true
+    },
+    "afterLateCommit": {
+      "pending": false,
+      "edit": true,
+      "ready": true,
+      "viewFrozen": false
+    },
+    "messages": [
+      "Ready was not committed: match.ready timed out. Your plan is unchanged; press Ready again."
+    ]
+  },
+  "setupDeparture": {
+    "challengerReservation": null,
+    "tombstoneWritten": true,
+    "sent": {
+      "t": "decline",
+      "challengeId": "abababababababababababababababab",
+      "reason": "left"
+    },
+    "joinerReservationPhase": "active",
+    "joinerMatchStatus": "active",
+    "events": [
+      {
+        "type": "lobby",
+        "kind": "setupLeft",
+        "challengeId": "abababababababababababababababab"
+      }
+    ]
+  },
+  "startupTimeout": {
+    "afterTimeout": {
+      "ok": false,
+      "code": "RUNTIME_NOT_READY",
+      "message": "the game's peer service is not ready: the peer service did not start in time"
+    },
+    "afterLateReady": {
+      "ok": false,
+      "code": "RUNTIME_NOT_READY",
+      "message": "the game's peer service is not ready: the peer service did not start in time"
+    },
+    "peerStatus": {
+      "runtime": "test-ready"
+    },
+    "procStillCurrent": true,
+    "kills": 0,
+    "forks": 1,
+    "restartTimers": 0,
+    "broadcasts": [
+      {
+        "type": "runtime",
+        "state": "failed",
+        "error": "the peer service did not start in time"
+      }
+    ]
+  },
+  "legacyReservation": {
+    "opened": 0,
+    "availability": "joining",
+    "reservationPhase": "active",
+    "match": null,
+    "setupLeaveError": "NO_ATTEMPT",
+    "matchLeaveBoundaryError": "NO_MATCH"
+  },
+  "execution": {
+    "diagnosticBody": "Executed in the functions JavaScript V8 isolate against exact fetched source methods",
+    "portableNodeWrapper": "Not separately executed",
+    "assertionMeaning": "Historical failures reproduced; exit 0 is not product acceptance",
+    "sourceFiles": [
+      {
+        "path": "src/hapa/presentation/app.js",
+        "gitBlobSha": "f10c4324fb78535d5347737c38200d994d5c3540"
+      },
+      {
+        "path": "src/hapa/presentation/online.js",
+        "gitBlobSha": "ad1af21761cf625c59464c37424f1d63e4e275dd"
+      },
+      {
+        "path": "src/hapa/network/runtime.js",
+        "gitBlobSha": "8cfe3b001191801b74103feb4839f534860557b0"
+      },
+      {
+        "path": "desktop/main.mjs",
+        "gitBlobSha": "67fc91a4bc9fa1d7b8fdfb6e414251f941ba259d"
+      }
+    ]
+  }
+}

@@ -1,0 +1,214 @@
+{
+  "reviewDate": "2026-11-26",
+  "userTimezone": "America/Los_Angeles",
+  "surface": "Connected Chrome browser via browser extension, dedicated review tab",
+  "url": "http://127.0.0.1:5199/versus.html",
+  "browserVersion": "not recorded",
+  "os": "not recorded",
+  "textScale": "not recorded",
+  "devicePixelRatio": 1,
+  "sourceIdentity": {
+    "gitRevision": "not exposed by the running demo",
+    "pinnedSourceReview": "b2a31f45baed1b70f0e1777eba93fe0267b09a5b",
+    "warning": "Do not equate the live Vite process with the pinned GitHub candidate.",
+    "scripts": [
+      "http://127.0.0.1:5199/@vite/client",
+      "http://127.0.0.1:5199/src/versus.js?t=1795730296993"
+    ]
+  },
+  "configuration": {
+    "profile": "hapa_open_10x9_v3_07",
+    "seatA": "human",
+    "seatB": "heuristic bot",
+    "redDefaultChecked": true,
+    "fixture": false,
+    "ownerPackageIdentity": "not available",
+    "localCardRenditionIndex": "not recorded"
+  },
+  "observations": [
+    {
+      "id": "B18-01",
+      "kind": "fresh live observation",
+      "result": "Red selected; empty chair/seat at Home; Red nameplate and greeting rendered.",
+      "capture": "02-default-home-avatar-fallback.jpg"
+    },
+    {
+      "id": "B18-02",
+      "kind": "fresh visible panel text",
+      "result": "Red (red-reaper) plays seat B. Moves: the heuristic bot (heuristic-bot/0.2.0), not a model. Renderer unavailable: /capabilities 502. Voice unavailable; captions only."
+    },
+    {
+      "id": "B18-03",
+      "kind": "fresh local interaction",
+      "steps": [
+        "Started the ordinary local human A / bot B match from the entrance.",
+        "Pinned/inspected A's C1 2 of Wands; supplied Pawn R2C1 with 2.",
+        "Supplied Castle R1C1 with 2 from C9.",
+        "Planned Castle R1C1 to R2C1, requiring 1 Supply.",
+        "Selected 0.5x playback and pressed Ready once.",
+        "Observed Tick 2, active C2/C8, Castle R2C1 merged 9/9 with Supply 3; total party count 36 to 34 includes the bot's merge.",
+        "Inspected the close merged formation; nine member controls were present."
+      ]
+    },
+    {
+      "id": "B18-04",
+      "kind": "fresh layout measurement",
+      "viewport": {
+        "width": 960,
+        "height": 720
+      },
+      "documentWidth": 960,
+      "decisionControlsWithinViewport": true,
+      "readyRight": 834.03125,
+      "lastHeaderControlRight": 948,
+      "caveat": "Limited to observed header and document width; not a comprehensive responsive/accessibility pass."
+    },
+    {
+      "id": "B18-05",
+      "kind": "fresh interaction",
+      "result": "Returned camera to Home, restored speed 1x and original 2223x1016 viewport; left dedicated review tab in Tick 2 Planning."
+    }
+  ],
+  "relevantConsole": [
+    {
+      "level": "warn",
+      "message": "[versus] Avatar opponent in text-only mode: /capabilities 502",
+      "timestamp": "2026-11-26T22:43:59.055Z",
+      "source": "http://127.0.0.1:5199/src/hapa/presentation/avatar-opponent.js"
+    },
+    {
+      "level": "warn",
+      "message": "[versus] music contribution unavailable (red): /music/red/songs 502",
+      "timestamp": "2026-11-26T22:43:59.055Z",
+      "source": "http://127.0.0.1:5199/src/hapa/presentation/soundtrack.js"
+    }
+  ],
+  "exclusions": [
+    "Unrelated browser-extension warnings omitted.",
+    "No fresh installed Electron, native Hypercore, real internet multiplayer or human acceptance claim.",
+    "No timing witness for the exact absorption cue or actual terrain effect; settled-state inspection only.",
+    "No claim that a specific mesh mode was removed: owner request failure is observed; exact expected renderer/package still needs local identification."
+  ],
+  "captures": [
+    {
+      "key": "entrance",
+      "path": "01-entrance-default-red.jpg",
+      "caption": "Default local entrance; Red selected, human A and heuristic bot B.",
+      "camera": "Default setup",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "4e83f80b44050aad79283b7acc8cba2a2968f046",
+      "sha256": "46e1acd73dc332563c6c3513906b74e2e605d2b280aa57d3f43ecc55b9f5a41e",
+      "size": 83816
+    },
+    {
+      "key": "default_home",
+      "path": "02-default-home-avatar-fallback.jpg",
+      "caption": "Tick 1 Home: empty seated-Avatar location, Red text/nameplate, music unavailable.",
+      "camera": "Home, seat A, all height bands",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "f3090673033b28c6b54a3ce89b07e8737f9a8e23",
+      "sha256": "c1103e3148a40e4b1f3b0d05cc03af71bf44f7bcd4bd237c7aa62956ce5f5cc4",
+      "size": 260198
+    },
+    {
+      "key": "card_actions",
+      "path": "03-card-inspection-actions.jpg",
+      "caption": "Pinned 2 of Wands with enlarged face and contextual actions.",
+      "camera": "Card inspection at Tick 1",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "49715441374bc03dc742023b619af951a728cdc4",
+      "sha256": "3986a5e58aaf442b3339cc33520a05a46c3a7608678ff4da05bc696e78278457",
+      "size": 272161
+    },
+    {
+      "key": "absorption_settled",
+      "path": "04-absorption-settled.jpg",
+      "caption": "Tick 2 after one Ready; Castle at R2C1 with merged membership and Supply 3.",
+      "camera": "Home, seat A, all height bands",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "57b3c2d27007dafb5262fb50243ad188b73e00e6",
+      "sha256": "8dedffd969019c893e2cf5bc58593d54fa70065da6d00f74337fa2bf3618dfab",
+      "size": 259856
+    },
+    {
+      "key": "close_absorption",
+      "path": "05-absorption-close.jpg",
+      "caption": "Close view and inspection of merged 9/9 Castle.",
+      "camera": "Closer camera, seat A, all height bands",
+      "viewportCss": {
+        "width": 2223,
+        "height": 1016
+      },
+      "pixelDimensions": {
+        "width": 2223,
+        "height": 1016
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "bf1c22efc52589b1961bf4b52b21e20e6116fdbb",
+      "sha256": "94d7ce570704d5064461aca91bbb62ea704429f82140ddafd62f2d35b94ff8c4",
+      "size": 331722
+    },
+    {
+      "key": "compact",
+      "path": "06-compact-header.jpg",
+      "caption": "960-pixel layout: decision controls remain within viewport.",
+      "camera": "Home, seat A, all height bands",
+      "viewportCss": {
+        "width": 960,
+        "height": 720
+      },
+      "pixelDimensions": {
+        "width": 960,
+        "height": 720
+      },
+      "devicePixelRatio": 1,
+      "format": "JPEG",
+      "original": true,
+      "gitBlobSha": "b56475084c6d30e612dceb979f485ada43ef2170",
+      "sha256": "2e5298f43f853e227a55be6a5af29952b48585b785eeca169f79f8055e5777b2",
+      "size": 128638
+    }
+  ]
+}

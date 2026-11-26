@@ -1,5 +1,7 @@
 # Continue the existing Hapa Versus work — three-pass coding handoff
 
+> **Current continuation:** [Assignment 18](2026-11-26-next-agent-assignment-18.md) and [Review 18](2026-11-26-readiness-review-18.md) follow the pushed Response 17. The three-pass selection below remains the parent scope; preserve corrected work and use the newer findings/acceptance conditions for the remaining completion pass.
+
 Continue as the same coding agent in the existing Hapa Versus checkout and working context. CJ has requested that you pick up the last three review passes together. Carry out the implementation, fit and qualification; use the existing work as the foundation.
 
 ## Scope selected by CJ

@@ -1,0 +1,129 @@
+{
+  "baseline": "b2a31f45baed1b70f0e1777eba93fe0267b09a5b",
+  "method": "Exact runtime/index methods with controlled files, transport, already-verified evidence and injected archive failure; actual standalone content validator with minimal catalog. No native storage, cryptographic verification, real transport or browser execution.",
+  "terminalRouting": {
+    "terminal": {
+      "progress": "terminal",
+      "finishingAuthorities": 1,
+      "currentMatch": null,
+      "topicJoins": [],
+      "attachCalls": 0
+    },
+    "activeControl": {
+      "progress": "active",
+      "finishingAuthorities": 0,
+      "currentMatch": "match-one",
+      "topicJoins": [
+        {
+          "kind": "match",
+          "id": "match-one"
+        }
+      ],
+      "attachCalls": 1
+    }
+  },
+  "conflictPropagation": {
+    "archiveStats": {
+      "playerId": "hv1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "buckets": {},
+      "disputed": 1
+    },
+    "freshObserver": {
+      "initiallyKnewFirstHistory": false,
+      "pulled": {
+        "archives": 1,
+        "fetched": 1,
+        "added": 1,
+        "duplicate": 0,
+        "refused": 0,
+        "disputed": 0
+      },
+      "stats": {
+        "playerId": "hv1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "buckets": {
+          "human-vs-human": {
+            "wins": 1,
+            "losses": 0,
+            "draws": 0,
+            "completed": 1,
+            "decisive": 1,
+            "winRate": 1
+          }
+        },
+        "disputed": 0
+      }
+    },
+    "priorObserver": {
+      "initiallyKnewFirstHistory": true,
+      "pulled": {
+        "archives": 1,
+        "fetched": 0,
+        "added": 0,
+        "duplicate": 1,
+        "refused": 0,
+        "disputed": 0
+      },
+      "stats": {
+        "playerId": "hv1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "buckets": {
+          "human-vs-human": {
+            "wins": 1,
+            "losses": 0,
+            "draws": 0,
+            "completed": 1,
+            "decisive": 1,
+            "winRate": 1
+          }
+        },
+        "disputed": 0
+      }
+    }
+  },
+  "archiveFailure": {
+    "requests": 1,
+    "first": {
+      "sync": {
+        "state": "synced",
+        "at": "2026-11-26T22:54:50.505Z",
+        "sources": [
+          "Configured Archive"
+        ],
+        "fetched": 0,
+        "added": 0,
+        "refused": 0
+      },
+      "checkedZero": true
+    },
+    "second": {
+      "sync": {
+        "state": "synced",
+        "at": "2026-11-26T22:54:50.505Z",
+        "sources": [
+          "Configured Archive"
+        ],
+        "fetched": 0,
+        "added": 0,
+        "refused": 0
+      },
+      "checkedZero": true
+    }
+  },
+  "validation": {
+    "valid": {
+      "ok": true,
+      "errors": []
+    },
+    "missingPower": {
+      "ok": false,
+      "errors": [
+        "spark: operation 1 (damage): missing required field \"power\""
+      ]
+    },
+    "invalidChannel": {
+      "ok": false,
+      "errors": [
+        "spark: operation 1 (damage): field \"channel\" must be one of physical, magic"
+      ]
+    }
+  }
+}

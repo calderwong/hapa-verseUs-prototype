@@ -4,9 +4,17 @@
 records what is built, which owners it attaches to, the defaults CJ selected and what is still loose.
 CJ's acceptance is separate from technical completion and is not recorded here on his behalf.
 
-## Current continuation — 26 November 2026
+## Current continuation — Review 18, 26 November 2026
 
-CJ has selected the [three-pass coding handoff](../reviews/2026-11-26-three-pass-coding-handoff.md): Review 16 / Assignment 17, the core visual and animation follow-on, and [open-ended Review 17](../reviews/2026-11-26-open-ended-review-17.md). It coordinates rules/content admission, durable decisions and the public view, recovery/results/discovery/finalization, local online music/notices and the selected Hapa presentation. Reconcile newer local work before implementing and use Loose Screws to fit one candidate. The latest reported implementation remains `5326438`; this note records selected work, not delivery or acceptance. Historical implementation entries and external gates below remain evidence of their stated revisions.
+[Response 17](../reviews/2026-11-26-three-pass-implementation-response-17.md) is pushed at `b2a31f4`, implementation candidate `7cc30a1`. [Review 18](../reviews/2026-11-26-readiness-review-18.md) preserves its substantial corrections and withholds the representative-local/desktop-P2P QE handoff pending specific remaining boundaries. **Current work: [Assignment 18](../reviews/2026-11-26-next-agent-assignment-18.md)**, continuing [the three-pass scope](../reviews/2026-11-26-three-pass-coding-handoff.md) under Loose Screws.
+
+- **Default appearance:** fresh local human/bot play has Red selected but an empty chair after `/capabilities 502`; music also reports its owner unavailable. Identify the live build/expected owner renderer and restore the existing default, including retry/rebind. The source still selects Red; no deleted mesh mode is established.
+- **Connected correctness:** ambiguous Ready, asymmetric/legacy reservation release, stale dispute snapshots, worker-deadline recovery, reconnecting terminal ownership, distribution of genuine result conflicts and truthful archive failure states.
+- **Selected presentation:** work-cell terrain FX, shared speed/pose/FX time, equipment settlement and the remaining bounded territory/party/Red scene and effect-density work.
+- **Evidence already usable:** ordinary local supply/one Ready/merged-party inspection and compact header observed fresh; Response 17 supplies installed same-Mac evidence. Review 18 registers 44 source files, three controlled diagnostics and six captures. The live demo revision is unverified; no new native/internet or CJ acceptance claim.
+- **Scope/gates:** keep remaining browser online, Rematch, diagnostics, live directory and lifecycle inventory explicit. External signing/hardware/services/approved distribution and installed Harbor origin remain distinct from independent implementation and local-playtest readiness.
+
+Reconcile newer local work and HV-67 on the real Overwatch workflow before editing. Historical entries below retain their original revision/evidence limits; read their broad completion summaries with the newer Review 18 qualifications.
 
 ## Defaults CJ selected (not re-asked)
 
