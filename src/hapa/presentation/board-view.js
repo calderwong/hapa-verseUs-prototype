@@ -322,7 +322,8 @@ export class BoardView {
 
   _sheet(role, mount, owner) {
     const key = `${role}:${mount}:${owner}`;
-    if (!this.sheets.has(key)) this.sheets.set(key, createCharacterSheet(spriteSpec(role, mount, owner)));
+    // the pinned engine's combat sheet keeps the plain frames and adds attack/aim/cast/hurt/down (VA-07)
+    if (!this.sheets.has(key)) this.sheets.set(key, createCharacterSheet(spriteSpec(role, mount, owner), { combat: true }));
     return this.sheets.get(key);
   }
 
@@ -360,7 +361,11 @@ export class BoardView {
       const band = pose ? pose[3] : (m.band ?? 1);
       const hgt = pose ? pose[4] : bandY(band);
       spr.position.set(w.x, hgt + 0.03, w.z);
-      spr.visible = bodyVisible(pose ? pose[2] : m.alive, band, layer);
+      const aliveNow = pose ? pose[2] : m.alive;
+      // a casualty shows a brief, restrained down pose as aftermath before it leaves the board
+      const dying = !aliveNow && pose && spr.userData.dying && spr.userData.dying.until > this._time;
+      spr.visible = bodyVisible(aliveNow || dying, band, layer);
+      spr.userData.aftermath = !!dying;
       // a flyer keeps a line to the floor below it, so height is never the only cue
       const flying = party?.movementMode === 'air';
       if (flying && !spr.userData.flyLine) {
@@ -507,10 +512,27 @@ export class BoardView {
       const v = { N: [0, -1], S: [0, 1], E: [1, 0], W: [-1, 0] }[f] ?? [0, -1];
       spr.faceVector(v[0], v[1]);
       // reduced motion keeps positions informative without a compulsory walk cycle
-      const want = `${spr.userData.walking && !still ? 'walk' : 'idle'}_${spr.direction}`;
-      if (spr.animation !== want) spr.play(want, { keepPhase: true });
+      // an accepted event's action (attack, aim, cast, hurt, down) holds for its moment on the battle clock
+      const act = spr.userData.aftermath ? { kind: 'down' } : spr.userData.act && spr.userData.act.until > this._time ? spr.userData.act : null;
+      const want = act ? `${act.kind}_${spr.direction}` : `${spr.userData.walking && !still ? 'walk' : 'idle'}_${spr.direction}`;
+      if (spr.animation !== want) spr.play(want, act ? {} : { keepPhase: true });
+      // combat frames draw their own weapon: the separately attached gear steps aside meanwhile
+      if (spr.userData.gear) for (const g of Object.values(spr.userData.gear)) g.visible = g.visible && !act;
       spr.update(dt, camera);
     }
+  }
+
+  /** Show an accepted action on one member for a moment of battle time (VA-07). */
+  act(memberId, kind, hold = 0.5) {
+    const spr = this.sprites.get(memberId);
+    if (!spr || !spr.visible) return;
+    spr.userData.act = { kind, until: this._time + hold };
+  }
+
+  /** Mark a member's death so its body shows the down pose briefly as aftermath. */
+  down(memberId, hold = 0.7) {
+    const spr = this.sprites.get(memberId);
+    if (spr) spr.userData.dying = { until: this._time + hold };
   }
 
   setWalking(ids) { for (const [id, spr] of this.sprites) spr.userData.walking = ids.has(id); }

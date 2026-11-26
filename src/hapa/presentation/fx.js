@@ -140,6 +140,58 @@ export class HitFX {
     this.items.push({ parts, t: 0, life: still ? 1.0 : 1.3, base: at.clone(), label, mark: null, ring, sparks, kind: 'supply' });
   }
 
+  // --- signature sequences (VA-08): pending → accepted/countered → settled ----------------------
+  /**
+   * A Spell waiting on the stack: a quiet, steady rune at its exact target (no flashing) that stays
+   * until the Spell is countered or resolves. Keyed by stack id.
+   */
+  pending(stackId, at, color = 0xd96b4a) {
+    this.settlePending(stackId, 'replaced');
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.95, 40), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.copy(at).add(new THREE.Vector3(0, 0.1, 0)); ring.renderOrder = 8;
+    const rune = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.tex.rune, color, transparent: true, opacity: 0.9, depthTest: false, toneMapped: false }));
+    rune.scale.set(0.9, 0.9, 1); rune.position.copy(at).add(new THREE.Vector3(0, 1.9, 0)); rune.renderOrder = 11;
+    this.group.add(ring, rune);
+    (this.pendingSpells ??= new Map()).set(stackId, { parts: [ring, rune], ring, rune });
+  }
+
+  /** End a pending Spell: `countered` collapses it inward; anything else clears it (its impact shows separately). */
+  settlePending(stackId, how) {
+    const p = this.pendingSpells?.get(stackId);
+    if (!p) return;
+    this.pendingSpells.delete(stackId);
+    if (how === 'countered') { this.items.push({ parts: p.parts, t: 0, life: reduced() ? 0.5 : 0.6, base: p.ring.position.clone(), label: null, mark: null, ring: p.ring, rune: p.rune, kind: 'collapse' }); return; }
+    for (const part of p.parts) { this.group.remove(part); part.material.dispose(); if (part.geometry && !(part instanceof THREE.Sprite)) part.geometry.dispose(); }
+  }
+
+  /** Accepted absorption: members settle into the combined formation (a short inward ring and the new count). */
+  absorbed(at, text) {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.3, 48), new THREE.MeshBasicMaterial({ color: 0xf5f0e3, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.copy(at).add(new THREE.Vector3(0, 0.08, 0)); ring.renderOrder = 8;
+    const label = numberSprite(text, '#F5F0E3');
+    label.position.copy(at).add(new THREE.Vector3(0, 2.3, 0));
+    this.group.add(ring, label);
+    this.items.push({ parts: [ring, label], t: 0, life: reduced() ? 0.9 : 1.1, base: at.clone(), label, mark: null, ring, kind: 'absorb' });
+  }
+
+  /** Accepted excavation/fill: a short fracture and settle at the changed territory; debris never collides. */
+  terrain(at, dig) {
+    const still = reduced();
+    const parts = [], chips = [];
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.4, 0.6, 6), new THREE.MeshBasicMaterial({ color: dig ? 0x8a6a4a : 0xb59a72, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.copy(at).add(new THREE.Vector3(0, 0.06, 0)); ring.renderOrder = 8;
+    this.group.add(ring); parts.push(ring);
+    if (!still) for (let i = 0; i < 10; i++) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.tex.burst, color: i % 2 ? 0x8a6a4a : 0xcbb48c, transparent: true, depthTest: false, toneMapped: false }));
+      sp.scale.set(0.22, 0.22, 1); sp.renderOrder = 10;
+      const a = (i / 10) * Math.PI * 2;
+      sp.position.copy(at).add(new THREE.Vector3(0, 0.2, 0));
+      sp.userData.v = new THREE.Vector3(Math.cos(a) * 1.4, dig ? 3.4 : 1.6, Math.sin(a) * 1.4);
+      this.group.add(sp); parts.push(sp); chips.push(sp);
+    }
+    this.items.push({ parts, t: 0, life: still ? 0.45 : 0.45, base: at.clone(), label: null, mark: null, ring, sparks: chips, kind: 'terrain' });
+  }
+
   /**
    * Release everything this helper owns, once (R14-02): the parts of effects still running and the
    * three textures it painted for reuse during the match. Those textures stay owned here even after
@@ -153,6 +205,7 @@ export class HitFX {
     const items = this.items.length;
     for (const it of this.items) for (const p of it.parts) { p.material.dispose(); if (p.geometry && !(p instanceof THREE.Sprite)) p.geometry.dispose(); if (p === it.label) p.material.map?.dispose(); }
     this.items = [];
+    for (const id of [...(this.pendingSpells?.keys() ?? [])]) this.settlePending(id, 'disposed');
     const tex = Object.values(this.tex);
     for (const t of tex) t.dispose();
     this.tex = {};
@@ -180,6 +233,9 @@ export class HitFX {
         it.ring.rotation.z = still ? 0 : k * 0.6;
         continue;
       }
+      if (it.kind === 'collapse') { const r = Math.max(0.05, 1 - k); it.ring.scale.set(r, r, r); it.rune.scale.set(0.9 * r, 0.9 * r, 1); continue; }
+      if (it.kind === 'absorb') { const r = still ? 1 : 1.6 - Math.min(1, k * 2) * 0.6; it.ring.scale.set(r, r, r); continue; }
+      if (it.kind === 'terrain') { const r = 1 + (still ? 1 : Math.min(1, k * 3)) * 1.4; it.ring.scale.set(r, r, r); for (const sp of it.sparks) { sp.userData.v.y -= 12 * dt; sp.position.addScaledVector(sp.userData.v, dt); if (sp.position.y < it.base.y) sp.position.y = it.base.y; } continue; }
       if (it.kind === 'supply') {
         const r = 0.6 + (still ? 1.6 : Math.min(1, k * 1.6) * 2.2);
         it.ring.scale.set(r, r, r);

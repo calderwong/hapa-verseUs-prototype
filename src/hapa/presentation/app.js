@@ -960,7 +960,12 @@ export class VersusApp {
   _spawnHits(events) {
     const posOf = (id) => this.view.sprites.get(id)?.position ?? null;
     const colorOfMember = (id) => activeCatalog.archetypes[this.state.members[id]?.archetype]?.color ?? null;
+    // the figures perform the accepted exchange (VA-07): one gesture per attacker, injury or a held
+    // brace on the recipient, the caster's gesture for a Card; simultaneous outcomes all show
+    const actOf = (memberId) => ({ swordsman: 'attack1', pikeman: 'attack3', archer: 'aim', mage: 'cast', priest: 'cast' })[this.state.members[memberId]?.archetype] ?? 'attack1';
+    const casterOf = (partyId) => { const p = this.state.parties[partyId]; return p ? p.slots[5] ?? Object.values(p.slots).find(Boolean) : null; };
     let n = 0;
+    const cued = new Set();
     for (const e of events) {
       if (this._fireEffect(e)) continue;
       if (e.type === 'supply_loaded') { // the planned Supply actually lands
@@ -968,21 +973,42 @@ export class VersusApp {
         if (mk) this.view.fx.supply(mk.position.clone(), `+${pts(e.units)} landed · Supply ${pts(e.total)}`);
         continue;
       }
+      if (e.type === 'member_died') { this.view.down(e.memberId); continue; }
+      // signature sequences (VA-08), each from its accepted event
+      if (e.type === 'ability_announced' || e.type === 'response_announced') {
+        const def = activeCatalog.cards[this.state.cards[e.cardId]?.abilityId];
+        const at = e.target?.memberId ? posOf(e.target.memberId) : null;
+        const caster = e.actorPartyId ? casterOf(e.actorPartyId) : null;
+        if (caster) this.view.act(caster, 'cast', 0.6);
+        if (at) this.view.fx.pending(e.stackId, at.clone(), def?.color ? Number(String(def.color).replace('#', '0x')) : undefined);
+        continue;
+      }
+      if (e.type === 'counter_applied' || e.type === 'ability_countered') { this.view.fx.settlePending(e.countered ?? e.stackId, 'countered'); continue; }
+      if (e.type === 'ability_resolved' || e.type === 'ability_fizzled') { this.view.fx.settlePending(e.stackId, 'resolved'); continue; }
+      if (e.type === 'parties_merged') { const mk = this.view.markers.get(e.partyId); if (mk) this.view.fx.absorbed(mk.position.clone(), `${e.members?.length ?? ''} together`); continue; }
+      if (e.type === 'terrain_changed') { const c = e.cell; const w = c && Number.isFinite(c.column) ? this.view.toWorld((c.column - 0.5) * 4 * this.ctx.U, (c.row - 0.5) * 4 * this.ctx.U) : null; if (w) this.view.fx.terrain(w.setY(this.view.partyY?.({ movementMode: 'ground', band: c.band ?? 1, region: c }) ?? w.y), !e.solid); continue; }
       const hits = e.type === 'exchange' ? e.hits : e.type === 'card_damage' ? [e] : [];
       const totals = new Map();
       for (const hit of hits) { const t = totals.get(hit.recipient) ?? { damage: 0, hits: 0, seen: 0 }; t.damage += hit.damage; t.hits++; totals.set(hit.recipient, t); }
       for (const hit of hits) {
-        if (n++ >= 48) return;
+        if (hit.kind === 'card') { const c = casterOf(hit.source); if (c) this.view.act(c, 'cast', 0.6); }
+        else this.view.act(hit.source, actOf(hit.source), 0.45);
+        if (hit.damage > 0) this.view.act(hit.recipient, 'hurt', 0.35);
+      }
+      for (const hit of hits) {
+        // bounded marks, but never at the cost of an affected member's one consequential cue (VA-10)
+        const t = totals.get(hit.recipient);
+        if (n >= 48 && cued.has(hit.recipient)) continue;
         const to = posOf(hit.recipient);
         if (!to) continue;
-        const from = hit.kind === 'card' ? null : posOf(hit.source);
+        const from = hit.kind === 'card' ? (posOf(casterOf(hit.source)) ?? null) : posOf(hit.source);
         const color = hit.kind === 'card' ? activeCatalog.cards[this.state.cards[hit.cardId]?.abilityId]?.color : colorOfMember(hit.source);
-        const t = totals.get(hit.recipient);
-        this.view.fx.hit(hit, from, to, color, this.ctx.U, { index: t.seen, total: t.seen === 0 ? t : null });
-        t.seen++;
+        this.view.fx.hit(hit, from, to, color, this.ctx.U, { index: t.seen, total: t.seen === 0 || n >= 48 ? t : null });
+        t.seen++; n++; cued.add(hit.recipient);
       }
     }
   }
+
 
   _stepPlayback(dt) {
     const pb = this.playback;
@@ -1011,6 +1037,8 @@ export class VersusApp {
   }
 
   _askResponse(req) {
+    // while a response window is open, each pending Spell shows a steady rune at its exact target (VA-08)
+    for (const e of req.stack ?? []) if (e.target?.memberId && !e.countered) { const p = this.view.sprites.get(e.target.memberId)?.position; if (p) this.view.fx.pending(e.id, p.clone()); }
     return new Promise((resolve) => {
       this.pendingChoice = { req, resolve };
       this.viewSeat = req.seat;
