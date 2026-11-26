@@ -254,9 +254,17 @@ export class VersusApp {
     this.el.overlay.replaceChildren(h('div', { class: 'card-sheet setup' },
       h('div', { class: 'title-emblems', 'aria-hidden': 'true' }, ...['red', 'purple', 'blue', 'black', 'rainbow', 'white', 'orange', 'yellow', 'green'].map((c) => h('img', { src: emblemURL(c, 18), alt: '' }))),
       h('h1', {}, 'Hapa Versus'),
-      h('p', { class: 'lede' }, 'Two armies on a nine-column battlefield. Each Tick the highlighted columns mint public Minor Arcana from the territory you hold: spend a card as Supply to move, burn it for colored Mana, or play its attached ability. Win by moving a party center into the enemy Capital or killing the enemy Commander.'),
+      h('p', { class: 'lede' }, 'Two armies, one table. Hold territory to mint public Cards, then spend them on movement, Mana or abilities. Take the enemy Capital or its Commander.'),
+      h('p', { class: 'small center' }, h('button', { class: 'linkish', onclick: () => this._help() }, 'How to play')),
       onlinePanel(this),
-      h('h2', { class: 'local-heading' }, 'Play on this computer'),
+      h('section', { class: 'local-panel', 'aria-label': 'Play on this computer' },
+        h('h2', { class: 'local-heading' }, 'Play on this computer'),
+        h('p', { class: 'small dim' }, 'You against the heuristic bot, with the defaults below. No network needed.'),
+        h('div', { class: 'row' },
+          h('button', { class: 'primary', onclick: () => start() }, 'Start match'),
+          h('button', { onclick: () => openEditor(this) }, 'Cards & decks…')),
+        this._tableSetup()),
+      h('details', { class: 'advanced' }, h('summary', {}, 'Advanced — profiles, seats, seed, presets, experiments and diagnostic fixtures'),
       h('div', { class: 'form' },
         h('label', { class: 'wide' }, 'Profile', profileSel),
         h('label', {}, 'Seat A (low rows)', seatSel('A', eff.seats?.A ?? 'human')),
@@ -264,23 +272,22 @@ export class VersusApp {
         h('label', {}, 'A standing damage allocation', policySel('A')),
         h('label', {}, 'B standing damage allocation', policySel('B')),
         h('label', {}, 'Seed', seed)),
-      this._tableSetup(),
       h('p', { class: 'dim small' }, 'Allocation applies when your seat assigns damage under the profile (attacker or defender allocation). It is public and recorded in the match manifest.'),
       h('div', { class: 'row' },
-        h('button', { class: 'primary', onclick: () => start() }, 'Start match'),
+        h('button', { onclick: () => start() }, 'Start with these settings'),
         h('button', { onclick: () => start({ seats: { A: 'bot', B: 'bot' }, watch: true }) }, 'Watch bot vs bot')),
       h('div', { class: 'dev-preset' },
         h('label', { class: 'inline' }, remember, ' Remember these seats, seed and profile as my development preset'),
         h('div', { class: 'small' }, h('b', {}, 'Launch link: '), linkOut, ' ', h('button', { class: 'linkish', onclick: () => navigator.clipboard?.writeText(linkOut.textContent).then(() => this.notice?.('Launch link copied')) }, 'Copy')),
         h('div', { class: 'dim small' }, `URL values override the saved preset; the built-in default is A ${CONTROLLER_NAME.human} / B ${CONTROLLER_NAME.bot}, seed 1. `, h('button', { class: 'linkish', onclick: () => { clearPreset(); this.effective = null; this.launch = null; this.showSetup(); } }, 'Reset preset'))),
       h('div', { class: 'row' }, h('button', { onclick: () => openLab(this) }, 'Rules & experiments…'), h('span', { class: 'dim small' }, 'Edit a copy of a profile, compare profiles, run bot batches.')),
-      h('div', { class: 'row' }, h('button', { onclick: () => openEditor(this) }, 'Cards & decks…'), h('span', { class: 'dim small' }, 'Edit Cards, bind them to columns for either seat, exchange bundles.')),
+      h('p', { class: 'dim small' }, 'Cards & decks (under Play on this computer) edits Cards, binds them to columns for either seat and exchanges bundles.'),
       h('details', {}, h('summary', {}, 'Diagnostic fixtures (labeled, not ordinary play)'),
         ...Object.entries(UI_FIXTURES).map(([id, f]) => h('div', { class: 'row fixture' },
           h('button', { onclick: () => this.startMatch({ fixture: id, seats: { A: 'human', B: 'human' } }) }, f.title),
           h('span', { class: 'dim small' }, f.description)))),
       h('details', {}, h('summary', {}, 'Controls'), h('div', { class: 'keys' },
-        ...[['Left click', 'select a party, member, territory or card'], ['Right click', 'set the selected party\'s one destination (again on a Knight\'s destination: flip its L)'], ['Shift + right click', 'a Knight\'s destination: change the facing it arrives with'], ['1–9', 'select your hand slot (home column order)'], ['U / B / C', 'Supply, Burn or Ability with the selected card'], ['M', 'show legal destinations of the selected party'], ['G', 'Face menu: turn the selected formation N / E / S / W'], ['L / O', 'Knight: flip the L path / change its arrival facing'], ['P / H', 'this Tick\'s orders / Tick history'], ['Ctrl/⌘ + Enter', 'Ready (commit your plan for this Tick)'], ['Esc', 'cancel the current tool'], ['Left-drag', 'pan the board'], ['Right-drag', 'orbit and tilt'], ['Wheel / pinch', 'zoom toward the cursor'], ['Shift + wheel', 'tilt'], ['W A S D / arrows', 'pan'], ['Q / E', 'rotate the camera 45°'], ['Z / X', 'tilt'], ['V', 'tactical view'], ['Home', 'home view'], ['F', 'focus the selection'], ['Space', 'pause playback']].map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v)))),
+        ...[['Left click', 'select a party, member, territory or card'], ['Right click', 'set the selected party\'s one destination (again on a Knight\'s destination: flip its L)'], ['Shift + right click', 'a Knight\'s destination: change the facing it arrives with'], ['1–9', 'select your hand slot (home column order)'], ['U / B / C', 'Supply, Burn or Ability with the selected card'], ['M', 'show legal destinations of the selected party'], ['G', 'Face menu: turn the selected formation N / E / S / W'], ['L / O', 'Knight: flip the L path / change its arrival facing'], ['P / H', 'this Tick\'s orders / Tick history'], ['Ctrl/⌘ + Enter', 'Ready (commit your plan for this Tick)'], ['Esc', 'cancel the current tool'], ['Left-drag', 'pan the board'], ['Right-drag', 'orbit and tilt'], ['Wheel / pinch', 'zoom toward the cursor'], ['Shift + wheel', 'tilt'], ['W A S D / arrows', 'pan'], ['Q / E', 'rotate the camera 45°'], ['Z / X', 'tilt'], ['V', 'tactical view'], ['Home', 'home view'], ['F', 'focus the selection'], ['Space', 'pause playback']].map(([k, v]) => h('div', {}, h('kbd', {}, k), ' ', v))))),
     ));
     this.el.overlay.hidden = false;
     showLink();
@@ -2122,7 +2129,7 @@ export class VersusApp {
         stat('Supply loaded', +sum.supplyLoaded.A.toFixed(2), +sum.supplyLoaded.B.toFixed(2)),
         stat('Mana burned', sum.manaBurned.A, sum.manaBurned.B),
         stat('Members lost', sum.casualties.A, sum.casualties.B)),
-      h('p', { class: 'dim small' }, `First contact on Tick ${sum.firstEngagementTick ?? '—'} · ${sum.engagements} contacts · ${sum.merges} merges · damage ${+sum.damage.physical.toFixed(1)} Physical / ${+sum.damage.magic.toFixed(1)} Magic. The replay recomputes this match exactly (npm run replay -- file.json).`),
+      h('p', { class: 'dim small' }, `First contact on Tick ${sum.firstEngagementTick ?? '—'} · ${sum.engagements} contacts · ${sum.merges} merges · damage ${+sum.damage.physical.toFixed(1)} Physical / ${+sum.damage.magic.toFixed(1)} Magic.`),
       this.onlineMatch ? h('p', { class: 'small result-saved', role: 'status' }, this.onlineMatch.resultState ?? 'Saving the verified result…') : null,
       h('div', { class: 'row center' }, h('button', { onclick: () => (this.el.overlay.hidden = true) }, 'Inspect the board'), h('button', { onclick: () => this._downloadReplay() }, 'Download replay'), h('button', { class: 'primary', onclick: () => this.showSetup() }, this.onlineMatch ? 'Return to lobby' : 'New match'))));
     this.el.overlay.hidden = false;
@@ -3038,7 +3045,7 @@ export class VersusApp {
     const slotCol = String(card.column), inSlot = s.players[seat].bank.minor[slotCol] === card.id;
     const replacedBy = !inSlot && s.players[seat].bank.minor[slotCol] ? s.players[seat].bank.minor[slotCol] : null;
     const manaN = Object.values(card.mana ?? {}).reduce((n, v) => n + v, 0);
-    const face = drawCardCanvas(card, s, 240, 320);
+    const face = drawCardCanvas(card, s, 336, 448); // crisp at the roomier trial size on 2× displays
     face.className = 'inspect-face';
     face.setAttribute('role', 'img');
     face.setAttribute('aria-label', `${card.rank} of ${SUIT_NAME[card.suit] ?? card.suit}: Supply ${pts(card.supply ?? 0)}, ${manaN ? fmtMana(card.mana) : 'no Mana'}, ability ${def?.title ?? 'none'}`);

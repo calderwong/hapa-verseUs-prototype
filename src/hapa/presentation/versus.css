@@ -762,3 +762,15 @@ button.opp-hit:hover:not(:disabled) { background: transparent; border: 0; box-sh
 .online-panel .who-line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .online-panel .record-view h3 { margin: 6px 0 2px; }
 .online-panel .recent-list { margin: 4px 0; padding-left: 18px; font-size: 0.92em; }
+/* entrance hierarchy (VA-05): two paths first, development controls behind Advanced */
+.setup .local-panel { border: 1px solid var(--line, #5a4a3a); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; }
+.setup details.advanced { margin-top: 6px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 6px; }
+.setup details.advanced > summary { cursor: pointer; font-size: 0.92em; color: var(--dim, #b8ab98); }
+.setup .center { text-align: center; }
+/* Card inspection trial (VA-09): a roomier face where the window has space; the compact 112 px face
+   stays the fallback. Facts remain full DOM text beside or below it. */
+@media (min-width: 1200px) and (min-height: 760px) {
+  .peek:has(.cardview) { width: clamp(380px, 32vw, 470px); }
+  .cardview .cv-top { grid-template-columns: 168px 1fr; gap: 12px; }
+  .peek-body .cardview .inspect-face { width: 168px; height: 224px; }
+}
