@@ -24,8 +24,22 @@ import { buildBundle, verifyBundle } from './results.js';
 
 export const RUNTIME_VERSION = 'hapa-versus-peer-runtime/0.2.0';
 const OFFER_MS = 120_000;
+const TABLE_MS = 300_000;
 const START_MS = 30_000;
 const now = () => Number(process.hrtime.bigint() / 1_000_000n);
+
+/** Parse and verify a pasted invitation capsule (it carries no secret and no loopback address). */
+export function parseInvite(code) {
+  const m = typeof code === 'string' && code.trim().match(/^hvinv1\.([A-Za-z0-9_-]{40,2000})$/);
+  if (!m) throw new Error('that is not a Hapa Versus invitation');
+  let c;
+  try { c = JSON.parse(b4a.toString(b4a.from(m[1], 'base64url'))); } catch { throw new Error('the invitation is damaged'); }
+  const { sig, ...capsule } = c ?? {};
+  const pk = keyOfPlayer(capsule.player);
+  if (capsule.v !== 1 || !pk || !/^[0-9a-f]{64}$/.test(capsule.transport ?? '') || !/^[0-9a-f]{32}$/.test(capsule.challengeId ?? '') || !Number.isSafeInteger(capsule.expiresAt)) throw new Error('the invitation is incomplete');
+  if (!verifyBody('control', { kind: 'invite', ...capsule }, sig, pk)) throw new Error('the invitation signature does not match its player');
+  return capsule;
+}
 
 /** A compact verified record for the roster: human-vs-human first, other buckets kept separate. */
 function recordLine(st) {
@@ -106,10 +120,10 @@ export class PeerRuntime {
     if (this.reservation) return 'joining';
     return this.settings.availability === 'busy' ? 'busy' : 'available';
   }
-  _presence() { return { availability: this.availability(), controller: this.controllerKind, label: this.identity.label, role: this.role }; }
+  _presence() { const r = this.reservation; return { availability: r?.phase === 'open' ? 'available' : this.availability(), controller: this.controllerKind, label: this.identity.label, role: this.role, table: r?.phase === 'open' ? r.challengeId : null }; }
   _saveSettings() { writeJsonAtomic(this.store.path('settings.json'), this.settings); }
   _reserve(r) { this.reservation = r; if (r) writeJsonAtomic(this.store.path('reservation.json'), r); else writeJsonAtomic(this.store.path('reservation.json'), null); this.lobby?.announce(); this.emit({ type: 'lobby', kind: 'reservation', reservation: this._publicReservation() }); }
-  _publicReservation() { const r = this.reservation; return r ? { phase: r.phase, role: r.role, challengeId: r.challengeId, matchId: r.matchId ?? null, opponent: r.opponentLabel ?? null } : null; }
+  _publicReservation() { const r = this.reservation; return r ? { phase: r.phase, role: r.role, challengeId: r.challengeId, matchId: r.matchId ?? null, opponent: r.opponentLabel ?? null, invite: r.phase === 'open' ? r.invite : undefined } : null; }
 
   // --- lobby ----------------------------------------------------------------------------------
   async joinLobby(args = {}) {
@@ -117,7 +131,7 @@ export class PeerRuntime {
     if (!this.lobby) {
       this.lobby = new Lobby({
         networkId: this.networkId, identity: this.identity, transportKeyPair: this._transportKeyPair(), compat: this.compat,
-        presence: () => this._presence(), bootstrap: this.o.bootstrap, relayThrough: this.o.relayThrough, log: this.log,
+        presence: () => this._presence(), bootstrap: this.o.bootstrap, relayThrough: this.o.relayThrough, forceRelay: this.o.forceRelay, relayEndpoints: this.o.relayEndpoints ?? [], log: this.log,
         onPeer: (p, ev) => this._onPeer(p, ev),
         onMessage: (p, msg) => this._onMessage(p, msg).catch((e) => this.log(`message ${msg.t}: ${e.message}`)),
         onConnection: (p, conn) => this._onConnection(p, conn),
@@ -172,6 +186,7 @@ export class PeerRuntime {
     const t = now();
     for (const [id, x] of this.incoming) if (t - x.receivedAt > OFFER_MS) { this.incoming.delete(id); this.emit({ type: 'lobby', kind: 'challengeExpired', challengeId: id }); }
     const r = this.reservation;
+    if (r && r.phase === 'open' && t - (r.localAt ?? 0) > TABLE_MS) { this._reserve(null); this.emit({ type: 'lobby', kind: 'tableExpired', challengeId: r.challengeId }); }
     if (r && r.phase === 'offered' && t - (r.localAt ?? 0) > OFFER_MS) { this._reserve(null); this.emit({ type: 'lobby', kind: 'challengeExpired', challengeId: r.challengeId, outgoing: true }); }
     if (r && r.phase === 'accepted' && r.localAt && t - r.localAt > START_MS && !r.warned) { r.warned = true; this.emit({ type: 'lobby', kind: 'startSlow', challengeId: r.challengeId }); }
   }
@@ -189,6 +204,47 @@ export class PeerRuntime {
     this._reserve({ phase: 'offered', role: 'challenger', challengeId: body.challengeId, challenge: body, challengeSig: sig, opponent: peer.playerId, opponentLabel: peer.player.label, localAt: now() });
     this.lobby.send(peer.playerId, { t: 'challenge', body, sig });
     return this.lobbyView();
+  }
+
+  /** Host an open table: consent to the first compatible player who joins (no second approval). */
+  openTable() {
+    if (!this.lobby) throw new Error('join the lobby first');
+    if (this.reservation || this.match?.status === 'active') throw Object.assign(new Error('you already have a match or a pending challenge'), { code: 'BUSY' });
+    const body = { kind: 'challenge', network: this.networkId, challengeId: randomHex(16), from: this.identity.participantId, to: null, compat: this.compat.id, controller: this.controllerKind, seats: { A: this.identity.participantId, B: null }, offerMs: TABLE_MS };
+    const sig = signBody('control', body, this.identity);
+    const capsule = { v: 1, network: this.networkId, player: this.identity.participantId, transport: b4a.toString(this.lobby.swarm.keyPair.publicKey, 'hex'), challengeId: body.challengeId, offer: fingerprint(body), expiresAt: Date.now() + TABLE_MS };
+    const invite = `hvinv1.${b4a.toString(b4a.from(JSON.stringify({ ...capsule, sig: signBody('control', { kind: 'invite', ...capsule }, this.identity) })), 'base64url')}`;
+    this._reserve({ phase: 'open', role: 'challenger', challengeId: body.challengeId, challenge: body, challengeSig: sig, opponent: null, opponentLabel: null, invite, localAt: now() });
+    return this.lobbyView();
+  }
+
+  closeTable() {
+    const r = this.reservation;
+    if (r?.phase !== 'open') throw new Error('no open table');
+    this._reserve(null);
+    return this.lobbyView();
+  }
+
+  /** Join an open table seen in the lobby, or one named by a pasted invitation. */
+  async joinTable(args) {
+    if (!this.lobby) await this.joinLobby({});
+    if (this.reservation || this.match?.status === 'active') throw Object.assign(new Error('you already have a match or a pending challenge'), { code: 'BUSY' });
+    let playerId = args.playerId, challengeId = args.challengeId;
+    if (typeof args.invite === 'string') {
+      const c = parseInvite(args.invite);
+      if (c.network !== this.networkId) throw new Error('that invitation is for another network');
+      if (c.player === this.identity.participantId) throw new Error('that is your own invitation');
+      if (c.expiresAt < Date.now() - 60_000) throw new Error('that invitation has expired');
+      playerId = c.player; challengeId = c.challengeId;
+      this.lobby.dial(c.transport); // an invitation bypasses roster discovery, not NAT or firewalls
+    }
+    const peer = await this.lobby.waitForPlayer(playerId, 30_000);
+    const reply = await this._ask(peer, { t: 'table.get', challengeId }, 15_000);
+    const b = reply.body;
+    if (!b || b.kind !== 'challenge' || b.to !== null || b.from !== peer.playerId || b.challengeId !== challengeId || b.network !== this.networkId || !verifyBody('control', b, reply.sig, peer.player.publicKey)) throw new Error('that table is no longer open');
+    if (b.compat !== this.compat.id) throw new Error('that table uses a different rules build');
+    this.incoming.set(b.challengeId, { body: b, sig: reply.sig, fromLabel: peer.player.label, receivedAt: now() });
+    return this.respond({ challengeId: b.challengeId, accept: true }); // joining is this player's consent
   }
 
   cancelChallenge(args) {
@@ -245,6 +301,13 @@ export class PeerRuntime {
         if (r?.phase === 'offered' && r.challengeId === msg.challengeId && r.opponent === peer.playerId) { this._reserve(null); this.emit({ type: 'lobby', kind: 'challengeDeclined', challengeId: msg.challengeId, reason: String(msg.reason ?? 'declined').slice(0, 24), by: peer.player.label }); }
         return;
       }
+      case 'table.get': {
+        const r = this.reservation;
+        if (r?.phase === 'open' && r.challengeId === msg.challengeId) this.lobby.send(peer.playerId, { t: 'table.offer', req: msg.req, body: r.challenge, sig: r.challengeSig });
+        else this.lobby.send(peer.playerId, { t: 'table.offer', req: msg.req, body: null });
+        return;
+      }
+      case 'table.offer': { const q = this._requests.get(msg.req); if (q) { this._requests.delete(msg.req); q(msg); } return; }
       case 'result': return this._onResult(peer, msg);
       case 'resultAck': return this._onResultAck(peer, msg);
       case 'results.query': return this._onResultsQuery(peer, msg);
@@ -258,7 +321,14 @@ export class PeerRuntime {
   }
 
   async _onAccept(peer, msg) {
-    const r = this.reservation, b = msg.body;
+    let r = this.reservation;
+    const b = msg.body;
+    if (r?.phase === 'open' && b?.challengeId === r.challengeId && b.to === this.identity.participantId && b.from !== this.identity.participantId) {
+      // an open table: the first valid, compatible acceptance takes the seat
+      if (!verifyBody('control', b, msg.sig, peer.player.publicKey)) return;
+      r = { ...r, phase: 'offered', opponent: peer.playerId, opponentLabel: peer.player.label };
+      this.reservation = r;
+    } else if (r && b?.challengeId === r.challengeId && r.opponent && r.opponent !== peer.playerId) { this.lobby.send(peer.playerId, { t: 'decline', challengeId: b.challengeId, reason: 'taken' }); return; }
     if (!r || r.phase !== 'offered' || !b || b.challengeId !== r.challengeId || b.from !== peer.playerId || b.to !== this.identity.participantId) return;
     if (b.kind !== 'accept' || b.network !== this.networkId || b.challengeHash !== fingerprint(r.challenge) || b.matchId !== `hv-${r.challengeId}` || !/^[0-9a-f]{64}$/.test(b.feed ?? '')) return;
     if (!verifyBody('control', b, msg.sig, peer.player.publicKey)) return;
@@ -519,12 +589,24 @@ export class PeerRuntime {
       case 'challenge': return this.challenge(args);
       case 'challenge.cancel': return this.cancelChallenge(args);
       case 'challenge.respond': return this.respond(args);
+      case 'table.open': return this.openTable();
+      case 'table.close': return this.closeTable();
+      case 'table.join': return this.joinTable({ playerId: args.playerId, challengeId: args.challengeId });
+      case 'invite.join': return this.joinTable({ invite: args.code });
       case 'match.get': return this.match ? this.match.snapshot() : null;
       case 'match.draft': return this._matchFor(args).draft(args);
       case 'match.ready': return this._matchFor(args).ready(args);
       case 'match.choice': return this._matchFor(args).choice(args);
       case 'match.leave': return this.abandon(args);
       case 'history.list': return this.history();
+      case 'system.suspend': this.suspended = true; return { ok: true };
+      case 'system.resume': {
+        // host-only (never a renderer operation): presence is refreshed and a lost opponent redialled
+        this.suspended = false;
+        this.lobby?.announce();
+        if (this.match?.status === 'active') { const opp = this.lobby?.peers.get(this.match.opponent.participantId); if (!opp) this.match.detached(); }
+        return { ok: true };
+      }
       case 'results.list': return this.results.list(args);
       case 'results.sync': return this.syncResults(args);
       case 'profile.get': return this.profile(args);

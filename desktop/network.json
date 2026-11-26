@@ -1,0 +1,13 @@
+{
+ "schema": "hapa-versus-network-config/v1",
+ "note": "Public client configuration. It contains no secrets. A listed relay or archive is an operated service with its own host; an empty list means none is operated for this network yet, so direct connections are attempted and finished results stay saved locally until an archive is reachable.",
+ "networks": {
+  "public-alpha": {
+   "lobby": "hapa-versus-lobby/v1",
+   "online": "hapa-versus-online/v1",
+   "bootstrap": "hyperdht-public-defaults",
+   "relays": [],
+   "archives": []
+  }
+ }
+}

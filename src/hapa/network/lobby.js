@@ -45,7 +45,9 @@ export class Lobby {
     this.state = 'connecting';
     const opts = { keyPair: this.o.transportKeyPair };
     if (this.o.bootstrap) opts.bootstrap = this.o.bootstrap;
-    if (this.o.relayThrough) opts.relayThrough = this.o.relayThrough;
+    // relayThrough: a configured blind relay's public key, used when direct holepunching fails
+    // (`forceRelay` relays every connection; for proving the relay path only)
+    if (this.o.relayThrough) { const key = b4a.from(this.o.relayThrough, 'hex'); opts.relayThrough = (force) => (force || this.o.forceRelay ? key : null); }
     this.swarm = new Hyperswarm(opts);
     this.swarm.on('connection', (conn, info) => this._onConnection(conn, info));
     this.swarm.on('update', () => this._emitTransport());
@@ -103,6 +105,15 @@ export class Lobby {
     try { ctx.message.send(encodeFrame(msg, msg.t === 'start' ? MAX_START_FRAME : msg.t === 'result' || msg.t === 'resultBundle' ? MAX_RESULT_FRAME : MAX_FRAME)); return true; } catch (e) { this.log(`send ${msg.t} failed: ${e.message}`); return false; }
   }
 
+  /** Resolve when a given player is authenticated (or reject after `ms`). */
+  waitForPlayer(playerId, ms = 30_000) {
+    if (this.peers.has(playerId)) return Promise.resolve(this.peers.get(playerId));
+    return new Promise((resolve, reject) => {
+      const t0 = Date.now();
+      const iv = setInterval(() => { const p = this.peers.get(playerId); if (p) { clearInterval(iv); resolve(p); } else if (Date.now() - t0 > ms || !this.swarm) { clearInterval(iv); reject(new Error('could not reach that player: they may be offline, or this network may block the peer transport')); } }, 250);
+    });
+  }
+
   /** Send a control message to an authenticated player (false when not connected). */
   send(playerId, msg) {
     const p = this.peers.get(playerId);
@@ -150,7 +161,7 @@ export class Lobby {
         (prev.standby ??= []).push(ctx);
         return;
       }
-      const peer = { playerId: ctx.player.participantId, player: ctx.player, fingerprint: fingerprintOf(ctx.player.publicKey), transportKey: ctx.remoteKey, compat: h.compat, compatible: h.compat === this.o.compat.id, presence: presenceOf(h.presence), lastSeen: now(), since: now(), ctx, path: pathOf(ctx) };
+      const peer = { playerId: ctx.player.participantId, player: ctx.player, fingerprint: fingerprintOf(ctx.player.publicKey), transportKey: ctx.remoteKey, compat: h.compat, compatible: h.compat === this.o.compat.id, presence: presenceOf(h.presence), lastSeen: now(), since: now(), ctx, path: pathOf(ctx, this.o.relayEndpoints), endpoint: null };
       this.peers.set(peer.playerId, peer);
       this.o.onPeer(peer, 'joined');
       this.o.onConnection?.(peer, ctx.conn);
@@ -165,7 +176,7 @@ export class Lobby {
       const p = this.peers.get(ctx.player.participantId);
       if (p && p.ctx === ctx) {
         const next = (p.standby ?? []).find((c) => !c.dropped);
-        if (next) { p.ctx = next; p.standby = p.standby.filter((c) => c !== next && !c.dropped); p.transportKey = next.remoteKey; p.path = pathOf(next); p.lastSeen = now(); this.o.onConnection?.(p, next.conn); this.o.onPeer(p, 'presence'); return; }
+        if (next) { p.ctx = next; p.standby = p.standby.filter((c) => c !== next && !c.dropped); p.transportKey = next.remoteKey; p.path = pathOf(next, this.o.relayEndpoints); p.lastSeen = now(); this.o.onConnection?.(p, next.conn); this.o.onPeer(p, 'presence'); return; }
         this.peers.delete(ctx.player.participantId); this.o.onPeer(p, 'lost');
       } else if (p?.standby) p.standby = p.standby.filter((c) => c !== ctx);
     }
@@ -184,7 +195,7 @@ export class Lobby {
 
   roster() {
     const t = now();
-    return [...this.peers.values()].map((p) => ({ playerId: p.playerId, label: p.player.label, fingerprint: p.fingerprint, availability: p.presence.availability, controller: p.presence.controller, role: p.presence.role, compatible: p.compatible, seenMsAgo: t - p.lastSeen, connectedMs: t - p.since, path: p.path }));
+    return [...this.peers.values()].map((p) => ({ playerId: p.playerId, label: p.player.label, fingerprint: p.fingerprint, availability: p.presence.availability, controller: p.presence.controller, role: p.presence.role, table: p.presence.table, compatible: p.compatible, seenMsAgo: t - p.lastSeen, connectedMs: t - p.since, path: p.path }));
   }
 
   async stop() {
@@ -201,16 +212,21 @@ export class Lobby {
 
 const AVAIL = ['available', 'busy', 'joining', 'in-match', 'reconnecting'];
 function presenceOf(p) {
-  return { availability: AVAIL.includes(p?.availability) ? p.availability : 'busy', controller: ['human', 'bot'].includes(p?.controller) ? p.controller : 'human', label: sanitizeName(p?.label), role: p?.role === 'archive' ? 'archive' : 'player' };
+  return { availability: AVAIL.includes(p?.availability) ? p.availability : 'busy', controller: ['human', 'bot'].includes(p?.controller) ? p.controller : 'human', label: sanitizeName(p?.label), role: p?.role === 'archive' ? 'archive' : 'player', table: typeof p?.table === 'string' && /^[0-9a-f]{32}$/.test(p.table) ? p.table : null };
 }
 const publicOf = (id) => ({ participantId: id.participantId, publicKey: id.publicKey, signingKeyId: id.signingKeyId, identityKind: id.identityKind, label: id.label });
 
-/** Direct or relayed, only when observable from the connection; otherwise unknown. */
-function pathOf(ctx) {
+/**
+ * Direct or relayed, only when observable; otherwise unknown. The connection's UDP remote endpoint
+ * is the one thing visible here: when it is the configured relay's own endpoint (operators publish
+ * it beside the relay key), traffic is going through the relay. A visible host alone proves nothing.
+ */
+function pathOf(ctx, relayEndpoints = []) {
   const raw = ctx.conn?.rawStream;
-  if (ctx.conn?.relay || raw?.relay) return 'relayed';
-  if (raw && typeof raw.remoteHost === 'string') return 'direct';
+  const ep = raw && typeof raw.remoteHost === 'string' ? `${raw.remoteHost}:${raw.remotePort}` : null;
+  if (ep && relayEndpoints.some((r) => r === ep || (r.startsWith('*:') && ep.endsWith(r.slice(1))))) return 'relayed';
   return 'unknown';
 }
+export { pathOf };
 
 export { crypto as _crypto };

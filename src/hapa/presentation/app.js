@@ -354,6 +354,11 @@ export class VersusApp {
       this.onlineMatch.opponentLabel = online.opponent.label;
       this._onlineSnap = online;
       this._onlineUnsub = this.online.on((e) => this._onOnlineEvent(e, gen));
+      if (!this._runtimeWatch) this._runtimeWatch = this.online.on((e) => {
+        // the peer runtime restarted under main's bounded policy: reattach to the same match from its record
+        if (e.type === 'runtime' && e.state === 'ready' && this.onlineMatch) { this._toast('The peer runtime restarted; reopening your match from its saved record', true); this.resumeOnline(); }
+        if (e.type === 'runtime' && (e.state === 'restarting' || e.state === 'failed') && this.onlineMatch) { this._toast(e.state === 'failed' ? `The peer runtime stopped: ${e.error}` : 'The peer runtime stopped unexpectedly; restarting it…', true); }
+      });
     } else if (fx) {
       // a labeled diagnostic fixture: its state is prepared directly, not reached by ordinary play
       this.session = createFixtureSession(fx.build(), { id: fixture, title: fx.title });

@@ -112,6 +112,7 @@ export function onlinePanel(app) {
   const client = app.online ??= new OnlineClient(host);
   let view = null, busy = false, note = '';
   const name = h('input', { type: 'text', maxlength: '32', 'aria-label': 'Your display name', placeholder: 'Your name' });
+  const paste = h('input', { type: 'text', 'aria-label': 'Paste an invitation code', placeholder: 'Paste an invitation (hvinv1.…)' });
   const act = async (fn) => { if (busy) return; busy = true; draw(); try { view = await fn(); note = ''; } catch (e) { note = e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, ''); } busy = false; draw(); };
   const refresh = async () => { try { view = await client.call('lobby.list'); } catch (e) { note = e.message; } draw(); };
   const draw = () => {
@@ -134,8 +135,14 @@ export function onlinePanel(app) {
         h('p', { class: 'dim small', role: 'status' }, conn));
       if (v.match && v.match.status === 'active') rows.push(h('div', { class: 'row' }, h('span', {}, `Your match against ${v.match.opponent} is in progress.`), h('button', { class: 'primary', onclick: () => app.resumeOnline() }, 'Return to the table')));
       const r = v.reservation;
+      if (!r && v.me.availability === 'available') rows.push(h('div', { class: 'row' },
+        h('button', { disabled: busy, title: 'Anyone compatible in the lobby (or holding your invitation) can take the other seat; hosting is your consent', onclick: () => act(() => client.call('table.open')) }, 'Open a table'),
+        paste, h('button', { disabled: busy, onclick: () => act(() => client.call('invite.join', { code: paste.value.trim() })) }, 'Join by invitation')));
+      if (r?.phase === 'open') rows.push(h('div', { class: 'row challenge-out' }, h('span', {}, 'Your table is open · the first compatible player to join takes the other seat'),
+        h('button', { onclick: () => navigator.clipboard?.writeText(r.invite).then(() => { note = 'Invitation copied. It names your table and expires in 5 minutes; it does not get through firewalls by itself.'; draw(); }) }, 'Copy invitation'),
+        h('button', { disabled: busy, onclick: () => act(() => client.call('table.close')) }, 'Close table')));
       if (r?.phase === 'offered') rows.push(h('div', { class: 'row challenge-out' }, h('span', {}, `Challenge sent to ${r.opponent} · waiting for an answer`), h('button', { disabled: busy, onclick: () => act(() => client.call('challenge.cancel', { challengeId: r.challengeId })) }, 'Cancel')));
-      else if (r && r.phase !== 'active') rows.push(h('p', { class: 'small', role: 'status' }, `Starting a match with ${r.opponent}…`));
+      else if (r && r.phase !== 'active' && r.phase !== 'open') rows.push(h('p', { class: 'small', role: 'status' }, `Starting a match with ${r.opponent}…`));
       for (const x of v.incoming) rows.push(h('div', { class: 'row challenge-in', role: 'alert' },
         h('span', {}, h('b', {}, x.label), ` (${x.fingerprint}, ${x.controller === 'bot' ? 'declared bot' : 'human'}) challenges you · bundled ${v.compat.profileId}`),
         h('button', { class: 'primary', disabled: busy, onclick: () => act(() => client.call('challenge.respond', { challengeId: x.challengeId, accept: true })) }, 'Accept'),
@@ -148,7 +155,9 @@ export function onlinePanel(app) {
         ? h('ul', { class: 'roster-online' }, ...players.map((p) => h('li', {},
           h('span', { class: `avail ${p.availability}`, title: AVAIL_TEXT[p.availability] }, AVAIL_GLYPH[p.availability] ?? '○'),
           h('span', { class: 'who' }, h('b', {}, p.label), h('span', { class: 'dim small' }, ` ${p.fingerprint} · ${p.controller === 'bot' ? 'declared bot' : 'human'} · ${AVAIL_TEXT[p.availability] ?? p.availability}${p.compatible ? '' : ' · different rules build'} · ${recordText(p.record)}`)),
-          h('button', { disabled: busy || !p.compatible || p.availability !== 'available' || !!r || v.me.availability !== 'available', title: !p.compatible ? 'This player uses a different rules build' : p.availability !== 'available' ? `${p.label} is ${AVAIL_TEXT[p.availability]}` : `Challenge ${p.label} with the bundled preset`, onclick: () => act(() => client.call('challenge', { playerId: p.playerId })) }, 'Challenge'))))
+          p.table
+            ? h('button', { disabled: busy || !p.compatible || !!r || v.me.availability !== 'available', title: `Take the open seat at ${p.label}'s table`, onclick: () => act(() => client.call('table.join', { playerId: p.playerId, challengeId: p.table })) }, 'Join table')
+            : h('button', { disabled: busy || !p.compatible || p.availability !== 'available' || !!r || v.me.availability !== 'available', title: !p.compatible ? 'This player uses a different rules build' : p.availability !== 'available' ? `${p.label} is ${AVAIL_TEXT[p.availability]}` : `Challenge ${p.label} with the bundled preset`, onclick: () => act(() => client.call('challenge', { playerId: p.playerId })) }, 'Challenge'))))
         : h('p', { class: 'dim small' }, t.state === 'online' ? 'No other players found yet. The list updates as players join.' : 'Looking for players…'));
     }
     if (note) rows.push(h('p', { class: 'warn small', role: 'alert' }, note));

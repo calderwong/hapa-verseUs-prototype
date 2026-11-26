@@ -22,6 +22,7 @@ const quiet = flag('quiet');
 
 const rt = new PeerRuntime({
   root: resolve(data), networkId: arg('network', 'public-alpha'), displayName: arg('name'), controller: flag('bot') ? 'bot' : 'human', autoAccept: flag('auto-accept'), bootstrap, host: 'headless',
+  relayThrough: arg('relay'), forceRelay: flag('force-relay'), relayEndpoints: arg('relay-endpoint') ? [arg('relay-endpoint')] : [],
   log: (s) => { if (!quiet) out({ log: s }); },
   onEvent: (e) => {
     if (!quiet || e.kind === 'opened' || e.kind === 'complete' || e.kind === 'disputed' || e.kind === 'challengeReceived' || e.kind === 'challengeDeclined') out({ event: e.kind, ...(e.type === 'match' ? { matchId: e.matchId, count: e.count, hash: e.hash?.slice(7, 19), reason: e.reason, outcome: e.outcome } : { from: e.from, reason: e.reason }) });
@@ -30,6 +31,7 @@ const rt = new PeerRuntime({
     if (e.type === 'match' && e.kind === 'resultSaved') { out({ SAVED: { status: e.status, key: e.key, record: e.record?.buckets } }); if (flag('exit-on-complete')) setTimeout(async () => { await rt.close(); process.exit(0); }, 20_000); }
     if (e.type === 'match' && e.kind === 'resultArchived') { out({ ARCHIVED: { by: e.by, status: e.status } }); if (flag('exit-on-complete')) setTimeout(async () => { await rt.close(); process.exit(0); }, 1500); }
     if (e.type === 'match' && e.kind === 'disputed') { out({ DISPUTED: e.reason }); }
+    if (e.type === 'match' && e.kind === 'opened') out({ PATHS: (rt.lobby?.roster() ?? []).map((r) => ({ label: r.label, path: r.path })) });
   },
 });
 const st = await rt.open();
@@ -51,6 +53,8 @@ if (flag('observe')) {
   };
   setTimeout(tick, 1000);
 }
+if (flag('open-table')) { const v = rt.openTable(); out({ INVITE: v.reservation.invite }); }
+if (arg('join-invite')) { setTimeout(() => rt.joinTable({ invite: arg('join-invite') }).then(() => out({ joined: true })).catch((e) => out({ joinError: e.message })), 2000); }
 const target = arg('challenge');
 if (target) {
   const t0 = Date.now();

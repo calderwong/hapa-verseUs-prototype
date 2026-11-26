@@ -6,7 +6,7 @@
  * process hosts the same reusable Node peer runtime the headless tools use, and the sandboxed
  * renderer reaches it only through the narrow preload bridge (desktop/preload.cjs).
  */
-import { app, BrowserWindow, protocol, session, ipcMain, utilityProcess, net, shell, dialog, Menu, screen } from 'electron';
+import { app, BrowserWindow, protocol, session, ipcMain, utilityProcess, net, shell, dialog, Menu, screen, powerMonitor } from 'electron';
 import { readFile, stat } from 'node:fs/promises';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, normalize, extname, isAbsolute, resolve, sep } from 'node:path';
@@ -102,7 +102,7 @@ function startPeer() {
   proc.stderr?.on('data', (d) => process.stderr.write(`[peer] ${d}`));
   peer.ready = new Promise((resolveReady, rejectReady) => {
     const onMsg = (m) => {
-      if (m?.type === 'ready') { peer.status = m.status; resolveReady(m.status); }
+      if (m?.type === 'ready') { peer.status = m.status; resolveReady(m.status); if (peer.restarts.length) broadcast({ type: 'runtime', state: 'ready', restarted: true }); }
       else if (m?.type === 'fatal') rejectReady(new Error(m.error));
       else if (m?.type === 'reply') { const p = peer.pending.get(m.id); if (p) { peer.pending.delete(m.id); m.ok ? p.resolve(m.value) : p.reject(Object.assign(new Error(m.error), { code: m.code })); } }
       else if (m?.type === 'event') broadcast(m.event);
@@ -122,7 +122,19 @@ function startPeer() {
     broadcast({ type: 'runtime', state: 'restarting', exitCode: code });
     setTimeout(startPeer, 500 * peer.restarts.length);
   });
-  proc.postMessage({ type: 'init', root: stateRoot(), networkId: NETWORK_ID });
+  proc.postMessage({ type: 'init', root: stateRoot(), networkId: NETWORK_ID, network: networkConfig() });
+}
+
+/**
+ * Public network configuration: the bundled desktop/network.json, optionally overridden by an
+ * operator-provided userData/network.json (relay keys and endpoints, archive keys). No secrets.
+ */
+function networkConfig() {
+  const read = (f) => { try { return JSON.parse(readFileSync(f, 'utf8')); } catch { return null; } };
+  const bundled = read(join(appRoot, 'desktop', 'network.json'))?.networks?.[NETWORK_ID] ?? {};
+  const local = read(join(app.getPath('userData'), 'network.json'))?.networks?.[NETWORK_ID] ?? {};
+  const relays = [...(local.relays ?? []), ...(bundled.relays ?? [])].filter((r) => /^[0-9a-f]{64}$/.test(r?.key ?? ''));
+  return { relayThrough: relays[0]?.key ?? null, relayEndpoints: relays.flatMap((r) => (typeof r.endpoint === 'string' ? [r.endpoint] : [])), relays: relays.length, archives: (local.archives ?? bundled.archives ?? []).length };
 }
 
 function callPeer(op, args, timeoutMs = 20_000) {
@@ -140,7 +152,7 @@ function broadcast(event) { if (win && !win.isDestroyed()) win.webContents.send(
 
 // Renderer → host operations. The renderer names an operation; the host validates the sender and
 // the operation name, and the runtime validates arguments, seat and generation.
-const RENDERER_OPS = new Set(['getStatus', 'setDisplayName', 'probeTransport', 'lobby.join', 'lobby.leave', 'lobby.list', 'setAvailability', 'challenge', 'challenge.cancel', 'challenge.respond', 'invite.create', 'invite.join', 'table.open', 'table.close', 'match.get', 'match.draft', 'match.ready', 'match.choice', 'match.leave', 'match.resume', 'history.list', 'profile.get', 'results.list', 'results.sync']);
+const RENDERER_OPS = new Set(['getStatus', 'setDisplayName', 'probeTransport', 'lobby.join', 'lobby.leave', 'lobby.list', 'setAvailability', 'challenge', 'challenge.cancel', 'challenge.respond', 'invite.join', 'table.open', 'table.close', 'table.join', 'match.get', 'match.draft', 'match.ready', 'match.choice', 'match.leave', 'match.resume', 'history.list', 'profile.get', 'results.list', 'results.sync']);
 ipcMain.handle('versus:call', async (e, msg) => {
   const frameUrl = e.senderFrame?.url ?? '';
   if (!frameUrl.startsWith(`${ORIGIN}/`) || e.senderFrame !== e.sender.mainFrame) throw new Error('refused: not the game page');
@@ -221,6 +233,9 @@ app.whenReady().then(async () => {
   buildMenu();
   startPeer();
   createWindow();
+  // after sleep or a network change, refresh presence and reconnect from durable state before claiming Available
+  powerMonitor.on('suspend', () => { if (peer.proc) peer.proc.postMessage({ type: 'call', id: 0, op: 'system.suspend', args: {} }); });
+  powerMonitor.on('resume', () => { if (peer.proc) peer.proc.postMessage({ type: 'call', id: 0, op: 'system.resume', args: {} }); });
   if (SMOKE_OUT) runSmoke().catch((e) => { writeSmoke({ ok: false, error: e.stack ?? String(e) }); app.exit(1); });
 });
 

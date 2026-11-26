@@ -45,7 +45,8 @@ async function local(o) {
   const bridge = await js(o, `window.hapaDesktop.call('getStatus').then(s => ({ ok: true, state: s.state, launch: s.launch, fingerprint: s.player?.fingerprint, hasSecret: JSON.stringify(s).includes('secretKey') })).catch(e => ({ ok: false, error: e.message }))`);
   const refused = await js(o, `window.hapaDesktop.call('deleteEverything').then(() => 'accepted').catch(e => e.message)`);
   const owners = await js(o, `Promise.all(['/capabilities','/music/cj/songs?q=x','/harness/game-status'].map(u => fetch(u).then(r => r.status).catch(e => 'error ' + e.message)))`);
-  return { ok: !!(page && status.launch && transport.destroyed && bridge.ok && !bridge.hasSecret), script: 'local', ms: Date.now() - t0, about: o.about(), dataInsideBundle: o.stateRoot().startsWith(o.appRoot), status: { state: status.state, launch: status.launch, createdIdentity: status.createdIdentity, versions: status.versions, fingerprint: status.player?.fingerprint }, transport, page, bridge, refusedUnknownOp: refused, ownerRoutes: owners };
+  const table = await until(o, `(() => { const t = window.__versus?.table; const b = t?.opponent?.binding ?? t?.avatar?.binding ?? null; const m = window.__versus?.table?.music ?? window.__versus?.table?.soundtrack; return t ? { avatarStatus: b?.status ?? null, renderer: b?.renderer?.packageId ?? null, voice: !!b?.voice, music: m?.status ?? m?.state ?? null } : { none: true }; })()`, 20_000, 1000);
+  return { ok: !!(page && status.launch && transport.destroyed && bridge.ok && !bridge.hasSecret), script: 'local', table, ms: Date.now() - t0, about: o.about(), dataInsideBundle: o.stateRoot().startsWith(o.appRoot), status: { state: status.state, launch: status.launch, createdIdentity: status.createdIdentity, versions: status.versions, fingerprint: status.player?.fingerprint }, transport, page, bridge, refusedUnknownOp: refused, ownerRoutes: owners };
 }
 
 async function online(o) {
@@ -54,12 +55,17 @@ async function online(o) {
   const opponent = process.env.HAPA_VERSUS_SMOKE_OPPONENT || null; // challenge this player; otherwise accept
   const maxTicks = Number(process.env.HAPA_VERSUS_SMOKE_TICKS || 400);
   const reloadAt = Number(process.env.HAPA_VERSUS_SMOKE_RELOAD_AT || 0);
+  // a bounded journey ends through the existing concession order (an editable-plan order resolved by
+  // an agreed Tick), so a long heuristic stalemate cannot hold the evidence run open
+  const concedeAfter = Number(process.env.HAPA_VERSUS_SMOKE_CONCEDE_AFTER || 0);
   const status = await o.peer.ready;
   await loaded(o);
   const log = [];
   const note = (x) => { log.push({ t: Date.now() - t0, ...x }); };
   // 1. the lobby: join with a name (real input + click), unless already joined/resumed
-  const resumed = await until(o, `!!document.querySelector('.online-panel') || !!window.__versus?.onlineMatch`, 30_000);
+  // a relaunch into an active match reattaches on its own; wait for that instead of racing the setup sheet
+  const active = (await o.callPeer('getStatus', {}, 10_000).catch(() => null))?.match;
+  const resumed = active ? await until(o, `!!window.__versus?.onlineMatch`, 60_000) : await until(o, `!!document.querySelector('.online-panel')`, 30_000);
   const inMatch = await js(o, `!!window.__versus?.onlineMatch`);
   if (!inMatch) {
     const joinBtn = await until(o, `(() => { const b = [...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join lobby'); return b ? true : !!document.querySelector('.online-me'); })()`, 30_000);
@@ -108,7 +114,8 @@ async function online(o) {
         continue;
       }
       // a real plan edit (heuristic suggestion entered as an ordinary plan revision), then the Ready button
-      const planned = await js(o, `window.__versus._devPlanWithBot()`).catch((e) => `error ${e.message}`);
+      let planned = await js(o, `window.__versus._devPlanWithBot()`).catch((e) => `error ${e.message}`);
+      if (concedeAfter && ticks.length >= concedeAfter) { planned = await js(o, `window.__versus._addCommand(window.__versus.viewSeat, { type: 'concede' }) ? 'concede' : 'concede refused'`); note({ step: 'concede', tick: s.tick }); }
       await sleep(250);
       const t1 = Date.now();
       await js(o, `document.querySelector('.ready-big').click()`);

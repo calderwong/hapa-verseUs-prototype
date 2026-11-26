@@ -1,0 +1,553 @@
+{
+ "schema": "hapa-versus-engine-runtime/v1",
+ "engine": {
+  "name": "Luminati (Hapa fork)",
+  "repository": "calderwong/lumina-hapa (private)",
+  "branch": "hapa",
+  "revision": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "licence": {
+   "file": "LICENSE",
+   "sha256": "98c8afa3d98bddd9fcbd59cf283c712c562cf6f21f90fb8a29ed25fcab3c41a5",
+   "spdx": "MIT"
+  }
+ },
+ "entries": [
+  "src/versus.js"
+ ],
+ "closure": {
+  "files": 105,
+  "bytes": 3313725
+ },
+ "files": [
+  {
+   "path": "src/engine/audio/AudioSystem.js",
+   "bytes": 124968,
+   "sha256": "0e964df70d2d12030e1a44328703132204ac03c971df389b3903cc67ec7dd54a"
+  },
+  {
+   "path": "src/engine/audio/EvermereAudio.js",
+   "bytes": 23939,
+   "sha256": "e39c49ff58df48bad11a3b7fba411287eea710d8c85b728778ee2dddbf980766"
+  },
+  {
+   "path": "src/engine/audio/VanquishAudio.js",
+   "bytes": 49563,
+   "sha256": "b37f434469d8b10ec8f9efae479b5f425bbc8101b99bac7a37b4f73029096841"
+  },
+  {
+   "path": "src/engine/audio/evermere/Bells.js",
+   "bytes": 14032,
+   "sha256": "b7f13514364acd140811d62710b11d0c176e1539435268d3c4a1b1e1221e6944"
+  },
+  {
+   "path": "src/engine/audio/evermere/Scores.js",
+   "bytes": 52153,
+   "sha256": "67420e0e97160664a9688a6d41e420e05d9f0148bfb6eef6d7d886c69580f66d"
+  },
+  {
+   "path": "src/engine/audio/evermere/Sounds.js",
+   "bytes": 28707,
+   "sha256": "6bdd68eb74470d4559bcea124bdc986aa722ebf737f57aac9cda1535104ecb41"
+  },
+  {
+   "path": "src/engine/audio/vanquish/MusicRenders.js",
+   "bytes": 64303,
+   "sha256": "23d30dee22b3a5186051d9e1f3f2433dec81b0060cc7e045f2108f53d1bb293a"
+  },
+  {
+   "path": "src/engine/audio/vanquish/RenderKit.js",
+   "bytes": 33582,
+   "sha256": "32efd975fcc59bbf8fc1f01a8867fe2b85859c270d872ac5286d4cc8caff11b0"
+  },
+  {
+   "path": "src/engine/audio/vanquish/ScoreKit.js",
+   "bytes": 52014,
+   "sha256": "9b007bdd8d6e6668d4681accd677610b5dde09929168fb64f5958440b42f9c91"
+  },
+  {
+   "path": "src/engine/audio/vanquish/ScoreVoices.js",
+   "bytes": 94084,
+   "sha256": "3ad051d60beaf7dc2189e10f459bf93eddd81477a19c7e7b0cdf2bbf3b24797e"
+  },
+  {
+   "path": "src/engine/audio/vanquish/Scores.js",
+   "bytes": 53077,
+   "sha256": "7f46854d108795e63123190e18cc074b90c60fcac1e1b22f45e68c81c68408fc"
+  },
+  {
+   "path": "src/engine/constants.js",
+   "bytes": 1111,
+   "sha256": "b018a8307b5850e2b639624f2591bd141a593ec8d00671adf1bc6579339ba551"
+  },
+  {
+   "path": "src/engine/core/Engine.js",
+   "bytes": 22814,
+   "sha256": "653e79e70ca1de7b5ffb50d2fc242f5c23921c07a9d1946912131b247d18d0f9"
+  },
+  {
+   "path": "src/engine/core/EventEmitter.js",
+   "bytes": 4158,
+   "sha256": "0d3bff4e02b329527ed51c66c1b3ddedaf48b0caa22094cad64a10f4a93f97b3"
+  },
+  {
+   "path": "src/engine/core/Input.js",
+   "bytes": 18558,
+   "sha256": "709fff64816670284f2554ca3865297f22d4045b3353945030b46fb979252282"
+  },
+  {
+   "path": "src/engine/fx/Particles.js",
+   "bytes": 56082,
+   "sha256": "9ad5ad37f727c0318911b93fcf9d224c65c0e1a13c4c7da8a860ee8ccb134ad5"
+  },
+  {
+   "path": "src/engine/fx/presets/siege.js",
+   "bytes": 2590,
+   "sha256": "c9f1f3e1639bb72d08ed6735087f93a6df90d1be236d6e7a151f46448c4b2e07"
+  },
+  {
+   "path": "src/engine/i18n/ContentKeys.js",
+   "bytes": 24177,
+   "sha256": "8749204ec5bd58f1cdd6ada9d64a4c0b2a9afe44a08b8ea688349b65c384b4f7"
+  },
+  {
+   "path": "src/engine/level/LevelFormat.js",
+   "bytes": 45257,
+   "sha256": "7f7de368d988f5d239815dee54c05bc658826c750c5a7d805e53cf40e49428bf"
+  },
+  {
+   "path": "src/engine/level/LevelMap.js",
+   "bytes": 16370,
+   "sha256": "a7feea2daef25e03edacb439debc569346ce1ce0ee5dafb4df1f3963bee57642"
+  },
+  {
+   "path": "src/engine/level/ObjectCatalog.js",
+   "bytes": 107938,
+   "sha256": "aab15093d221dabf7b370ac5ffeced87f0fb0a73f3b74803a62aec79e0c4eeab"
+  },
+  {
+   "path": "src/engine/level/Owners.js",
+   "bytes": 3242,
+   "sha256": "8039c15dce5839a0f763de361ee8099c0cf51bb25845971a7c9f2da9f779cd1f"
+  },
+  {
+   "path": "src/engine/level/StoryCondition.js",
+   "bytes": 20046,
+   "sha256": "6966c8eea881618346828b73b46d3ff7275a04e613397f69eaa49cc4ed11c5bd"
+  },
+  {
+   "path": "src/engine/pixel/AridSprites.js",
+   "bytes": 16918,
+   "sha256": "f7fbb6a6aaa1f229035fd2099908263a07f57cc81d1266e19be98d78ba3d7ed0"
+  },
+  {
+   "path": "src/engine/pixel/CharacterKit.js",
+   "bytes": 13558,
+   "sha256": "c84aa6992abc8527d2eb94a71bf6ce78a29507782f28c98583648118ded282f9"
+  },
+  {
+   "path": "src/engine/pixel/CharacterSprites.js",
+   "bytes": 178974,
+   "sha256": "583c5bbad0a32ea0c114b73d4e633196c3f1ad27d93464ac107d0f41714cc998"
+  },
+  {
+   "path": "src/engine/pixel/Palette.js",
+   "bytes": 3442,
+   "sha256": "00828f26871fa3aa223840a29f25c5dd19727fc4a0bed13bc147c00e31488016"
+  },
+  {
+   "path": "src/engine/pixel/PixelCanvas.js",
+   "bytes": 19477,
+   "sha256": "fe8d729df1aaf631db3872cf0610fc2ab245f3a4734b179cc76eeed8c420d939"
+  },
+  {
+   "path": "src/engine/pixel/PropSprites.js",
+   "bytes": 34040,
+   "sha256": "8abc061bf5f1384b5480644ecb0ef2c7e4a4ebc22d9252e196e23e6a0e652232"
+  },
+  {
+   "path": "src/engine/pixel/SeasonSprites.js",
+   "bytes": 34845,
+   "sha256": "666d64f7309baa60d0b34653eeb27722d84f889554a79fc6d76e9e168ace3ff2"
+  },
+  {
+   "path": "src/engine/pixel/Textures.js",
+   "bytes": 131627,
+   "sha256": "65413af59a18ff90061aa209b5567db15e26b2b666871d509d20712ece84e445"
+  },
+  {
+   "path": "src/engine/pixel/textures/arid.js",
+   "bytes": 47637,
+   "sha256": "250307d413816c1c75ad76cfad5000bf9988108642a9f8c21ca9e35ee63ab724"
+  },
+  {
+   "path": "src/engine/pixel/textures/buildings.js",
+   "bytes": 22868,
+   "sha256": "9a794163cad8bb9097a423e64a8d4d387412cf0c0269f6ff6f57aa83fae2b607"
+  },
+  {
+   "path": "src/engine/pixel/textures/evermereProps.js",
+   "bytes": 23940,
+   "sha256": "61e24b6727e6e98c2040d50ec73365cad7332fce645e7e8c43a42d1b97014b65"
+  },
+  {
+   "path": "src/engine/pixel/textures/names.js",
+   "bytes": 3630,
+   "sha256": "88fa52ecca8d7bbe95574d0abd6a9c3b4fed6894d6ba520eb31d1082a5d062f5"
+  },
+  {
+   "path": "src/engine/pixel/textures/seasons.js",
+   "bytes": 46800,
+   "sha256": "65585f28f79c8cf8f1adaf8098a675a57fc9a97fc531afb3288f073a8e07d0b5"
+  },
+  {
+   "path": "src/engine/pixel/textures/sky.js",
+   "bytes": 96253,
+   "sha256": "78d3632689e3f062fb1b5feae94e77a72a15e818b77c83be88f6a540e73e3ce4"
+  },
+  {
+   "path": "src/engine/render/GlobalUniforms.js",
+   "bytes": 2122,
+   "sha256": "5c367009b8e97395e738a00631765e3402bff8c485d6ac55fea27e245d57fcc6"
+  },
+  {
+   "path": "src/engine/render/PostFX.js",
+   "bytes": 37162,
+   "sha256": "16152522a6838e5a8f7c71429dc5ba952fa46097160fdf0548040029836545a5"
+  },
+  {
+   "path": "src/engine/render/shaders/BloomShaders.js",
+   "bytes": 1686,
+   "sha256": "bfbe243f120b11ad43bf811edc5987d9125c7ed4c695cb5b4680482adab9b537"
+  },
+  {
+   "path": "src/engine/render/shaders/CinematicShaders.js",
+   "bytes": 4411,
+   "sha256": "ce55b1f227e627c6cbac8a34270a6f6e9bbfb3096c4f54f2e58246472f73ee75"
+  },
+  {
+   "path": "src/engine/render/shaders/DofShaders.js",
+   "bytes": 26844,
+   "sha256": "ca5a727a665298dbb6e1c6a4449f1f0c299af539b71d3a7d08411bd0b0db039d"
+  },
+  {
+   "path": "src/engine/render/shaders/GradeShader.js",
+   "bytes": 10788,
+   "sha256": "e8b0c7a090c8fcc1859b6a3a4d83b545955706ee3533dbed49f25135c725d099"
+  },
+  {
+   "path": "src/engine/render/shaders/PostCommon.js",
+   "bytes": 2321,
+   "sha256": "e6af291b0defcb917f462994526d342eb734327793fcf0a9f099f8f8a9def515"
+  },
+  {
+   "path": "src/engine/sprite/Sprite3D.js",
+   "bytes": 43449,
+   "sha256": "1bf90d5debaecb355f884ad2cbed58c048d4782794a7708186a0f2a5d4e2062d"
+  },
+  {
+   "path": "src/engine/ui/art/gilt.js",
+   "bytes": 6255,
+   "sha256": "06966d324ed31699180a854860895e8766bcd05887597e772f3426bd5f289c69"
+  },
+  {
+   "path": "src/engine/ui/art/minimap.js",
+   "bytes": 36992,
+   "sha256": "517e145d0f2251a2b3c90ef6fef658410d3227bc69421c283565c7539dfb2c05"
+  },
+  {
+   "path": "src/engine/ui/art/painter.js",
+   "bytes": 6397,
+   "sha256": "41bc6cfc5a612d1fb426c1ea78c08afec915f8c38c77bdb6cc813d96361d5ea5"
+  },
+  {
+   "path": "src/engine/ui/art/palette.js",
+   "bytes": 6422,
+   "sha256": "51ea1a2e841863ff94c4bb9361ad3104fc596d585bd633b94402da0d9abf99b0"
+  },
+  {
+   "path": "src/engine/utils/math.js",
+   "bytes": 4710,
+   "sha256": "228e62ad9c4908bfd8779caf93961c680883ad7ec1a9925ffa96a4867f62fd17"
+  },
+  {
+   "path": "src/engine/utils/own.js",
+   "bytes": 6990,
+   "sha256": "0a9c1a6509c6724c2ead6a08946dc42d8c23f204226fd8a98d978e3ea09c5132"
+  },
+  {
+   "path": "src/engine/utils/steps.js",
+   "bytes": 823,
+   "sha256": "1cf8e5366671f62640ef4dc51760a95ff6d5a407b5706b5c6b1c7321a7983ee3"
+  },
+  {
+   "path": "src/engine/world/Props.js",
+   "bytes": 50731,
+   "sha256": "ed8029f27be4ae750ff6e981cf0e2501a0d2601beb447221f7d2404dc081e026"
+  },
+  {
+   "path": "src/engine/world/SeasonKit.js",
+   "bytes": 5970,
+   "sha256": "62107675d629c3b40324b5de9908d58f9710eee660bf6dd3a9e9d694ee7c814e"
+  },
+  {
+   "path": "src/engine/world/SeasonKitParts.js",
+   "bytes": 2386,
+   "sha256": "ac23ea65665efca6f86c1a183ee73d5e85c834e89d2293b597245d7c2c2206d3"
+  },
+  {
+   "path": "src/engine/world/SetPieceKit.js",
+   "bytes": 6849,
+   "sha256": "3d01baea29db0629d51d6ecc0a919ea78df58d55be4e1e7067ca7a39d3eba8e7"
+  },
+  {
+   "path": "src/engine/world/SetPieceKitParts.js",
+   "bytes": 2724,
+   "sha256": "d4b56ad4661408a8071c39cac99e537e7a874dd29e4772a3fe3427aeb19f6b0c"
+  },
+  {
+   "path": "src/engine/world/ShadowCasters.js",
+   "bytes": 13217,
+   "sha256": "a75ec055872365c928cf206dc7a9a611b92e4c3053f4351a16a39d174a820ce4"
+  },
+  {
+   "path": "src/engine/world/SkyKit.js",
+   "bytes": 8871,
+   "sha256": "9c966d129788af82fa267c2c2c76ed6b5f27c7206e27e97e460f9b7100399687"
+  },
+  {
+   "path": "src/engine/world/SkyKitParts.js",
+   "bytes": 3831,
+   "sha256": "5c9959482ae9c08cc2cf55472795c3cd04777eb4064b7dc2092ba1393d5ecda3"
+  },
+  {
+   "path": "src/engine/world/SpatialSplit.js",
+   "bytes": 15280,
+   "sha256": "6601c9e5c126152d679a2e7ed6e5025a24e01c9854d43d2aac4f748bc6df843f"
+  },
+  {
+   "path": "src/engine/world/ThawField.js",
+   "bytes": 6938,
+   "sha256": "c585d80badd8ba1defdcd101fd3c1f49df8a12d8bfc518161739129b8a3ec9f2"
+  },
+  {
+   "path": "src/engine/world/TileMap.js",
+   "bytes": 85751,
+   "sha256": "d4d22171cdfd20ab280c6edcc6653bb650cb8116a91b4cef2c73ea76908b8955"
+  },
+  {
+   "path": "src/engine/world/Water.js",
+   "bytes": 50287,
+   "sha256": "3ff5560cce961076083fdf3c8425aa9c806c266932698cf01c8371b85b430ee5"
+  },
+  {
+   "path": "src/engine/world/WaterShore.js",
+   "bytes": 7481,
+   "sha256": "d27b779c6dddca66e58487f592587815a8376529ba588e96c5a2c29a20b8f11c"
+  },
+  {
+   "path": "src/engine/world/props/AridPropTextures.js",
+   "bytes": 14418,
+   "sha256": "b616523cc23a69cb26e184eda0cb74b84c352baec57cdd619b18ac8cbc4d5f8a"
+  },
+  {
+   "path": "src/engine/world/props/AridTrees.js",
+   "bytes": 17218,
+   "sha256": "0aaffaeb691d81ce77605ac12e1e6e7e35cde81bd44253204ce352bae4a120a0"
+  },
+  {
+   "path": "src/engine/world/props/Belfry.js",
+   "bytes": 62583,
+   "sha256": "42273082d17a31f73a840dffb71c832d1a1bf916168064f1ad78be8ab7d46b6a"
+  },
+  {
+   "path": "src/engine/world/props/CombatProps.js",
+   "bytes": 15231,
+   "sha256": "bf69c9ac2cd116435728963b7387adcb4da772bb422f7302af7b0fbce2298375"
+  },
+  {
+   "path": "src/engine/world/props/Crags.js",
+   "bytes": 27648,
+   "sha256": "76163576eca4418006729eee77b46ad5130382c87b95d06f1897ba6cc3cd6b1a"
+  },
+  {
+   "path": "src/engine/world/props/Details.js",
+   "bytes": 4834,
+   "sha256": "f77ad26f902d262173074bfa57fde17bff64d60c2a7e88f1bbe069deaaa522ae"
+  },
+  {
+   "path": "src/engine/world/props/Flame.js",
+   "bytes": 10599,
+   "sha256": "b7a3559a052db5a0238e75f88927b37c572ba302d3820b7500d3daa7b2b9f956"
+  },
+  {
+   "path": "src/engine/world/props/FlameBatch.js",
+   "bytes": 21585,
+   "sha256": "6505e7bdcdee9f0fbd4db101746823bfd731a97071b628514602a1b60f80c33f"
+  },
+  {
+   "path": "src/engine/world/props/Furniture.js",
+   "bytes": 54029,
+   "sha256": "b884b46ef0cbe7e50521d9952f405d860913b9481375a54744d31c4a84952919"
+  },
+  {
+   "path": "src/engine/world/props/House.js",
+   "bytes": 34369,
+   "sha256": "f1202a7251a2cb36e82531a91f5ded7ebfc0347f4be7a65e1e5d10ed90d72814"
+  },
+  {
+   "path": "src/engine/world/props/HouseSiege.js",
+   "bytes": 26683,
+   "sha256": "964025ba216e97da6028607030b03d27fca69ca5bfd0a04dc75c584e54243475"
+  },
+  {
+   "path": "src/engine/world/props/LightProps.js",
+   "bytes": 7799,
+   "sha256": "d20a03e28f10e785c48754650ce004602e6caae44ba2f5c93451564d74554812"
+  },
+  {
+   "path": "src/engine/world/props/MeshBuilder.js",
+   "bytes": 24622,
+   "sha256": "9821c92d60ac0ff680a940579a25c0634ed922a1d275f4d49c13d69a9efcfa96"
+  },
+  {
+   "path": "src/engine/world/props/Monuments.js",
+   "bytes": 16830,
+   "sha256": "3c0e69f22f91feb578c78552de46a4830d781d98f3d67211a385a810b37e7971"
+  },
+  {
+   "path": "src/engine/world/props/PropTextures.js",
+   "bytes": 14557,
+   "sha256": "065132fa7d7c010e8a8c34b07843b0e15d4125a777d2b2a3b786c8bde3578d92"
+  },
+  {
+   "path": "src/engine/world/props/SeasonTrees.js",
+   "bytes": 12013,
+   "sha256": "c2354c8b323854f2d2290ee8af32369473fc4a02d5cc2cd34e6b3b854395e4c9"
+  },
+  {
+   "path": "src/engine/world/props/SetPieces.js",
+   "bytes": 49609,
+   "sha256": "11cbf3d2078813689b2ca4fd1779699382bf84e334bca4c98c84ac780cc1b29e"
+  },
+  {
+   "path": "src/engine/world/props/Ships.js",
+   "bytes": 32239,
+   "sha256": "510e6c70f55c53d9bbcbcd79916952710cd02b9eda1da63264d125e7ad6b2fcc"
+  },
+  {
+   "path": "src/engine/world/props/SmallProps.js",
+   "bytes": 20279,
+   "sha256": "1d429636d0cd1c8e130201e4ecac060ea043e9ee552eea57f5383d1513106c30"
+  },
+  {
+   "path": "src/engine/world/props/Smithy.js",
+   "bytes": 14724,
+   "sha256": "99d02d0f5218f294850af2b9045628cf9841031dbfe5ca6b129cc3a38127220b"
+  },
+  {
+   "path": "src/engine/world/props/Structures.js",
+   "bytes": 22679,
+   "sha256": "4783714ac879f484270434448f4fdd19bcc9a6f43fe50241f6673495eecfbb2f"
+  },
+  {
+   "path": "src/engine/world/props/Trees.js",
+   "bytes": 14418,
+   "sha256": "4cb7ac938a2433020b42cf29e237376b2b5a03bf325a542de4d93cf0314e68e0"
+  },
+  {
+   "path": "src/engine/world/props/Wind.js",
+   "bytes": 6091,
+   "sha256": "6f49ca79297350259b0419fb6159520943448509da4aa02291a6f6da5655714e"
+  },
+  {
+   "path": "src/engine/world/sky/Cathedral.js",
+   "bytes": 52527,
+   "sha256": "724087b2ee9fcc3c407ff2ae0967959257bd799692ecafd3a745e20281f0c423"
+  },
+  {
+   "path": "src/engine/world/sky/Civic.js",
+   "bytes": 80838,
+   "sha256": "65052afcfe5349434b6eaf780052b2131edba9c4c02c0edd3e402a4f4610dcba"
+  },
+  {
+   "path": "src/engine/world/sky/CloudSea.js",
+   "bytes": 34446,
+   "sha256": "ea55b3cd045b19dd4694a45024e3fe5a522cf2a38c39bad42a6c79f976b64e80"
+  },
+  {
+   "path": "src/engine/world/sky/Decor.js",
+   "bytes": 56141,
+   "sha256": "5d5befa5598c7b117529e604242d04399a3050287e668199b7091b79f70d05ae"
+  },
+  {
+   "path": "src/engine/world/sky/FloatingIsles.js",
+   "bytes": 26838,
+   "sha256": "b762cb8e4a5d046ba7a9302cef2973edb44b1334b55496440c14aaddb497b933"
+  },
+  {
+   "path": "src/engine/world/sky/GoldTrim.js",
+   "bytes": 18885,
+   "sha256": "b7e4fb5d049b5a709868218f797ecf1395a31c4c805cf151d24201ed1cfda31c"
+  },
+  {
+   "path": "src/engine/world/sky/Gothic.js",
+   "bytes": 74251,
+   "sha256": "713288b7cceb829a5cb42787d10b3c20b794b33430ea7bfddf6444dc93a44716"
+  },
+  {
+   "path": "src/engine/world/sky/Islands.js",
+   "bytes": 61073,
+   "sha256": "ae142976d446d79df0d918bac433a85ee4e4b4a7c3ded433a3441f1ecf05bd14"
+  },
+  {
+   "path": "src/engine/world/sky/Magic.js",
+   "bytes": 75445,
+   "sha256": "6cb41e94976bd3d1234d1971a0a501faae87522d9521e0045b015a1631b9d9c5"
+  },
+  {
+   "path": "src/engine/world/sky/Plants.js",
+   "bytes": 14648,
+   "sha256": "54b9c1d871683d08dedded316f99e1eab1a016df633958f5e04dcef18e375d97"
+  },
+  {
+   "path": "src/engine/world/sky/Sheen.js",
+   "bytes": 54319,
+   "sha256": "c9982b9234360b9349ce16ee7cd22828957b0a97b8a0ed9b96aa89e717240788"
+  },
+  {
+   "path": "src/engine/world/sky/SkyFall.js",
+   "bytes": 17782,
+   "sha256": "9e52c9915f632d3efa33cb2a1176ee98ae7ce15ae81fd696587bb07b90437eb1"
+  },
+  {
+   "path": "src/engine/world/sky/SkyScenery.js",
+   "bytes": 78406,
+   "sha256": "7318571ba667975123a01f84659d3bd10916f9720d3bdde12bf7dca30c44c635"
+  },
+  {
+   "path": "src/engine/world/sky/Spires.js",
+   "bytes": 28383,
+   "sha256": "853346565cfd3aac4b1f1db09b30f7cb28aaf9c690ccd544df1f5cb403f0fc06"
+  },
+  {
+   "path": "src/engine/world/sky/Street.js",
+   "bytes": 16952,
+   "sha256": "3851ad599fd2ff3b52faf5fb3b3cf5b714ce15cbdbaeaa1ff35c9ffda0c277c1"
+  },
+  {
+   "path": "src/engine/world/sky/Viaduct.js",
+   "bytes": 37016,
+   "sha256": "81d23c3fe710554ad919ea5a1c499dfb7311b131c87c43201fda97dd67d7b44d"
+  },
+  {
+   "path": "src/engine/world/sky/materials.js",
+   "bytes": 16256,
+   "sha256": "afb106db753b0d5f0c66eeec567bbd3c5aa94a946dedfdf83422d835d9a7e043"
+  }
+ ],
+ "notes": [
+  "This is the transitive import closure of engine modules reachable from the game entry points (static and literal dynamic imports).",
+  "The packaged desktop app already contains this code compiled into dist/ by the Vite build; installed players never need the private repository.",
+  "A public source-build input would be a revision-pinned archive of exactly these files plus the licence, approved by the engine owner. Nothing here publishes it."
+ ]
+}
