@@ -140,7 +140,7 @@ function broadcast(event) { if (win && !win.isDestroyed()) win.webContents.send(
 
 // Renderer → host operations. The renderer names an operation; the host validates the sender and
 // the operation name, and the runtime validates arguments, seat and generation.
-const RENDERER_OPS = new Set(['getStatus', 'setDisplayName', 'probeTransport', 'lobby.join', 'lobby.leave', 'lobby.list', 'setAvailability', 'challenge', 'challenge.cancel', 'challenge.respond', 'invite.create', 'invite.join', 'table.open', 'table.close', 'match.get', 'match.draft', 'match.ready', 'match.choice', 'match.leave', 'match.resume', 'history.list', 'profile.get']);
+const RENDERER_OPS = new Set(['getStatus', 'setDisplayName', 'probeTransport', 'lobby.join', 'lobby.leave', 'lobby.list', 'setAvailability', 'challenge', 'challenge.cancel', 'challenge.respond', 'invite.create', 'invite.join', 'table.open', 'table.close', 'match.get', 'match.draft', 'match.ready', 'match.choice', 'match.leave', 'match.resume', 'history.list', 'profile.get', 'results.list', 'results.sync']);
 ipcMain.handle('versus:call', async (e, msg) => {
   const frameUrl = e.senderFrame?.url ?? '';
   if (!frameUrl.startsWith(`${ORIGIN}/`) || e.senderFrame !== e.sender.mainFrame) throw new Error('refused: not the game page');

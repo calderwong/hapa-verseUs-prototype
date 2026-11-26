@@ -16,7 +16,7 @@ import c from 'compact-encoding';
 import b4a from 'b4a';
 import crypto from 'hypercore-crypto';
 import { createHash } from 'node:crypto';
-import { signBody, verifyBody, encodeFrame, decodeFrame, randomHex, keyOfPlayer, MAX_FRAME, MAX_START_FRAME } from './control.js';
+import { signBody, verifyBody, encodeFrame, decodeFrame, randomHex, keyOfPlayer, MAX_FRAME, MAX_START_FRAME, MAX_RESULT_FRAME } from './control.js';
 import { LOBBY_PROTOCOL } from './compat.js';
 import { sanitizeName, fingerprintOf } from './identity.js';
 
@@ -100,7 +100,7 @@ export class Lobby {
   }
 
   _send(ctx, msg) {
-    try { ctx.message.send(encodeFrame(msg, msg.t === 'start' ? MAX_START_FRAME : MAX_FRAME)); return true; } catch (e) { this.log(`send ${msg.t} failed: ${e.message}`); return false; }
+    try { ctx.message.send(encodeFrame(msg, msg.t === 'start' ? MAX_START_FRAME : msg.t === 'result' || msg.t === 'resultBundle' ? MAX_RESULT_FRAME : MAX_FRAME)); return true; } catch (e) { this.log(`send ${msg.t} failed: ${e.message}`); return false; }
   }
 
   /** Send a control message to an authenticated player (false when not connected). */
@@ -111,7 +111,7 @@ export class Lobby {
 
   _onFrame(ctx, buf) {
     let msg;
-    try { msg = decodeFrame(buf, ctx.authed ? MAX_START_FRAME : MAX_FRAME); } catch (e) { this.log(`dropped frame: ${e.message}`); ctx.bad = (ctx.bad ?? 0) + 1; if (ctx.bad > 8) ctx.conn.destroy(); return; }
+    try { msg = decodeFrame(buf, ctx.authed ? MAX_RESULT_FRAME : MAX_FRAME); } catch (e) { this.log(`dropped frame: ${e.message}`); ctx.bad = (ctx.bad ?? 0) + 1; if (ctx.bad > 8) ctx.conn.destroy(); return; }
     if (!ctx.authed) return this._handshake(ctx, msg);
     ctx.lastSeen = now();
     const peer = this.peers.get(ctx.player.participantId);
@@ -144,7 +144,12 @@ export class Lobby {
       ctx.player = { participantId: h.player.participantId, publicKey: h.player.publicKey, signingKeyId: h.player.signingKeyId, identityKind: h.player.identityKind, label: sanitizeName(h.player.label) || 'Player' };
       this.pending.delete(ctx);
       const prev = this.peers.get(ctx.player.participantId);
-      if (prev && prev.ctx !== ctx) { prev.ctx.replaced = true; prev.ctx.conn.destroy(); }
+      if (prev && prev.ctx !== ctx && !prev.ctx.dropped) {
+        // Hyperswarm may briefly deliver a second connection to the same peer and then close one of
+        // them itself; keep the connection already in use and hold the other in reserve
+        (prev.standby ??= []).push(ctx);
+        return;
+      }
       const peer = { playerId: ctx.player.participantId, player: ctx.player, fingerprint: fingerprintOf(ctx.player.publicKey), transportKey: ctx.remoteKey, compat: h.compat, compatible: h.compat === this.o.compat.id, presence: presenceOf(h.presence), lastSeen: now(), since: now(), ctx, path: pathOf(ctx) };
       this.peers.set(peer.playerId, peer);
       this.o.onPeer(peer, 'joined');
@@ -158,7 +163,11 @@ export class Lobby {
     this.pending.delete(ctx);
     if (ctx.player) {
       const p = this.peers.get(ctx.player.participantId);
-      if (p && p.ctx === ctx) { this.peers.delete(ctx.player.participantId); this.o.onPeer(p, ctx.replaced ? 'replaced' : 'lost'); }
+      if (p && p.ctx === ctx) {
+        const next = (p.standby ?? []).find((c) => !c.dropped);
+        if (next) { p.ctx = next; p.standby = p.standby.filter((c) => c !== next && !c.dropped); p.transportKey = next.remoteKey; p.path = pathOf(next); p.lastSeen = now(); this.o.onConnection?.(p, next.conn); this.o.onPeer(p, 'presence'); return; }
+        this.peers.delete(ctx.player.participantId); this.o.onPeer(p, 'lost');
+      } else if (p?.standby) p.standby = p.standby.filter((c) => c !== ctx);
     }
   }
 
@@ -175,7 +184,7 @@ export class Lobby {
 
   roster() {
     const t = now();
-    return [...this.peers.values()].map((p) => ({ playerId: p.playerId, label: p.player.label, fingerprint: p.fingerprint, availability: p.presence.availability, controller: p.presence.controller, compatible: p.compatible, seenMsAgo: t - p.lastSeen, connectedMs: t - p.since, path: p.path }));
+    return [...this.peers.values()].map((p) => ({ playerId: p.playerId, label: p.player.label, fingerprint: p.fingerprint, availability: p.presence.availability, controller: p.presence.controller, role: p.presence.role, compatible: p.compatible, seenMsAgo: t - p.lastSeen, connectedMs: t - p.since, path: p.path }));
   }
 
   async stop() {
@@ -192,7 +201,7 @@ export class Lobby {
 
 const AVAIL = ['available', 'busy', 'joining', 'in-match', 'reconnecting'];
 function presenceOf(p) {
-  return { availability: AVAIL.includes(p?.availability) ? p.availability : 'busy', controller: ['human', 'bot'].includes(p?.controller) ? p.controller : 'human', label: sanitizeName(p?.label) };
+  return { availability: AVAIL.includes(p?.availability) ? p.availability : 'busy', controller: ['human', 'bot'].includes(p?.controller) ? p.controller : 'human', label: sanitizeName(p?.label), role: p?.role === 'archive' ? 'archive' : 'player' };
 }
 const publicOf = (id) => ({ participantId: id.participantId, publicKey: id.publicKey, signingKeyId: id.signingKeyId, identityKind: id.identityKind, label: id.label });
 

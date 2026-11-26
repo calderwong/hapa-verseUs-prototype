@@ -695,6 +695,10 @@ export class VersusApp {
     } else if (e.kind === 'locked' && e.count === tick) this._tryResolve();
     else if (e.kind === 'connection') { this._renderAll(); if (e.state === 'reconnecting') this._toast(`Connection to ${this.onlineMatch.opponentLabel} lost — reconnecting. Your committed plan is saved.`, true); }
     else if (e.kind === 'disputed') { this._toast(`The match is paused: ${e.reason}`, true); this._renderAll(); }
+    else if (e.kind === 'resultSaved' || e.kind === 'resultArchived') {
+      this.onlineMatch.resultState = e.kind === 'resultArchived' ? `Result saved and archived by ${e.by}` : e.status === 'saved' ? 'Result saved on this computer · archive pending' : `Result not saved: ${e.reason}`;
+      const el = document.querySelector('.result-saved'); if (el) el.textContent = this.onlineMatch.resultState;
+    }
   }
 
   /** Ready in an online match: the runtime appends it durably first; only then is it shown as committed. */
@@ -1999,6 +2003,7 @@ export class VersusApp {
         stat('Mana burned', sum.manaBurned.A, sum.manaBurned.B),
         stat('Members lost', sum.casualties.A, sum.casualties.B)),
       h('p', { class: 'dim small' }, `First contact on Tick ${sum.firstEngagementTick ?? '—'} · ${sum.engagements} contacts · ${sum.merges} merges · damage ${+sum.damage.physical.toFixed(1)} Physical / ${+sum.damage.magic.toFixed(1)} Magic. The replay recomputes this match exactly (npm run replay -- file.json).`),
+      this.onlineMatch ? h('p', { class: 'small result-saved', role: 'status' }, this.onlineMatch.resultState ?? 'Saving the verified result…') : null,
       h('div', { class: 'row center' }, h('button', { onclick: () => (this.el.overlay.hidden = true) }, 'Inspect the board'), h('button', { onclick: () => this._downloadReplay() }, 'Download replay'), h('button', { class: 'primary', onclick: () => this.showSetup() }, this.onlineMatch ? 'Return to lobby' : 'New match'))));
     this.el.overlay.hidden = false;
     this.sound?.play(o.result === 'win' ? 'levelup' : 'close', { volume: 0.6 });

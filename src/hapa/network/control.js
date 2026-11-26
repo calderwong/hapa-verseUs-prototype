@@ -16,6 +16,8 @@ export const DOMAINS = {
 };
 export const MAX_FRAME = 64 * 1024;
 export const MAX_START_FRAME = 2 * 1024 * 1024;
+/** Result evidence frames: a 15-Tick bundle measured 87 KB; 4 MiB holds roughly 600 Ticks. */
+export const MAX_RESULT_FRAME = 4 * 1024 * 1024;
 
 const bytes = (domain, body) => b4a.from(utf8(DOMAINS[domain] + canonicalize(body)));
 

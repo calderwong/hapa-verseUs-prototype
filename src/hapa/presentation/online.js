@@ -17,6 +17,12 @@ import { replayChooser } from '../rules/match.js';
 export const desktopHost = () => (typeof window !== 'undefined' && window.hapaDesktop?.kind === 'electron' ? window.hapaDesktop : null);
 
 const AVAIL_TEXT = { available: 'Available', busy: 'Busy', joining: 'Joining a match', 'in-match': 'In a match', reconnecting: 'Reconnecting', offline: 'Offline' };
+/** A verified record in words: W–L–D, the bucket it belongs to, and the win rate with its denominator. */
+export function recordText(r) {
+  if (!r || !r.bucket) return 'no verified matches yet';
+  const rate = r.decisive ? `${Math.round((r.winRate ?? 0) * 100)}% of ${r.decisive} decisive` : 'win rate —';
+  return `${r.wins}–${r.losses}–${r.draws} ${r.bucket.replace(/-/g, ' ')} · ${rate}${r.disputed ? ` · ${r.disputed} disputed` : ''}`;
+}
 const AVAIL_GLYPH = { available: '●', busy: '◐', joining: '◌', 'in-match': '⚔', reconnecting: '↻', offline: '○' };
 
 export class OnlineClient {
@@ -134,11 +140,14 @@ export function onlinePanel(app) {
         h('span', {}, h('b', {}, x.label), ` (${x.fingerprint}, ${x.controller === 'bot' ? 'declared bot' : 'human'}) challenges you · bundled ${v.compat.profileId}`),
         h('button', { class: 'primary', disabled: busy, onclick: () => act(() => client.call('challenge.respond', { challengeId: x.challengeId, accept: true })) }, 'Accept'),
         h('button', { disabled: busy, onclick: () => act(() => client.call('challenge.respond', { challengeId: x.challengeId, accept: false })) }, 'Decline')));
-      const players = v.roster;
+      const archives = v.roster.filter((p) => p.role === 'archive');
+      rows.push(h('p', { class: 'dim small' }, archives.length ? `Result archive: ${archives.map((a) => a.label).join(', ')} connected — finished matches are shared and verifiable while you are offline.` : 'No result archive connected: finished matches are saved on this computer and shared when an archive is reachable.'),
+        h('p', { class: 'small' }, h('b', {}, 'Your verified record: '), recordText(v.record)));
+      const players = v.roster.filter((p) => p.role !== 'archive');
       rows.push(players.length
         ? h('ul', { class: 'roster-online' }, ...players.map((p) => h('li', {},
           h('span', { class: `avail ${p.availability}`, title: AVAIL_TEXT[p.availability] }, AVAIL_GLYPH[p.availability] ?? '○'),
-          h('span', { class: 'who' }, h('b', {}, p.label), h('span', { class: 'dim small' }, ` ${p.fingerprint} · ${p.controller === 'bot' ? 'declared bot' : 'human'} · ${AVAIL_TEXT[p.availability] ?? p.availability}${p.compatible ? '' : ' · different rules build'}`)),
+          h('span', { class: 'who' }, h('b', {}, p.label), h('span', { class: 'dim small' }, ` ${p.fingerprint} · ${p.controller === 'bot' ? 'declared bot' : 'human'} · ${AVAIL_TEXT[p.availability] ?? p.availability}${p.compatible ? '' : ' · different rules build'} · ${recordText(p.record)}`)),
           h('button', { disabled: busy || !p.compatible || p.availability !== 'available' || !!r || v.me.availability !== 'available', title: !p.compatible ? 'This player uses a different rules build' : p.availability !== 'available' ? `${p.label} is ${AVAIL_TEXT[p.availability]}` : `Challenge ${p.label} with the bundled preset`, onclick: () => act(() => client.call('challenge', { playerId: p.playerId })) }, 'Challenge'))))
         : h('p', { class: 'dim small' }, t.state === 'online' ? 'No other players found yet. The list updates as players join.' : 'Looking for players…'));
     }

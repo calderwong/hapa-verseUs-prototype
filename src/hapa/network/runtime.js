@@ -19,11 +19,21 @@ import { compatibility, presetManifest, manifestError, initialStateHash, ONLINE_
 import { signBody, verifyBody, randomHex, keyOfPlayer } from './control.js';
 import { fingerprint } from '../rules/encoding.js';
 import { HeuristicBot } from '../controllers/heuristic-bot.js';
+import { ResultIndex } from './result-index.js';
+import { buildBundle, verifyBundle } from './results.js';
 
 export const RUNTIME_VERSION = 'hapa-versus-peer-runtime/0.2.0';
 const OFFER_MS = 120_000;
 const START_MS = 30_000;
 const now = () => Number(process.hrtime.bigint() / 1_000_000n);
+
+/** A compact verified record for the roster: human-vs-human first, other buckets kept separate. */
+function recordLine(st) {
+  const b = st.buckets;
+  const pick = b['human-vs-human'] ?? b['human-vs-bot'] ?? b['bot-vs-bot'] ?? null;
+  const bucket = b['human-vs-human'] ? 'human-vs-human' : b['human-vs-bot'] ? 'human-vs-bot' : b['bot-vs-bot'] ? 'bot-vs-bot' : null;
+  return pick ? { bucket, wins: pick.wins, losses: pick.losses, draws: pick.draws, decisive: pick.decisive, winRate: pick.winRate, disputed: st.disputed } : { bucket: null, wins: 0, losses: 0, draws: 0, decisive: 0, winRate: null, disputed: st.disputed };
+}
 
 export class PeerRuntime {
   /**
@@ -33,6 +43,8 @@ export class PeerRuntime {
     this.o = o;
     this.networkId = o.networkId ?? 'public-alpha';
     this.controllerKind = o.controller === 'bot' ? 'bot' : 'human';
+    this.role = o.role === 'archive' ? 'archive' : 'player';
+    this._requests = new Map();
     this.log = o.log ?? (() => {});
     this.onEvent = o.onEvent ?? (() => {});
     this.state = 'closed';
@@ -51,6 +63,8 @@ export class PeerRuntime {
     this.reservation = readJson(this.store.path('reservation.json'), null);
     this.launch = await this._recordLaunch();
     this.compat = compatibility();
+    this.results = new ResultIndex(this.store.path('results'));
+    this.outbox = readJson(this.store.path('outbox.json'), {});
     this.state = 'open';
     this.log(`runtime open ${this.networkId} ${fingerprintOf(identity.publicKey)} launch ${this.launch.index}`);
     await this._resumeMatches();
@@ -88,10 +102,11 @@ export class PeerRuntime {
   // --- availability ---------------------------------------------------------------------------
   availability() {
     if (this.match && this.match.status === 'active') return this.match.connection === 'reconnecting' ? 'reconnecting' : 'in-match';
+    if (this.role === 'archive') return 'busy';
     if (this.reservation) return 'joining';
     return this.settings.availability === 'busy' ? 'busy' : 'available';
   }
-  _presence() { return { availability: this.availability(), controller: this.controllerKind, label: this.identity.label }; }
+  _presence() { return { availability: this.availability(), controller: this.controllerKind, label: this.identity.label, role: this.role }; }
   _saveSettings() { writeJsonAtomic(this.store.path('settings.json'), this.settings); }
   _reserve(r) { this.reservation = r; if (r) writeJsonAtomic(this.store.path('reservation.json'), r); else writeJsonAtomic(this.store.path('reservation.json'), null); this.lobby?.announce(); this.emit({ type: 'lobby', kind: 'reservation', reservation: this._publicReservation() }); }
   _publicReservation() { const r = this.reservation; return r ? { phase: r.phase, role: r.role, challengeId: r.challengeId, matchId: r.matchId ?? null, opponent: r.opponentLabel ?? null } : null; }
@@ -128,7 +143,7 @@ export class PeerRuntime {
   lobbyView() {
     return {
       joined: !!this.lobby, transport: this.lobby?.transport() ?? { state: 'off' }, me: { ...publicPlayer(this.identity), fingerprint: fingerprintOf(this.identity.publicKey), availability: this.availability(), manual: this.settings.availability, controller: this.controllerKind },
-      roster: this.lobby?.roster() ?? [], incoming: [...this.incoming.values()].map((x) => ({ challengeId: x.body.challengeId, from: x.body.from, label: x.fromLabel, fingerprint: fingerprintOf(keyOfPlayer(x.body.from)), controller: x.body.controller, expiresInMs: Math.max(0, OFFER_MS - (now() - x.receivedAt)) })),
+      roster: (this.lobby?.roster() ?? []).map((r) => ({ ...r, record: r.role === 'archive' ? null : recordLine(this.results.stats(r.playerId)) })), record: recordLine(this.results.stats(this.identity.participantId)), incoming: [...this.incoming.values()].map((x) => ({ challengeId: x.body.challengeId, from: x.body.from, label: x.fromLabel, fingerprint: fingerprintOf(keyOfPlayer(x.body.from)), controller: x.body.controller, expiresInMs: Math.max(0, OFFER_MS - (now() - x.receivedAt)) })),
       reservation: this._publicReservation(), compat: { id: this.compat.id.slice(7, 19), profileId: this.compat.profileId, rules: this.compat.rulesImplementation.slice(7, 19) },
       match: this.match ? { matchId: this.match.matchId, status: this.match.status, seat: this.match.seat, opponent: this.match.opponent.label } : null,
     };
@@ -136,6 +151,7 @@ export class PeerRuntime {
 
   _onPeer(peer, ev) {
     if (ev === 'joined' && this.reservation) this._resendStart(peer);
+    if (ev === 'joined' && peer.presence.role === 'archive') this._flushOutbox(peer);
     if ((ev === 'lost' || ev === 'replaced') && this.match && peer?.playerId === this.match.opponent.participantId && ev === 'lost') { this.match.detached(); this.lobby?.dial(peer.transportKey); this.lobby?.announce(); }
     this.emit({ type: 'lobby', kind: ev === 'transport' ? 'transport' : 'roster', roster: this.lobby?.roster() ?? [], transport: this.lobby?.transport() });
   }
@@ -229,6 +245,11 @@ export class PeerRuntime {
         if (r?.phase === 'offered' && r.challengeId === msg.challengeId && r.opponent === peer.playerId) { this._reserve(null); this.emit({ type: 'lobby', kind: 'challengeDeclined', challengeId: msg.challengeId, reason: String(msg.reason ?? 'declined').slice(0, 24), by: peer.player.label }); }
         return;
       }
+      case 'result': return this._onResult(peer, msg);
+      case 'resultAck': return this._onResultAck(peer, msg);
+      case 'results.query': return this._onResultsQuery(peer, msg);
+      case 'result.get': return this._onResultGet(peer, msg);
+      case 'results.page': case 'resultBundle': { const r = this._requests.get(msg.req); if (r) { this._requests.delete(msg.req); r(msg); } return; }
       case 'accept': return this._onAccept(peer, msg);
       case 'start': return this._onStart(peer, msg);
       case 'started': return this._onStarted(peer, msg);
@@ -348,6 +369,92 @@ export class PeerRuntime {
     this._reserve(null);
     this.lobby?.leaveTopic('match', m.matchId);
     this.lobby?.announce();
+    this._saveResult(m).catch((e) => { this.log(`result not saved: ${e.message}`); this.emit({ type: 'match', matchId: m.matchId, kind: 'resultSaved', status: 'failed', reason: e.message }); });
+  }
+
+  // --- results: save locally first, then share with archives (idempotent outbox) ---------------
+  async _saveResult(m) {
+    const session = readJson(join(m.dir, 'session.json'));
+    const records = await m.records();
+    const bundle = buildBundle({ session, records, calculation: { terminalTick: m.state.tick, outcome: m.state.outcome, finalStateHash: m.finalHash } });
+    const r = this.results.submit(bundle, { source: 'participant' });
+    if (r.status !== 'added' && r.status !== 'duplicate' && r.status !== 'disputed') throw new Error(`own evidence did not verify: ${r.reason}`);
+    this.outbox[r.key] = this.outbox[r.key] ?? { matchId: m.matchId, archivedBy: [] };
+    this._saveOutbox();
+    this.emit({ type: 'match', matchId: m.matchId, kind: 'resultSaved', status: 'saved', key: r.key, commitment: r.commitment, record: this.results.stats(this.identity.participantId) });
+    for (const p of this.lobby?.peers.values() ?? []) if (p.presence.role === 'archive') this._flushOutbox(p);
+    return r;
+  }
+
+  _saveOutbox() { writeJsonAtomic(this.store.path('outbox.json'), this.outbox); }
+
+  _flushOutbox(peer) {
+    for (const [key, o] of Object.entries(this.outbox)) {
+      if (o.archivedBy.includes(peer.playerId)) continue;
+      for (const bundle of this.results.bundles(key)) this.lobby.send(peer.playerId, { t: 'result', key, bundle });
+    }
+  }
+
+  _onResult(peer, msg) {
+    // any peer may hold public evidence; it is verified independently before it counts
+    const r = this.results.submit(msg.bundle, { source: peer.fingerprint });
+    this.lobby.send(peer.playerId, { t: 'resultAck', key: r.key ?? msg.key, status: r.status, commitment: r.commitment ?? null });
+    if (r.status === 'added' || r.status === 'disputed') this.emit({ type: 'results', kind: 'received', key: r.key, status: r.status });
+  }
+
+  _onResultAck(peer, msg) {
+    const o = this.outbox[msg.key];
+    if (!o || !['added', 'duplicate', 'disputed'].includes(msg.status)) return;
+    if (!o.archivedBy.includes(peer.playerId)) { o.archivedBy.push(peer.playerId); this._saveOutbox(); }
+    this.emit({ type: 'match', matchId: o.matchId, kind: 'resultArchived', key: msg.key, by: peer.player.label, status: msg.status });
+  }
+
+  _onResultsQuery(peer, msg) {
+    const page = this.results.list({ playerId: typeof msg.playerId === 'string' ? msg.playerId : null, offset: Number.isSafeInteger(msg.offset) ? msg.offset : 0, limit: 20 });
+    this.lobby.send(peer.playerId, { t: 'results.page', req: msg.req, total: page.total, items: page.items.map((x) => ({ key: x.key, commitment: x.commitment })) });
+  }
+
+  _onResultGet(peer, msg) {
+    const bundles = typeof msg.key === 'string' ? this.results.bundles(msg.key) : [];
+    const want = typeof msg.commitment === 'string' ? bundles.find((b) => { const v = verifyBundle(b); return v.ok && v.commitment === msg.commitment; }) : bundles[0];
+    this.lobby.send(peer.playerId, { t: 'resultBundle', req: msg.req, key: msg.key, bundle: want ?? null });
+  }
+
+  _ask(peer, msg, ms = 15_000) {
+    const req = randomHex(8);
+    return new Promise((resolve, reject) => {
+      const t = setTimeout(() => { this._requests.delete(req); reject(new Error('the archive did not answer')); }, ms);
+      this._requests.set(req, (m) => { clearTimeout(t); resolve(m); });
+      if (!this.lobby.send(peer.playerId, { ...msg, req })) { clearTimeout(t); this._requests.delete(req); reject(new Error('not connected')); }
+    });
+  }
+
+  /** Pull verified evidence from connected archives (optionally for one player); verify each locally. */
+  async syncResults(args = {}) {
+    const archives = [...(this.lobby?.peers.values() ?? [])].filter((p) => p.presence.role === 'archive');
+    const out = { archives: archives.length, fetched: 0, added: 0, duplicate: 0, refused: 0, disputed: 0 };
+    for (const a of archives) {
+      for (let offset = 0; offset < 1000; offset += 20) {
+        const page = await this._ask(a, { t: 'results.query', playerId: args.playerId ?? null, offset }).catch(() => null);
+        if (!page) break;
+        for (const it of page.items ?? []) {
+          if (this.results.has(it.key, it.commitment)) { out.duplicate++; continue; }
+          const got = await this._ask(a, { t: 'result.get', key: it.key, commitment: it.commitment }).catch(() => null);
+          if (!got?.bundle) continue;
+          out.fetched++;
+          const r = this.results.submit(got.bundle, { source: `archive:${a.fingerprint}` });
+          if (r.status === 'added') out.added++; else if (r.status === 'duplicate') out.duplicate++; else if (r.status === 'disputed') out.disputed++; else out.refused++;
+        }
+        if (!page.items?.length || offset + 20 >= page.total) break;
+      }
+    }
+    return out;
+  }
+
+  async profile(args) {
+    if (typeof args.playerId !== 'string') throw new Error('playerId required');
+    const sync = args.sync === false ? null : await this.syncResults({ playerId: args.playerId }).catch((e) => ({ error: e.message }));
+    return { stats: this.results.stats(args.playerId), recent: this.results.list({ playerId: args.playerId, limit: 10 }), sync };
   }
 
   _matchFor(args) {
@@ -418,6 +525,9 @@ export class PeerRuntime {
       case 'match.choice': return this._matchFor(args).choice(args);
       case 'match.leave': return this.abandon(args);
       case 'history.list': return this.history();
+      case 'results.list': return this.results.list(args);
+      case 'results.sync': return this.syncResults(args);
+      case 'profile.get': return this.profile(args);
       default: throw new Error(`unknown operation ${op}`);
     }
   }

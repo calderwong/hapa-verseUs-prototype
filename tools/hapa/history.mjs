@@ -8,6 +8,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { verifyReplay } from '../../src/hapa/rules/session.js';
+import { canonicalize } from '../../src/hapa/rules/encoding.js';
 import { HistoryStore, matchReport, combatCredit, creatorStats, itemHistory, questProgress } from '../../src/hapa/rules/stats.js';
 
 const files = process.argv.slice(2).filter((a) => !a.startsWith('--') && a !== process.argv[process.argv.indexOf('--experiment') + 1]);
@@ -20,8 +21,11 @@ for (const f of files) {
   const events = [];
   const v = verifyReplay(replay, { onEvents: (e) => events.push(...e) });
   if (!v.ok) { imports.push({ file: f, ok: false, reason: v.reason, tick: v.tick }); continue; }
-  const first = store.importMatch({ manifest: replay.manifest, events, outcome: replay.outcome, experimentId });
-  const again = store.importMatch({ manifest: replay.manifest, events, outcome: replay.outcome, experimentId });
+  // the calculated outcome is what counts; a replay whose top-level claim differs is refused (assignment 16, finding 6)
+  if (replay.outcome !== undefined && canonicalize(replay.outcome ?? null) !== canonicalize(v.outcome ?? replay.outcome ?? null) && !(replay.outcome?.result === 'unfinished' && !v.outcome)) { imports.push({ file: f, ok: false, reason: 'the replay claims an outcome its inputs do not produce', claimed: replay.outcome, calculated: v.outcome ?? null }); continue; }
+  const outcome = v.outcome ?? { result: 'unfinished', tick: replay.ticks.length };
+  const first = store.importMatch({ manifest: replay.manifest, events, outcome, experimentId });
+  const again = store.importMatch({ manifest: replay.manifest, events, outcome, experimentId });
   imports.push({ file: f, ok: true, matchId: replay.manifest.matchId, eventsAdded: first, reimportAdded: again });
 }
 const QUESTS = [

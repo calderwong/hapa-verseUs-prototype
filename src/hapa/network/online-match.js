@@ -344,6 +344,13 @@ export class OnlineMatch {
     };
   }
 
+  /** Both feeds' signed records as stored (for result evidence). */
+  async records() {
+    const read = async (core) => { const out = []; for (let i = 0; i < core.length; i++) out.push(await core.get(i)); return out; };
+    const own = await read(this.own), remote = await read(this.remote);
+    return this.seat === 'A' ? { A: own, B: remote } : { A: remote, B: own };
+  }
+
   _persist(progress) {
     try { writeJsonAtomic(join(this.dir, 'progress.json'), { ...progress, at: new Date().toISOString() }); } catch (e) { this.log(`progress not saved: ${e.message}`); }
   }
