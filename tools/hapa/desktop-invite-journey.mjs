@@ -17,7 +17,8 @@ import { join, resolve } from 'node:path';
 
 const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i > 0 ? process.argv[i + 1] : d; };
 const app = resolve(arg('app', 'out/Hapa Versus-darwin-arm64/Hapa Versus.app'));
-const exe = join(app, 'Contents', 'MacOS', 'Hapa Versus');
+// --exe for a Windows (or other) packaged executable; the .app layout otherwise
+const exe = arg('exe') ? resolve(arg('exe')) : join(app, 'Contents', 'MacOS', 'Hapa Versus');
 const work = arg('work');
 if (!work) { console.error('--work <absolute scratch directory> is required'); process.exit(2); }
 rmSync(work, { recursive: true, force: true });
@@ -28,7 +29,10 @@ const invite = join(work, 'invitation.txt');
 function launch(name, data, env, timeout = 600_000) {
   const out = join(work, name);
   mkdirSync(out, { recursive: true });
-  const e = { HOME: process.env.HOME, PATH: '/usr/bin:/bin', TMPDIR: process.env.TMPDIR ?? '/tmp', HAPA_VERSUS_DATA_DIR: join(work, data), HAPA_VERSUS_NETWORK: NET, HAPA_VERSUS_SMOKE_OUT: out, HAPA_VERSUS_START: 'versus.html?debug=1', ...env };
+  // a minimal environment: no Node or npm on PATH for the app (Windows keeps only its system folders)
+  const win = process.platform === 'win32';
+  const base = win ? { SystemRoot: process.env.SystemRoot, windir: process.env.windir, PATH: `${process.env.SystemRoot}\\System32;${process.env.SystemRoot}`, USERPROFILE: process.env.USERPROFILE, APPDATA: process.env.APPDATA, LOCALAPPDATA: process.env.LOCALAPPDATA, TEMP: process.env.TEMP, TMP: process.env.TMP } : { HOME: process.env.HOME, PATH: '/usr/bin:/bin', TMPDIR: process.env.TMPDIR ?? '/tmp' };
+  const e = { ...base, HAPA_VERSUS_DATA_DIR: join(work, data), HAPA_VERSUS_NETWORK: NET, HAPA_VERSUS_SMOKE_OUT: out, HAPA_VERSUS_START: 'versus.html?debug=1', ...env };
   const p = spawn(exe, [], { env: e, stdio: ['ignore', 'pipe', 'pipe'] });
   let log = ''; p.stdout.on('data', (d) => { log += d; }); p.stderr.on('data', (d) => { log += d; });
   const done = new Promise((res) => { const t = setTimeout(() => p.kill('SIGKILL'), timeout); p.on('exit', (code) => { clearTimeout(t); res(code); }); });
@@ -48,7 +52,7 @@ const j2 = launch('joiner-reopen', 'friend', { HAPA_VERSUS_SMOKE_SCRIPT: 'local'
 await Promise.all([h2.done, j2.done]);
 const hr = smoke(h2.out), jr = smoke(j2.out);
 const report = {
-  network: NET, app: app.replace(process.env.HOME, '~'), build: hs?.about?.build ?? null,
+  network: NET, app: (arg('exe') ?? app).replace(process.env.HOME ?? process.env.USERPROFILE ?? '~', '~'), build: hs?.about?.build ?? null,
   host: { exit: hc, ok: hs?.ok, seat: hs?.seat, steps: hs?.log?.map((x) => x.step), outcome: hs?.outcome, finalHash: hs?.finalHash, readyClicks: hs?.readyClicks, fingerprint: hs?.about?.peer?.fingerprint },
   joiner: { exit: jc, ok: js?.ok, seat: js?.seat, steps: js?.log?.map((x) => x.step), stages: js?.log?.find((x) => x.step === 'joinedByInvitation')?.stages, outcome: js?.outcome, finalHash: js?.finalHash, readyClicks: js?.readyClicks, fingerprint: js?.about?.peer?.fingerprint },
   reopen: { hostSameIdentity: hr?.about?.peer?.fingerprint === hs?.about?.peer?.fingerprint, joinerSameIdentity: jr?.about?.peer?.fingerprint === js?.about?.peer?.fingerprint, hostRecorded: recorded('cal').map((p) => p.status), joinerRecorded: recorded('friend').map((p) => p.status) },

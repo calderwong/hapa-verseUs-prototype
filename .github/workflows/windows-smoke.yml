@@ -1,0 +1,81 @@
+# Windows x64 qualification of a RELEASED Hapa Versus artifact (Assignment 20, N20-05).
+#
+# Downloads the named release asset, checks its SHA-256, extracts it and runs the packaged
+# executable on a GitHub-hosted Windows x64 VM. The app runs with a minimal environment (no Node,
+# npm or checkout on its PATH, no development server, no provider configuration); the runner's Node
+# only drives the repository's stdlib-only test scripts from outside the app. A download by the
+# GitHub CLI carries no Mark-of-the-Web, so SmartScreen/firewall prompts are NOT observed here; they
+# remain a human-machine observation.
+name: Windows smoke (released artifact)
+on:
+  workflow_dispatch:
+    inputs:
+      tag: { description: 'Release tag (e.g. v0.1.0-friend.3)', required: true }
+      asset: { description: 'Windows zip asset name', required: true }
+      sha256: { description: 'Expected SHA-256 of the asset', required: true }
+      lifecycle: { description: 'Run the staged worker-start checks (builds with the lifecycle smoke script)', required: false, default: 'true' }
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+      ASSET: ${{ inputs.asset }}
+      SHA: ${{ inputs.sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: tools/hapa, sparse-checkout-cone-mode: true }
+      - name: Machine
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force evidence | Out-Null
+          $os = Get-CimInstance Win32_OperatingSystem
+          @{ caption = $os.Caption; version = $os.Version; build = $os.BuildNumber; arch = $env:PROCESSOR_ARCHITECTURE; runner = "$env:ImageOS $env:ImageVersion"; nodeForDriversOnly = (node --version) } | ConvertTo-Json | Tee-Object evidence/machine.json
+      - name: Download and verify the release asset
+        shell: pwsh
+        run: |
+          gh release download $env:TAG --repo $env:GITHUB_REPOSITORY --pattern $env:ASSET --dir dl
+          $h = (Get-FileHash "dl/$env:ASSET" -Algorithm SHA256).Hash.ToLower()
+          @{ tag = $env:TAG; asset = $env:ASSET; bytes = (Get-Item "dl/$env:ASSET").Length; sha256 = $h; expected = $env:SHA; match = ($h -eq $env:SHA) } | ConvertTo-Json | Tee-Object evidence/artifact.json
+          if ($h -ne $env:SHA) { throw "SHA-256 mismatch" }
+          Expand-Archive "dl/$env:ASSET" -DestinationPath app
+          $exe = Get-ChildItem app -Recurse -Filter 'Hapa Versus.exe' | Select-Object -First 1
+          "EXE=$($exe.FullName)" | Out-File -Append $env:GITHUB_ENV
+          Get-AuthenticodeSignature $exe.FullName | Select-Object Status, StatusMessage | ConvertTo-Json | Tee-Object evidence/signature.json
+      - name: Clean-runtime smoke, isolated data root (two launches)
+        shell: pwsh
+        run: node tools/hapa/desktop-smoke.mjs --exe "$env:EXE" --launches 2 --data "$env:RUNNER_TEMP\hv-isolated" --out "$env:RUNNER_TEMP\hv-isolated-out" | Tee-Object evidence/smoke-isolated.json
+      - name: Clean-runtime smoke, the OS user-data folder (two launches)
+        shell: pwsh
+        run: |
+          node tools/hapa/desktop-smoke.mjs --exe "$env:EXE" --launches 2 --os-data --out "$env:RUNNER_TEMP\hv-os-out" | Tee-Object evidence/smoke-os-data.json
+          Get-ChildItem "$env:APPDATA\Hapa Versus" -Recurse -Depth 3 -Directory | ForEach-Object { $_.FullName.Replace($env:APPDATA, '%APPDATA%') } | Tee-Object evidence/os-data-folders.txt
+      - name: Two installed copies, invitation and a human-seat game (public DHT)
+        shell: pwsh
+        run: node tools/hapa/desktop-invite-journey.mjs --exe "$env:EXE" --work "$env:RUNNER_TEMP\hv-invite" | Tee-Object evidence/invite-journey.json
+        continue-on-error: true
+      - name: Staged worker starts (late, never ready)
+        if: ${{ inputs.lifecycle == 'true' }}
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          $base = @{ HAPA_VERSUS_SMOKE_SCRIPT = 'lifecycle'; HAPA_VERSUS_NETWORK = 'test-lifecycle'; HAPA_VERSUS_PEER_STARTUP_MS = '4000' }
+          foreach ($case in @(@{ name = 'late'; gens = 'first'; delay = '7000' }, @{ name = 'never'; gens = 'all'; delay = '600000' })) {
+            $out = "$env:RUNNER_TEMP\hv-life-$($case.name)"
+            $vars = $base + @{ HAPA_VERSUS_DATA_DIR = "$env:RUNNER_TEMP\hv-life-data-$($case.name)"; HAPA_VERSUS_SMOKE_OUT = $out; HAPA_VERSUS_PEER_DELAY_MS = $case.delay; HAPA_VERSUS_PEER_DELAY_GENS = $case.gens }
+            foreach ($k in $vars.Keys) { Set-Item "env:$k" $vars[$k] }
+            $p = Start-Process -FilePath $env:EXE -PassThru
+            if (-not $p.WaitForExit(180000)) { $p.Kill() }
+            Copy-Item "$out\smoke.json" "evidence/lifecycle-$($case.name).json" -ErrorAction SilentlyContinue
+          }
+      - name: Collect screenshots and reports
+        if: always()
+        shell: pwsh
+        run: |
+          Get-ChildItem $env:RUNNER_TEMP -Recurse -Include *.png,smoke.json -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like '*hv-*' } | ForEach-Object { $rel = $_.FullName.Substring($env:RUNNER_TEMP.Length + 1).Replace('\','__'); Copy-Item $_.FullName "evidence/$rel" }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: windows-smoke-evidence, path: evidence }
