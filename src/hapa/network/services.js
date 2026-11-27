@@ -260,6 +260,18 @@ export class ServicePolicy {
     this.records.push(rec);
   }
 
+  /**
+   * Re-derive eligibility from the same accepted history with the current clock (Review 20 V20-B /
+   * N22-02). Called at every new use — join, rejoin, retry, relay selection — so an entry that expired
+   * after startup is not used; nothing is appended (time passing is not an adoption decision).
+   */
+  refresh(nowMs = Date.now()) {
+    if (!this.records) return this.effective;
+    this.projection = project(this.records, nowMs);
+    this.effective = effectivePolicy(this.projection, this.o.override);
+    return this.effective;
+  }
+
   /** A user decision recorded with its provenance (add/update/disable/enable/retire/mode). */
   async decide(decision) {
     const prov = { kind: 'user', source: 'in-app', digest: digest({ decision, at: Date.now() }) };

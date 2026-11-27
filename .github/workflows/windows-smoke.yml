@@ -56,11 +56,9 @@ jobs:
       - name: Two installed copies, invitation and a human-seat game (public DHT)
         shell: pwsh
         run: node tools/hapa/desktop-invite-journey.mjs --exe "$env:EXE" --work "$env:RUNNER_TEMP\hv-invite" | Tee-Object evidence/invite-journey.json
-        continue-on-error: true
       - name: Staged worker starts (late, never ready)
         if: ${{ inputs.lifecycle == 'true' }}
         shell: pwsh
-        continue-on-error: true
         run: |
           $base = @{ HAPA_VERSUS_SMOKE_SCRIPT = 'lifecycle'; HAPA_VERSUS_NETWORK = 'test-lifecycle'; HAPA_VERSUS_PEER_STARTUP_MS = '4000' }
           foreach ($case in @(@{ name = 'late'; gens = 'first'; delay = '7000' }, @{ name = 'never'; gens = 'all'; delay = '600000' })) {
@@ -71,6 +69,23 @@ jobs:
             if (-not $p.WaitForExit(180000)) { $p.Kill() }
             Copy-Item "$out\smoke.json" "evidence/lifecycle-$($case.name).json" -ErrorAction SilentlyContinue
           }
+      # mandatory reports (Review 20 / N22-05): a missing or failed result fails qualification
+      - name: Assert required results
+        shell: pwsh
+        run: |
+          $required = @('artifact.json', 'smoke-isolated.json', 'smoke-os-data.json', 'invite-journey.json')
+          if ('${{ inputs.lifecycle }}' -eq 'true') { $required += @('lifecycle-late.json', 'lifecycle-never.json') }
+          $bad = @()
+          foreach ($f in $required) {
+            $p = "evidence/$f"
+            if (-not (Test-Path $p)) { $bad += "$f missing"; continue }
+            $t = Get-Content $p -Raw; $i = $t.IndexOf('{'); $j = $t.LastIndexOf('}')
+            try { $o = $t.Substring($i, $j - $i + 1) | ConvertFrom-Json } catch { $bad += "$f unreadable"; continue }
+            $okv = if ($f -eq 'artifact.json') { $o.match } else { $o.ok }
+            if ($okv -ne $true) { $bad += "$f not ok" }
+          }
+          @{ required = $required; failures = $bad } | ConvertTo-Json | Tee-Object evidence/qualification.json
+          if ($bad.Count) { throw "qualification failed: $($bad -join ', ')" }
       - name: Collect screenshots and reports
         if: always()
         shell: pwsh

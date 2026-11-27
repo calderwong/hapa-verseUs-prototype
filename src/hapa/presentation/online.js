@@ -269,7 +269,7 @@ export function onlinePanel(app) {
       const at = attempt;
       if (at && !(at.stage === 'connected' && !r)) rows.push(h('div', { class: `row attempt ${at.stage}`, role: at.stage === 'failed' ? 'alert' : 'status' },
         h('span', {}, `${ATTEMPT_TEXT[at.stage] ?? at.stage}${at.target ? ` · player ${at.target}` : ''}${at.error && at.stage === 'failed' ? `: ${at.error}` : ''}`),
-        LIVE.has(at.stage) ? h('button', { disabled: busy, onclick: () => act(async () => { attempt = (await client.call('attempt.cancel', { attemptId: at.id })).attempt; return client.call('lobby.list'); }) }, 'Cancel') : null,
+        LIVE.has(at.stage) ? h('button', { disabled: busy, onclick: async () => { let msg = null; await act(async () => { const res = await client.call('attempt.cancel', { attemptId: at.id }); attempt = res.attempt; if (res.notCancellable) msg = `Too late to cancel: ${res.notCancellable}.`; return client.call('lobby.list'); }); if (msg) { note = msg; draw(); } } }, 'Cancel') : null,
         at.stage === 'failed' && lastJoin ? h('button', { disabled: busy, onclick: () => join(lastJoin) }, 'Retry') : null));
       if (!r && v.me.availability === 'available') rows.push(h('div', { class: 'row' },
         h('button', { disabled: busy, title: 'Anyone compatible in the lobby (or holding your invitation) can take the other seat; hosting is your consent', onclick: () => act(() => client.call('table.open')) }, 'Open a table'),

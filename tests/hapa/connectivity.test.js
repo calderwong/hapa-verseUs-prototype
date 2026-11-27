@@ -14,6 +14,8 @@ import { createRequire } from 'node:module';
 import { createSocket } from 'node:dgram';
 import { ServicePolicy, normalizeConfig, PUBLIC_BOOTSTRAP, project, effectivePolicy } from '../../src/hapa/network/services.js';
 import { Lobby } from '../../src/hapa/network/lobby.js';
+import { OnlineMatch } from '../../src/hapa/network/online-match.js';
+import { readJson } from '../../src/hapa/network/store.js';
 import { PeerRuntime, parseInvite } from '../../src/hapa/network/runtime.js';
 import { startRelay } from '../../tools/hapa/relay-serve.mjs';
 
@@ -102,7 +104,7 @@ test('FT-08 (controlled, partial): relay candidates rotate past an unreachable f
     const handed = [lobby._nextRelay(), lobby._nextRelay(), lobby._nextRelay()].map((b) => b.toString('hex'));
     assert.deepEqual(handed, [K('e'), relay.publicKey, K('e')]);
     // a relay observed carrying a connection is preferred
-    lobby.relays[1].observed = Number(process.hrtime.bigint() / 1_000_000n);
+    lobby.relayState.get('live').lastConfirmed = Number(process.hrtime.bigint() / 1_000_000n);
     assert.equal(lobby._nextRelay().toString('hex'), relay.publicKey);
     await until(() => rts[0].lobbyView().roster.some((p) => p.label === 'Bea'));
     // NOTE: on a loopback testnet HyperDHT upgrades to the direct path, so this fixture cannot force the
@@ -178,24 +180,58 @@ test('HC-07 (N20-02): an import interrupted at any durable boundary is never hal
   } finally { rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
 });
 
-test('HC-09 (N20-03): an unsuccessful relay cools down and yields; a formerly good relay that stops working yields; exhaustion is bounded', () => {
-  const lobby = new Lobby({ networkId: 'n', relays: [{ id: 'A', key: 'a'.repeat(64), endpoint: '198.51.100.1:1' }, { id: 'B', key: 'b'.repeat(64), endpoint: '198.51.100.2:2' }] });
-  lobby.relays = lobby.o.relays.map((r) => ({ ...r, buf: Buffer.from(r.key, 'hex'), handed: 0, observed: 0, failures: 0, cooldownUntil: 0, pending: 0 }));
-  const pick = () => lobby._nextRelay().toString('hex')[0];
-  // unreachable first: A handed, no relayed connection observed, next request goes to B
-  assert.equal(pick(), 'a'); assert.equal(pick(), 'b');
-  assert.equal(lobby.relays[0].failures, 1);
-  // B carries a connection (observed): it is preferred while healthy
-  lobby.relays[1].observed = Number(process.hrtime.bigint() / 1_000_000n); lobby.relays[1].failures = 0; lobby.relays[1].cooldownUntil = 0;
+test('HC-09 (N22-03): unconfirmed handouts are not failures; concurrent consumers spread; suspicion needs time and repetition; exhaustion hands out nothing; expiry is read at use', () => {
+  let clock = Date.now();
+  const all = [{ id: 'A', key: 'a'.repeat(64), endpoint: '198.51.100.1:1', expiresAt: null }, { id: 'B', key: 'b'.repeat(64), endpoint: '198.51.100.2:2' }];
+  const lobby = new Lobby({ networkId: 'n', relays: () => all.filter((r) => !r.expiresAt || r.expiresAt > clock) });
+  lobby.relayState = new Map();
+  const nowMs = () => Number(process.hrtime.bigint() / 1_000_000n);
+  const pick = () => lobby._nextRelay()?.toString('hex')[0] ?? null;
+  // concurrent consumers: many handouts in quick succession rotate and never cool anything down
+  const burst = Array.from({ length: 8 }, pick);
+  assert.deepEqual([burst.filter((x) => x === 'a').length, burst.filter((x) => x === 'b').length], [4, 4]);
+  assert.ok(lobby._relayList().every((r) => r.suspected === 0 && !(r.cooldownUntil > nowMs())), 'an unconfirmed handout is not a failure');
+  // a relay observed carrying a connection is preferred while healthy
+  lobby.relayState.get('B').lastConfirmed = nowMs();
   assert.equal(pick(), 'b');
-  // B stops working: its unobserved handout counts against it; A's cooldown has expired → A next
-  lobby.relays[0].cooldownUntil = 0;
-  lobby.relays[1].observed = 0;
-  const seq = [pick(), pick(), pick(), pick()];
-  assert.ok(seq.includes('a') && seq.filter((x) => x === 'b').length < 4, `alternatives reached: ${seq.join('')}`);
-  // both cooling: bounded retry of the one whose cooldown ends first, reported as exhausted
-  for (const r of lobby.relays) { r.cooldownUntil = Number(process.hrtime.bigint() / 1_000_000n) + 60_000 + (r.id === 'B' ? 1 : 0); r.pending = 0; }
-  assert.equal(pick(), 'a'); assert.equal(lobby.transport().relaysExhausted, true);
+  // A: three handouts spread over 40 s with no confirmation → suspected and cooling; B is chosen
+  lobby.relayState.get('B').lastConfirmed = 0;
+  const a = lobby.relayState.get('A'); a.handouts = [nowMs() - 40_000, nowMs() - 20_000, nowMs() - 1_000];
+  const next = [pick(), pick(), pick()];
+  assert.equal(a.suspected, 1); assert.ok(a.cooldownUntil > nowMs());
+  assert.deepEqual(next, ['b', 'b', 'b'], 'the suspected relay yields to the eligible alternative');
+  // both cooling: honest exhaustion — nothing is handed out, Hyperswarm makes its ordinary attempt
+  const b = lobby.relayState.get('B'); b.cooldownUntil = nowMs() + 60_000;
+  assert.equal(pick(), null); assert.equal(lobby.transport().relaysExhausted, true);
+  // confirmation clears suspicion and cooldown
+  a.lastConfirmed = nowMs(); a.suspected = 0; a.cooldownUntil = 0; b.cooldownUntil = 0;
+  assert.equal(pick(), 'a');
+  // a relay that expires after startup is no longer handed out (the list is read at each use)
+  all[0].expiresAt = clock + 1000; clock += 2000;
+  assert.deepEqual([pick(), pick()], ['b', 'b']);
+});
+
+test('V20-B / N22-02: providers that expire after startup are excluded at the next join and relay use (no history append)', { timeout: 60_000 }, async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'hv-exp-'));
+  let clock = Date.now();
+  const soon = clock + 60_000;
+  const local = { bootstrap: { mode: 'extend', nodes: [] }, retire: ['hyperdht-public-1', 'hyperdht-public-2', 'hyperdht-public-3'],
+    services: [{ id: 'boot-x', role: 'bootstrap', endpoint: { node: '203.0.113.5@dht.example.net:49737' }, expiresAt: soon }, { id: 'relay-x', role: 'relay', publicKey: 'c'.repeat(64), expiresAt: soon }, { id: 'relay-y', role: 'relay', publicKey: 'd'.repeat(64) }] };
+  try {
+    const rt = new PeerRuntime({ root: dir, networkId: 'test-exp', services: { bundled: null, local }, now: () => clock });
+    await rt.open();
+    assert.deepEqual(rt.policy.bootstrap, ['203.0.113.5@dht.example.net:49737']);
+    assert.deepEqual(rt._relayCandidates().map((r) => r.id), ['relay-x', 'relay-y']);
+    const records = rt.services.records.length;
+    clock = soon + 1000; // the app keeps running past the expiry
+    assert.deepEqual(rt._relayCandidates().map((r) => r.id), ['relay-y'], 'an expired relay is not offered to a new attempt');
+    await rt.joinLobby({});
+    assert.equal(rt.lobby.swarm, undefined, 'the expired bootstrap was not handed to a new swarm');
+    assert.match(rt.lobby.transport().error, /no eligible discovery provider/);
+    assert.equal(rt.services.summary().services.find((x) => x.id === 'boot-x').state, 'expired', 'diagnostics agree');
+    assert.equal(rt.services.records.length, records, 'time passing appended nothing');
+    await rt.close();
+  } finally { rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
 });
 
 test('HC-10 (N20-04): cancelling at discovery, negotiation and after the accept stays cancelled; one tombstone; the next attempt works', { timeout: 180_000 }, async () => {
@@ -238,6 +274,67 @@ test('HC-10 (N20-04): cancelling at discovery, negotiation and after the accept 
     await until(() => rts[1].attempt.stage === 'connected' && rts[1].match, 90_000);
   } finally {
     for (const r of rts) await r.close().catch(() => {});
+    await testnet.destroy();
+    for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  }
+});
+
+test('V20-A / N22-01: Cancel during match initialization owns the cut — nothing opens, no STARTED, one durable leave; after activation Cancel answers connected', { timeout: 240_000 }, async () => {
+  const testnet = await createTestnet(3);
+  const roots = [mkdtempSync(join(tmpdir(), 'hv-act-a-')), mkdtempSync(join(tmpdir(), 'hv-act-b-'))];
+  const events = [];
+  const make = (i) => new PeerRuntime({ root: roots[i], networkId: 'test-activation', displayName: i ? 'Bea' : 'Ari', bootstrap: testnet.bootstrap, controller: 'bot', onEvent: i ? (e) => events.push(e) : undefined });
+  let B = make(1);
+  const A = make(0);
+  // hold the joiner's real OnlineMatch.open() until released
+  const origOpen = OnlineMatch.prototype.open;
+  let gate = null, entered = null;
+  OnlineMatch.prototype.open = async function (...args) { if (this.dir.startsWith(roots[1]) && gate) { entered?.(); await gate; } return origOpen.apply(this, args); };
+  try {
+    await A.open(); await B.open(); await A.joinLobby({}); await B.joinLobby({});
+    const sent = [];
+    const send = B.lobby.send.bind(B.lobby);
+    B.lobby.send = (pid, msg) => { sent.push(msg.t); return send(pid, msg); };
+    let release; gate = new Promise((r) => { release = r; });
+    const inside = new Promise((r) => { entered = r; });
+    A.openTable();
+    const challengeId = A.reservation.challengeId;
+    B.startJoin({ invite: A.reservation.invite, attemptId: 'act-cancel-0001' });
+    await inside; // the reservation is active and the authority is initializing
+    assert.equal(B.reservation?.phase, 'active');
+    const res = await B.cancelAttempt({ attemptId: 'act-cancel-0001' });
+    assert.equal(res.attempt.stage, 'cancelled');
+    assert.ok(B.tombstones.attempts[challengeId], 'the cancel intent is durable before cleanup');
+    await B.cancelAttempt({ attemptId: 'act-cancel-0001' }); // duplicate
+    release(); gate = null;
+    await until(() => !B.match && !B.reservation, 30_000);
+    await new Promise((r) => setTimeout(r, 1000));
+    const matchId = `hv-${challengeId}`;
+    assert.equal(B.attempt.stage, 'cancelled');
+    assert.equal(events.filter((e) => e.kind === 'opened').length, 0, 'no opened event');
+    assert.equal(sent.filter((t) => t === 'started').length, 0, 'no STARTED sent');
+    assert.ok(sent.includes('decline'), 'the challenger is told the joiner left');
+    assert.equal(readJson(join(roots[1], 'test-activation', 'matches', matchId, 'progress.json')).status, 'abandoned_setup');
+    assert.equal(Object.values(B.tombstones.attempts).filter((t) => t.matchId === matchId).length, 1, 'one tombstone');
+    assert.ok(!events.some((e) => e.kind === 'resultSaved'), 'no result or loss');
+    // restart: the cancelled session is not resumed
+    await B.close();
+    B = make(1);
+    await B.open();
+    assert.equal(B.match, null);
+    await B.joinLobby({});
+    // a new attempt connects; after activation Cancel is refused as connected
+    if (A.reservation) A._reserve(null);
+    A.openTable();
+    B.startJoin({ invite: A.reservation.invite, attemptId: 'act-next-00002' });
+    await until(() => B.attempt.stage === 'connected' && B.match && A.match, 90_000);
+    const late = await B.cancelAttempt({ attemptId: 'act-next-00002' });
+    assert.equal(late.attempt.stage, 'connected');
+    assert.match(late.notCancellable, /already started/);
+    assert.ok(B.match, 'the active match is untouched');
+  } finally {
+    OnlineMatch.prototype.open = origOpen;
+    for (const r of [A, B]) await r.close().catch(() => {});
     await testnet.destroy();
     for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }

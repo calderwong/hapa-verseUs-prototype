@@ -1,0 +1,29 @@
+# Native second-relay carriage witness (Review 20 / N22-03, HC-09) on Linux network namespaces.
+# The job FAILS unless every peer authenticates every other peer over a stream observed arriving from
+# the second (live) relay while all peer-to-peer packets are dropped, and the relay reports pairings.
+name: Relay witness (network namespaces)
+on:
+  workflow_dispatch:
+  push:
+    paths: ['src/hapa/network/**', 'tools/hapa/relay-*', '.github/workflows/relay-witness.yml']
+permissions:
+  contents: read
+jobs:
+  witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Install dependencies (no Electron binary, no install scripts)
+        env: { ELECTRON_SKIP_BINARY_DOWNLOAD: '1' }
+        run: npm ci --ignore-scripts
+      - name: Run the witness
+        run: sudo env "PATH=$PATH" bash tools/hapa/relay-netns-witness.sh "$RUNNER_TEMP/relay-witness"
+      - name: Record source identity
+        if: always()
+        run: echo "{\"commit\":\"$GITHUB_SHA\",\"run\":\"$GITHUB_RUN_ID\",\"node\":\"$(node --version)\"}" | sudo tee "$RUNNER_TEMP/relay-witness/source.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: relay-witness-evidence, path: '${{ runner.temp }}/relay-witness' }

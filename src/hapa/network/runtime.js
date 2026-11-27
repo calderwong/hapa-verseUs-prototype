@@ -30,6 +30,12 @@ const OFFER_MS = 120_000;
 const TABLE_MS = 300_000;
 const START_MS = 30_000;
 const now = () => Number(process.hrtime.bigint() / 1_000_000n);
+/** A bootstrap entry ("ip@host:port", "host:port" or {host, port}) as dht-rpc's {host, port}. */
+function bootstrapNodeOf(n) {
+  if (n && typeof n === 'object') return { host: n.host, port: n.port };
+  const m = typeof n === 'string' && n.match(/^(?:([^@]+)@)?([^:]+):(\d+)$/);
+  return m ? { host: m[1] ?? m[2], port: Number(m[3]) } : null;
+}
 
 /** Parse and verify a pasted invitation capsule (it carries no secret and no loopback address). */
 export function parseInvite(code) {
@@ -173,12 +179,22 @@ export class PeerRuntime {
   _publicReservation() { const r = this.reservation; return r ? { phase: r.phase, role: r.role, challengeId: r.challengeId, matchId: r.matchId ?? null, opponent: r.opponentLabel ?? null, invite: r.phase === 'open' ? r.invite : undefined, stalled: !!r.stalled } : null; }
 
   // --- lobby ----------------------------------------------------------------------------------
+  /** The provider policy as of now (N22-02): expiry is evaluated at each new use, not only at startup. */
+  _policyNow() {
+    this.policy = this.services?.refresh(this.o.now?.() ?? Date.now()) ?? this.policy;
+    // a running swarm re-bootstraps on wake-up: keep its entry list to the currently eligible providers
+    const dht = this.lobby?.swarm?.dht;
+    if (dht && Array.isArray(this.policy.bootstrap) && !this.o.bootstrap) dht.bootstrapNodes = this.policy.bootstrap.map(bootstrapNodeOf).filter(Boolean);
+    return this.policy;
+  }
+
   async joinLobby(args = {}) {
     if (args.name) renameIdentity(this.store, this.identity, args.name);
+    this._policyNow();
     if (!this.lobby) {
       this.lobby = new Lobby({
         networkId: this.networkId, identity: this.identity, transportKeyPair: this._transportKeyPair(), compat: this.compat,
-        presence: () => this._presence(), bootstrap: this.policy.bootstrap, noRoute: this.policy.noRoute, relays: this._relayCandidates(), forceRelay: this.o.forceRelay, log: this.log,
+        presence: () => this._presence(), bootstrap: this.policy.bootstrap, noRoute: this.policy.noRoute, relays: () => this._relayCandidates(), forceRelay: this.o.forceRelay, log: this.log, dht: this.o.dht,
         onPeer: (p, ev) => this._onPeer(p, ev),
         onMessage: (p, msg) => this._onMessage(p, msg).catch((e) => this.log(`message ${msg.t}: ${e.message}`)),
         onConnection: (p, conn) => this._onConnection(p, conn),
@@ -239,7 +255,7 @@ export class PeerRuntime {
 
   /** Relay candidates in policy order: accepted services, then a key passed by a tool (legacy option). */
   _relayCandidates() {
-    const out = [...(this.policy?.relays ?? [])];
+    const out = [...(this._policyNow()?.relays ?? [])];
     if (typeof this.o.relayThrough === 'string' && /^[0-9a-f]{64}$/.test(this.o.relayThrough) && !out.some((r) => r.key === this.o.relayThrough)) out.push({ id: 'tool-relay', key: this.o.relayThrough, endpoint: this.o.relayEndpoints?.[0] ?? null, label: 'relay (tool option)' });
     for (const [i, ep] of (this.o.relayEndpoints ?? []).entries()) if (out[i] && !out[i].endpoint) out[i].endpoint = ep;
     return out;
@@ -318,6 +334,7 @@ export class PeerRuntime {
 
   /** Resend this attempt's last setup message and redial the opponent; the deadline restarts. */
   setupRetry(args) {
+    this._policyNow();
     const r = this.reservation;
     if (!r || r.challengeId !== args.challengeId || (r.phase !== 'accepted' && r.phase !== 'starting')) throw Object.assign(new Error('no such setup attempt'), { code: 'NO_ATTEMPT' });
     if (r.opponentTransport) this.lobby?.dial(r.opponentTransport);
@@ -380,6 +397,7 @@ export class PeerRuntime {
     if (this.attempt?.id === id) return { attempt: this._publicAttempt(), view: this.lobbyView() };
     if (this.attempt && !['failed', 'cancelled', 'connected'].includes(this.attempt.stage)) throw Object.assign(new Error('another connection attempt is in progress'), { code: 'ATTEMPT_BUSY' });
     if (this.reservation || this.match?.status === 'active') throw Object.assign(new Error('you already have a match or a pending challenge'), { code: 'BUSY' });
+    this._policyNow(); // a new attempt uses providers as eligible now
     const gen = this._attemptGen = (this._attemptGen ?? 0) + 1;
     this.attempt = { id, gen, kind: args.invite ? 'invitation' : 'table', stage: 'starting-discovery', startedAt: Date.now(), at: Date.now(), error: null, target: null, cancel: new AbortController() };
     this._emitAttempt();
@@ -408,14 +426,23 @@ export class PeerRuntime {
   cancelAttempt(args) {
     const a = this.attempt;
     if (!a || (args.attemptId && args.attemptId !== a.id)) throw Object.assign(new Error('no such connection attempt'), { code: 'NO_ATTEMPT' });
-    if (['failed', 'cancelled', 'connected'].includes(a.stage)) return { attempt: this._publicAttempt(), view: this.lobbyView() };
+    if (a.stage === 'connected') return { attempt: this._publicAttempt(), view: this.lobbyView(), notCancellable: 'the match has already started; use Leave this match instead' };
+    if (['failed', 'cancelled'].includes(a.stage)) return { attempt: this._publicAttempt(), view: this.lobbyView() };
     // the player's intent is terminal at once (N20-04): the attempt is `cancelled` before any cleanup,
     // so releasing its reservation cannot relabel it `failed`; work already queued sees the abort
     a.cancel.abort();
     this._setStage(a, 'cancelled', 'cancelled by you');
     // a recorded accept (accepted/starting) is left durably, once, after any in-flight setup step:
     // tombstone first, then `left`, then release — late setup messages stay fenced
-    const leave = () => { const r = this.reservation; if (r && a.challengeId && r.challengeId === a.challengeId && ['accepted', 'starting'].includes(r.phase) && !this.tombstones.attempts[r.challengeId]) this.setupLeave({ challengeId: r.challengeId }); };
+    // durable cancel intent: when something durable already exists for this attempt (an accept, or an
+    // authority initializing after START), the tombstone is written now, so a crash before cleanup still
+    // reopens as left (restart skips tombstoned sessions) and a late START is refused
+    const r0 = this.reservation;
+    if (r0 && a.challengeId && r0.challengeId === a.challengeId && ['accepted', 'starting', 'active'].includes(r0.phase) && !this.tombstones.attempts[a.challengeId]) {
+      this.tombstones.attempts[a.challengeId] = { matchId: r0.matchId ?? `hv-${a.challengeId}`, phase: `cancelled-${r0.phase}`, opponent: r0.opponent, at: new Date().toISOString() };
+      writeJsonAtomic(this.store.path('tombstones.json'), this.tombstones);
+    }
+    const leave = () => { const r = this.reservation; if (!a.left && r && a.challengeId && r.challengeId === a.challengeId && ['accepted', 'starting'].includes(r.phase)) { a.left = true; this.setupLeave({ challengeId: r.challengeId }); } };
     leave();
     a.leaving = this._serial(async () => leave()).catch((e) => this.log(`cancel leave: ${e.message}`));
     return { attempt: this._publicAttempt(), view: this.lobbyView() };
@@ -579,13 +606,23 @@ export class PeerRuntime {
     const existing = readJson(this.store.path('matches', d.matchId, 'session.json'));
     if (existing?.sigs?.A && existing?.sigs?.B) { if (fingerprint(existing.descriptor) === fingerprint(d)) this.lobby.send(peer.playerId, { t: 'started', matchId: d.matchId, sig: existing.sigs.B }); return; }
     if (r.phase !== 'accepted') return;
+    // activation boundary (Review 20 V20-A / N22-01): until STARTED is sent the joiner's attempt may
+    // still be cancelled; a cancelled attempt never writes an active session or opens its authority
+    const cancelled = () => !!(this.attempt?.challengeId === r.challengeId && this.attempt.stage === 'cancelled') || !!this.tombstones.attempts[r.challengeId];
+    if (cancelled()) return;
     const err = this._descriptorError(d, msg.manifest, peer, r);
     if (err) { this.log(`refused session start: ${err}`); this.lobby.send(peer.playerId, { t: 'decline', challengeId: r.challengeId, reason: 'bad-start' }); this._reserve(null); this.emit({ type: 'lobby', kind: 'startFailed', reason: err }); return; }
     const sigB = signBody('session', d, this.identity);
     const session = { descriptor: d, manifest: msg.manifest, sigs: { A: msg.sig, B: sigB }, seat: 'B', phase: 'active' };
     writeJsonAtomic(this.store.path('matches', d.matchId, 'session.json'), session);
     this._reserve({ ...r, phase: 'active' });
-    await this._openMatch(session);
+    const m = await this._openMatch(session, { activation: true });
+    // a Cancel that arrived while the authority initialized still owns this cut: the authority is closed,
+    // the attempt left durably (tombstone, `left`) and nothing is published as opened; no result or loss
+    if (cancelled()) { await this._releaseUnstarted('cancelled by you before the match started', { notify: false }); this.lobby.send(peer.playerId, { t: 'decline', challengeId: r.challengeId, reason: 'left' }); return; }
+    // activation: from here the match is connected and Cancel answers "already connected"
+    if (this.attempt?.challengeId === r.challengeId) this._setStage(this.attempt, 'connected');
+    this.emit({ type: 'match', matchId: m.matchId, kind: 'opened', seat: m.seat, opponent: m.opponent.label });
     this.lobby.send(peer.playerId, { t: 'started', matchId: d.matchId, sig: sigB });
   }
 
@@ -629,7 +666,7 @@ export class PeerRuntime {
   }
 
   // --- matches --------------------------------------------------------------------------------
-  async _openMatch(session, { finishing = false } = {}) {
+  async _openMatch(session, { finishing = false, activation = false } = {}) {
     const id = session.descriptor.matchId;
     if (this.match?.matchId === id) return this.match;
     if (this.finishing.has(id)) return this.finishing.get(id);
@@ -647,8 +684,8 @@ export class PeerRuntime {
     const opp = this.lobby?.peers.get(m.opponent.participantId);
     if (opp) m.attach(opp.ctx.conn);
     this.lobby?.announce();
-    if (!finishing) this.emit({ type: 'match', matchId: m.matchId, kind: 'opened', seat: m.seat, opponent: m.opponent.label });
-    if (!finishing && this.attempt?.challengeId && this.reservation?.challengeId === this.attempt.challengeId) this._setStage(this.attempt, 'connected');
+    // the joiner's first opening is published by _onStart at its activation boundary (after the cancel fence)
+    if (!finishing && !activation) this.emit({ type: 'match', matchId: m.matchId, kind: 'opened', seat: m.seat, opponent: m.opponent.label });
     return m;
   }
 
@@ -903,7 +940,7 @@ export class PeerRuntime {
   }
 
   /** Close an active match that never started on the other side; tombstoned, kept, no result (R18-03). */
-  async _releaseUnstarted(reason) {
+  async _releaseUnstarted(reason, { notify = true } = {}) {
     const m = this.match, r = this.reservation;
     this.tombstones.attempts[r?.challengeId ?? m.matchId] = { matchId: m.matchId, phase: 'active-unstarted', opponent: m.opponent.participantId, at: new Date().toISOString() };
     writeJsonAtomic(this.store.path('tombstones.json'), this.tombstones);
@@ -912,7 +949,7 @@ export class PeerRuntime {
     this.lobby?.leaveTopic('match', m.matchId);
     this.match = null;
     this._reserve(null);
-    this.emit({ type: 'match', matchId: m.matchId, kind: 'unstarted', reason });
+    if (notify) this.emit({ type: 'match', matchId: m.matchId, kind: 'unstarted', reason });
     this.emit({ type: 'lobby', kind: 'setupLeft', challengeId: r?.challengeId ?? null, reason });
   }
 

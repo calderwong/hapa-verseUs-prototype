@@ -49,5 +49,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const bootstrap = arg('testnet') ? arg('testnet').split(',').map((hp) => { const [host, port] = hp.split(':'); return { host, port: Number(port) }; }) : undefined;
   const r = await startRelay({ bootstrap, seed, port: arg('port') ? Number(arg('port')) : undefined });
   console.log(JSON.stringify({ relay: { publicKey: r.publicKey, endpoint: r.endpoint() } }));
+  // --stats <file>: what the relay itself observed (sessions, pairings, streams), rewritten every 2 s
+  if (arg('stats')) setInterval(() => { try { writeFileSync(arg('stats'), JSON.stringify({ at: new Date().toISOString(), sessions: { ...r.stats.sessions, active: r.stats.sessions.active }, pairings: r.stats.pairings, streams: r.stats.streams })); } catch { /* best effort */ } }, 2000);
   for (const s of ['SIGINT', 'SIGTERM']) process.on(s, async () => { await r.close(); process.exit(0); });
 }
