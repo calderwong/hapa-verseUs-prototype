@@ -40,6 +40,9 @@ echo '{"peerToPeerBlocked":true,"peerToRelay":true}' > "$OUT/control.json"
 (cd "$ROOT" && "$NODE" -e "require('hyperdht/testnet')(3, { host: '10.77.1.1' }).then((t) => { console.log(JSON.stringify(t.bootstrap)); setInterval(() => {}, 1e6); })" > "$OUT/testnet.json" 2>"$OUT/testnet.err") &
 for _ in $(seq 1 50); do [ -s "$OUT/testnet.json" ] && break; sleep 0.2; done
 BOOT=$(python3 -c "import json;b=json.load(open('$OUT/testnet.json'))[0];print(f\"{b['host']}:{b['port']}\")")
+# diagnostics: can a plain DHT node inside a peer namespace bootstrap from the host testnet?
+iptables -S > "$OUT/iptables.txt" 2>&1 || true
+(cd "$ROOT" && ip netns exec hva "$NODE" -e "const DHT = require('hyperdht'); const d = new DHT({ bootstrap: ['$BOOT'] }); const t = setTimeout(() => { console.log(JSON.stringify({ timeout: true, nodes: d.toArray().length, host: d.host })); process.exit(0); }, 20000); d.fullyBootstrapped().then(() => { clearTimeout(t); console.log(JSON.stringify({ host: d.host, port: d.port, nodes: d.toArray().length, firewalled: d.firewalled })); process.exit(0); })" > "$OUT/diag-dht-in-ns.json" 2>&1) || true
 # the live relay in its namespace, on a fixed port so its endpoint can be published
 ip netns exec hvr "$NODE" "$ROOT/tools/hapa/relay-serve.mjs" --testnet "$BOOT" --port 49740 --stats "$OUT/relay-stats.json" > "$OUT/relay.json" 2>"$OUT/relay.err" &
 for _ in $(seq 1 100); do [ -s "$OUT/relay.json" ] && break; sleep 0.2; done

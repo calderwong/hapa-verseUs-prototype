@@ -1,0 +1,162 @@
+{
+ "ok": true,
+ "exit": 0,
+ "app": "<scratch>",
+ "build": {
+  "source": "6eac8dbc663d5b8bd9a204d8cb30dbacc0818f4f",
+  "dirty": false,
+  "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "builtAt": "2026-11-27T21:44:45.633Z",
+  "target": "darwin-arm64"
+ },
+ "ownerPackage": {
+  "available": true,
+  "id": "red-pose-art",
+  "revision": "2026-11-02.1",
+  "renderer": "red-pose-art-speech-v2-idle-v2",
+  "assets": 54,
+  "modules": 11,
+  "mediaCopies": 0,
+  "integrity": "verified-at-start-and-each-read",
+  "nativeParity": false,
+  "manifestSha256": "fc2d4d6cf1ea70eb83403ab842a0d85374b71039bd5afc218677f14301be1098",
+  "manifestBytes": 12334,
+  "meshAvatarPin": {
+   "owner": "hapa-mesh-avatar",
+   "pinnedCommit": "a6fc511"
+  },
+  "rendererKind": "2D mesh: forward triangle rasterization over pose art (WebGL); not volumetric"
+ },
+ "steps": [
+  {
+   "t": 2524,
+   "step": "owner-absent",
+   "gen": 1,
+   "tick": 1,
+   "player": false,
+   "status": "text-only",
+   "error": "harbor is not reachable: net::ERR_CONNECTION_REFUSED",
+   "attempts": 1,
+   "retryVisible": true,
+   "performers": 1,
+   "frames": 0,
+   "drawn": false,
+   "visibility": 0,
+   "renderer": null
+  },
+  {
+   "t": 9507,
+   "step": "recovered",
+   "gen": 1,
+   "tick": 1,
+   "player": true,
+   "status": "ready",
+   "error": null,
+   "attempts": 2,
+   "retryVisible": false,
+   "performers": 1,
+   "frames": 1,
+   "drawn": true,
+   "visibility": 1,
+   "renderer": {
+    "owner": "hapa-harbor-storefront",
+    "packageId": "red-pose-art",
+    "revision": "2026-11-02.1",
+    "renderer": "red-pose-art-speech-v2-idle-v2",
+    "integrity": "verified-at-start-and-each-read"
+   }
+  },
+  {
+   "t": 12207,
+   "step": "orbit-45",
+   "gen": 1,
+   "tick": 1,
+   "player": true,
+   "status": "ready",
+   "error": null,
+   "attempts": 2,
+   "retryVisible": false,
+   "performers": 1,
+   "frames": 1,
+   "drawn": true,
+   "visibility": 1,
+   "renderer": {
+    "owner": "hapa-harbor-storefront",
+    "packageId": "red-pose-art",
+    "revision": "2026-11-02.1",
+    "renderer": "red-pose-art-speech-v2-idle-v2",
+    "integrity": "verified-at-start-and-each-read"
+   }
+  },
+  {
+   "t": 14869,
+   "step": "orbit-90",
+   "gen": 1,
+   "tick": 1,
+   "player": true,
+   "status": "ready",
+   "error": null,
+   "attempts": 2,
+   "retryVisible": false,
+   "performers": 1,
+   "frames": 1,
+   "drawn": true,
+   "visibility": 0.49701144514024564,
+   "renderer": {
+    "owner": "hapa-harbor-storefront",
+    "packageId": "red-pose-art",
+    "revision": "2026-11-02.1",
+    "renderer": "red-pose-art-speech-v2-idle-v2",
+    "integrity": "verified-at-start-and-each-read"
+   }
+  },
+  {
+   "t": 18044,
+   "step": "close",
+   "gen": 1,
+   "tick": 1,
+   "player": true,
+   "status": "ready",
+   "error": null,
+   "attempts": 2,
+   "retryVisible": false,
+   "performers": 1,
+   "frames": 1,
+   "drawn": true,
+   "visibility": 1,
+   "renderer": {
+    "owner": "hapa-harbor-storefront",
+    "packageId": "red-pose-art",
+    "revision": "2026-11-02.1",
+    "renderer": "red-pose-art-speech-v2-idle-v2",
+    "integrity": "verified-at-start-and-each-read"
+   }
+  },
+  {
+   "t": 22788,
+   "step": "after-ready",
+   "gen": 1,
+   "tick": 2,
+   "player": true,
+   "status": "ready",
+   "error": null,
+   "attempts": 2,
+   "retryVisible": false,
+   "performers": 1,
+   "frames": 1,
+   "drawn": true,
+   "visibility": 1,
+   "renderer": {
+    "owner": "hapa-harbor-storefront",
+    "packageId": "red-pose-art",
+    "revision": "2026-11-02.1",
+    "renderer": "red-pose-art-speech-v2-idle-v2",
+    "integrity": "verified-at-start-and-each-read"
+   }
+  }
+ ],
+ "sameMatch": true,
+ "tickBefore": 1,
+ "tickAfter": 2,
+ "harborLeftRunning": true
+}
