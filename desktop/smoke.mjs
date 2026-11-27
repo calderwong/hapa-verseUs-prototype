@@ -131,7 +131,7 @@ async function online(o) {
       await js(o, `(() => { const i = [...document.querySelectorAll('.online-panel input[type=text]')].find(x => /invitation/.test(x.placeholder)); i.value = ${JSON.stringify(text)}; i.dispatchEvent(new Event('input')); [...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join by invitation').click(); })()`);
       const stages = [];
       const t1 = Date.now();
-      while (Date.now() - t1 < 120_000) { const st = await js(o, `document.querySelector('.online-panel .attempt')?.className.split(' ').pop() ?? (window.__versus?.onlineMatch ? 'opened' : null)`); if (st && stages.at(-1) !== st) stages.push(st); if (st === 'opened' || st === 'failed') break; await sleep(250); }
+      while (Date.now() - t1 < 120_000) { const st = await js(o, `window.__versus?.onlineMatch ? 'opened' : document.querySelector('.online-panel .attempt')?.className.split(' ').pop() ?? null`); if (st && stages.at(-1) !== st) stages.push(st); if (st === 'opened' || st === 'failed') break; await sleep(250); }
       note({ step: 'joinedByInvitation', stages });
       if (stages.at(-1) === 'failed') return { ok: false, script: 'online', error: 'invitation attempt failed', log };
     } else if (opponent) {
