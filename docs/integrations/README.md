@@ -1,5 +1,13 @@
 # Integrations and online play
 
+## Latest selected direction — friend test, 26 November 2026
+
+[Addendum 09](../requirements/2026-11-26-human-feedback-addendum-09.md) selects a bundled app that CJ's friend can open on his own machine/network and use to play CJ. [Assignment 19](../reviews/2026-11-26-next-agent-assignment-19.md) queues the implementation after reconciling in-flight [Assignment 18](../reviews/2026-11-26-next-agent-assignment-18.md). [Friend test and resilient connectivity v1](friend-test-and-resilient-connectivity-v1.md) defines real provider fallback, signed Hypercore contact/service history, packaging and evidence. No CJ-maintained VPS is a prerequisite; optional relay/archive services remain separate roles.
+
+This pointer supersedes older “current/next” labels in the historical milestone summary below. Review 18 remains the latest readiness decision; no implementation, release or two-network pass is claimed here.
+
+## Historical milestone summary
+
 CJ's selected feature is standalone P2P play and matchmaking in a bundled Electron application. [Assignment 16](../reviews/2026-11-25-next-agent-assignment-16.md) produced the local candidate described in [Response 16](../reviews/2026-11-25-p2p-implementation-response-16.md). [Review 16](../reviews/2026-11-25-desktop-p2p-review-16.md) identifies the remaining connected-path defects; [Assignment 17](../reviews/2026-11-25-next-agent-assignment-17.md) is the next bounded completion batch. The [network specification](p2p-matchmaking-v1.md), [Electron companion](electron-desktop-v1.md) and Addenda 07–08 remain the selected contracts. Review 15's earlier music/coastal correction scope remains closed; current user direction and CJ's acceptance remain authoritative.
 
 | Record | Status | Purpose |
@@ -32,4 +40,5 @@ CJ's selected feature is standalone P2P play and matchmaking in a bundled Electr
 Follow [the review index](../reviews/README.md) and [Loose Screws](../workflows/LOOSE_SCREWS.md). The current soundtrack is local to one browser. Response 13 delivers retained-library playback UI using the inspected owner, with subsequent corrections in Responses 14–15 and scoped closure in Review 15. It does not establish remote synchronized listening, re-sharing/export or complete cross-session listening history. Preserve the existing seated opponent and source/owner boundaries while changing the authored environment around the match.
 
 The next coding action is Assignment 17 under the same desktop/P2P goal. Preserve the delivered scene and restore locally available music in online mode. Remote music synchronization, song transfer and voice streaming remain separate owner integrations. The source now includes a real peer runtime and packaged local candidate; Review 16 explains why the installed player journey and dependable public records still need correction before the wider release gates.
+
 

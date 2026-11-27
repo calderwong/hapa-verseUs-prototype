@@ -5,6 +5,14 @@ This runbook covers what exists, how to run it, and the steps still owned by an 
 
 **Current candidate/review status (26 November):** [Response 17](../reviews/2026-11-26-three-pass-implementation-response-17.md), implementation `7cc30a1`, adds configured archive dialing, installed profile retrieval, v2 attested results, recovery fixes, online local music and notices. Its same-Mac evidence does not establish separate-network qualification. [Review 18](../reviews/2026-11-26-readiness-review-18.md) finds remaining ambiguous Ready, setup/migration, snapshot/worker, terminal reconnect/retirement and archive-conflict/failure cases, plus default-Avatar/presentation work. **Complete [Assignment 18](../reviews/2026-11-26-next-agent-assignment-18.md) and identify the corrected candidate before handing these known fault journeys to CJ for QE.** A narrower local playtest and public release have different gates; do not confuse signing/hardware with independent code completion. Historical steps below and the Response 17 additions remain applicable where unchanged.
 
+## Next delivery target — the simple friend test
+
+[Addendum 09](../requirements/2026-11-26-human-feedback-addendum-09.md), [Assignment 19](../reviews/2026-11-26-next-agent-assignment-19.md) and [the connectivity companion](friend-test-and-resilient-connectivity-v1.md) govern the next iteration. This runbook's older candidate instructions are historical until reconciled with the actual new artifact.
+
+The first friend session is: obtain the matching bundled app, open it normally, choose Play online, Challenge/Accept or exchange an in-app invitation, complete a human game, and quit/reopen with matching saved results. The repo link must lead to the runnable download. No terminal, provider JSON, private engine access, optional owner app, router setup or VPS maintained by CJ is required in that normal path.
+
+Qualify applicable known faults before that handoff. The longer fault/third-observer session below is separate; a publicly operated archive is not needed for the initial live match. Confirm the friend's actual OS/architecture; the historical build only establishes macOS arm64. Record candidate preparation, ready-to-try status and actual human WAN success separately. No new artifact or test is supplied by this tasking update.
+
 ## 1. Player install (macOS Apple Silicon)
 
 1. Get `Hapa Versus.dmg` (or the `.zip`) for `darwin-arm64` and check its SHA-256 against the release record.
@@ -14,7 +22,7 @@ This runbook covers what exists, how to run it, and the steps still owned by an 
 
 Nothing else is required: no Git, Node, npm, terminal, Vite server, engine credentials or other Hapa apps.
 
-**Current signing state:** the candidate is sealed with an ad-hoc signature only. It is **not** signed with a Developer ID and **not** notarized, so Gatekeeper rejects a downloaded copy. Do not tell testers to disable Gatekeeper. Until a signed/notarized build exists, a tester on another Mac must use Finder's *Open* on the app once (Control-click → Open) and accept the unidentified-developer prompt, or receive the build through a channel that does not add the quarantine attribute. Record which path was used.
+**Historical signing state (Response 16/17 candidate):** the candidate was sealed with an ad-hoc signature only, without Developer ID signing or notarization; the report records rejection of the downloaded-launch path. Earlier manual-open/unquarantined-delivery workarounds do not satisfy Addendum 09's normal download/open acceptance. The next agent must verify the exact artifact on the supported OS, report actual signing/notarization and prompts, and resolve the ordinary launch path. Do not remove quarantine, disable Gatekeeper or change the delivery channel simply to evade that qualification.
 
 ### Where the app keeps data
 
@@ -65,7 +73,9 @@ npm run lobby:serve -- --data /abs/archive-root [--network public-alpha]
 
 Test identities always use explicit `--data` / `HAPA_VERSUS_DATA_DIR` roots and `test-*` network ids. `npm run check` and the `.data/peers` demo never touch player data.
 
-## 3. The two-machine acceptance session (journey 2 — still to be run)
+## 3. Historical extended two-machine/QE session (not the first friend script)
+
+For the simpler current first-session criteria, use the preceding friend-test section and FT-01–10 in the connectivity companion. Steps below combine recovery and offline third-observer qualification; the archive requirement applies only to that observer claim.
 
 Needs two Macs (Apple Silicon) on **different internet connections** (for example home broadband and a phone hotspot), each with the same DMG, plus — for journey 4 — an archive host that stays online.
 
@@ -143,3 +153,4 @@ The installed app already contains the compiled engine code it needs (inside `di
 - **Finishing after a crash.** A completed match is re-finished at the next launch from its journals (attestation, verified result, sharing job), exactly once.
 - **Notices.** `Contents/Resources/app.asar/desktop/THIRD_PARTY_NOTICES.txt` lists the game notice, the compiled engine (revision and MIT text), the packages compiled into the game and every production package in the app.
 - **Tester additions for the two-Mac session (§3):** after finishing, open **Player records** and each **Profile** on a third Mac with both players quit; on one Mac, accept a challenge and quit the other side before the table opens to see **Retry / Leave this attempt**; during play, open the match menu and confirm **Leave this match** is offered (do not use it in the counted game).
+

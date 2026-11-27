@@ -12,15 +12,19 @@ Built from the Hapa Versus Master Requirements v3, Design Companion v1 and Refer
 
 ## Current selected development goal
 
-The [bundled Electron / P2P milestone](docs/reviews/2026-11-25-next-agent-assignment-16.md) has a newer installed local candidate: [Response 17](docs/reviews/2026-11-26-three-pass-implementation-response-17.md), implementation `7cc30a1`, pushed with report `b2a31f4`. **Next: [Assignment 18](docs/reviews/2026-11-26-next-agent-assignment-18.md)** following [Review 18](docs/reviews/2026-11-26-readiness-review-18.md). Preserve the completed corrections from [the three-pass handoff](docs/reviews/2026-11-26-three-pass-coding-handoff.md), restore the expected default Avatar, and close the remaining decision/recovery/result and presentation gaps as one candidate.
+**Queued next delivery: [Assignment 19 — a friend opens the app and plays across town](docs/reviews/2026-11-26-next-agent-assignment-19.md).** [Addendum 09](docs/requirements/2026-11-26-human-feedback-addendum-09.md) selects two native apps on separate machines/internet connections, a simple download/open player path, no VPS maintained by CJ as a prerequisite, and [replaceable services with signed contact history](docs/integrations/friend-test-and-resilient-connectivity-v1.md). Reconcile the in-flight Assignment 18 first; preserve newer fixes. This publication adds tasking, not an executable or a passed WAN test. The friend's actual OS/architecture is still an artifact-selection input.
+
+The [bundled Electron / P2P milestone](docs/reviews/2026-11-25-next-agent-assignment-16.md) has a newer installed local candidate: [Response 17](docs/reviews/2026-11-26-three-pass-implementation-response-17.md), implementation `7cc30a1`, pushed with report `b2a31f4`. **Current in-flight work: [Assignment 18](docs/reviews/2026-11-26-next-agent-assignment-18.md)** following [Review 18](docs/reviews/2026-11-26-readiness-review-18.md). Preserve the completed corrections from [the three-pass handoff](docs/reviews/2026-11-26-three-pass-coding-handoff.md), restore the expected default Avatar, and close the remaining decision/recovery/result and presentation gaps as one candidate.
 
 **Readiness:** the representative-local and desktop/P2P human playtest/QE handoff is held pending Review 18's concrete corrections. Fresh local supply/Ready/absorption and compact controls work; the observed default Avatar falls back after an owner `/capabilities 502`. The running local demo did not expose a source revision. This review publication adds instructions/evidence and does not change product code.
 
-This is not yet a publicly delivered multiplayer release. Signing/notarization, separate hardware/networks, operated services, approved engine/Avatar distribution and CJ's acceptance remain separate gates. They are distinct from a narrowly scoped local-playtest recommendation and from still-unbuilt selected features. The [runbook](docs/integrations/online-desktop-runbook.md) describes the candidate/operator steps; read it with Review 18 before treating a journey as qualified.
+This is not yet a publicly delivered multiplayer release. Signing/notarization, separate hardware/networks, approved engine/Avatar distribution and CJ's acceptance remain separate gates. Operated relay/archive availability is conditional on the journey being claimed; it is not a blanket prerequisite for the two-person native test. They are distinct from a narrowly scoped local-playtest recommendation and from still-unbuilt selected features. The [runbook](docs/integrations/online-desktop-runbook.md) describes the candidate/operator steps; read it with Review 18 before treating a journey as qualified.
 
 For current gameplay and presentation, follow the [review index](docs/reviews/README.md) and newer addenda: the current default is `hapa_open_10x9_v3_07` with one commitment to each own plan.
 
 ## Play (desktop app)
+
+**Friend handoff target:** download the app matching your machine, open it, choose Play online, then Challenge/Accept or Join by invitation. The coding agent must publish a verified artifact link here when available. No new downloadable artifact is supplied by Assignment 19. Contributor commands below are separate from the friend's install path.
 
 The following describes the intended prototype player path. Review 18 records the remaining observed recovery, result and presentation limitations; no downloadable release is published by these reviews.
 
@@ -158,3 +162,4 @@ Start with [docs/reviews/README.md](docs/reviews/README.md) for the latest desig
 implementation evidence template, and the CJ ↔ reviewer ↔ local coding agent iteration flow.
 The dated notes include the original screenshot, prioritized findings, source references and
 acceptance checks. Overwatch `hapa-versus` remains the canonical task tracker.
+

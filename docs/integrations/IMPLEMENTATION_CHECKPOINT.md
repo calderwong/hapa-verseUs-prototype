@@ -4,7 +4,13 @@
 records what is built, which owners it attaches to, the defaults CJ selected and what is still loose.
 CJ's acceptance is separate from technical completion and is not recorded here on his behalf.
 
-## Current continuation — Review 18, 26 November 2026
+## Queued delivery — Assignment 19, 26 November 2026
+
+CJ's latest target is [a friend across town opening a bundled app and playing over independent internet connections](../requirements/2026-11-26-human-feedback-addendum-09.md). [Assignment 19](../reviews/2026-11-26-next-agent-assignment-19.md) and [the connectivity companion](friend-test-and-resilient-connectivity-v1.md) add the concrete download/open journey, public-DHT-first attempt, typed replaceable provider selection and signed Hypercore contact/service history. Reconcile in-flight Assignment 18 and newer local work before implementation; its unresolved findings are not closed by these notes.
+
+This is documentation-only tasking. No artifact, runtime, live service, human test or Overwatch update is claimed. A VPS maintained by CJ and an offline archive are not prerequisites for the two-player native test. The friend's OS/architecture is not yet known. Candidate prepared, friend-test readiness and actual two-network human success must be reported separately.
+
+## In-flight continuation — Review 18, 26 November 2026
 
 [Response 17](../reviews/2026-11-26-three-pass-implementation-response-17.md) is pushed at `b2a31f4`, implementation candidate `7cc30a1`. [Review 18](../reviews/2026-11-26-readiness-review-18.md) preserves its substantial corrections and withholds the representative-local/desktop-P2P QE handoff pending specific remaining boundaries. **Current work: [Assignment 18](../reviews/2026-11-26-next-agent-assignment-18.md)**, continuing [the three-pass scope](../reviews/2026-11-26-three-pass-coding-handoff.md) under Loose Screws.
 
@@ -272,4 +278,5 @@ Five focused source-level probe groups and scope limits are recorded in the [rev
 **Remaining selected scope:** browser online adapter, Rematch, diagnostics export, lifecycle/platform checks, installed witnesses for the fault cases, and the rest of VA-06.
 
 **Blockers:** signing, a second Mac on another connection, operated hosts, the engine snapshot, and Harbor's app origin.
+
 

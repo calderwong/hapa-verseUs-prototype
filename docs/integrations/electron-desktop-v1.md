@@ -1,5 +1,7 @@
 # Hapa Versus — Electron desktop delivery v1
 
+**26 November 2026 amendment:** [Addendum 09](../requirements/2026-11-26-human-feedback-addendum-09.md), [Friend test and resilient connectivity v1](friend-test-and-resilient-connectivity-v1.md) and [Assignment 19](../reviews/2026-11-26-next-agent-assignment-19.md) select the simple two-network native friend test and signed, replaceable service/contact history. Reconcile active Assignment 18 first. No VPS maintained by CJ or always-online archive is a prerequisite for this live two-person test. Preserve the earlier broader scope and archived semantics; newer direction governs conflicting infrastructure/delivery sequencing. This amendment is tasking only.
+
 **Date:** 25 November 2026, America/Los_Angeles.  
 **Selected by:** [Human-feedback addendum 08](../requirements/2026-11-25-human-feedback-addendum-08.md).  
 **Implementation scope:** An extension of [Assignment 16](../reviews/2026-11-25-next-agent-assignment-16.md), using the existing [P2P specification](p2p-matchmaking-v1.md).  
@@ -194,3 +196,4 @@ Official implementation references:
 - [Forge Vite plugin status](https://www.electronforge.io/config/plugins/vite), [macOS distribution signing](https://www.electronforge.io/guides/code-signing/code-signing-macos), and [updater API](https://www.electronjs.org/docs/latest/api/auto-updater).
 
 Pin the Electron/Forge/dependency versions actually tested together. This research does not select an untested newest version or prove that the current native dependency chain already loads in Electron.
+

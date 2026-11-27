@@ -1,5 +1,7 @@
 # Hapa Versus — P2P play and matchmaking v1
 
+**26 November 2026 amendment:** [Addendum 09](../requirements/2026-11-26-human-feedback-addendum-09.md), [Friend test and resilient connectivity v1](friend-test-and-resilient-connectivity-v1.md) and [Assignment 19](../reviews/2026-11-26-next-agent-assignment-19.md) select the simple two-network native friend test and signed, replaceable service/contact history. Reconcile active Assignment 18 first. No VPS maintained by CJ or always-online archive is a prerequisite for this live two-person test. Preserve the earlier broader scope and archived semantics; newer direction governs conflicting infrastructure/delivery sequencing. This amendment is tasking only.
+
 **Date:** 25 November 2026, America/Los_Angeles.  
 **Status:** Implementation specification and research-backed working design. No internet match, installation, relay deployment or new runtime is claimed by this document.  
 **Selected scope:** [Human-feedback addendum 07](../requirements/2026-11-25-human-feedback-addendum-07.md).  
@@ -456,3 +458,4 @@ Primary upstream references, checked for this plan:
 - [Blind peering guide](https://docs.pears.com/p2p/how-to/blind-peering/keep-data-available-with-blind-peering/) — data availability when writers are offline, distinct from relaying connections.
 
 Observed upstream versions are in the source register. They are research observations, not instructions to upgrade all dependencies. Implement against the tested lockfile and only change versions for a demonstrated compatibility need.
+
