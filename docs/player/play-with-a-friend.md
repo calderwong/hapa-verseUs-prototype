@@ -2,7 +2,7 @@
 
 The target is two people opening bundled apps on two computers and two internet connections.
 
-**Candidate status:** [Review 19](../reviews/2026-11-26-connectivity-review-19.md) withholds a broad ready-to-play handoff pending the listed corrections and artifact checks. The Windows zip has not yet been run on Windows; the separate-network human test is pending. These are the intended player steps, not a record that they have passed.
+**Candidate status:** [Review 20](../reviews/2026-11-27-connectivity-and-delivery-review-20.md) requires further corrections before a dependable handoff. Friend.4 has actually run on a Windows runner, with native startup, retained identity and a same-machine invitation/result journey. Normal consumer downloaded launch and the separate-network human test remain pending. These are the intended player steps, not a claim that the full human journey passed.
 
 **Current downloads:** see [Download and play](../../README.md#download-and-play) on the repository's front page. Each file names the computer it is for: **Windows PC (64-bit)** or **Mac with Apple Silicon** (M1 or newer). The intended Windows/Mac interoperability still needs a witnessed two-computer test.
 

@@ -1,0 +1,338 @@
+{
+  "reviewDate": "2026-11-27",
+  "reviewedSource": "da8c9e062984aa7ee870b61e771da38460f57854",
+  "method": "Reviewer retrieved release metadata, Windows job logs and the workflow evidence ZIP; verified archive digest and read result JSON. No fresh Windows execution by reviewer.",
+  "release": {
+    "tag": "v0.1.0-friend.4",
+    "target": "bd35cecb6dcefb67fcd47ecac7a9ad8eca07bcc1",
+    "publishedAt": "2026-11-27T08:40:33Z",
+    "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.4",
+    "assets": [
+      {
+        "name": "Hapa-Versus-0.1.0-friend4-macOS-AppleSilicon.dmg",
+        "bytes": 124524966,
+        "sha256": "sha256:a54fc7d624f23f82d82639b6aa91eeb522ef44aa552b2f609b5a57e05bbcb6d1",
+        "download": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.4/Hapa-Versus-0.1.0-friend4-macOS-AppleSilicon.dmg"
+      },
+      {
+        "name": "Hapa-Versus-0.1.0-friend4-Windows-x64.zip",
+        "bytes": 167153853,
+        "sha256": "sha256:3e2df857dacb52826a289f2a1eab3e1bda787b58dae9e655c812e88c5d5faaff",
+        "download": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.4/Hapa-Versus-0.1.0-friend4-Windows-x64.zip"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 223,
+        "sha256": "sha256:a807d56fc47ab968265cc15ce68c6c0c2a0038ebf6e3eb9c619fa510d83802d9",
+        "download": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.4/SHA256SUMS.txt"
+      }
+    ]
+  },
+  "workflow": {
+    "run": 45967513759,
+    "job": 140399648830,
+    "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/45967513759",
+    "source": "bd35cecb6dcefb67fcd47ecac7a9ad8eca07bcc1"
+  },
+  "archive": {
+    "artifactId": 15182873616,
+    "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/45967513759/artifacts/15182873616",
+    "bytes": 6541094,
+    "sha256": "e278290903944b2616bb82e4bf769042f58ce6e4ab08b13cfa047c3439f6bf3b"
+  },
+  "machine": {
+    "runner": "win25-vs2026 20261116.315.1",
+    "caption": "Microsoft Windows Server 2025 Datacenter",
+    "build": "26100",
+    "nodeForDriversOnly": "v22.23.5",
+    "version": "10.0.26100",
+    "arch": "AMD64"
+  },
+  "results": {
+    "smoke-isolated": {
+      "ok": true,
+      "sameIdentity": true,
+      "storeGrewPerLaunch": true,
+      "launches": [
+        {
+          "ok": true,
+          "exit": 0,
+          "nativeListened": true,
+          "dataInsideBundle": false,
+          "ownerRoutes": [
+            503,
+            503,
+            503
+          ],
+          "build": {
+            "source": "bd35cecb6dcefb67fcd47ecac7a9ad8eca07bcc1",
+            "dirty": false,
+            "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+            "builtAt": "2026-11-27T08:38:53.801Z",
+            "target": "win32-x64"
+          }
+        },
+        {
+          "ok": true,
+          "exit": 0,
+          "nativeListened": true,
+          "dataInsideBundle": false,
+          "ownerRoutes": [
+            503,
+            503,
+            503
+          ],
+          "build": {
+            "source": "bd35cecb6dcefb67fcd47ecac7a9ad8eca07bcc1",
+            "dirty": false,
+            "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+            "builtAt": "2026-11-27T08:38:53.801Z",
+            "target": "win32-x64"
+          }
+        }
+      ]
+    },
+    "smoke-os-data": {
+      "ok": true,
+      "sameIdentity": true,
+      "storeGrewPerLaunch": true,
+      "launches": [
+        {
+          "ok": true,
+          "exit": 0,
+          "nativeListened": true,
+          "dataInsideBundle": false,
+          "ownerRoutes": [
+            503,
+            503,
+            503
+          ],
+          "build": {
+            "source": "bd35cecb6dcefb67fcd47ecac7a9ad8eca07bcc1",
+            "dirty": false,
+            "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+            "builtAt": "2026-11-27T08:38:53.801Z",
+            "target": "win32-x64"
+          }
+        },
+        {
+          "ok": true,
+          "exit": 0,
+          "nativeListened": true,
+          "dataInsideBundle": false,
+          "ownerRoutes": [
+            503,
+            503,
+            503
+          ],
+          "build": {
+            "source": "bd35cecb6dcefb67fcd47ecac7a9ad8eca07bcc1",
+            "dirty": false,
+            "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+            "builtAt": "2026-11-27T08:38:53.801Z",
+            "target": "win32-x64"
+          }
+        }
+      ]
+    },
+    "invitationJourney": {
+      "network": "test-invite-mwyqfizy",
+      "build": {
+        "source": "bd35cecb6dcefb67fcd47ecac7a9ad8eca07bcc1",
+        "dirty": false,
+        "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+        "builtAt": "2026-11-27T08:38:53.801Z",
+        "target": "win32-x64"
+      },
+      "host": {
+        "exit": 0,
+        "ok": true,
+        "seat": "A",
+        "steps": [
+          "join",
+          "invitationCopied",
+          "tableOpen",
+          "result"
+        ],
+        "outcome": {
+          "result": "win",
+          "winner": "A",
+          "loser": "B",
+          "tick": 4,
+          "reasons": [
+            {
+              "seat": "B",
+              "reason": "conceded"
+            }
+          ]
+        },
+        "finalHash": "sha256:311f61577de197b69c9f48d9e5d22267bcc5fa74b551dca8e917287e6cfc9d1b",
+        "readyClicks": 4,
+        "fingerprint": "9948-104a-aa86"
+      },
+      "joiner": {
+        "exit": 0,
+        "ok": true,
+        "seat": "B",
+        "steps": [
+          "join",
+          "joinedByInvitation",
+          "tableOpen",
+          "concede",
+          "result"
+        ],
+        "stages": [
+          "finding-player",
+          "negotiating",
+          "opened"
+        ],
+        "outcome": {
+          "result": "win",
+          "winner": "A",
+          "loser": "B",
+          "tick": 4,
+          "reasons": [
+            {
+              "seat": "B",
+              "reason": "conceded"
+            }
+          ]
+        },
+        "finalHash": "sha256:311f61577de197b69c9f48d9e5d22267bcc5fa74b551dca8e917287e6cfc9d1b",
+        "readyClicks": 4,
+        "fingerprint": "55f5-263d-5a93"
+      },
+      "reopen": {
+        "hostSameIdentity": true,
+        "joinerSameIdentity": true,
+        "hostRecorded": [
+          "recorded"
+        ],
+        "joinerRecorded": [
+          "recorded"
+        ]
+      },
+      "sameResult": true,
+      "ok": true
+    },
+    "lifecycle-late": {
+      "ok": true,
+      "states": [
+        {
+          "t": 0,
+          "state": "starting",
+          "gen": 1,
+          "error": null
+        },
+        {
+          "t": 3977,
+          "state": "restarting",
+          "gen": 1,
+          "error": null
+        },
+        {
+          "t": 4481,
+          "state": "starting",
+          "gen": 2,
+          "error": null
+        },
+        {
+          "t": 4682,
+          "state": "ready",
+          "gen": 2,
+          "error": null
+        }
+      ],
+      "final": "ready",
+      "pageSees": {
+        "state": "ready",
+        "error": null
+      }
+    },
+    "lifecycle-never": {
+      "ok": true,
+      "states": [
+        {
+          "t": 0,
+          "state": "starting",
+          "gen": 1,
+          "error": null
+        },
+        {
+          "t": 3998,
+          "state": "restarting",
+          "gen": 1,
+          "error": null
+        },
+        {
+          "t": 4501,
+          "state": "starting",
+          "gen": 2,
+          "error": null
+        },
+        {
+          "t": 8574,
+          "state": "restarting",
+          "gen": 2,
+          "error": null
+        },
+        {
+          "t": 9478,
+          "state": "starting",
+          "gen": 3,
+          "error": null
+        },
+        {
+          "t": 13525,
+          "state": "restarting",
+          "gen": 3,
+          "error": null
+        },
+        {
+          "t": 15035,
+          "state": "starting",
+          "gen": 4,
+          "error": null
+        },
+        {
+          "t": 18988,
+          "state": "failed",
+          "gen": 4,
+          "error": "the peer service did not start in time three times in a minute"
+        }
+      ],
+      "final": "failed",
+      "pageSees": {
+        "state": "failed",
+        "error": "the peer service did not start in time three times in a minute"
+      }
+    }
+  },
+  "limitations": [
+    "Same Windows Server 2025 VM, automated human-seat inputs, explicit concession at Tick 4.",
+    "GitHub CLI download has no Mark-of-the-Web; consumer SmartScreen/firewall flow unobserved.",
+    "No two independent home networks or CJ acceptance.",
+    "Forced second-relay carriage remains unverified."
+  ],
+  "presentation": {
+    "submittedBrowser": "a1-red-home.jpg shows pose-art Red; a4-red-close.jpg crops the head; orbit screenshot alone establishes no mesh geometry.",
+    "submittedInstalled": "a7-installed-red-mac.jpg shows an empty chair. No visible installed Red acceptance follows from its filename.",
+    "freshBrowser": {
+      "url": "http://127.0.0.1:5199/versus.html",
+      "sourceCommit": "unversioned live local preview; not attributed to reviewed Git source",
+      "rendererLabel": "red-pose-art 2026-11-02.1, ready",
+      "observed": [
+        "Red selected at launch",
+        "Red visible in home composition",
+        "Music ready with 3 songs",
+        "Ready -> Committed/resolving -> Tick 2 Planning without a second confirmation"
+      ],
+      "screenshot": "browser-red-home.jpg",
+      "sha256": "d05439b7a4082834df5666ffb67b9a5d9a5e376993ffa26c71bf4ed66a8e8f0b"
+    }
+  },
+  "reviewerEnvironmentLimits": [
+    "Local Mac grounding and Overwatch unavailable; no board update.",
+    "No new full test suite, package build, native transport execution or WAN test was run by the reviewer."
+  ]
+}

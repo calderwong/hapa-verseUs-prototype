@@ -1,0 +1,173 @@
+{
+  "sourceCommit": "da8c9e062984aa7ee870b61e771da38460f57854",
+  "scope": "controlled source-method diagnostics; no native/installed/WAN claim",
+  "sourceFiles": [
+    {
+      "path": "src/hapa/rules/encoding.js",
+      "blob": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+      "sha256": "58fcb62ee318ab6b461a01f6cc108d650807595e1dc2722c2ba8023c7af0396e",
+      "bytes": 8381
+    },
+    {
+      "path": "src/hapa/network/control.js",
+      "blob": "055bdb0d8f62e986bcb44be53ca064301c0cbd5b",
+      "sha256": "db50d4c8d3f735f7b46cc3d85bc0d3df1e62e16048cac3756eb67380b46940d0",
+      "bytes": 2790
+    },
+    {
+      "path": "src/hapa/network/services.js",
+      "blob": "bd72f35db5712be47828eadc8f5bf7b87a2d9d72",
+      "sha256": "f9ed098f87a4b7bf847f463e0f280edac9b30236c4dd2ca68448a9b6aa9fd4d5",
+      "bytes": 20001
+    },
+    {
+      "path": "src/hapa/network/contact.js",
+      "blob": "8218cda449c5945ace74babc316d12ab95ef621f",
+      "sha256": "ce35095417bc5db79d5c54e2a5d6fc708e29a533db21ef70f84a4377586364d0",
+      "bytes": 18041
+    },
+    {
+      "path": "src/hapa/network/lobby.js",
+      "blob": "527c4216433a9e37584166679849ee8a1e360aae",
+      "sha256": "7f91be794ac32024a6afbc1107369437b2dc768b77196904fd34d30f3cd88f67",
+      "bytes": 18249
+    },
+    {
+      "path": "src/hapa/network/runtime.js",
+      "blob": "fe0604ae9eccba399f472c9a83271d9217012fb0",
+      "sha256": "2acaa31efe01044fd631568a632cf44af1d083672d7bf2f1f9adf851ea8fda43",
+      "bytes": 72297
+    }
+  ],
+  "results": [
+    {
+      "id": "C1",
+      "status": "corrected",
+      "actual": {
+        "revision": 1,
+        "proof": "snapshot",
+        "source": "snapshot:invitation",
+        "checkpoint": {
+          "length": 1,
+          "revision": 0,
+          "verifiedAt": "2026-11-27T11:49:10.579Z"
+        },
+        "conflicts": 0
+      },
+      "scope": "newer signed snapshot retains its own snapshot-only evidence across cache reopen"
+    },
+    {
+      "id": "C2",
+      "status": "corrected",
+      "forward": {
+        "revision": 0,
+        "proof": "snapshot",
+        "source": "snapshot:invitation",
+        "checkpoint": null,
+        "conflicts": 1
+      },
+      "reverse": {
+        "revision": 0,
+        "proof": "core-verified",
+        "source": "core",
+        "checkpoint": {
+          "length": 1,
+          "revision": 0,
+          "verifiedAt": "2026-11-27T11:49:10.587Z"
+        },
+        "conflicts": 1
+      }
+    },
+    {
+      "id": "C3",
+      "status": "corrected",
+      "actual": {
+        "revision": 1,
+        "proof": "snapshot",
+        "source": "snapshot:invitation",
+        "checkpoint": {
+          "length": 1,
+          "revision": 0,
+          "verifiedAt": "2026-11-27T11:49:10.590Z"
+        },
+        "conflicts": 0
+      }
+    },
+    {
+      "id": "P1",
+      "status": "corrected",
+      "replacement": [
+        "203.0.113.1@replacement.example:49737"
+      ],
+      "afterDisablingLast": [],
+      "noRoute": "no eligible discovery provider is adopted (every candidate is disabled, retired or expired, or none was added for extend mode)"
+    },
+    {
+      "id": "P2",
+      "status": "corrected-in-controlled-storage",
+      "cuts": [
+        {
+          "cut": 1,
+          "bootstrap": [
+            "203.0.113.1@a.example:49737",
+            "203.0.113.2@b.example:49737"
+          ],
+          "records": 9,
+          "incomplete": 1
+        },
+        {
+          "cut": 2,
+          "bootstrap": [
+            "203.0.113.1@a.example:49737",
+            "203.0.113.2@b.example:49737"
+          ],
+          "records": 10,
+          "incomplete": 1
+        },
+        {
+          "cut": 3,
+          "bootstrap": [
+            "203.0.113.1@a.example:49737",
+            "203.0.113.2@b.example:49737"
+          ],
+          "records": 11,
+          "incomplete": 1
+        }
+      ]
+    },
+    {
+      "id": "A1",
+      "status": "corrected",
+      "stage": "cancelled",
+      "tombstones": 1
+    },
+    {
+      "id": "A2_cancel_during_match_open",
+      "status": "reproduced",
+      "actual": {
+        "attempt": "cancelled",
+        "reservation": "active",
+        "authorityRetained": true,
+        "tombstones": 0,
+        "openedEvents": 1,
+        "startedMessages": 1,
+        "durableSessionPhase": "active"
+      },
+      "expected": "Cancellation and the activation boundary must agree: either fence/close the still-opening match with durable leave, or return an explicitly already-connected/non-cancellable state; never cancelled plus an opened active authority."
+    },
+    {
+      "id": "P3_expired_provider_reused_on_later_join",
+      "status": "reproduced",
+      "actual": {
+        "expiredAt": 1795780210612,
+        "expiresAt": 1795780210611,
+        "passedToNewLobby": [
+          "203.0.113.3@short.example:49737"
+        ],
+        "eligibleAtJoinTime": [],
+        "recordedState": "active"
+      },
+      "expected": "Recompute time-dependent eligibility before constructing a new lobby/provider attempt; a provider that expired after runtime startup is no longer eligible."
+    }
+  ]
+}

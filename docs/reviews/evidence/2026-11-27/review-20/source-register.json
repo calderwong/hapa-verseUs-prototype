@@ -1,0 +1,127 @@
+{
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "commit": "da8c9e062984aa7ee870b61e771da38460f57854",
+  "tree": "6add5f2d1735b064b507acf9ac71188201f8360b",
+  "files": [
+    {
+      "path": ".github/workflows/windows-smoke.yml",
+      "blob": "ecfc1f172f500ec8b7cd2917dc5e01f8231f81e7",
+      "sha256": "3687ef1714ef499ee2dea3c6bad2d1dd2513b40b4d07a0d60c6ba7e974c6400d",
+      "bytes": 5337
+    },
+    {
+      "path": "AGENTS.md",
+      "blob": "1707f6592b4d483beb301c9c6198e2b601130e72",
+      "sha256": "4fd705d02c7519cf92df4977c6548bf3df8e953f12c1883782e900e4dd082503",
+      "bytes": 7795
+    },
+    {
+      "path": "desktop/main.mjs",
+      "blob": "3457f01759866141aafca6f98e2a7bfa5ff489de",
+      "sha256": "1f8542c8ce7b030108a5e12b19ca9362f4f333e49ded25780f4c26c9f15548e4",
+      "bytes": 21788
+    },
+    {
+      "path": "desktop/peer-host.mjs",
+      "blob": "3be2a59e6758ca01f6b3b8ec308c4523528663e1",
+      "sha256": "365d29065ef9369b42d70c123ef8419245d9073c6d53f28abd090e7269cc207e",
+      "bytes": 1950
+    },
+    {
+      "path": "desktop/smoke.mjs",
+      "blob": "693a86d61f511fde2ea9298f1fe2ef6b60c1682d",
+      "sha256": "c2da831dbe1586f4bd61e08939d0771c5bb2814d51d9d9536551ae0744aef03c",
+      "bytes": 20258
+    },
+    {
+      "path": "docs/protocols/hapa-connectivity-v0.1-conformance.json",
+      "blob": "d2da9f4d14c30a3a18c1ee9cd7ea2204125d6e05",
+      "sha256": "b05fd62764bbd73f7e87eaa6faee03006608bf04cb77e5685036341cb55cc9be",
+      "bytes": 26157
+    },
+    {
+      "path": "docs/reviews/2026-11-26-next-agent-assignment-20.md",
+      "blob": "b5769f8918faea6e604a2f31e4d5e6c926406c1e",
+      "sha256": "e8d79f7d8019af16ab7f3b89927e8baca5ba1b19455b81eb11f4bc6099ecc9fb",
+      "bytes": 14093
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-26/review-19/review-probe.mjs",
+      "blob": "1c0dcc958cd1cd0317026326db9c7ffc882448f8",
+      "sha256": "390e028bc01894f41190b7814d6913d502a03f7760894ccd4d40d2c92d662b70",
+      "bytes": 14569
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-20/conformance-execution.json",
+      "blob": "9bfda6045f2369cbacf3808fcf1707148e553662",
+      "sha256": "a6a6a12df909850afed16dcdd85e79d2d44883554ba75905df9cbcdaf44264f6",
+      "bytes": 7212
+    },
+    {
+      "path": "package.json",
+      "blob": "0cf18638a48a8c33a449dd3050e40e4192af832c",
+      "sha256": "27a5c89631b98bdc7ee4d6b7aad468796db521d5f1fa71b6a74ee16cb28b126e",
+      "bytes": 2301
+    },
+    {
+      "path": "src/hapa/network/contact.js",
+      "blob": "8218cda449c5945ace74babc316d12ab95ef621f",
+      "sha256": "ce35095417bc5db79d5c54e2a5d6fc708e29a533db21ef70f84a4377586364d0",
+      "bytes": 18041
+    },
+    {
+      "path": "src/hapa/network/control.js",
+      "blob": "055bdb0d8f62e986bcb44be53ca064301c0cbd5b",
+      "sha256": "db50d4c8d3f735f7b46cc3d85bc0d3df1e62e16048cac3756eb67380b46940d0",
+      "bytes": 2790
+    },
+    {
+      "path": "src/hapa/network/lobby.js",
+      "blob": "527c4216433a9e37584166679849ee8a1e360aae",
+      "sha256": "7f91be794ac32024a6afbc1107369437b2dc768b77196904fd34d30f3cd88f67",
+      "bytes": 18249
+    },
+    {
+      "path": "src/hapa/network/runtime.js",
+      "blob": "fe0604ae9eccba399f472c9a83271d9217012fb0",
+      "sha256": "2acaa31efe01044fd631568a632cf44af1d083672d7bf2f1f9adf851ea8fda43",
+      "bytes": 72297
+    },
+    {
+      "path": "src/hapa/network/services.js",
+      "blob": "bd72f35db5712be47828eadc8f5bf7b87a2d9d72",
+      "sha256": "f9ed098f87a4b7bf847f463e0f280edac9b30236c4dd2ca68448a9b6aa9fd4d5",
+      "bytes": 20001
+    },
+    {
+      "path": "src/hapa/presentation/online.js",
+      "blob": "3b406dda170bde2d00f3fc22b44367b483a5b7e6",
+      "sha256": "2896bf49ae50bcc38b9f034c8f2f82993e90b221f75c5e87d653e48a135547c1",
+      "bytes": 35161
+    },
+    {
+      "path": "src/hapa/rules/encoding.js",
+      "blob": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+      "sha256": "58fcb62ee318ab6b461a01f6cc108d650807595e1dc2722c2ba8023c7af0396e",
+      "bytes": 8381
+    },
+    {
+      "path": "tests/hapa/connectivity.test.js",
+      "blob": "3f79cc1327b2171b1ea72168bca7018c1bf9d5b7",
+      "sha256": "c7f37360ca2300e93d58b5d11b452c2b90cbc37dc321ceef23b1977362c62dcb",
+      "bytes": 16965
+    },
+    {
+      "path": "tests/hapa/contact.test.js",
+      "blob": "b814d2ae785427ba11b3eb6fd7da106cccf7f1b3",
+      "sha256": "8aca9eaadfac6870e537a4bcc867a3964d8866d0d116f29ee50857a62d4fabe3",
+      "bytes": 13724
+    },
+    {
+      "path": "tests/hapa/recovery-native.test.js",
+      "blob": "0389fac13fdf95c1a0ff667de9fb43c337f140df",
+      "sha256": "1d94644508dd954603dc328e4eff33971b71a0e2ba8582b5bab7d67bb3655b45",
+      "bytes": 9902
+    }
+  ]
+}

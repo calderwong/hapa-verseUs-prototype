@@ -1,16 +1,12 @@
 # Integrations and online play
 
-## Current work and queued Avatar scope — 26 November 2026
+## Current work — 27 November 2026
 
-[Review 19](../reviews/2026-11-26-connectivity-review-19.md) remains the latest review; [Assignment 20](../reviews/2026-11-26-next-agent-assignment-20.md) is the current connectivity/friend-test work under Addenda 09–10. CJ has said the agents are awaiting their allowance window and are not ready for a new review. This update records future requirements only.
+[Review 20](../reviews/2026-11-27-connectivity-and-delivery-review-20.md) and [Assignment 22](../reviews/2026-11-27-next-agent-assignment-22.md) are current. Preserve credited Assignment 20 repairs and Windows execution evidence; close the remaining cancellation/activation, provider-expiry, relay and installed-presentation boundaries. Friend.4 is the current published candidate; consumer launch and two-home human acceptance remain unverified.
 
-[Addendum 11](../requirements/2026-11-26-human-feedback-addendum-11.md) selects **Mimi / Falka, Leo and Thor** as optional Mesh Avatar players. [Optional Avatar players v1](optional-avatar-players-v1.md) defines a descriptor-driven roster, separate roster/seat/online controls, actual owner presentation bindings, one authority per seat and explicit controller/result attribution. [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md) queues local roster delivery and then online Avatar participation after the relevant current work.
+[Addendum 11](../requirements/2026-11-26-human-feedback-addendum-11.md), [optional Avatar players v1](optional-avatar-players-v1.md) and [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md) retain Mimi/Falka, Leo and Thor as a separate queued roster. Keep two seats, Red's default and direct human multiplayer.
 
-Keep the current two-seat game, Red default and direct human-versus-human path. An unavailable optional Avatar is not a blocker for the across-town human friend test. No new owner IDs, packages, implementations or acceptance results are asserted here.
-
-The [friend-test companion](friend-test-and-resilient-connectivity-v1.md), [desktop runbook](online-desktop-runbook.md), [implementation checkpoint](IMPLEMENTATION_CHECKPOINT.md) and [Hapa Connectivity v0.1](../protocols/hapa-connectivity-v0.1.md) remain the integration boundaries. Existing [Avatar decision/observer/performer notes](avatar-opponents-and-music-discovery-v1-contracts.md) supply the historical adapter rationale; refresh actual owner contracts when coding. No CJ-maintained VPS is a prerequisite.
-
-The current pointers above supersede the historical “current/next” labels below.
+The [friend-test companion](friend-test-and-resilient-connectivity-v1.md), [desktop runbook](online-desktop-runbook.md), [checkpoint](IMPLEMENTATION_CHECKPOINT.md) and [shared contract](../protocols/hapa-connectivity-v0.1.md) remain the integration boundaries. Prove small common semantics before SDK extraction. No CJ-maintained VPS is a prerequisite. The current pointers supersede historical current/next wording below.
 
 ## Historical milestone summary
 

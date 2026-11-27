@@ -4,25 +4,23 @@
 records what is built, which owners it attaches to, the defaults CJ selected and what is still loose.
 CJ's acceptance is separate from technical completion and is not recorded here on his behalf.
 
-## Queued optional Avatar scope — 26 November 2026
+## Current review and assignment — 27 November 2026
 
-[Addendum 11](../requirements/2026-11-26-human-feedback-addendum-11.md), [optional Avatar players v1](optional-avatar-players-v1.md) and [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md) record CJ's request for Mimi/Falka, Leo and Thor Mesh Avatar player options. Separate local roster enablement, per-game controller/presentation selection and opted-in online availability. Preserve Red's existing default, one authority per seat and the two-player rules; use actual owner packages and distinguish Avatar-controlled outcomes from human-versus-human results.
+[Review 20](../reviews/2026-11-27-connectivity-and-delivery-review-20.md) assesses `da8c9e0`; [Assignment 22](../reviews/2026-11-27-next-agent-assignment-22.md) continues unfinished Assignment 20 work. Contact proof/conflicts, committed provider imports, retired-provider exclusions and accepted cancellation are credited. Cancel during match initialization and time-expired provider reuse remain reproduced defects.
 
-**Queued, not built or newly reviewed.** CJ says the agents are waiting for an allowance window and are not ready to submit the previous work. Keep Assignment 20 current, preserve in-flight changes and qualify this scope later as local roster and online participation slices. No new asset discovery, runtime test, release, Overwatch update or readiness approval is claimed by this requirements publication.
+Friend.4 Mac arm64/Windows x64 artifacts exist from `bd35cec`. The reviewer verified Windows runner launch/reopen, same-VM invitation/concession/result and bounded worker-start evidence. Consumer downloaded launch and the real Mac-to-Windows two-home human game remain unverified. Relay carriage remains partial. **Changes required before a dependable friend-test recommendation.**
 
-## Current review and assignment — 26 November 2026
+A fresh live browser renders Red's pose-art package. The submitted installed-Mac screenshot has an empty chair; visible installed owner delivery and actual renderer kind still require proof. Current source/evidence lacks a dated Response 20 and its ledger source is a placeholder; Response 22 must reconcile the handoff. [Evidence](../reviews/evidence/2026-11-27/review-20/README.md) separates source diagnostics, reviewed CI artifacts and unversioned live browser observations.
 
-[Review 19](../reviews/2026-11-26-connectivity-review-19.md), pinned to `b42f555e35f7686dd3391e4f00f64a03875b5fb5`, qualifies [Response 19](../reviews/2026-11-26-friend-test-implementation-response-19.md). [Assignment 20](../reviews/2026-11-26-next-agent-assignment-20.md) is the next work: close six contact/provider/attempt findings, qualify the pertinent inherited native recovery cuts, verify the downloaded Windows candidate and complete the actual independent-network friend journey. Preserve newer local work and all corrected behavior.
+## Queued optional Avatar scope
 
-The Mac friend.1 DMG and Windows friend.2 zip are published. The friend's Windows PC is confirmed. The Windows zip was cross-built and inspected; it has not run on Windows. The same-Mac installed invitation/concession/reopen evidence is not a two-network or Mac-to-Windows witness. **Candidate prepared; broad friend-test/desktop-P2P QE go-ahead withheld; human friend test pending.** No new executable is created by this review publication.
+[Addendum 11](../requirements/2026-11-26-human-feedback-addendum-11.md), [optional Avatar players v1](optional-avatar-players-v1.md) and [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md) retain Mimi/Falka, Leo and Thor. Separate local roster enablement, per-game selection and explicit online availability. Preserve Red's default and one authority per seat. The reviewed diff has no roster implementation. This optional scope does not gate the human friend test.
 
-Built foundations include typed service-policy history and bootstrap/relay plumbing, asynchronous connection attempts/diagnostics, root-signed contact history and hvinv2, plus A18 corrections. Review 19 documents why the new edge cases remain material. A fresh unversioned browser match renders Red's pose-art output; that narrows the old empty-chair observation without establishing an installed owner frame or volumetric mesh.
-
-[Addendum 10](../requirements/2026-11-26-human-feedback-addendum-10.md) and [Hapa Connectivity v0.1](../protocols/hapa-connectivity-v0.1.md) define shared contracts while game semantics stay application-owned. Stabilize the existing implementation before extracting a shared package. A CJ-maintained VPS and public archive remain optional for the first live friend game. Overwatch was not accessed by this reviewer; reconcile the local board when implementing.
+The common connectivity contract remains unchanged; stabilize small shared semantics through both adapters before extracting a module. No product source, new executable or Overwatch state is changed by this review publication.
 
 ## Historical Review 18 checkpoint
 
-The observations below describe that earlier pinned review. Response 19 and Review 19 supersede their current-status wording where later evidence exists; unfinished compatible cases remain tracked in Assignment 20.
+The observations below describe that earlier pinned review. The current Review 20 pointers supersede historical current-status wording where later evidence exists; unfinished compatible cases remain tracked through Assignment 22.
 
 ### Review 18, 26 November 2026
 

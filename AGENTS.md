@@ -30,10 +30,11 @@ packaging/storage/IPC while existing gameplay and archived records keep their me
 
 Addendum 11 selects optional Mimi/Falka, Leo and Thor Mesh Avatar players through a local roster,
 per-game selection and separately opted-in online participation. Read its companion and queued
-Assignment 21 through the review index. Assignment 20 remains current while the implementing
-agents await their allowance window; this new scope does not trigger another review, replace
-in-flight work or gate the existing human-versus-human friend test. Preserve two seats, actual
-owner bindings, one authority per seat and explicit human/Avatar result attribution.
+Assignment 21 through the review index. Review 20 now evaluates the updated foundation and
+Assignment 22 continues the remaining Assignment 20 corrections and delivery qualification.
+Preserve in-flight work and the optional roster queue; it does not gate the existing
+human-versus-human friend test. Preserve two seats, actual owner bindings, one authority per seat
+and explicit human/Avatar result attribution.
 
 The `.docx` originals stay local in `reference_documents/` (ignored: large binaries).
 
