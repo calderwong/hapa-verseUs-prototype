@@ -4,6 +4,8 @@ This folder is the shared handoff between CJ, the reviewing assistant, and the l
 
 ## Start here
 
+- **Latest implementation response:** [Response 22 — lifecycle, provider and delivery correctness](2026-11-27-implementation-response-22.md): friend.5 (`aabb62a`), V20-A/B corrected with native regressions, installed Avatar outage/recovery witnessed, gated Windows run passed, no macOS keychain prompts; relay carriage (HC-09), consumer Windows download and the two-home human game remain pending. Assignment 21 not started.
+
 - **Latest review:** [Review 20 — connectivity and delivery](2026-11-27-connectivity-and-delivery-review-20.md), source `da8c9e062984aa7ee870b61e771da38460f57854`. Earlier contact/provider repairs are credited; active-opening cancellation and time-expired provider reuse are reproduced. Installed Red remains unproved by the submitted empty-chair image. **Changes required before a dependable friend-test recommendation.**
 - **Current coding-agent assignment:** [Assignment 22](2026-11-27-next-agent-assignment-22.md), consolidating remaining Assignment 20 work. Preserve all newer local changes and corrected behavior. Finish lifecycle/provider correctness, relay carriage/attribution, installed presentation and exact source-to-artifact evidence.
 - **Evidence:** [Review 20 packet](evidence/2026-11-27/review-20/README.md) contains exact-source diagnostics, a verified Windows workflow/archive summary and a separately scoped fresh local-browser screenshot.

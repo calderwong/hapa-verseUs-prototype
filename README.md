@@ -12,7 +12,7 @@ Built from the Hapa Versus Master Requirements v3, Design Companion v1 and Refer
 
 ## Current selected development goal
 
-**Current review:** [Review 20 — connectivity and delivery](docs/reviews/2026-11-27-connectivity-and-delivery-review-20.md), pinned to `da8c9e062984aa7ee870b61e771da38460f57854`. **Next work:** [Assignment 22](docs/reviews/2026-11-27-next-agent-assignment-22.md), continuing the remaining Assignment 20 work.
+**Current implementation response:** [Response 22](docs/reviews/2026-11-27-implementation-response-22.md) (friend.5, source `aabb62a`) answering [Review 20](docs/reviews/2026-11-27-connectivity-and-delivery-review-20.md) / [Assignment 22](docs/reviews/2026-11-27-next-agent-assignment-22.md); ready for the next review.
 
 The contact proof/conflict fixes, committed provider imports, retired-provider exclusions and accepted-phase cancellation are credited. Two controlled remaining defects require correction: cancellation during match opening can still activate the cancelled match, and providers that expire after app startup can be reused on a later join. Actual second-relay carriage, installed Avatar delivery and the coherent implementation handoff still need qualification.
 
@@ -26,10 +26,10 @@ The contact proof/conflict fixes, committed provider imports, retired-provider e
 
 ## Download and play
 
-Current published candidate: [friend.4](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.4). Review 20's corrections remain outstanding; these files are not represented as a completed human acceptance pass.
+Current published candidate: [friend.5](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.5), clean source `aabb62a`, with Review 20's corrections ([Response 22](docs/reviews/2026-11-27-implementation-response-22.md)). Not a completed human acceptance pass: the two-home game and consumer Windows download are still pending.
 
-- **Windows PC, 64-bit:** [Hapa-Versus-0.1.0-friend4-Windows-x64.zip](https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.4/Hapa-Versus-0.1.0-friend4-Windows-x64.zip), 167,153,853 bytes; SHA-256 `3e2df857dacb52826a289f2a1eab3e1bda787b58dae9e655c812e88c5d5faaff`. Extract and open Hapa Versus.exe. Executed on a Windows Server 2025 runner; unsigned, with consumer download/SmartScreen/firewall behavior still unobserved.
-- **Mac with Apple Silicon:** [Hapa-Versus-0.1.0-friend4-macOS-AppleSilicon.dmg](https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.4/Hapa-Versus-0.1.0-friend4-macOS-AppleSilicon.dmg), 124,524,966 bytes; SHA-256 `a54fc7d624f23f82d82639b6aa91eeb522ef44aa552b2f609b5a57e05bbcb6d1`. Consumer downloaded launch and visible owner-rendered default remain separately qualified; the review did not freshly install this DMG.
+- **Windows PC, 64-bit:** [Hapa-Versus-0.1.0-friend5-Windows-x64.zip](https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.5/Hapa-Versus-0.1.0-friend5-Windows-x64.zip), 167,156,741 bytes; SHA-256 `c2ccca726b45d5c0a609dbbea1496064604c27de4ab3ddb109059306f36f1db9`. Extract and open Hapa Versus.exe. Passed a gated run on Windows Server 2025 x64 (GitHub-hosted); unsigned, consumer download/SmartScreen/firewall behavior still unobserved.
+- **Mac with Apple Silicon:** [Hapa-Versus-0.1.0-friend5-macOS-AppleSilicon.dmg](https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.5/Hapa-Versus-0.1.0-friend5-macOS-AppleSilicon.dmg), 124,520,594 bytes; SHA-256 `72e4fc0fe5fdd7255a79bd610e406c4c986ce29c95520824549b57550e6fa02e`. Installed and checked on macOS 26 arm64 (local match, two-copy invitation game, Red with owner outage/recovery); ad-hoc signed — approve once with Open Anyway. No keychain prompts.
 
 Both artifacts target source `bd35cecb6dcefb67fcd47ecac7a9ad8eca07bcc1`. Choose Play online and Challenge/Accept, or Open a table → Copy invitation. [Player steps](docs/player/play-with-a-friend.md) and the [desktop runbook](docs/integrations/online-desktop-runbook.md) distinguish prepared, platform-executed, ready-to-try, two-home success and CJ acceptance.
 

@@ -1,0 +1,81 @@
+{
+ "network": "test-invite-mwzjbkv0",
+ "app": "<scratch>",
+ "build": {
+  "source": "aabb62a0a99b541b5bad41f54a827cbedbf102b6",
+  "dirty": false,
+  "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "builtAt": "2026-11-27T22:07:36.552Z",
+  "target": "darwin-arm64"
+ },
+ "host": {
+  "exit": 0,
+  "ok": true,
+  "seat": "A",
+  "steps": [
+   "join",
+   "invitationCopied",
+   "tableOpen",
+   "result"
+  ],
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 4,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:dcb960e3e862fa5c90bad501a8e99dbbd07ac233891b3739ca2703629177cce5",
+  "readyClicks": 4,
+  "fingerprint": "e957-e60f-0852"
+ },
+ "joiner": {
+  "exit": 0,
+  "ok": true,
+  "seat": "B",
+  "steps": [
+   "join",
+   "joinedByInvitation",
+   "tableOpen",
+   "concede",
+   "result"
+  ],
+  "stages": [
+   "finding-player",
+   "negotiating",
+   "opened"
+  ],
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 4,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:dcb960e3e862fa5c90bad501a8e99dbbd07ac233891b3739ca2703629177cce5",
+  "readyClicks": 4,
+  "fingerprint": "7417-df0b-ce0a"
+ },
+ "reopen": {
+  "hostSameIdentity": true,
+  "joinerSameIdentity": true,
+  "hostRecorded": [
+   "recorded"
+  ],
+  "joinerRecorded": [
+   "recorded"
+  ]
+ },
+ "sameResult": true,
+ "ok": true
+}

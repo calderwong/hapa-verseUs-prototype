@@ -1,0 +1,8 @@
+{
+  "arch": "AMD64",
+  "runner": "win25-vs2026 20261123.321.1",
+  "build": "26100",
+  "nodeForDriversOnly": "v22.23.5",
+  "caption": "Microsoft Windows Server 2025 Datacenter",
+  "version": "10.0.26100"
+}

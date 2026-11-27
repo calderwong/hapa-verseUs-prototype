@@ -1,0 +1,157 @@
+{
+ "ok": true,
+ "script": "online",
+ "ms": 100511,
+ "about": {
+  "app": "Hapa Versus",
+  "version": "0.1.0",
+  "packaged": true,
+  "electron": "45.3.0",
+  "chrome": "156.0.8078.96",
+  "node": "24.22.2",
+  "platform": "win32",
+  "arch": "x64",
+  "network": "test-invite-mwzjc3e7",
+  "build": {
+   "source": "aabb62a0a99b541b5bad41f54a827cbedbf102b6",
+   "dirty": false,
+   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+   "builtAt": "2026-11-27T22:07:56.797Z",
+   "target": "win32-x64"
+  },
+  "peer": {
+   "runtime": "hapa-versus-peer-runtime/0.2.0",
+   "fingerprint": "7cb6-dda6-5d7b"
+  },
+  "name": "Hapa Versus"
+ },
+ "me": "7cb6-dda6-5d7b",
+ "seat": "B",
+ "opponent": "Cal",
+ "outcome": {
+  "result": "win",
+  "winner": "A",
+  "loser": "B",
+  "tick": 4,
+  "reasons": [
+   {
+    "seat": "B",
+    "reason": "conceded"
+   }
+  ]
+ },
+ "finalHash": "sha256:686e649aede96c67f4a9c0da0f4e961b426e242b552b429031cd04fd77394b03",
+ "ticksAgreed": 4,
+ "viewMatchesAgreed": true,
+ "readyClicks": 4,
+ "choicesAnswered": 0,
+ "readyAckMs": {
+  "n": 4,
+  "median": 37,
+  "p95": 39,
+  "max": 39
+ },
+ "reloaded": false,
+ "music": {
+  "before": {
+   "deck": true,
+   "status": "unavailable",
+   "remotePlate": "Cal",
+   "avatar": false
+  },
+  "after": {
+   "status": "unavailable",
+   "now": null,
+   "action": "none"
+  }
+ },
+ "feeds": {
+  "own": {
+   "length": 13,
+   "fork": 0
+  },
+  "remote": {
+   "length": 13,
+   "read": 13,
+   "fork": 0
+  }
+ },
+ "ticks": [
+  {
+   "tick": 1,
+   "planned": "3 orders",
+   "readyAckMs": 39,
+   "label": "Ready · waiting for CalYour plan is committed · Cal is planning"
+  },
+  {
+   "tick": 2,
+   "planned": "3 orders",
+   "readyAckMs": 37,
+   "label": "Ready · waiting for CalYour plan is committed · Cal is planning"
+  },
+  {
+   "tick": 3,
+   "planned": "3 orders",
+   "readyAckMs": 36,
+   "label": "Ready · waiting for CalYour plan is committed · Cal is planning"
+  },
+  {
+   "tick": 4,
+   "planned": "concede",
+   "readyAckMs": 37,
+   "label": "Ready · waiting for CalYour plan is committed · Cal is planning"
+  }
+ ],
+ "log": [
+  {
+   "t": 440,
+   "step": "join",
+   "auto": true
+  },
+  {
+   "t": 4420,
+   "step": "joinedByInvitation",
+   "stages": [
+    "finding-player",
+    "negotiating",
+    "opened"
+   ]
+  },
+  {
+   "t": 4425,
+   "step": "tableOpen",
+   "seat": "B",
+   "opponent": "Cal",
+   "tick": 1,
+   "seats": {
+    "B": "human",
+    "A": "remote"
+   }
+  },
+  {
+   "t": 97183,
+   "step": "concede",
+   "tick": 4
+  },
+  {
+   "t": 98163,
+   "step": "result",
+   "outcome": {
+    "result": "win",
+    "winner": "A",
+    "loser": "B",
+    "tick": 4,
+    "reasons": [
+     {
+      "seat": "B",
+      "reason": "conceded"
+     }
+    ]
+   }
+  }
+ ],
+ "console": [
+  "warning: [versus] music contribution unavailable (cj): music library cj is not configured on this computer",
+  "warning: [versus] music contribution unavailable (cj): music library cj is not configured on this computer"
+ ]
+}

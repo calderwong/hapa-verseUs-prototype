@@ -1,0 +1,72 @@
+{
+ "ok": false,
+ "script": "local",
+ "table": {
+  "none": true
+ },
+ "ms": 35699,
+ "about": {
+  "app": "Hapa Versus",
+  "version": "0.1.0",
+  "packaged": true,
+  "electron": "45.3.0",
+  "chrome": "156.0.8078.96",
+  "node": "24.22.2",
+  "platform": "win32",
+  "arch": "x64",
+  "network": "test-invite-mwzjc3e7",
+  "build": {
+   "source": "aabb62a0a99b541b5bad41f54a827cbedbf102b6",
+   "dirty": false,
+   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+   "builtAt": "2026-11-27T22:07:56.797Z",
+   "target": "win32-x64"
+  },
+  "peer": {
+   "runtime": "hapa-versus-peer-runtime/0.2.0",
+   "fingerprint": "a117-781a-d1c1"
+  },
+  "name": "Hapa Versus"
+ },
+ "dataInsideBundle": false,
+ "status": {
+  "state": "open",
+  "launch": {
+   "index": 1,
+   "length": 2,
+   "coreKey": "657a6deb06f8bfed"
+  },
+  "createdIdentity": false,
+  "versions": {
+   "node": "24.22.2",
+   "electron": "45.3.0",
+   "modules": "150"
+  },
+  "fingerprint": "a117-781a-d1c1"
+ },
+ "transport": {
+  "listened": true,
+  "transportKey": "b36de624e1b557e6",
+  "ms": 1771,
+  "destroyed": true
+ },
+ "page": null,
+ "bridge": {
+  "ok": true,
+  "state": "open",
+  "launch": {
+   "index": 1,
+   "length": 2,
+   "coreKey": "657a6deb06f8bfed"
+  },
+  "fingerprint": "a117-781a-d1c1",
+  "hasSecret": false
+ },
+ "refusedUnknownOp": "Error invoking remote method 'versus:call': Error: refused: unknown operation",
+ "ownerRoutes": [
+  503,
+  503,
+  503
+ ],
+ "console": []
+}

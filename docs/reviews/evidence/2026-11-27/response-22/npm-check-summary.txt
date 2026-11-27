@@ -1,0 +1,8 @@
+npm run check — source aabb62a0a99b541b5bad41f54a827cbedbf102b6 — 2026-11-27T22:14:08Z
+ℹ tests 192
+ℹ pass 192
+ℹ fail 0
+✔ rules tests (43546 ms)
+✔ two-process peer-verified match (3347 ms)
+✔ build (563 ms)
+exit 0

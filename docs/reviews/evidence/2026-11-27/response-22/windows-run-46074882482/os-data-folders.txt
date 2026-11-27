@@ -1,0 +1,35 @@
+%APPDATA%\Hapa Versus\GPUPersistentCache
+%APPDATA%\Hapa Versus\GrShaderCache
+%APPDATA%\Hapa Versus\Partitions
+%APPDATA%\Hapa Versus\ShaderCache
+%APPDATA%\Hapa Versus\state
+%APPDATA%\Hapa Versus\GPUPersistentCache\DawnGraphiteCache
+%APPDATA%\Hapa Versus\GPUPersistentCache\DawnGraphiteCache\H62Z7TRIVBH6RCQHOSP4HPDJ4SSXTHYD
+%APPDATA%\Hapa Versus\Partitions\versus
+%APPDATA%\Hapa Versus\Partitions\versus\blob_storage
+%APPDATA%\Hapa Versus\Partitions\versus\Cache
+%APPDATA%\Hapa Versus\Partitions\versus\Code Cache
+%APPDATA%\Hapa Versus\Partitions\versus\DawnGraphiteCache
+%APPDATA%\Hapa Versus\Partitions\versus\DawnWebGPUCache
+%APPDATA%\Hapa Versus\Partitions\versus\Extension State
+%APPDATA%\Hapa Versus\Partitions\versus\GPUCache
+%APPDATA%\Hapa Versus\Partitions\versus\Local Storage
+%APPDATA%\Hapa Versus\Partitions\versus\Network
+%APPDATA%\Hapa Versus\Partitions\versus\Session Storage
+%APPDATA%\Hapa Versus\Partitions\versus\Shared Dictionary
+%APPDATA%\Hapa Versus\Partitions\versus\blob_storage\687f04b1-9a40-4aee-9645-8b06bb350cd9
+%APPDATA%\Hapa Versus\Partitions\versus\Cache\Cache_Data
+%APPDATA%\Hapa Versus\Partitions\versus\Cache\No_Vary_Search
+%APPDATA%\Hapa Versus\Partitions\versus\Code Cache\electron-preload
+%APPDATA%\Hapa Versus\Partitions\versus\Code Cache\js
+%APPDATA%\Hapa Versus\Partitions\versus\Code Cache\wasm
+%APPDATA%\Hapa Versus\Partitions\versus\Local Storage\leveldb
+%APPDATA%\Hapa Versus\Partitions\versus\Shared Dictionary\cache
+%APPDATA%\Hapa Versus\state\test-smoke
+%APPDATA%\Hapa Versus\state\test-smoke\cores
+%APPDATA%\Hapa Versus\state\test-smoke\results
+%APPDATA%\Hapa Versus\state\test-smoke\cores\contact
+%APPDATA%\Hapa Versus\state\test-smoke\cores\launches
+%APPDATA%\Hapa Versus\state\test-smoke\cores\service-policy
+%APPDATA%\Hapa Versus\state\test-smoke\results\bundles
+%APPDATA%\Hapa Versus\state\test-smoke\results\quarantine

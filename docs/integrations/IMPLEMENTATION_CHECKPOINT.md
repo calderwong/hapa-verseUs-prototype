@@ -4,6 +4,10 @@
 records what is built, which owners it attaches to, the defaults CJ selected and what is still loose.
 CJ's acceptance is separate from technical completion and is not recorded here on his behalf.
 
+## Current candidate — Response 22, 27 November 2026
+
+[Response 22](../reviews/2026-11-27-implementation-response-22.md): friend.5 (`aabb62a`). Cancel/activation boundary, provider eligibility at use, honest relay attribution, installed Avatar journey, keychain-free macOS build, gated Windows qualification. Pending: relay carriage witness, consumer Windows download, two-home human game, Assignment 21.
+
 ## Current review and assignment — 27 November 2026
 
 [Review 20](../reviews/2026-11-27-connectivity-and-delivery-review-20.md) assesses `da8c9e0`; [Assignment 22](../reviews/2026-11-27-next-agent-assignment-22.md) continues unfinished Assignment 20 work. Contact proof/conflicts, committed provider imports, retired-provider exclusions and accepted cancellation are credited. Cancel during match initialization and time-expired provider reuse remain reproduced defects.

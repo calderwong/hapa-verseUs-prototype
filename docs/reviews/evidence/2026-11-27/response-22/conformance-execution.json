@@ -1,0 +1,202 @@
+{
+ "contractVersion": "0.1",
+ "application": "hapa-versus",
+ "source": {
+  "commit": "aabb62a0a99b541b5bad41f54a827cbedbf102b6",
+  "reviewedBase": "676c3352ce17a101161f7ad9b48aded9710d1c34"
+ },
+ "artifacts": [
+  {
+   "name": "Hapa-Versus-0.1.0-friend5-macOS-AppleSilicon.dmg",
+   "bytes": 124520594,
+   "sha256": "72e4fc0fe5fdd7255a79bd610e406c4c986ce29c95520824549b57550e6fa02e",
+   "release": "https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.5"
+  },
+  {
+   "name": "Hapa-Versus-0.1.0-friend5-Windows-x64.zip",
+   "bytes": 167156741,
+   "sha256": "c2ccca726b45d5c0a609dbbea1496064604c27de4ab3ddb109059306f36f1db9",
+   "release": "https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.5"
+  }
+ ],
+ "commands": {
+  "npmCheck": "npm run check \u2014 192/192 tests, peer match, build (evidence: npm-check-summary.txt)",
+  "windowsRun": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46074882482",
+  "relayWitnessRuns": [
+   "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46073160726",
+   "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46073663908"
+  ]
+ },
+ "date": "2026-11-27",
+ "environment": "macOS 26 arm64 (Node 25, Electron 45.3.0); Windows Server 2025 x64 (GitHub-hosted); Ubuntu (GitHub-hosted, network namespaces)",
+ "cases": [
+  {
+   "id": "HC-01",
+   "title": "Identity and key roles remain distinct",
+   "result": "pass",
+   "evidenceLevel": "controlled-native",
+   "evidence": "tests/hapa/contact.test.js \u2014 FT-09 root identity, contact core and transport keys distinct; rotation keeps hv1"
+  },
+  {
+   "id": "HC-02",
+   "title": "Namespace, resource and handshake isolation",
+   "result": "partial",
+   "evidenceLevel": "controlled-native",
+   "evidence": "Lobby HELLO/AUTH binds network, lobby protocol and Noise transport key (existing); no new cross-namespace fixture this iteration"
+  },
+  {
+   "id": "HC-03",
+   "title": "Newer snapshots do not inherit an older core proof",
+   "result": "pass",
+   "evidenceLevel": "controlled-model + native reopen",
+   "evidence": "tests/hapa/contact.test.js \u2014 HC-03: revision 1 snapshot-only before verification, older checkpoint kept unrefreshed, restart from cache, promotion on verification"
+  },
+  {
+   "id": "HC-04",
+   "title": "Same-revision contact conflicts are symmetric",
+   "result": "pass",
+   "evidenceLevel": "controlled-model",
+   "evidence": "tests/hapa/contact.test.js \u2014 HC-04: equal-revision snapshot/core conflict in both orders, matching state, stale completion fenced, fork/truncation refused"
+  },
+  {
+   "id": "HC-05",
+   "title": "Contact rollback, fork and freshness limits are explicit",
+   "result": "pass",
+   "evidenceLevel": "controlled-model",
+   "evidence": "rollback, fork, core replacement refused; freshness reported as last verified (evidenceOf); no unseen-revocation claim"
+  },
+  {
+   "id": "HC-06",
+   "title": "Retired providers cannot reappear through defaults",
+   "result": "pass",
+   "evidenceLevel": "controlled-native + runtime options",
+   "evidence": "tests/hapa/connectivity.test.js HC-06 (retired/disabled/expired never reappear; no-route) and V20-B (expiry after startup excluded at next join and relay use; no history append)"
+  },
+  {
+   "id": "HC-07",
+   "title": "Interrupted configuration imports resume or remain unapplied",
+   "result": "pass",
+   "evidenceLevel": "controlled-native (Hypercore)",
+   "evidence": "tests/hapa/connectivity.test.js \u2014 HC-07: interrupted after 1, 2, 3 durable records; restart completes once; partial batch retained unapplied"
+  },
+  {
+   "id": "HC-08",
+   "title": "Provider roles, overlays and provenance remain accurate",
+   "result": "pass",
+   "evidenceLevel": "controlled-native",
+   "evidence": "roles separated; overlay scope enforced; provenance per record (bundled-default, bundled-config, local-config-import, user)"
+  },
+  {
+   "id": "HC-09",
+   "title": "A failed preferred relay yields to eligible alternatives",
+   "result": "partial",
+   "evidenceLevel": "controlled-model + Linux namespace fixture",
+   "evidence": "selection: unconfirmed handouts are not failures, concurrent consumers rotate, suspicion needs >=3 handouts over >=30 s, exhaustion hands out nothing, expiry read at use (HC-09 test). Carriage NOT achieved: relay-witness runs 46073160726/46073663908 \u2014 peer-to-peer blocked, DHT discovery works, relay accepts sessions, but pairing never matches (one side per connection reaches the relay)"
+  },
+  {
+   "id": "HC-10",
+   "title": "Cancelled generations cannot mutate a later session",
+   "result": "pass",
+   "evidenceLevel": "controlled-native",
+   "evidence": "HC-10 (accepted-phase cancel) and V20-A (cancel during match initialization: nothing opens, no STARTED, one tombstone, restart not resumed; after activation Cancel answers connected)"
+  },
+  {
+   "id": "HC-11",
+   "title": "Uncertain durable append is reconciled without duplication",
+   "result": "pass",
+   "evidenceLevel": "controlled-native",
+   "evidence": "tests/hapa/recovery-native.test.js \u2014 delayed Ready append committing \u2192 committed once; app reconciliation from Response 18/19"
+  },
+  {
+   "id": "HC-12",
+   "title": "Discovery does not grant membership or unscoped replication",
+   "result": "not-executed",
+   "evidenceLevel": "-",
+   "evidence": "no new fixture this iteration"
+  },
+  {
+   "id": "HC-13",
+   "title": "Bounds and transport semantics are enforced",
+   "result": "partial",
+   "evidenceLevel": "existing tests",
+   "evidence": "frame/record bounds (existing admission tests); invitation and descriptor size bounds"
+  },
+  {
+   "id": "HC-14",
+   "title": "Native bridge authority stays scoped to the authorized renderer",
+   "result": "pass",
+   "evidenceLevel": "installed (macOS)",
+   "evidence": "renderer op allowlist and sender-frame checks (existing); installed Red frame runs only Harbor routes on its loopback origin"
+  },
+  {
+   "id": "HC-15",
+   "title": "Presence expires without creating durable authority",
+   "result": "not-executed",
+   "evidenceLevel": "-",
+   "evidence": "presence expiry unchanged; no new witness"
+  },
+  {
+   "id": "HC-16",
+   "title": "Application authority remains outside the transport layer",
+   "result": "pass",
+   "evidenceLevel": "source + native",
+   "evidence": "game rules, seats and results stay in the Versus adapter; transport layer carries no game authority"
+  },
+  {
+   "id": "HC-17",
+   "title": "Existing identities and archived signatures remain compatible",
+   "result": "pass",
+   "evidenceLevel": "controlled-native",
+   "evidence": "hvinv1 still parsed; archived signatures and v1 records kept (legacy v1 reservation released as unsupported)"
+  },
+  {
+   "id": "HC-18",
+   "title": "Yjs session IDs and update origins do not impersonate writers",
+   "result": "not-applicable",
+   "evidenceLevel": "-",
+   "evidence": "Flowcraft (Yjs) case"
+  },
+  {
+   "id": "HC-19",
+   "title": "Document convergence survives supported update order and duplication",
+   "result": "not-applicable",
+   "evidenceLevel": "-",
+   "evidence": "Flowcraft (Yjs) case"
+  },
+  {
+   "id": "HC-20",
+   "title": "Asset digests remain stable across storage locators",
+   "result": "not-executed",
+   "evidenceLevel": "-",
+   "evidence": "assets out of scope this iteration"
+  },
+  {
+   "id": "HC-21",
+   "title": "Retention and history claims match the retained inputs",
+   "result": "not-executed",
+   "evidenceLevel": "-",
+   "evidence": "retention claims unchanged"
+  },
+  {
+   "id": "HC-22",
+   "title": "Diagnostics describe measured evidence and redact secrets",
+   "result": "pass",
+   "evidenceLevel": "installed (macOS)",
+   "evidence": "Copy connection report: fingerprints only, drop reasons, relay attempts/cooldowns, evidence proof states; no keys/addresses/paths/invitations"
+  },
+  {
+   "id": "HC-23",
+   "title": "Installed applications demonstrate independent-network readiness",
+   "result": "pending",
+   "evidenceLevel": "installed (Windows Server 2025 VM via GitHub Actions; macOS 26 arm64)",
+   "evidence": "friend.5 Windows run 46074882482 (gated, all required reports ok) and Mac installed smoke/invite/Avatar journeys; no consumer download, no two-home human session"
+  },
+  {
+   "id": "HC-24",
+   "title": "Common contract and extraction remain versioned and reviewable",
+   "result": "partial",
+   "evidenceLevel": "repository",
+   "evidence": "a second application implementation exists (Flowcraft); shared code adoption/extraction not attempted or proven"
+  }
+ ]
+}

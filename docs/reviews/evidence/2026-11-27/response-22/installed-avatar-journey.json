@@ -3,10 +3,10 @@
  "exit": 0,
  "app": "<scratch>",
  "build": {
-  "source": "6eac8dbc663d5b8bd9a204d8cb30dbacc0818f4f",
+  "source": "aabb62a0a99b541b5bad41f54a827cbedbf102b6",
   "dirty": false,
   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
-  "builtAt": "2026-11-27T21:44:45.633Z",
+  "builtAt": "2026-11-27T22:07:36.552Z",
   "target": "darwin-arm64"
  },
  "ownerPackage": {
@@ -29,7 +29,7 @@
  },
  "steps": [
   {
-   "t": 2524,
+   "t": 2491,
    "step": "owner-absent",
    "gen": 1,
    "tick": 1,
@@ -45,7 +45,7 @@
    "renderer": null
   },
   {
-   "t": 9507,
+   "t": 9867,
    "step": "recovered",
    "gen": 1,
    "tick": 1,
@@ -67,7 +67,7 @@
    }
   },
   {
-   "t": 12207,
+   "t": 12573,
    "step": "orbit-45",
    "gen": 1,
    "tick": 1,
@@ -89,7 +89,7 @@
    }
   },
   {
-   "t": 14869,
+   "t": 15236,
    "step": "orbit-90",
    "gen": 1,
    "tick": 1,
@@ -101,7 +101,7 @@
    "performers": 1,
    "frames": 1,
    "drawn": true,
-   "visibility": 0.49701144514024564,
+   "visibility": 0.4970114451398657,
    "renderer": {
     "owner": "hapa-harbor-storefront",
     "packageId": "red-pose-art",
@@ -111,7 +111,7 @@
    }
   },
   {
-   "t": 18044,
+   "t": 18432,
    "step": "close",
    "gen": 1,
    "tick": 1,
@@ -133,7 +133,7 @@
    }
   },
   {
-   "t": 22788,
+   "t": 23188,
    "step": "after-ready",
    "gen": 1,
    "tick": 2,
