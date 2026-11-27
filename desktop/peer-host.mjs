@@ -17,7 +17,7 @@ port.on('message', async (e) => {
     const delay = (process.env.HAPA_VERSUS_PEER_DELAY_GENS === 'first' && m.gen > 1) ? 0 : Number(process.env.HAPA_VERSUS_PEER_DELAY_MS) || 0;
     if (delay > 0) await new Promise((r) => setTimeout(r, delay));
     try {
-      runtime = new PeerRuntime({ root: m.root, networkId: m.networkId, host: 'electron-utility', relayThrough: m.network?.relayThrough ?? null, relayEndpoints: m.network?.relayEndpoints ?? [], archives: m.network?.archives ?? [], log: (s) => process.stdout.write(`${s}\n`), onEvent: (event) => send({ type: 'event', event }) });
+      runtime = new PeerRuntime({ root: m.root, networkId: m.networkId, host: 'electron-utility', services: m.network?.services ?? null, forceRelay: process.env.HAPA_VERSUS_FORCE_RELAY === '1', log: (s) => process.stdout.write(`${s}\n`), onEvent: (event) => send({ type: 'event', event }) });
       const status = await runtime.open();
       send({ type: 'ready', status });
       // a player who joined the lobby before rejoins it (the saved online preference); local play never waits on it

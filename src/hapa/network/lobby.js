@@ -44,10 +44,14 @@ export class Lobby {
     if (this.swarm) return;
     this.state = 'connecting';
     const opts = { keyPair: this.o.transportKeyPair };
-    if (this.o.bootstrap) opts.bootstrap = this.o.bootstrap;
-    // relayThrough: a configured blind relay's public key, used when direct holepunching fails
-    // (`forceRelay` relays every connection; for proving the relay path only)
-    if (this.o.relayThrough) { const key = b4a.from(this.o.relayThrough, 'hex'); opts.relayThrough = (force) => (force || this.o.forceRelay ? key : null); }
+    if (this.o.bootstrap?.length) opts.bootstrap = this.o.bootstrap;
+    // relay candidates (N19-03): Hyperswarm asks for a relay when holepunching fails (`force`) and
+    // retries that peer; each request takes the next candidate not cooling down, so a first relay
+    // that fails does not hide a second reachable one. A relay observed carrying a connection (its
+    // published endpoint matched) is preferred for a while. `forceRelay` relays every connection
+    // (for proving the relay path only).
+    this.relays = (this.o.relays ?? []).filter((r) => /^[0-9a-f]{64}$/.test(r?.key ?? '')).slice(0, 16).map((r) => ({ ...r, buf: b4a.from(r.key, 'hex'), handed: 0, observed: 0 }));
+    if (this.relays.length) opts.relayThrough = (force) => (force || this.o.forceRelay ? this._nextRelay() : null);
     this.swarm = new Hyperswarm(opts);
     this.swarm.on('connection', (conn, info) => this._onConnection(conn, info));
     this.swarm.on('update', () => this._emitTransport());
@@ -55,6 +59,28 @@ export class Lobby {
     this._beat = setInterval(() => this._heartbeat(), HEARTBEAT_MS);
     this._sweep = setInterval(() => this._expire(), 5_000);
     lobby.flushed().then(() => { if (this.swarm) { this.state = 'online'; this._emitTransport(); } }).catch((e) => { this.state = 'failed'; this.error = e.message; this._emitTransport(); });
+  }
+
+  /** The next relay candidate: the one last observed working (for 10 min), else round-robin. */
+  _nextRelay() {
+    const t = now();
+    const good = this.relays.filter((r) => r.observed && t - r.observed < 600_000).sort((a, b) => b.observed - a.observed)[0];
+    const pick = good ?? this.relays[(this._relayTurn = ((this._relayTurn ?? -1) + 1) % this.relays.length)];
+    pick.handed++;
+    pick.lastHanded = t;
+    return pick.buf;
+  }
+
+  /** Observed path of a connection; a match against a relay's published endpoint marks that relay working. */
+  _path(ctx) {
+    const eps = (this.relays ?? []).filter((r) => r.endpoint);
+    const path = pathOf(ctx, eps.map((r) => r.endpoint));
+    if (path === 'relayed') {
+      const raw = ctx.conn?.rawStream, ep = `${raw?.remoteHost}:${raw?.remotePort}`;
+      const r = eps.find((x) => x.endpoint === ep || (x.endpoint.startsWith('*:') && ep.endsWith(x.endpoint.slice(1))));
+      if (r) { r.observed = now(); ctx.relayId = r.id; }
+    }
+    return path;
   }
 
   /** Join (or keep) a discovery topic; topics are versioned and namespaced by kind. */
@@ -77,7 +103,7 @@ export class Lobby {
   dial(transportKeyHex) { if (this.swarm && /^[0-9a-f]{64}$/.test(transportKeyHex)) this.swarm.joinPeer(b4a.from(transportKeyHex, 'hex')); }
 
   transport() {
-    return { state: this.state, error: this.error ?? null, connections: this.swarm?.connections.size ?? 0, peers: this.peers.size, relay: !!this.o.relayThrough };
+    return { state: this.state, error: this.error ?? null, connections: this.swarm?.connections.size ?? 0, peers: this.peers.size, relay: !!this.relays?.length, relays: (this.relays ?? []).map((r) => ({ id: r.id, label: r.label, handed: r.handed, observed: !!r.observed })), dht: this.swarm?.dht ? { bootstrapped: !!this.swarm.dht.bootstrapped, firewalled: this.swarm.dht.firewalled ?? null, randomized: this.swarm.dht.randomized ?? null } : null };
   }
 
   _emitTransport() { this.o.onPeer(null, 'transport'); }
@@ -101,16 +127,31 @@ export class Lobby {
     setTimeout(() => { if (!ctx.authed && !ctx.dropped) { this.log(`unauthenticated connection ${remoteKey.slice(0, 8)} timed out`); conn.destroy(); } }, 20_000);
   }
 
+  /** Bounded counters for diagnostics: incompatible peers, failed authentication (no addresses kept). */
+  _note(kind, detail) { const n = (this.notes ??= {})[kind] ??= { count: 0, last: null }; n.count++; n.last = { detail, at: new Date().toISOString() }; }
+
   _send(ctx, msg) {
     try { ctx.message.send(encodeFrame(msg, msg.t === 'start' ? MAX_START_FRAME : msg.t === 'result' || msg.t === 'resultBundle' ? MAX_RESULT_FRAME : MAX_FRAME)); return true; } catch (e) { this.log(`send ${msg.t} failed: ${e.message}`); return false; }
   }
 
   /** Resolve when a given player is authenticated (or reject after `ms`). */
-  waitForPlayer(playerId, ms = 30_000) {
+  waitForPlayer(playerId, ms = 30_000, signal = null, onAuthenticating = null) {
     if (this.peers.has(playerId)) return Promise.resolve(this.peers.get(playerId));
     return new Promise((resolve, reject) => {
       const t0 = Date.now();
-      const iv = setInterval(() => { const p = this.peers.get(playerId); if (p) { clearInterval(iv); resolve(p); } else if (Date.now() - t0 > ms || !this.swarm) { clearInterval(iv); reject(new Error('could not reach that player: they may be offline, or this network may block the peer transport')); } }, 250);
+      let said = false;
+      const iv = setInterval(() => {
+        const p = this.peers.get(playerId);
+        if (p) { clearInterval(iv); resolve(p); return; }
+        if (signal?.aborted) { clearInterval(iv); reject(Object.assign(new Error('cancelled'), { code: 'CANCELLED' })); return; }
+        // a connection is open and its HELLO/AUTH is under way (we cannot know whose until it authenticates)
+        if (!said && this.pending.size && onAuthenticating) { said = true; onAuthenticating(); }
+        if (Date.now() - t0 > ms || !this.swarm) {
+          clearInterval(iv);
+          const why = this.state !== 'online' ? 'discovery has not reached the network yet (it may be blocked here)' : said ? 'a connection opened but that player did not authenticate' : 'no connection to that player opened: they may be offline, or one of the networks blocks the peer transport';
+          reject(Object.assign(new Error(`could not reach that player: ${why}`), { code: 'UNREACHABLE' }));
+        }
+      }, 250);
     });
   }
 
@@ -135,7 +176,7 @@ export class Lobby {
   _handshake(ctx, msg) {
     if (msg.t === 'hello') {
       const pk = keyOfPlayer(msg.player?.participantId);
-      if (msg.network !== this.o.networkId || msg.v !== LOBBY_PROTOCOL) { this.log('hello for another network/version'); ctx.conn.destroy(); return; }
+      if (msg.network !== this.o.networkId || msg.v !== LOBBY_PROTOCOL) { this.log('hello for another network/version'); this._note('incompatible', msg.network !== this.o.networkId ? 'another network' : `lobby protocol ${String(msg.v).slice(0, 40)}`); ctx.conn.destroy(); return; }
       if (!pk || msg.player.publicKey !== pk || msg.player.signingKeyId !== `ed25519:${pk}`) { ctx.conn.destroy(); return; }
       if (msg.transportKey !== ctx.remoteKey) { this.log('hello transport key differs from the Noise key'); ctx.conn.destroy(); return; }
       if (typeof msg.nonce !== 'string' || !/^[0-9a-f]{64}$/.test(msg.nonce)) { ctx.conn.destroy(); return; }
@@ -149,7 +190,7 @@ export class Lobby {
       if (!ctx.hello) { ctx.pendingAuth = msg; return; }
       const h = ctx.hello;
       const body = { network: this.o.networkId, signer: h.player.participantId, signerTransport: ctx.remoteKey, peerTransport: b4a.toString(this.swarm.keyPair.publicKey, 'hex'), peerNonce: ctx.nonce };
-      if (!verifyBody('hello', body, msg.sig, h.player.publicKey)) { this.log('auth signature refused'); ctx.conn.destroy(); return; }
+      if (!verifyBody('hello', body, msg.sig, h.player.publicKey)) { this.log('auth signature refused'); this._note('authFailed', 'signature refused'); ctx.conn.destroy(); return; }
       if (h.player.participantId === this.o.identity.participantId) { ctx.conn.destroy(); return; } // our own key elsewhere
       ctx.authed = true;
       ctx.player = { participantId: h.player.participantId, publicKey: h.player.publicKey, signingKeyId: h.player.signingKeyId, identityKind: h.player.identityKind, label: sanitizeName(h.player.label) || 'Player' };
@@ -161,7 +202,7 @@ export class Lobby {
         (prev.standby ??= []).push(ctx);
         return;
       }
-      const peer = { playerId: ctx.player.participantId, player: ctx.player, fingerprint: fingerprintOf(ctx.player.publicKey), transportKey: ctx.remoteKey, compat: h.compat, compatible: h.compat === this.o.compat.id, presence: presenceOf(h.presence), lastSeen: now(), since: now(), ctx, path: pathOf(ctx, this.o.relayEndpoints), endpoint: null };
+      const peer = { playerId: ctx.player.participantId, player: ctx.player, fingerprint: fingerprintOf(ctx.player.publicKey), transportKey: ctx.remoteKey, compat: h.compat, compatible: h.compat === this.o.compat.id, presence: presenceOf(h.presence), lastSeen: now(), since: now(), ctx, path: this._path(ctx), endpoint: null };
       this.peers.set(peer.playerId, peer);
       this.o.onPeer(peer, 'joined');
       this.o.onConnection?.(peer, ctx.conn);
@@ -176,7 +217,7 @@ export class Lobby {
       const p = this.peers.get(ctx.player.participantId);
       if (p && p.ctx === ctx) {
         const next = (p.standby ?? []).find((c) => !c.dropped);
-        if (next) { p.ctx = next; p.standby = p.standby.filter((c) => c !== next && !c.dropped); p.transportKey = next.remoteKey; p.path = pathOf(next, this.o.relayEndpoints); p.lastSeen = now(); this.o.onConnection?.(p, next.conn); this.o.onPeer(p, 'presence'); return; }
+        if (next) { p.ctx = next; p.standby = p.standby.filter((c) => c !== next && !c.dropped); p.transportKey = next.remoteKey; p.path = this._path(next); p.lastSeen = now(); this.o.onConnection?.(p, next.conn); this.o.onPeer(p, 'presence'); return; }
         this.peers.delete(ctx.player.participantId); this.o.onPeer(p, 'lost');
       } else if (p?.standby) p.standby = p.standby.filter((c) => c !== ctx);
     }
@@ -195,7 +236,7 @@ export class Lobby {
 
   roster() {
     const t = now();
-    return [...this.peers.values()].map((p) => ({ playerId: p.playerId, label: p.player.label, fingerprint: p.fingerprint, availability: p.presence.availability, controller: p.presence.controller, role: p.presence.role, table: p.presence.table, compatible: p.compatible, seenMsAgo: t - p.lastSeen, connectedMs: t - p.since, path: p.path }));
+    return [...this.peers.values()].map((p) => ({ playerId: p.playerId, label: p.player.label, fingerprint: p.fingerprint, availability: p.presence.availability, controller: p.presence.controller, role: p.presence.role, table: p.presence.table, compatible: p.compatible, seenMsAgo: t - p.lastSeen, connectedMs: t - p.since, path: p.path, relay: p.ctx.relayId ?? null }));
   }
 
   async stop() {

@@ -210,6 +210,7 @@ export function onlinePanel(app) {
   const client = app.online ??= new OnlineClient(host);
   let view = null, busy = false, note = '';
   let sub = null; // { kind: 'profile', data } | { kind: 'records', data } — inline record views
+  let attempt = null, lastJoin = null, autoJoined = false;
   const openProfile = async (playerId, label) => {
     sub = { kind: 'profile', label, data: null }; draw();
     try { sub = { kind: 'profile', label, data: await client.call('profile.get', { playerId }) }; } catch (e) { sub = { kind: 'profile', label, error: hostMessage(e) }; }
@@ -243,11 +244,15 @@ export function onlinePanel(app) {
     if (sub) { box.replaceChildren(...rows, recordView(sub, { back: () => { sub = null; draw(); }, open: openProfile })); return; }
     if (!v?.joined) {
       if (v && !name.value) name.value = v.me.label;
-      rows.push(h('p', { class: 'small' }, 'Join the public lobby to find players. Your name, availability and finished match evidence (moves, choices and result — never chat, voice or music) are shared with the lobby so anyone can verify records.'),
-        h('div', { class: 'row' }, name, h('button', { class: 'primary', disabled: busy, onclick: () => act(() => client.call('lobby.join', { name: name.value })) }, 'Join lobby')));
+      // Play online starts discovery by itself with the bundled public defaults (Assignment 19, N19-02);
+      // after an explicit Leave lobby it waits for the player instead
+      if (v && !autoJoined && !v.leftByPlayer) { autoJoined = true; act(() => client.call('lobby.join', {})); }
+      rows.push(h('p', { class: 'small' }, busy ? 'Starting discovery…' : 'Find players on the public lobby. Your name, availability and finished match evidence (moves, choices and result — never chat, voice or music) are shared with the lobby so anyone can verify records.'),
+        h('div', { class: 'row' }, name, h('button', { class: 'primary', disabled: busy, onclick: () => act(() => client.call('lobby.join', { name: name.value })) }, 'Start discovery')));
     } else {
       const t = v.transport;
-      const conn = t.state === 'online' ? `Connected · ${t.peers} player${t.peers === 1 ? '' : 's'} in view` : t.state === 'connecting' ? 'Connecting to the lobby…' : t.state === 'failed' ? `Lobby unreachable: ${t.error ?? 'network error'} — local play still works` : 'Offline';
+      // discovery reaching the network is not proof that anyone in particular is reachable (N19-02)
+      const conn = t.state === 'online' ? (t.peers ? `Discovery running · ${t.peers} player${t.peers === 1 ? '' : 's'} connected and authenticated` : 'Discovery running · no other players connected yet') : t.state === 'connecting' ? 'Starting discovery…' : t.state === 'failed' ? `Discovery could not reach the network: ${t.error ?? 'network error'} — local play still works` : 'Offline';
       rows.push(h('div', { class: 'online-me row' },
         h('span', {}, h('b', {}, v.me.label), h('span', { class: 'dim small' }, ` · ${v.me.fingerprint}`)),
         h('span', { class: `avail ${v.me.availability}`, role: 'status' }, `${AVAIL_GLYPH[v.me.availability] ?? ''} ${AVAIL_TEXT[v.me.availability] ?? v.me.availability}`),
@@ -260,9 +265,15 @@ export function onlinePanel(app) {
         v.match.status === 'disputed' || v.match.unstarted ? h('button', { disabled: busy, title: v.match.unstarted ? 'The other player has not started this match (no Tick has been agreed). Leaving keeps its record; it is not a concession and records no loss.' : undefined, onclick: () => { if (window.confirm(v.match.unstarted ? 'Leave this match? No Tick has been agreed; it stays recorded as unstarted. This is not a concession.' : 'Leave this match? It stays recorded as unfinished/disputed; this is not a concession.')) act(() => client.call('match.leave', { matchId: v.match.matchId }).then(() => client.call('lobby.list'))); } }, 'Leave this match') : null));
       for (const f of v.finishing ?? []) rows.push(h('p', { class: 'small', role: 'status' }, `Finishing your match against ${f.opponent}: waiting for their final record. It is retrieved when they or an archive are reachable; nothing is replayed and no result is assumed.`));
       const r = v.reservation;
+      // the current connection attempt: its stage, Cancel while live, Retry after a failure (N19-02)
+      const at = attempt;
+      if (at && !(at.stage === 'connected' && !r)) rows.push(h('div', { class: `row attempt ${at.stage}`, role: at.stage === 'failed' ? 'alert' : 'status' },
+        h('span', {}, `${ATTEMPT_TEXT[at.stage] ?? at.stage}${at.target ? ` · player ${at.target}` : ''}${at.error && at.stage === 'failed' ? `: ${at.error}` : ''}`),
+        LIVE.has(at.stage) ? h('button', { disabled: busy, onclick: () => act(async () => { attempt = (await client.call('attempt.cancel', { attemptId: at.id })).attempt; return client.call('lobby.list'); }) }, 'Cancel') : null,
+        at.stage === 'failed' && lastJoin ? h('button', { disabled: busy, onclick: () => join(lastJoin) }, 'Retry') : null));
       if (!r && v.me.availability === 'available') rows.push(h('div', { class: 'row' },
         h('button', { disabled: busy, title: 'Anyone compatible in the lobby (or holding your invitation) can take the other seat; hosting is your consent', onclick: () => act(() => client.call('table.open')) }, 'Open a table'),
-        paste, h('button', { disabled: busy, onclick: () => act(() => client.call('invite.join', { code: paste.value.trim() })) }, 'Join by invitation')));
+        paste, h('button', { disabled: busy || (at && LIVE.has(at.stage)), onclick: () => join({ op: 'invite.join', args: { code: paste.value.trim() } }) }, 'Join by invitation')));
       if (r?.phase === 'open') rows.push(h('div', { class: 'row challenge-out' }, h('span', {}, 'Your table is open · the first compatible player to join takes the other seat'),
         h('button', { onclick: () => navigator.clipboard?.writeText(r.invite).then(() => { note = 'Invitation copied. It names your table and expires in 5 minutes; it does not get through firewalls by itself.'; draw(); }) }, 'Copy invitation'),
         h('button', { disabled: busy, onclick: () => act(() => client.call('table.close')) }, 'Close table')));
@@ -292,15 +303,44 @@ export function onlinePanel(app) {
             h('span', { class: 'who-line dim small' }, `${p.controller === 'bot' ? 'declared bot' : 'human'} · ${p.compatible ? recordText(p.record) : 'different rules build'}`)),
           h('button', { class: 'linkish', title: `Verified record and recent matches for ${p.label}`, onclick: () => openProfile(p.playerId, p.label) }, 'Profile'),
           p.table
-            ? h('button', { disabled: busy || !p.compatible || !!r || v.me.availability !== 'available', title: `Take the open seat at ${p.label}'s table`, onclick: () => act(() => client.call('table.join', { playerId: p.playerId, challengeId: p.table })) }, 'Join table')
+            ? h('button', { disabled: busy || !p.compatible || !!r || v.me.availability !== 'available', title: `Take the open seat at ${p.label}'s table`, onclick: () => join({ op: 'table.join', args: { playerId: p.playerId, challengeId: p.table } }) }, 'Join table')
             : h('button', { disabled: busy || !p.compatible || p.availability !== 'available' || !!r || v.me.availability !== 'available', title: !p.compatible ? 'This player uses a different rules build' : p.availability !== 'available' ? `${p.label} is ${AVAIL_TEXT[p.availability]}` : `Challenge ${p.label} with the bundled preset`, onclick: () => act(() => client.call('challenge', { playerId: p.playerId })) }, 'Challenge'))))
         : h('p', { class: 'dim small' }, t.state === 'online' ? 'No other players found yet. The list updates as players join.' : 'Looking for players…'));
     }
     if (note) rows.push(h('p', { class: 'warn small', role: 'alert' }, note));
+    // a redacted report the player can send without a terminal (N19-02): no keys, addresses, paths or invitations
+    rows.push(h('div', { class: 'row diag' },
+      h('button', { class: 'linkish', onclick: () => connectionReport().then((txt) => navigator.clipboard?.writeText(txt)).then(() => { note = 'Connection report copied. It contains no keys, addresses or invitations; paste it into a message to whoever is helping.'; draw(); }).catch((e) => { note = `Could not copy the report: ${hostMessage(e)}`; draw(); }) }, 'Copy connection report'),
+      h('button', { class: 'linkish', onclick: () => connectionReport().then((txt) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' })); a.download = `hapa-versus-connection-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.txt`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }) }, 'Save diagnostics')));
     box.replaceChildren(...rows);
+  };
+  /** A join through one attempt id; Retry makes a new attempt only after the last one ended. */
+  const join = (spec) => {
+    lastJoin = spec;
+    return act(async () => { const res = await client.call(spec.op, { ...spec.args, attemptId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}` }); attempt = res.attempt; return res.view; });
+  };
+  const connectionReport = async () => {
+    const [about, d] = await Promise.all([host.host('about').catch(() => null), client.call('diagnostics')]);
+    const lines = [
+      'Hapa Versus connection report (redacted: no keys, addresses, paths or invitations)',
+      `App ${about?.version ?? '?'} · ${about?.platform ?? '?'}-${about?.arch ?? '?'} · Electron ${about?.electron ?? '?'} · build ${about?.build?.source?.slice(0, 12) ?? 'development'}${about?.build?.dirty ? ' (modified)' : ''}`,
+      `Network ${d.network} · rules ${d.compat.rules} · profile ${d.compat.profile} · ${d.compat.online} · runtime ${d.runtime}`,
+      `Me ${d.me.fingerprint} · contact core ${d.me.contact?.core ?? '-'} seq ${d.me.contact?.seq ?? '-'} · launches ${d.launch ?? '-'}`,
+      `Discovery ${d.discovery.state}${d.discovery.error ? ` (${d.discovery.error})` : ''} · ${d.discovery.connections} connections · ${d.discovery.players} authenticated players · DHT ${d.discovery.dht ? `bootstrapped ${d.discovery.dht.bootstrapped}, firewalled ${d.discovery.dht.firewalled}, randomized NAT ${d.discovery.dht.randomized}` : 'off'}`,
+      `Services: mode ${d.services?.mode} (${d.services?.overlay}) · ${d.services?.services?.filter((s) => s.state === 'active').map((s) => `${s.role} ${s.label} [${s.provenance}]`).join(', ') || 'none'}${d.services?.warnings?.length ? ` · ${d.services.warnings.join('; ')}` : ''}${d.services?.errors?.length ? ` · refused: ${d.services.errors.join('; ')}` : ''}`,
+      `Relays: ${d.discovery.relays.length ? d.discovery.relays.map((x) => `${x.label} tried ${x.handed}${x.observed ? ', observed carrying' : ''}`).join('; ') : 'none configured'}`,
+      `Attempt: ${d.attempt ? `${d.attempt.id} ${d.attempt.kind} ${d.attempt.stage}${d.attempt.error ? ` — ${d.attempt.error}` : ''} (${Math.round(d.attempt.elapsedMs / 1000)} s)` : 'none'}`,
+      `Reservation: ${d.reservation ? `${d.reservation.phase} as ${d.reservation.role}${d.reservation.stalled ? ', stalled' : ''}` : 'none'} · Match: ${d.match ? `${d.match.status}, ${d.match.connection}, seat ${d.match.seat}, ${d.match.ticks} Ticks agreed` : 'none'} · finishing ${d.finishing}`,
+      `Players seen: ${d.roster.length ? d.roster.map((p) => `${p.fingerprint} ${p.compatible ? 'compatible' : 'DIFFERENT BUILD'} ${p.availability} path ${p.path}`).join('; ') : 'none'}`,
+      `Contacts: ${d.contacts ? `${d.contacts.known} known, ${d.contacts.coreVerified} core-verified${d.contacts.rejected.length ? `, rejected: ${d.contacts.rejected.map((x) => x.reason).join('; ')}` : ''}` : '-'}`,
+      `Counters: ${Object.entries(d.notes ?? {}).map(([k, x]) => `${k} ${x.count} (last: ${x.last?.detail})`).join('; ') || 'none'}`,
+      `At ${d.at}`,
+    ];
+    return lines.join('\n');
   };
   const unsub = client.on((e) => {
     if (!box.isConnected) { unsub(); clearInterval(timer); return; }
+    if (e.type === 'lobby' && e.kind === 'attempt') attempt = e.attempt;
     if (e.type === 'lobby') { if (e.kind === 'challengeDeclined') note = `${e.by} ${e.reason === 'busy' ? 'is busy' : e.reason === 'incompatible' ? 'uses a different rules build' : 'declined'}.`; if (e.kind === 'startFailed') note = `The match could not start: ${e.reason}`; if (e.kind === 'setupStalled') note = ''; refresh(); }
     if (e.type === 'match' && e.kind === 'opened') { unsub(); clearInterval(timer); app.resumeOnline(); }
   });
@@ -309,6 +349,8 @@ export function onlinePanel(app) {
   return box;
 }
 
+const ATTEMPT_TEXT = { 'starting-discovery': 'Starting discovery…', 'finding-player': 'Looking for the other player…', authenticating: 'Checking who answered…', negotiating: 'Agreeing the table…', connected: 'Connected — starting the match', failed: 'Could not connect', cancelled: 'Connection attempt cancelled' };
+const LIVE = new Set(['starting-discovery', 'finding-player', 'authenticating', 'negotiating']);
 const hostMessage = (e) => String(e?.message ?? e).replace(/^Error invoking remote method '[^']+': (Error: )?/, '');
 const SYNC_TEXT = {
   'archive-unavailable': 'No archive reachable now — showing only results verified on this computer.',

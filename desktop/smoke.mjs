@@ -3,13 +3,13 @@
  * HAPA_VERSUS_SMOKE_OUT names an absolute directory, and writes only there.
  *
  *  - `local`  : a rendered local human/bot match, native store/transport/bridge checks.
- *  - `online` : the real lobby and table UI driven by DOM clicks — Join lobby, Challenge (or Accept),
+ *  - `online` : the real lobby and table UI driven by DOM clicks — automatic discovery, Challenge (or Accept),
  *               a planned order and Ready each Tick, response choices — against another peer, with
  *               each Tick's view replay compared to the runtime's agreed receipt. Optional renderer
  *               reload mid-match (HAPA_VERSUS_SMOKE_RELOAD_AT=<tick>).
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { join, isAbsolute } from 'node:path';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -68,12 +68,33 @@ async function online(o) {
   const resumed = active ? await until(o, `!!window.__versus?.onlineMatch`, 60_000) : await until(o, `!!document.querySelector('.online-panel')`, 30_000);
   const inMatch = await js(o, `!!window.__versus?.onlineMatch`);
   if (!inMatch) {
-    const joinBtn = await until(o, `(() => { const b = [...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join lobby'); return b ? true : !!document.querySelector('.online-me'); })()`, 30_000);
-    await js(o, `(() => { const i = document.querySelector('.online-panel input[type=text]'); const b = [...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join lobby'); if (i && b) { i.value = ${JSON.stringify(name)}; i.dispatchEvent(new Event('input')); b.click(); return 'clicked'; } return 'already'; })()`);
-    note({ step: 'join', joinBtn: !!joinBtn });
+    // Play online starts discovery by itself (Assignment 19); the display name is set through the
+    // same renderer operation the name field uses, before the roster sees it
+    if (name) await o.callPeer('setDisplayName', { name }, 10_000).catch(() => null);
+    const joinBtn = await until(o, `!!document.querySelector('.online-me')`, 45_000);
+    note({ step: 'join', auto: !!joinBtn });
     await until(o, `!!document.querySelector('.online-me')`, 30_000);
     await shot(o, '01-lobby');
-    if (opponent) {
+    const inviteOut = process.env.HAPA_VERSUS_SMOKE_INVITE_OUT, inviteIn = process.env.HAPA_VERSUS_SMOKE_INVITE_IN;
+    if (inviteOut && isAbsolute(inviteOut)) {
+      // host: Open a table, Copy invitation (the real buttons), hand the copied text over through a file
+      await until(o, `!![...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Open a table' && !b.disabled)`, 60_000);
+      await js(o, `[...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Open a table').click()`);
+      const code = await until(o, `(async () => { const b = [...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Copy invitation'); if (!b) return null; b.click(); await new Promise(r => setTimeout(r, 300)); return (await window.hapaDesktop.call('lobby.list')).reservation?.invite ?? null; })()`, 30_000);
+      writeFileSync(inviteOut, String(code));
+      note({ step: 'invitationCopied', version: String(code).slice(0, 6) });
+    } else if (inviteIn && isAbsolute(inviteIn)) {
+      // joiner: paste the invitation and press Join by invitation; then follow the attempt stages
+      let text = null;
+      for (let i = 0; i < 240 && !text; i++) { try { text = readFileSync(inviteIn, 'utf8').trim() || null; } catch { /* not yet */ } if (!text) await sleep(500); }
+      if (!text) return { ok: false, script: 'online', error: 'no invitation arrived', log };
+      await js(o, `(() => { const i = [...document.querySelectorAll('.online-panel input[type=text]')].find(x => /invitation/.test(x.placeholder)); i.value = ${JSON.stringify(text)}; i.dispatchEvent(new Event('input')); [...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join by invitation').click(); })()`);
+      const stages = [];
+      const t1 = Date.now();
+      while (Date.now() - t1 < 120_000) { const st = await js(o, `document.querySelector('.online-panel .attempt')?.className.split(' ').pop() ?? (window.__versus?.onlineMatch ? 'opened' : null)`); if (st && stages.at(-1) !== st) stages.push(st); if (st === 'opened' || st === 'failed') break; await sleep(250); }
+      note({ step: 'joinedByInvitation', stages });
+      if (stages.at(-1) === 'failed') return { ok: false, script: 'online', error: 'invitation attempt failed', log };
+    } else if (opponent) {
       const seen = await until(o, `(() => { const li = [...document.querySelectorAll('.roster-online li')].find(li => li.querySelector('.who b')?.textContent === ${JSON.stringify(opponent)}); const b = li && [...li.querySelectorAll('button')].find((x) => x.textContent === 'Challenge'); return b && !b.disabled ? true : null; })()`, 180_000, 500);
       note({ step: 'opponentSeen', ok: !!seen });
       if (!seen) return { ok: false, script: 'online', error: `opponent ${opponent} not available`, log };
@@ -161,9 +182,8 @@ async function observe(o) {
   const status = await o.peer.ready;
   await loaded(o);
   // the panel renders its Join button once the lobby state arrives: wait for it before clicking
-  await until(o, `!![...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join lobby') || !!document.querySelector('.online-me')`, 30_000);
-  await js(o, `(() => { const i = document.querySelector('.online-panel input[type=text]'); const b = [...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Join lobby'); if (i && b) { i.value = ${JSON.stringify(process.env.HAPA_VERSUS_SMOKE_NAME || 'Olu')}; i.dispatchEvent(new Event('input')); b.click(); } })()`);
-  await until(o, `!!document.querySelector('.online-me')`, 30_000);
+  await o.callPeer('setDisplayName', { name: process.env.HAPA_VERSUS_SMOKE_NAME || 'Olu' }, 10_000).catch(() => null);
+  await until(o, `!!document.querySelector('.online-me')`, 45_000); // discovery starts by itself
   const archive = await until(o, `(() => { const p = [...document.querySelectorAll('.online-panel p')].find(p => /Result archive: .* connected/.test(p.textContent)); return p ? p.textContent : null; })()`, 120_000, 500);
   await shot(o, '01-observer-lobby');
   await js(o, `[...document.querySelectorAll('.online-panel button')].find(b => b.textContent === 'Player records').click()`);

@@ -177,17 +177,16 @@ async function whenReady() {
 }
 
 /**
- * Public network configuration: the bundled desktop/network.json, optionally overridden by an
- * operator-provided userData/network.json (relay keys and endpoints, archive keys). No secrets.
+ * Public network configuration (N19-03): the bundled desktop/network.json section and, when the
+ * player or an operator supplied one, userData/network.json. Both go unfiltered to the peer runtime,
+ * which validates them as typed service descriptors, records accepted decisions in its append-only
+ * service history and derives the effective bootstrap/relay/archive policy. No secrets live here.
  */
 function networkConfig() {
   const read = (f) => { try { return JSON.parse(readFileSync(f, 'utf8')); } catch { return null; } };
-  const bundled = read(join(appRoot, 'desktop', 'network.json'))?.networks?.[NETWORK_ID] ?? {};
-  const local = read(join(app.getPath('userData'), 'network.json'))?.networks?.[NETWORK_ID] ?? {};
-  const relays = [...(local.relays ?? []), ...(bundled.relays ?? [])].filter((r) => /^[0-9a-f]{64}$/.test(r?.key ?? ''));
-  // configured directory/archive services: their player identity and dialable transport key (R16-03)
-  const archives = [...(local.archives ?? []), ...(bundled.archives ?? [])].filter((a) => /^hv1:[0-9a-f]{64}$/.test(a?.player ?? '') && /^[0-9a-f]{64}$/.test(a?.transport ?? '')).map((a) => ({ player: a.player, transport: a.transport, label: typeof a.label === 'string' ? a.label.slice(0, 40) : 'Archive' }));
-  return { relayThrough: relays[0]?.key ?? null, relayEndpoints: relays.flatMap((r) => (typeof r.endpoint === 'string' ? [r.endpoint] : [])), relays: relays.length, archives };
+  const bundled = read(join(appRoot, 'desktop', 'network.json'))?.networks?.[NETWORK_ID] ?? null;
+  const local = read(join(app.getPath('userData'), 'network.json'))?.networks?.[NETWORK_ID] ?? null;
+  return { services: { bundled, local } };
 }
 
 function callPeer(op, args, timeoutMs = 20_000) {
@@ -207,13 +206,16 @@ function broadcast(event) { if (win && !win.isDestroyed()) win.webContents.send(
 
 // Renderer → host operations. The renderer names an operation; the host validates the sender and
 // the operation name, and the runtime validates arguments, seat and generation.
-const RENDERER_OPS = new Set(['getStatus', 'setDisplayName', 'probeTransport', 'lobby.join', 'lobby.leave', 'lobby.list', 'setAvailability', 'challenge', 'challenge.cancel', 'challenge.respond', 'invite.join', 'table.open', 'table.close', 'table.join', 'setup.retry', 'setup.leave', 'match.get', 'match.draft', 'match.ready', 'match.choice', 'match.leave', 'match.resume', 'history.list', 'profile.get', 'results.list', 'results.sync', 'directory.list']);
+const LONG_OPS = new Set(['results.sync', 'profile.get', 'directory.list', 'lobby.join']);
+const RENDERER_OPS = new Set(['getStatus', 'setDisplayName', 'probeTransport', 'lobby.join', 'lobby.leave', 'lobby.list', 'setAvailability', 'challenge', 'challenge.cancel', 'challenge.respond', 'invite.join', 'attempt.cancel', 'attempt.get', 'diagnostics', 'table.open', 'table.close', 'table.join', 'setup.retry', 'setup.leave', 'match.get', 'match.draft', 'match.ready', 'match.choice', 'match.leave', 'match.resume', 'history.list', 'profile.get', 'results.list', 'results.sync', 'directory.list']);
 ipcMain.handle('versus:call', async (e, msg) => {
   const frameUrl = e.senderFrame?.url ?? '';
   if (!frameUrl.startsWith(`${ORIGIN}/`) || e.senderFrame !== e.sender.mainFrame) throw new Error('refused: not the game page');
   if (!msg || typeof msg.op !== 'string' || !RENDERER_OPS.has(msg.op)) throw new Error('refused: unknown operation');
   await whenReady();
-  return callPeer(msg.op, msg.args ?? {});
+  // deadlines match the runtime's own bounds (N19-02): joins return at once with an attempt; archive
+  // lookups ask each archive with their own 15 s bounds; everything else is local and quick
+  return callPeer(msg.op, msg.args ?? {}, LONG_OPS.has(msg.op) ? 120_000 : 20_000);
 });
 ipcMain.handle('versus:host', async (e, msg) => {
   const frameUrl = e.senderFrame?.url ?? '';

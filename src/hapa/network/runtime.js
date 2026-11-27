@@ -22,6 +22,8 @@ import { HeuristicBot } from '../controllers/heuristic-bot.js';
 import { ResultIndex } from './result-index.js';
 import { buildBundle, verifyBundle, resultKey } from './results.js';
 import { feedPrefix } from './prefix.js';
+import { ServicePolicy } from './services.js';
+import { OwnContact, ContactBook, checkSnapshot } from './contact.js';
 
 export const RUNTIME_VERSION = 'hapa-versus-peer-runtime/0.2.0';
 const OFFER_MS = 120_000;
@@ -31,14 +33,19 @@ const now = () => Number(process.hrtime.bigint() / 1_000_000n);
 
 /** Parse and verify a pasted invitation capsule (it carries no secret and no loopback address). */
 export function parseInvite(code) {
-  const m = typeof code === 'string' && code.trim().match(/^hvinv1\.([A-Za-z0-9_-]{40,2000})$/);
-  if (!m) throw new Error('that is not a Hapa Versus invitation');
+  // hvinv1 (archived meaning, still read) and hvinv2 (adds a signed contact snapshot); bounded size
+  const m = typeof code === 'string' && code.trim().match(/^hvinv([12])\.([A-Za-z0-9_-]{40,4000})$/);
+  if (!m) throw new Error('that is not a Hapa Versus invitation (it should start with hvinv)');
   let c;
-  try { c = JSON.parse(b4a.toString(b4a.from(m[1], 'base64url'))); } catch { throw new Error('the invitation is damaged'); }
+  try { c = JSON.parse(b4a.toString(b4a.from(m[2], 'base64url'))); } catch { throw new Error('the invitation is damaged: copy the whole text again'); }
   const { sig, ...capsule } = c ?? {};
   const pk = keyOfPlayer(capsule.player);
-  if (capsule.v !== 1 || !pk || !/^[0-9a-f]{64}$/.test(capsule.transport ?? '') || !/^[0-9a-f]{32}$/.test(capsule.challengeId ?? '') || !Number.isSafeInteger(capsule.expiresAt)) throw new Error('the invitation is incomplete');
+  if (capsule.v !== Number(m[1]) || !pk || !/^[0-9a-f]{64}$/.test(capsule.transport ?? '') || !/^[0-9a-f]{32}$/.test(capsule.challengeId ?? '') || !Number.isSafeInteger(capsule.expiresAt)) throw new Error('the invitation is incomplete: copy the whole text again');
   if (!verifyBody('control', { kind: 'invite', ...capsule }, sig, pk)) throw new Error('the invitation signature does not match its player');
+  if (capsule.v === 2) {
+    const err = checkSnapshot(capsule.contact);
+    if (err || capsule.contact.subject !== capsule.player) throw new Error(`the invitation's contact information is not valid (${err ?? 'another player'})`);
+  }
   return capsule;
 }
 
@@ -83,6 +90,14 @@ export class PeerRuntime {
     this.reservation = readJson(this.store.path('reservation.json'), null);
     this.tombstones = readJson(this.store.path('tombstones.json'), { attempts: {} });
     this.launch = await this._recordLaunch();
+    // the effective connectivity policy from the append-only local service history (N19-03)
+    this.services = new ServicePolicy({ dir: this.store.path('cores', 'service-policy'), bundled: this.o.services?.bundled ?? null, local: this.o.services?.local ?? null, override: this.o.bootstrap ? { bootstrap: this.o.bootstrap } : null, log: this.log });
+    this.policy = await this.services.open();
+    // signed contact history (N19-04): this player's own single-writer core and verified knowledge of others
+    this.contact = await new OwnContact({ dir: this.store.path('cores', 'contact'), identity: this.identity, transport: b4a.toString(this._transportKeyPair().publicKey, 'hex'), log: this.log }).open();
+    this.contacts = new ContactBook({ dir: this.store.path('contacts'), storeFile: this.store.path('contacts.json'), self: this.identity.participantId, log: this.log });
+    const known = new Set(this.archives.map((a) => a.player));
+    for (const a of this.policy.archives) if (!known.has(a.player)) this.archives.push(a);
     this.compat = compatibility();
     this.results = new ResultIndex(this.store.path('results'));
     this.outbox = readJson(this.store.path('outbox.json'), {});
@@ -151,7 +166,10 @@ export class PeerRuntime {
   }
   _presence() { const r = this.reservation; return { availability: r?.phase === 'open' ? 'available' : this.availability(), controller: this.controllerKind, label: this.identity.label, role: this.role, table: r?.phase === 'open' ? r.challengeId : null }; }
   _saveSettings() { writeJsonAtomic(this.store.path('settings.json'), this.settings); }
-  _reserve(r) { this.reservation = r; if (r) writeJsonAtomic(this.store.path('reservation.json'), r); else writeJsonAtomic(this.store.path('reservation.json'), null); this.lobby?.announce(); this.emit({ type: 'lobby', kind: 'reservation', reservation: this._publicReservation() }); }
+  _reserve(r) {
+    const prev = this.reservation;
+    if (!r && prev && this.attempt?.challengeId === prev.challengeId) this._setStage(this.attempt, 'failed', 'the table setup ended before the match started');
+    this.reservation = r; if (r) writeJsonAtomic(this.store.path('reservation.json'), r); else writeJsonAtomic(this.store.path('reservation.json'), null); this.lobby?.announce(); this.emit({ type: 'lobby', kind: 'reservation', reservation: this._publicReservation() }); }
   _publicReservation() { const r = this.reservation; return r ? { phase: r.phase, role: r.role, challengeId: r.challengeId, matchId: r.matchId ?? null, opponent: r.opponentLabel ?? null, invite: r.phase === 'open' ? r.invite : undefined, stalled: !!r.stalled } : null; }
 
   // --- lobby ----------------------------------------------------------------------------------
@@ -160,7 +178,7 @@ export class PeerRuntime {
     if (!this.lobby) {
       this.lobby = new Lobby({
         networkId: this.networkId, identity: this.identity, transportKeyPair: this._transportKeyPair(), compat: this.compat,
-        presence: () => this._presence(), bootstrap: this.o.bootstrap, relayThrough: this.o.relayThrough, forceRelay: this.o.forceRelay, relayEndpoints: this.o.relayEndpoints ?? [], log: this.log,
+        presence: () => this._presence(), bootstrap: this.policy.bootstrap, relays: this._relayCandidates(), forceRelay: this.o.forceRelay, log: this.log,
         onPeer: (p, ev) => this._onPeer(p, ev),
         onMessage: (p, msg) => this._onMessage(p, msg).catch((e) => this.log(`message ${msg.t}: ${e.message}`)),
         onConnection: (p, conn) => this._onConnection(p, conn),
@@ -172,13 +190,14 @@ export class PeerRuntime {
       // configured directory/archive services are dialled directly by their transport key (R16-03)
       for (const a of this.archives) this.lobby.dial(a.transport);
     }
-    if (!this.settings.joined) { this.settings.joined = true; this._saveSettings(); }
+    if (!this.settings.joined || this.settings.leftLobby) { this.settings.joined = true; this.settings.leftLobby = false; this._saveSettings(); }
     this._sweepTimer ??= setInterval(() => this._sweepOffers(), 2_000);
     return this.lobbyView();
   }
 
   async leaveLobby() {
     this.settings.joined = false;
+    this.settings.leftLobby = true; // Play online then waits for the player instead of rejoining by itself
     this._saveSettings();
     clearInterval(this._sweepTimer); this._sweepTimer = null;
     const l = this.lobby; this.lobby = null;
@@ -189,12 +208,41 @@ export class PeerRuntime {
 
   lobbyView() {
     return {
-      joined: !!this.lobby, transport: this.lobby?.transport() ?? { state: 'off' }, me: { ...publicPlayer(this.identity), fingerprint: fingerprintOf(this.identity.publicKey), availability: this.availability(), manual: this.settings.availability, controller: this.controllerKind },
+      joined: !!this.lobby, leftByPlayer: !!this.settings.leftLobby, transport: this.lobby?.transport() ?? { state: 'off' }, me: { ...publicPlayer(this.identity), fingerprint: fingerprintOf(this.identity.publicKey), availability: this.availability(), manual: this.settings.availability, controller: this.controllerKind },
       roster: (this.lobby?.roster() ?? []).map((r) => ({ ...r, record: r.role === 'archive' ? null : recordLine(this.results.stats(r.playerId)) })), record: recordLine(this.results.stats(this.identity.participantId)), incoming: [...this.incoming.values()].map((x) => ({ challengeId: x.body.challengeId, from: x.body.from, label: x.fromLabel, fingerprint: fingerprintOf(keyOfPlayer(x.body.from)), controller: x.body.controller, expiresInMs: Math.max(0, OFFER_MS - (now() - x.receivedAt)) })),
       services: this._services(), reservation: this._publicReservation(), compat: { id: this.compat.id.slice(7, 19), profileId: this.compat.profileId, rules: this.compat.rulesImplementation.slice(7, 19) },
       match: this.match ? { matchId: this.match.matchId, status: this.match.status, seat: this.match.seat, opponent: this.match.opponent.label, unstarted: this.match.history.length === 0 && !(this.match.remote?.length > 0) } : null,
       finishing: [...this.finishing.values()].filter((m) => !m.closed && m.status === 'finishing').map((m) => ({ matchId: m.matchId, opponent: m.opponent.label })),
     };
+  }
+
+  /**
+   * A redacted connection report for support (N19-02): build/protocol compatibility, discovery and
+   * policy state with provenance, the current attempt and bounded counters. No keys, tokens, raw
+   * addresses, paths or invitation payloads — players appear only as short fingerprints.
+   */
+  diagnostics() {
+    const t = this.lobby?.transport() ?? { state: 'off' };
+    return {
+      schema: 'hapa-versus-diagnostics/v1', at: new Date().toISOString(), runtime: RUNTIME_VERSION, network: this.networkId,
+      compat: { id: this.compat.id.slice(7, 19), profile: this.compat.profileId, rules: this.compat.rulesImplementation.slice(7, 19), online: ONLINE_PROTOCOL },
+      me: { fingerprint: fingerprintOf(this.identity.publicKey), contact: this.contact ? { core: `${this.contact.key.slice(0, 8)}…`, seq: this.contact.descriptor().seq, records: this.contact.records.length } : null },
+      contacts: this.contacts?.summary() ?? null,
+      discovery: { state: t.state, error: t.error ?? null, connections: t.connections ?? 0, players: t.peers ?? 0, dht: t.dht ?? null, relays: t.relays ?? [] },
+      services: this.services?.summary() ?? null,
+      roster: (this.lobby?.roster() ?? []).slice(0, 20).map((p) => ({ fingerprint: p.fingerprint, compatible: p.compatible, availability: p.availability, path: p.path, relay: p.relay ? 'configured relay' : null, role: p.role })),
+      attempt: this._publicAttempt(), reservation: this._publicReservation() ? { phase: this.reservation.phase, role: this.reservation.role, stalled: !!this.reservation.stalled } : null,
+      match: this.match ? { status: this.match.status, connection: this.match.connection, seat: this.match.seat, ticks: this.match.history.length } : null,
+      finishing: this.finishing.size, notes: this.lobby?.notes ?? {}, launch: this.launch?.index ?? null,
+    };
+  }
+
+  /** Relay candidates in policy order: accepted services, then a key passed by a tool (legacy option). */
+  _relayCandidates() {
+    const out = [...(this.policy?.relays ?? [])];
+    if (typeof this.o.relayThrough === 'string' && /^[0-9a-f]{64}$/.test(this.o.relayThrough) && !out.some((r) => r.key === this.o.relayThrough)) out.push({ id: 'tool-relay', key: this.o.relayThrough, endpoint: this.o.relayEndpoints?.[0] ?? null, label: 'relay (tool option)' });
+    for (const [i, ep] of (this.o.relayEndpoints ?? []).entries()) if (out[i] && !out[i].endpoint) out[i].endpoint = ep;
+    return out;
   }
 
   /** Configured and opportunistic archives with what is actually observed about each. */
@@ -208,6 +256,7 @@ export class PeerRuntime {
 
   _onPeer(peer, ev) {
     if (ev === 'joined' && this.reservation) this._resendStart(peer);
+    if (ev === 'joined' && this.contact) this.lobby.send(peer.playerId, { t: 'contact', snapshot: this.contact.snapshot() });
     if (ev === 'joined' && peer.presence.role === 'archive') this._flushOutbox(peer);
     if ((ev === 'lost' || ev === 'replaced') && this.match && peer?.playerId === this.match.opponent.participantId && ev === 'lost') { this.match.detached(); this.lobby?.dial(peer.transportKey); this.lobby?.announce(); }
     this.emit({ type: 'lobby', kind: ev === 'transport' ? 'transport' : 'roster', roster: this.lobby?.roster() ?? [], transport: this.lobby?.transport() });
@@ -219,6 +268,7 @@ export class PeerRuntime {
    */
   _onConnection(peer, conn) {
     let any = false;
+    try { this.contact?.core.replicate(conn); } catch { /* replication already attached */ }
     for (const m of new Set([this.match, ...this.finishing.values()])) if (m && !m.closed && peer.playerId === m.opponent.participantId) { m.attach(conn); any = true; }
     if (any) this.lobby?.announce();
   }
@@ -301,8 +351,9 @@ export class PeerRuntime {
     if (this.reservation || this.match?.status === 'active') throw Object.assign(new Error('you already have a match or a pending challenge'), { code: 'BUSY' });
     const body = { kind: 'challenge', network: this.networkId, challengeId: randomHex(16), from: this.identity.participantId, to: null, compat: this.compat.id, controller: this.controllerKind, seats: { A: this.identity.participantId, B: null }, offerMs: TABLE_MS };
     const sig = signBody('control', body, this.identity);
-    const capsule = { v: 1, network: this.networkId, player: this.identity.participantId, transport: b4a.toString(this.lobby.swarm.keyPair.publicKey, 'hex'), challengeId: body.challengeId, offer: fingerprint(body), expiresAt: Date.now() + TABLE_MS };
-    const invite = `hvinv1.${b4a.toString(b4a.from(JSON.stringify({ ...capsule, sig: signBody('control', { kind: 'invite', ...capsule }, this.identity) })), 'base64url')}`;
+    // v2 (N19-04): the v1 table/network/expiry binding plus a compact signed contact snapshot
+    const capsule = { v: 2, network: this.networkId, player: this.identity.participantId, transport: b4a.toString(this.lobby.swarm.keyPair.publicKey, 'hex'), challengeId: body.challengeId, offer: fingerprint(body), expiresAt: Date.now() + TABLE_MS, contact: this.contact.snapshot() };
+    const invite = `hvinv2.${b4a.toString(b4a.from(JSON.stringify({ ...capsule, sig: signBody('control', { kind: 'invite', ...capsule }, this.identity) })), 'base64url')}`;
     this._reserve({ phase: 'open', role: 'challenger', challengeId: body.challengeId, challenge: body, challengeSig: sig, opponent: null, opponentLabel: null, invite, localAt: now() });
     return this.lobbyView();
   }
@@ -314,26 +365,86 @@ export class PeerRuntime {
     return this.lobbyView();
   }
 
+  // --- connection attempts (Assignment 19, N19-02) -------------------------------------------
+  /**
+   * Start joining a table (lobby or invitation) as one attempt with a stable id. Returns at once;
+   * the attempt advances through stages — starting discovery, finding the player, authenticating,
+   * negotiating the table, connected — or ends failed/cancelled with a stage-specific reason, all as
+   * `attempt` events. The same attempt id again returns the same attempt (no second seat); a new
+   * attempt is refused while one is live or a reservation exists.
+   */
+  startJoin(args) {
+    const id = typeof args.attemptId === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(args.attemptId) ? args.attemptId : randomHex(8);
+    if (this.attempt?.id === id) return { attempt: this._publicAttempt(), view: this.lobbyView() };
+    if (this.attempt && !['failed', 'cancelled', 'connected'].includes(this.attempt.stage)) throw Object.assign(new Error('another connection attempt is in progress'), { code: 'ATTEMPT_BUSY' });
+    if (this.reservation || this.match?.status === 'active') throw Object.assign(new Error('you already have a match or a pending challenge'), { code: 'BUSY' });
+    const gen = this._attemptGen = (this._attemptGen ?? 0) + 1;
+    this.attempt = { id, gen, kind: args.invite ? 'invitation' : 'table', stage: 'starting-discovery', startedAt: Date.now(), at: Date.now(), error: null, target: null, cancel: new AbortController() };
+    this._emitAttempt();
+    this.joinTable(args, this.attempt).catch((e) => {
+      const a = this.attempt;
+      if (!a || a.gen !== gen || a.stage === 'cancelled') return;
+      this._setStage(a, 'failed', e.code === 'CANCELLED' ? 'cancelled' : e.message);
+    });
+    return { attempt: this._publicAttempt(), view: this.lobbyView() };
+  }
+
+  _setStage(a, stage, error = null) {
+    if (this.attempt !== a || ['failed', 'cancelled', 'connected'].includes(a.stage)) return false;
+    a.stage = stage; a.at = Date.now(); a.error = error;
+    this._emitAttempt();
+    return true;
+  }
+  _publicAttempt() { const a = this.attempt; return a ? { id: a.id, kind: a.kind, stage: a.stage, error: a.error, target: a.target, elapsedMs: Date.now() - a.startedAt } : null; }
+  _emitAttempt() { this.emit({ type: 'lobby', kind: 'attempt', attempt: this._publicAttempt() }); }
+
+  /**
+   * Cancel a live attempt. Before the accept is recorded nothing durable exists and the attempt is
+   * simply fenced. After it (a reservation for this attempt's table exists), cancelling leaves that
+   * setup attempt durably (tombstone + `left`), exactly once; it never becomes a loss.
+   */
+  cancelAttempt(args) {
+    const a = this.attempt;
+    if (!a || (args.attemptId && args.attemptId !== a.id)) throw Object.assign(new Error('no such connection attempt'), { code: 'NO_ATTEMPT' });
+    if (['failed', 'cancelled', 'connected'].includes(a.stage)) return { attempt: this._publicAttempt(), view: this.lobbyView() };
+    a.cancel.abort();
+    const r = this.reservation;
+    if (r && a.challengeId && r.challengeId === a.challengeId && ['accepted', 'starting'].includes(r.phase)) this.setupLeave({ challengeId: r.challengeId });
+    this._setStage(a, 'cancelled', 'cancelled by you');
+    return { attempt: this._publicAttempt(), view: this.lobbyView() };
+  }
+
   /** Join an open table seen in the lobby, or one named by a pasted invitation. */
-  async joinTable(args) {
+  async joinTable(args, attempt = null) {
+    const live = () => { if (attempt && (attempt.cancel.signal.aborted || this.attempt !== attempt)) throw Object.assign(new Error('cancelled'), { code: 'CANCELLED' }); };
+    const stage = (s) => { if (attempt) this._setStage(attempt, s); };
     if (!this.lobby) await this.joinLobby({});
+    live();
     if (this.reservation || this.match?.status === 'active') throw Object.assign(new Error('you already have a match or a pending challenge'), { code: 'BUSY' });
     let playerId = args.playerId, challengeId = args.challengeId;
     if (typeof args.invite === 'string') {
       const c = parseInvite(args.invite);
       if (c.network !== this.networkId) throw new Error('that invitation is for another network');
       if (c.player === this.identity.participantId) throw new Error('that is your own invitation');
-      if (c.expiresAt < Date.now() - 60_000) throw new Error('that invitation has expired');
+      if (c.expiresAt < Date.now() - 60_000) throw new Error('that invitation has expired: ask for a new one');
       playerId = c.player; challengeId = c.challengeId;
-      this.lobby.dial(c.transport); // an invitation bypasses roster discovery, not NAT or firewalls
+      if (c.contact) this.contacts?.admitSnapshot(c.contact, { source: 'invitation' }); // a signed capsule is an entry path, not an extension of the invite's expiry
+      for (const t of new Set([c.transport, ...(this.contacts?.transportsOf(c.player) ?? [])])) this.lobby.dial(t); // an invitation bypasses roster discovery, not NAT or firewalls
     }
-    const peer = await this.lobby.waitForPlayer(playerId, 30_000);
+    if (attempt) { attempt.target = fingerprintOf(keyOfPlayer(playerId) ?? ''); attempt.challengeId = challengeId; }
+    stage('finding-player');
+    const peer = await this.lobby.waitForPlayer(playerId, 30_000, attempt?.cancel.signal, () => stage('authenticating'));
+    live();
+    stage('negotiating');
     const reply = await this._ask(peer, { t: 'table.get', challengeId }, 15_000);
+    live();
     const b = reply.body;
     if (!b || b.kind !== 'challenge' || b.to !== null || b.from !== peer.playerId || b.challengeId !== challengeId || b.network !== this.networkId || !verifyBody('control', b, reply.sig, peer.player.publicKey)) throw new Error('that table is no longer open');
-    if (b.compat !== this.compat.id) throw new Error('that table uses a different rules build');
+    if (b.compat !== this.compat.id) throw Object.assign(new Error('that table uses a different version of the game: both players need the same app build'), { code: 'INCOMPATIBLE' });
     this.incoming.set(b.challengeId, { body: b, sig: reply.sig, fromLabel: peer.player.label, receivedAt: now() });
-    return this.respond({ challengeId: b.challengeId, accept: true }); // joining is this player's consent
+    const view = await this._serial(async () => { live(); return this.respond({ challengeId: b.challengeId, accept: true }); }); // joining is this player's consent; recorded once
+    if (attempt) attempt.awaitingStart = true; // 'connected' when the agreed session opens
+    return view;
   }
 
   cancelChallenge(args) {
@@ -411,6 +522,12 @@ export class PeerRuntime {
       case 'players.page': { const q = this._requests.get(msg.req); if (q) { this._requests.delete(msg.req); q(msg); } return; }
       case 'result.get': return this._onResultGet(peer, msg);
       case 'evidence.get': return this._onEvidenceGet(peer, msg);
+      case 'contact': {
+        // a signed snapshot from the authenticated player itself; then follow (replicate + verify) its core
+        const r = this.contacts?.admitSnapshot(msg.snapshot, { source: 'peer', authenticatedAs: peer.playerId });
+        if (r?.ok) await this.contacts.follow(peer.playerId, peer.ctx.conn).catch((e) => this.log(`contact follow: ${e.message}`));
+        return;
+      }
       case 'results.page': case 'resultBundle': { const r = this._requests.get(msg.req); if (r) { this._requests.delete(msg.req); r(msg); } return; }
       case 'accept': if (this._tombstoned(msg.body?.challengeId, msg.body?.matchId)) { this.lobby.send(peer.playerId, { t: 'decline', challengeId: msg.body?.challengeId, reason: 'left' }); return; } return this._serial(() => this._onAccept(peer, msg));
       case 'start': if (this._tombstoned(null, msg.descriptor?.matchId)) return; return this._serial(() => this._onStart(peer, msg));
@@ -524,6 +641,7 @@ export class PeerRuntime {
     if (opp) m.attach(opp.ctx.conn);
     this.lobby?.announce();
     if (!finishing) this.emit({ type: 'match', matchId: m.matchId, kind: 'opened', seat: m.seat, opponent: m.opponent.label });
+    if (!finishing && this.attempt?.challengeId && this.reservation?.challengeId === this.attempt.challengeId) this._setStage(this.attempt, 'connected');
     return m;
   }
 
@@ -854,8 +972,13 @@ export class PeerRuntime {
       case 'setup.leave': return this._serial(() => this.setupLeave(args));
       case 'table.open': return this._serial(() => this.openTable());
       case 'table.close': return this.closeTable();
-      case 'table.join': return this.joinTable({ playerId: args.playerId, challengeId: args.challengeId });
-      case 'invite.join': return this.joinTable({ invite: args.code });
+      // joins return at once with a stable attempt; progress, success or failure arrive as attempt
+      // events, so the host's request deadline can never cut an operation in half (N19-02)
+      case 'table.join': return this.startJoin({ playerId: args.playerId, challengeId: args.challengeId, attemptId: args.attemptId });
+      case 'invite.join': return this.startJoin({ invite: args.code, attemptId: args.attemptId });
+      case 'attempt.cancel': return this._serial(() => this.cancelAttempt(args));
+      case 'attempt.get': return this.attempt ? this._publicAttempt() : null;
+      case 'diagnostics': return this.diagnostics();
       case 'match.get': return this.match ? this.match.snapshot() : (args.includeCompleted ? this.lastCompleted : null);
       case 'match.draft': return this._matchFor(args).draft(args);
       case 'match.ready': return this._matchFor(args).ready(args);
@@ -887,6 +1010,9 @@ export class PeerRuntime {
     for (const m of owned) await m.close().catch(() => {});
     this.finishing.clear();
     await this.lobby?.stop();
+    await this.contacts?.close();
+    await this.contact?.close();
+    await this.services?.close();
     this.store?.release();
     this.state = 'closed';
   }

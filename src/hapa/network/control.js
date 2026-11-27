@@ -13,6 +13,7 @@ export const DOMAINS = {
   session: 'HAPA-VERSUS SESSION v1\n',
   result: 'HAPA-VERSUS RESULT v1\n',
   profile: 'HAPA-VERSUS PROFILE v1\n',
+  contact: 'HAPA-VERSUS CONTACT v1\n', // contact-core records and snapshots (Assignment 19, N19-04)
 };
 export const MAX_FRAME = 64 * 1024;
 export const MAX_START_FRAME = 2 * 1024 * 1024;
