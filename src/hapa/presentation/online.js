@@ -275,7 +275,9 @@ export function onlinePanel(app) {
         h('button', { disabled: busy, title: 'Anyone compatible in the lobby (or holding your invitation) can take the other seat; hosting is your consent', onclick: () => act(() => client.call('table.open')) }, 'Open a table'),
         paste, h('button', { disabled: busy || (at && LIVE.has(at.stage)), onclick: () => join({ op: 'invite.join', args: { code: paste.value.trim() } }) }, 'Join by invitation')));
       if (r?.phase === 'open') rows.push(h('div', { class: 'row challenge-out' }, h('span', {}, 'Your table is open · the first compatible player to join takes the other seat'),
-        h('button', { onclick: () => navigator.clipboard?.writeText(r.invite).then(() => { note = 'Invitation copied. It names your table and expires in 5 minutes; it does not get through firewalls by itself.'; draw(); }) }, 'Copy invitation'),
+        h('button', { onclick: () => Promise.resolve(navigator.clipboard?.writeText(r.invite)).then(() => { note = 'Invitation copied. It names your table and expires in 5 minutes; it does not get through firewalls by itself.'; draw(); }).catch(() => { note = 'Copying was refused here: select the invitation text below and copy it yourself.'; draw(); }) }, 'Copy invitation'),
+        // the text itself stays selectable, so copying never depends on clipboard permission
+        h('input', { class: 'invite-text', type: 'text', readonly: true, value: r.invite, 'aria-label': 'Your invitation (select and copy)', onfocus: (e) => e.target.select() }),
         h('button', { disabled: busy, onclick: () => act(() => client.call('table.close')) }, 'Close table')));
       if (r?.phase === 'offered') rows.push(h('div', { class: 'row challenge-out' }, h('span', {}, `Challenge sent to ${r.opponent} · waiting for an answer`), h('button', { disabled: busy, onclick: () => act(() => client.call('challenge.cancel', { challengeId: r.challengeId })) }, 'Cancel')));
       else if (r && r.phase !== 'active' && r.phase !== 'open') rows.push(r.stalled
