@@ -102,7 +102,7 @@ async function avatar(o) {
   await js(o, `window.__versus.cam.rotate(45)`); await sleep(2500); note({ step: 'orbit-45', ...(await st()) }); await shot(o, 'b3-orbit-45');
   await js(o, `window.__versus.cam.rotate(45)`); await sleep(2500); note({ step: 'orbit-90', ...(await st()) }); await shot(o, 'b4-orbit-90');
   // close: head and shoulders framed from the human's side, outside the figure's near-fade distance
-  await js(o, `(() => { const v = window.__versus, c = v.cam, f = v.table.seated.faceWorld(); c.home(); c.atHome = false; c.goal.focus.set(f.x, f.y - 9, f.z); c.goal.distance = 44; c.goal.pitch = 14 * Math.PI / 180; })()`); await sleep(3000);
+  await js(o, `(() => { const v = window.__versus, c = v.cam, f = v.table.seated.faceWorld(); c.home(); c.atHome = false; c.goal.focus.set(f.x, f.y - 4, f.z); c.goal.distance = 78; c.goal.pitch = 10 * Math.PI / 180; })()`); await sleep(3000);
   note({ step: 'close', ...(await st()) }); await shot(o, 'b5-close');
   await js(o, `window.__versus.cam.home()`); await sleep(1500);
   // legal play continues in the same match

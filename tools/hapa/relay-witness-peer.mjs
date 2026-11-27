@@ -32,7 +32,9 @@ while (Date.now() - t0 < 180_000) {
 }
 await new Promise((r) => setTimeout(r, 3000)); // let late upgrades or drops happen before recording
 roster = rt.lobbyView().roster;
-const result = { name, seconds: (Date.now() - t0) / 1000, roster: roster.map((p) => ({ label: p.label, fingerprint: p.fingerprint, path: p.path, relay: p.relay })), relays: rt.lobby.transport().relays, exhausted: rt.lobby.transport().relaysExhausted, policyRelays: rt.policy.relays.map((r) => r.id) };
+const dht = rt.lobby.swarm?.dht;
+const transport = { ...rt.lobby.transport(), dhtNodes: dht?.nodes?.length ?? null, dhtHost: dht?.host ?? null, dhtPort: dht?.port ?? null, firewalled: dht?.firewalled ?? null, swarmPeers: rt.lobby.swarm?.peers?.size ?? null, connecting: rt.lobby.swarm?.connecting ?? null, stats: rt.lobby.swarm?.stats ?? null };
+const result = { name, transport, seconds: (Date.now() - t0) / 1000, roster: roster.map((p) => ({ label: p.label, fingerprint: p.fingerprint, path: p.path, relay: p.relay })), relays: rt.lobby.transport().relays, exhausted: rt.lobby.transport().relaysExhausted, policyRelays: rt.policy.relays.map((r) => r.id) };
 result.ok = roster.length >= Number(expect) && roster.every((p) => p.path === 'relayed' && p.relay === 'live');
 writeFileSync(out, JSON.stringify(result, null, 1));
 console.log(JSON.stringify(result));
