@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function runSmoke(o) {
   mkdirSync(o.out, { recursive: true });
   o.win.webContents.on('console-message', (e) => { if (o.consoleLines.length < 120 && (e.level === 'warning' || e.level === 'error')) o.consoleLines.push(`${e.level}: ${String(e.message).slice(0, 300)}`); });
-  const result = o.script === 'online' ? await online(o) : o.script === 'observe' ? await observe(o) : o.script === 'lifecycle' ? await lifecycle(o) : o.script === 'red' ? await red(o) : await local(o);
+  const result = o.script === 'online' ? await online(o) : o.script === 'observe' ? await observe(o) : o.script === 'lifecycle' ? await lifecycle(o) : o.script === 'red' ? await red(o) : o.script === 'avatar' ? await avatar(o) : await local(o);
   writeFileSync(join(o.out, 'smoke.json'), JSON.stringify({ ...result, console: o.consoleLines }, null, 1));
   o.app.quit();
 }
@@ -72,6 +72,47 @@ async function red(o) {
   await shot(o, 'red-home');
   const r = bound ? JSON.parse(bound) : null;
   return { ok: !!r?.player && JSON.parse(after).drawn, script: 'red', seconds: (Date.now() - t0) / 1000, binding: r, after: JSON.parse(after), origin: await js(o, 'location.origin'), about: o.about() };
+}
+
+/**
+ * `avatar` (Review 20 V20-C / N22-04): the installed default Avatar through an owner outage and
+ * recovery in ONE match, driven with tools/hapa/desktop-avatar-journey.mjs (which starts Harbor when
+ * signalled). Records the owner-absent state, the recovery (same match, one performer, the frame, a
+ * drawn figure), Home, orbit 45°/90° and a close framing, then presses Ready once to show legal play
+ * continues. Needs a visible window: hidden windows are throttled by Chromium and the owner frame
+ * does not load in reasonable time.
+ */
+async function avatar(o) {
+  const t0 = Date.now(), log = [];
+  const note = (x) => log.push({ t: Date.now() - t0, ...x });
+  const signal = process.env.HAPA_VERSUS_SMOKE_SIGNAL;
+  await loaded(o);
+  const st = () => js(o, `JSON.stringify((() => { const v = window.__versus, op = v?.table?.opponent; return { gen: v?.generation, tick: v?.state?.tick, player: !!op?.player, status: op?.binding?.status ?? null, error: op?.bindingError ?? null, attempts: op?.attempts ?? 0, retryVisible: !!document.querySelector('.opp-retry:not([hidden])'), performers: document.querySelectorAll('.opp-social').length, frames: document.querySelectorAll('iframe.red-frame').length, drawn: !!v?.table?.seated?._hasFrame, visibility: v?.table?.seated?.visibility ?? null, renderer: op?.binding?.renderer ?? null }; })())`).then(JSON.parse);
+  const absent = await until(o, `(() => { const op = window.__versus?.table?.opponent; return op && op.binding.status === 'text-only' && op.bindingError ? true : null; })()`, 60_000, 300);
+  await sleep(1500);
+  const a = await st(); note({ step: 'owner-absent', ...a }); await shot(o, 'b1-owner-absent-home');
+  if (!absent) return { ok: false, script: 'avatar', error: 'the owner-absent state was not observed (is Harbor already running?)', log };
+  if (signal) writeFileSync(signal, 'absent');
+  // the owner comes back; the table's own retry (or Show Red) restores Red in the same match
+  let back = await until(o, `!!window.__versus?.table?.opponent?.player`, 30_000, 300);
+  if (!back) { await js(o, `document.querySelector('.opp-retry')?.click()`); note({ step: 'pressed Show Red' }); back = await until(o, `!!window.__versus?.table?.opponent?.player`, 60_000, 300); }
+  await until(o, `!!window.__versus?.table?.seated?._hasFrame`, 20_000, 300);
+  await js(o, `window.__versus.cam.home()`); await sleep(2500);
+  const r = await st(); note({ step: 'recovered', ...r }); await shot(o, 'b2-recovered-home');
+  await js(o, `window.__versus.cam.rotate(45)`); await sleep(2500); note({ step: 'orbit-45', ...(await st()) }); await shot(o, 'b3-orbit-45');
+  await js(o, `window.__versus.cam.rotate(45)`); await sleep(2500); note({ step: 'orbit-90', ...(await st()) }); await shot(o, 'b4-orbit-90');
+  // close: head and shoulders framed from the human's side, outside the figure's near-fade distance
+  await js(o, `(() => { const v = window.__versus, c = v.cam, f = v.table.seated.faceWorld(); c.home(); c.atHome = false; c.goal.focus.set(f.x, f.y - 9, f.z); c.goal.distance = 44; c.goal.pitch = 14 * Math.PI / 180; })()`); await sleep(3000);
+  note({ step: 'close', ...(await st()) }); await shot(o, 'b5-close');
+  await js(o, `window.__versus.cam.home()`); await sleep(1500);
+  // legal play continues in the same match
+  const tick0 = (await st()).tick;
+  await js(o, `window.__versus._pressReady()`);
+  const advanced = await until(o, `window.__versus?.state?.tick > ${tick0} && !window.__versus.playback ? window.__versus.state.tick : null`, 60_000, 300);
+  await sleep(1500);
+  const f = await st(); note({ step: 'after-ready', ...f }); await shot(o, 'b6-after-ready');
+  const sameMatch = a.gen === r.gen && r.gen === f.gen;
+  return { ok: !!back && r.player && r.drawn && r.performers === 1 && r.frames === (o.win.webContents.getURL().startsWith('app:') ? 1 : 0) && sameMatch && !!advanced, script: 'avatar', sameMatch, tickBefore: tick0, tickAfter: advanced, log, about: o.about() };
 }
 
 async function local(o) {
