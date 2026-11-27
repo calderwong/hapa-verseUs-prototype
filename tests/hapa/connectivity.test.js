@@ -12,8 +12,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { createSocket } from 'node:dgram';
-import { ServicePolicy, normalizeConfig, PUBLIC_BOOTSTRAP } from '../../src/hapa/network/services.js';
-import { PeerRuntime } from '../../src/hapa/network/runtime.js';
+import { ServicePolicy, normalizeConfig, PUBLIC_BOOTSTRAP, project, effectivePolicy } from '../../src/hapa/network/services.js';
+import { Lobby } from '../../src/hapa/network/lobby.js';
+import { PeerRuntime, parseInvite } from '../../src/hapa/network/runtime.js';
 import { startRelay } from '../../tools/hapa/relay-serve.mjs';
 
 const createTestnet = createRequire(import.meta.url)('hyperdht/testnet');
@@ -60,7 +61,7 @@ test('service policy: bundled defaults, idempotent import, extend/replace, refus
     await p.close();
     const fresh = new ServicePolicy({ dir: join(dir, 'policy2'), local: { bootstrap: { mode: 'replace', nodes: [] } } });
     const fe = await fresh.open();
-    assert.ok(fe.bootstrap.length === 3 && fe.warnings.some((w) => /empty replace/.test(w)), 'an empty replacement is refused rather than isolating the player');
+    assert.ok(fe.bootstrap.length === 3 && fresh.errors.some((w) => /refused — no eligible/.test(w)), 'an empty replacement is refused before adoption; the previous policy stays');
     await fresh.close();
 
     assert.equal(normalizeConfig({ services: [{ id: 'g1', role: 'gateway', adapter: 'wss/1', endpoint: 'wss://x.example' }] }).services[0].executable, false, 'a future adapter is data, never executed');
@@ -109,6 +110,134 @@ test('FT-08 (controlled, partial): relay candidates rotate past an unreachable f
   } finally {
     for (const r of rts) await r.close().catch(() => {});
     await relay.close();
+    await testnet.destroy();
+    for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  }
+});
+
+test('HC-06 (N20-02): retired, disabled and expired providers never return through fallback; no eligible route is an explicit state', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'hv-hc6-'));
+  const ids = ['hyperdht-public-1', 'hyperdht-public-2', 'hyperdht-public-3'];
+  try {
+    const open = async (n, local) => { const p = new ServicePolicy({ dir: join(dir, `p${n}`), local }); const e = await p.open(); return { p, e }; };
+    // retire one default: only the other two remain
+    let { p, e } = await open(1, { retire: ['hyperdht-public-1'] });
+    assert.deepEqual(e.bootstrap, PUBLIC_BOOTSTRAP.slice(1));
+    await p.close();
+    // retire all defaults with an accepted alternative: only the alternative is used
+    ({ p, e } = await open(2, { bootstrap: { mode: 'extend', nodes: ['203.0.113.9@dht.example.org:49737'] }, retire: ids }));
+    assert.deepEqual(e.bootstrap, ['203.0.113.9@dht.example.org:49737'], 'no retired default is put back');
+    await p.close();
+    ({ p, e } = await open(2, null)); // restart: seeding does not resurrect the retired ids
+    assert.deepEqual(e.bootstrap, ['203.0.113.9@dht.example.org:49737']);
+    // disable all defaults with no alternative: the import is refused (it would leave no route); the defaults stay
+    ({ p, e } = await open(3, { disable: ids }));
+    assert.equal(e.bootstrap.length, 3); assert.match(p.errors.join(' '), /refused — no eligible/);
+    // a user decision that does it anyway yields an honest no-route state, never the hard-coded list
+    for (const id of ids) e = await p.decide({ action: 'disable', serviceId: id });
+    assert.deepEqual(e.bootstrap, []); assert.match(e.noRoute, /no eligible discovery provider/);
+    e = await p.decide({ action: 'enable', serviceId: 'hyperdht-public-2' });
+    assert.deepEqual(e.bootstrap, [PUBLIC_BOOTSTRAP[1]], 'an explicit enable is required for reuse');
+    await p.close();
+    // expiry: an expired accepted alternative is excluded; isolated mode never crosses to public
+    const pr = project([{ schema: 'hapa-versus-service-policy/v1', action: 'add', service: { id: 'x', role: 'bootstrap', endpoint: { node: 'dht.example.org:1' }, expiresAt: 1 }, provenance: { kind: 'user' } }, { schema: 'hapa-versus-service-policy/v1', action: 'mode', mode: 'isolated' }]);
+    assert.equal(pr.services.get('x').state, 'expired');
+    assert.deepEqual(effectivePolicy(pr).bootstrap, []);
+    // the options the native layer receives: a Lobby with no eligible route never starts a swarm (no library defaults)
+    const lobby = new Lobby({ networkId: 'n', identity: {}, transportKeyPair: null, compat: {}, presence: () => ({}), onPeer: () => {}, onMessage: () => {}, bootstrap: [], noRoute: 'no eligible discovery provider' });
+    await lobby.start();
+    assert.deepEqual([lobby.swarm, lobby.state, lobby.transport().error], [undefined, 'failed', 'no eligible discovery provider']);
+  } finally { rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
+});
+
+test('HC-07 (N20-02): an import interrupted at any durable boundary is never half-applied; restart completes it once', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'hv-hc7-'));
+  const local = { bootstrap: { mode: 'replace', nodes: ['203.0.113.1@a.example:49737', '203.0.113.2@b.example:49737'] } }; // 3 records + commit
+  try {
+    for (const k of [1, 2, 3]) {
+      const d = join(dir, `p${k}`);
+      // first open seeds the defaults (one batch); then the local import is interrupted after k records
+      const p0 = new ServicePolicy({ dir: d }); await p0.open(); await p0.close();
+      const p1 = new ServicePolicy({ dir: d, local, interruptAfter: k });
+      await assert.rejects(p1.open(), /interrupted/);
+      await p1.close();
+      const p2 = new ServicePolicy({ dir: d, local });
+      const before = project(p2.records ?? []);
+      const e = await p2.open();
+      assert.equal(e.mode, 'replace', `boundary ${k}: the restarted import completed`);
+      assert.deepEqual(e.bootstrap, local.bootstrap.nodes);
+      assert.ok(p2.projection.incomplete.length === 1, 'the partial batch stays as evidence, unapplied');
+      const n = p2.records.length;
+      await p2.close();
+      const p3 = new ServicePolicy({ dir: d, local });
+      await p3.open();
+      assert.equal(p3.records.length, n, 'reapplying a completed import appends nothing');
+      await p3.close();
+      void before;
+    }
+  } finally { rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
+});
+
+test('HC-09 (N20-03): an unsuccessful relay cools down and yields; a formerly good relay that stops working yields; exhaustion is bounded', () => {
+  const lobby = new Lobby({ networkId: 'n', relays: [{ id: 'A', key: 'a'.repeat(64), endpoint: '198.51.100.1:1' }, { id: 'B', key: 'b'.repeat(64), endpoint: '198.51.100.2:2' }] });
+  lobby.relays = lobby.o.relays.map((r) => ({ ...r, buf: Buffer.from(r.key, 'hex'), handed: 0, observed: 0, failures: 0, cooldownUntil: 0, pending: 0 }));
+  const pick = () => lobby._nextRelay().toString('hex')[0];
+  // unreachable first: A handed, no relayed connection observed, next request goes to B
+  assert.equal(pick(), 'a'); assert.equal(pick(), 'b');
+  assert.equal(lobby.relays[0].failures, 1);
+  // B carries a connection (observed): it is preferred while healthy
+  lobby.relays[1].observed = Number(process.hrtime.bigint() / 1_000_000n); lobby.relays[1].failures = 0; lobby.relays[1].cooldownUntil = 0;
+  assert.equal(pick(), 'b');
+  // B stops working: its unobserved handout counts against it; A's cooldown has expired → A next
+  lobby.relays[0].cooldownUntil = 0;
+  lobby.relays[1].observed = 0;
+  const seq = [pick(), pick(), pick(), pick()];
+  assert.ok(seq.includes('a') && seq.filter((x) => x === 'b').length < 4, `alternatives reached: ${seq.join('')}`);
+  // both cooling: bounded retry of the one whose cooldown ends first, reported as exhausted
+  for (const r of lobby.relays) { r.cooldownUntil = Number(process.hrtime.bigint() / 1_000_000n) + 60_000 + (r.id === 'B' ? 1 : 0); r.pending = 0; }
+  assert.equal(pick(), 'a'); assert.equal(lobby.transport().relaysExhausted, true);
+});
+
+test('HC-10 (N20-04): cancelling at discovery, negotiation and after the accept stays cancelled; one tombstone; the next attempt works', { timeout: 180_000 }, async () => {
+  const testnet = await createTestnet(3);
+  const roots = [mkdtempSync(join(tmpdir(), 'hv-c-a-')), mkdtempSync(join(tmpdir(), 'hv-c-b-'))];
+  const make = (i) => new PeerRuntime({ root: roots[i], networkId: 'test-cancel', displayName: i ? 'Bea' : 'Ari', bootstrap: testnet.bootstrap, controller: 'bot' });
+  const rts = [make(0), make(1)];
+  try {
+    for (const r of rts) await r.open();
+    for (const r of rts) await r.joinLobby({});
+    // discovery stage: a table whose host is unreachable; cancel immediately
+    rts[0].openTable();
+    const invite = rts[0].reservation.invite;
+    rts[1].startJoin({ invite, attemptId: 'cancel-disc-0001' });
+    await rts[1].cancelAttempt({ attemptId: 'cancel-disc-0001' });
+    assert.equal(rts[1].attempt.stage, 'cancelled');
+    await rts[1].cancelAttempt({ attemptId: 'cancel-disc-0001' }); // duplicate: no second effect
+    assert.equal(rts[1].attempt.stage, 'cancelled');
+    // after the accept: hold the host's START so the joiner sits in `accepted`, then cancel
+    const origSend = rts[0].lobby.send.bind(rts[0].lobby);
+    rts[0].lobby.send = (pid, msg) => (msg.t === 'start' ? true : origSend(pid, msg));
+    rts[1].startJoin({ invite, attemptId: 'cancel-acc-0002' });
+    await until(() => rts[1].reservation?.phase === 'accepted', 60_000);
+    const res = await rts[1].cancelAttempt({ attemptId: 'cancel-acc-0002' });
+    await rts[1].attempt.leaving;
+    assert.equal(res.attempt.stage, 'cancelled');
+    assert.equal(rts[1].attempt.stage, 'cancelled', 'reservation release did not relabel it failed');
+    assert.equal(rts[1].reservation, null);
+    const tomb = Object.values(rts[1].tombstones.attempts).filter((t) => t.matchId === `hv-${rts[0].reservation?.challengeId ?? parseInvite(invite).challengeId}`);
+    assert.equal(tomb.length, 1, 'exactly one tombstone');
+    // a late START for the cancelled attempt cannot revive it
+    rts[0].lobby.send = origSend;
+    await new Promise((r) => setTimeout(r, 2000));
+    assert.equal(rts[1].match, null);
+    assert.equal(rts[1].attempt.stage, 'cancelled');
+    // the next attempt (a new table) connects
+    if (rts[0].reservation) rts[0]._reserve(null);
+    rts[0].openTable();
+    rts[1].startJoin({ invite: rts[0].reservation.invite, attemptId: 'next-ok-0003' });
+    await until(() => rts[1].attempt.stage === 'connected' && rts[1].match, 90_000);
+  } finally {
+    for (const r of rts) await r.close().catch(() => {});
     await testnet.destroy();
     for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }

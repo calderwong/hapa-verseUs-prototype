@@ -178,7 +178,7 @@ export class PeerRuntime {
     if (!this.lobby) {
       this.lobby = new Lobby({
         networkId: this.networkId, identity: this.identity, transportKeyPair: this._transportKeyPair(), compat: this.compat,
-        presence: () => this._presence(), bootstrap: this.policy.bootstrap, relays: this._relayCandidates(), forceRelay: this.o.forceRelay, log: this.log,
+        presence: () => this._presence(), bootstrap: this.policy.bootstrap, noRoute: this.policy.noRoute, relays: this._relayCandidates(), forceRelay: this.o.forceRelay, log: this.log,
         onPeer: (p, ev) => this._onPeer(p, ev),
         onMessage: (p, msg) => this._onMessage(p, msg).catch((e) => this.log(`message ${msg.t}: ${e.message}`)),
         onConnection: (p, conn) => this._onConnection(p, conn),
@@ -352,6 +352,7 @@ export class PeerRuntime {
     const body = { kind: 'challenge', network: this.networkId, challengeId: randomHex(16), from: this.identity.participantId, to: null, compat: this.compat.id, controller: this.controllerKind, seats: { A: this.identity.participantId, B: null }, offerMs: TABLE_MS };
     const sig = signBody('control', body, this.identity);
     // v2 (N19-04): the v1 table/network/expiry binding plus a compact signed contact snapshot
+    if (!this.lobby.swarm) throw Object.assign(new Error(`discovery is off: ${this.lobby.error ?? 'no route'}`), { code: 'NO_ROUTE' });
     const capsule = { v: 2, network: this.networkId, player: this.identity.participantId, transport: b4a.toString(this.lobby.swarm.keyPair.publicKey, 'hex'), challengeId: body.challengeId, offer: fingerprint(body), expiresAt: Date.now() + TABLE_MS, contact: this.contact.snapshot() };
     const invite = `hvinv2.${b4a.toString(b4a.from(JSON.stringify({ ...capsule, sig: signBody('control', { kind: 'invite', ...capsule }, this.identity) })), 'base64url')}`;
     this._reserve({ phase: 'open', role: 'challenger', challengeId: body.challengeId, challenge: body, challengeSig: sig, opponent: null, opponentLabel: null, invite, localAt: now() });
@@ -407,10 +408,15 @@ export class PeerRuntime {
     const a = this.attempt;
     if (!a || (args.attemptId && args.attemptId !== a.id)) throw Object.assign(new Error('no such connection attempt'), { code: 'NO_ATTEMPT' });
     if (['failed', 'cancelled', 'connected'].includes(a.stage)) return { attempt: this._publicAttempt(), view: this.lobbyView() };
+    // the player's intent is terminal at once (N20-04): the attempt is `cancelled` before any cleanup,
+    // so releasing its reservation cannot relabel it `failed`; work already queued sees the abort
     a.cancel.abort();
-    const r = this.reservation;
-    if (r && a.challengeId && r.challengeId === a.challengeId && ['accepted', 'starting'].includes(r.phase)) this.setupLeave({ challengeId: r.challengeId });
     this._setStage(a, 'cancelled', 'cancelled by you');
+    // a recorded accept (accepted/starting) is left durably, once, after any in-flight setup step:
+    // tombstone first, then `left`, then release — late setup messages stay fenced
+    const leave = () => { const r = this.reservation; if (r && a.challengeId && r.challengeId === a.challengeId && ['accepted', 'starting'].includes(r.phase) && !this.tombstones.attempts[r.challengeId]) this.setupLeave({ challengeId: r.challengeId }); };
+    leave();
+    a.leaving = this._serial(async () => leave()).catch((e) => this.log(`cancel leave: ${e.message}`));
     return { attempt: this._publicAttempt(), view: this.lobbyView() };
   }
 
@@ -976,7 +982,7 @@ export class PeerRuntime {
       // events, so the host's request deadline can never cut an operation in half (N19-02)
       case 'table.join': return this.startJoin({ playerId: args.playerId, challengeId: args.challengeId, attemptId: args.attemptId });
       case 'invite.join': return this.startJoin({ invite: args.code, attemptId: args.attemptId });
-      case 'attempt.cancel': return this._serial(() => this.cancelAttempt(args));
+      case 'attempt.cancel': return this.cancelAttempt(args);
       case 'attempt.get': return this.attempt ? this._publicAttempt() : null;
       case 'diagnostics': return this.diagnostics();
       case 'match.get': return this.match ? this.match.snapshot() : (args.includeCompleted ? this.lastCompleted : null);

@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import b4a from 'b4a';
 import { PeerRuntime, parseInvite } from '../../src/hapa/network/runtime.js';
-import { ContactBook, checkRecord, checkSnapshot } from '../../src/hapa/network/contact.js';
+import { ContactBook, checkRecord, checkSnapshot, CONTACT_SCHEMA } from '../../src/hapa/network/contact.js';
 import { signBody } from '../../src/hapa/network/control.js';
 import { fingerprint } from '../../src/hapa/rules/encoding.js';
 
@@ -112,7 +112,7 @@ test('FT-06/FT-09 (controlled): a v2 invitation joins through one attempt; conta
     assert.equal(second.attempt.id, 'attempt-three-03');
     assert.ok(['finding-player', 'negotiating', 'connected'].every((s) => events.includes(s)), events.join(','));
     // contacts: each side admitted the other's snapshot and verified its core over the connection
-    await until(() => rts[1].contacts.cache.contacts[rts[0].identity.participantId]?.evidence === 'core-verified' && rts[0].contacts.cache.contacts[rts[1].identity.participantId]?.evidence === 'core-verified', 60_000);
+    await until(() => rts[1].contacts.evidenceOf(rts[0].identity.participantId)?.proof === 'core-verified' && rts[0].contacts.evidenceOf(rts[1].identity.participantId)?.proof === 'core-verified', 60_000);
     const diag = rts[1].diagnostics();
     assert.equal(diag.attempt.stage, 'connected');
     assert.ok(!JSON.stringify(diag).includes(rts[0].identity.publicKey), 'diagnostics carry fingerprints, not keys');
@@ -122,4 +122,82 @@ test('FT-06/FT-09 (controlled): a v2 invitation joins through one attempt; conta
     await testnet.destroy();
     for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
+});
+
+/** A controlled core: an array of signed records with Hypercore's length/fork/get surface. */
+const fakeCore = (records, fork = 0) => ({ length: records.length, fork, get: async (i) => records[i] });
+/** Sign an alternative record at a given position (the same root signing two histories: equivocation). */
+function altRecord(rt, seq, prevRec, transports) {
+  const body = { schema: CONTACT_SCHEMA, subject: rt.identity.participantId, core: rt.contact.key, seq, prev: prevRec ? fingerprint(prevRec) : null, at: new Date().toISOString(), sources: ['peer-replication'], kind: seq === 0 ? 'binding' : 'update', transports, retired: [] };
+  return { ...body, sig: signBody('contact', body, rt.identity) };
+}
+
+test('HC-03 (N20-01): a newer snapshot stays snapshot-only until its own revision is verified; restart keeps the distinction', async () => {
+  const roots = [tmp('hv-hc3-a-'), tmp('hv-hc3-b-')];
+  try {
+    const a = new PeerRuntime({ root: roots[0], networkId: 'test-hc' }); await a.open();
+    const id = a.identity.participantId, file = join(roots[1], 'cb.json');
+    let book = new ContactBook({ dir: join(roots[1], 'cb'), storeFile: file, self: 'hv1:' + '0'.repeat(64) });
+    assert.equal(book.admitSnapshot(a.contact.snapshot()).ok, true);
+    await book.verifyCore(id, fakeCore([...a.contact.records]));
+    assert.equal(book.evidenceOf(id).proof, 'core-verified');
+    const verifiedAt = book.evidenceOf(id).checkpoint.verifiedAt;
+    await a.contact.rotate('ab'.repeat(32));
+    assert.equal(book.admitSnapshot(a.contact.snapshot()).proof, 'snapshot', 'revision 1 arrives as a snapshot only');
+    let ev = book.evidenceOf(id);
+    assert.deepEqual([ev.revision, ev.proof, ev.checkpoint.revision, ev.checkpoint.length, ev.checkpoint.verifiedAt], [1, 'snapshot', 0, 1, verifiedAt], 'the older checkpoint is kept, not promoted or refreshed');
+    assert.equal(book.summary().coreVerified, 0);
+    book = new ContactBook({ dir: join(roots[1], 'cb'), storeFile: file, self: 'hv1:' + '0'.repeat(64) }); // restart from cache
+    ev = book.evidenceOf(id);
+    assert.deepEqual([ev.revision, ev.proof, ev.checkpoint.revision], [1, 'snapshot', 0]);
+    await book.verifyCore(id, fakeCore([...a.contact.records]));
+    ev = book.evidenceOf(id);
+    assert.deepEqual([ev.revision, ev.proof, ev.checkpoint.revision, ev.checkpoint.length], [1, 'core-verified', 1, 2], 'only matching verified history promotes revision 1');
+    // known rollback still refused
+    assert.match(book.admitSnapshot({ ...a.contact.snapshot(), seq: 0 }).reason, /signature|rollback/);
+    await a.close();
+  } finally { for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
+});
+
+test('HC-04 (N20-01): same-revision snapshot/core disagreement is a conflict in both arrival orders; matching state passes; stale completion is fenced', async () => {
+  const roots = [tmp('hv-hc4-a-'), tmp('hv-hc4-b-')];
+  try {
+    const a = new PeerRuntime({ root: roots[0], networkId: 'test-hc' }); await a.open();
+    const id = a.identity.participantId;
+    const book = (n) => new ContactBook({ dir: join(roots[1], `cb${n}`), storeFile: join(roots[1], `cb${n}.json`), self: 'hv1:' + '0'.repeat(64) });
+    const snap = a.contact.snapshot(); // revision 0, route = the real transport
+    const equiv = [altRecord(a, 0, null, ['cd'.repeat(32)])]; // the same root signs another revision 0
+    // order 1: snapshot then core
+    const b1 = book(1);
+    b1.admitSnapshot(snap);
+    const r1 = await b1.verifyCore(id, fakeCore(equiv));
+    assert.equal(r1.ok, false); assert.match(r1.reason, /conflicting contact information at revision 0/);
+    assert.deepEqual(b1.transportsOf(id), snap.transports, 'the last unconflicted state stays');
+    assert.equal(b1.evidenceOf(id).conflicts, 1);
+    // order 2: core then snapshot
+    const b2 = book(2);
+    b2.cache.contacts[id] = { core: a.contact.key, accepted: null, checkpoint: null, revisions: {}, conflicts: [], retired: [], gen: 0 };
+    assert.equal((await b2.verifyCore(id, fakeCore(equiv))).ok, true);
+    const r2 = b2.admitSnapshot(snap);
+    assert.equal(r2.ok, false); assert.match(r2.reason, /conflicting contact information at revision 0/);
+    assert.deepEqual(b2.transportsOf(id), ['cd'.repeat(32)]);
+    // matching state succeeds in both orders
+    const b3 = book(3); b3.admitSnapshot(snap); assert.equal((await b3.verifyCore(id, fakeCore([...a.contact.records]))).proof, 'core-verified');
+    // a delayed verification of revision 0 completing after revision 1 was accepted does not roll it back
+    await a.contact.rotate('ef'.repeat(32));
+    const b4 = book(4); b4.admitSnapshot(snap);
+    let release;
+    const slow = { length: 1, fork: 0, get: async (i) => { await new Promise((r) => { release = r; }); return a.contact.records[i]; } };
+    const pending = b4.verifyCore(id, slow);
+    await new Promise((r) => setTimeout(r, 20));
+    b4.admitSnapshot(a.contact.snapshot());
+    release();
+    await pending;
+    const ev = b4.evidenceOf(id);
+    assert.deepEqual([ev.revision, ev.proof, ev.checkpoint.revision], [1, 'snapshot', 0], 'the stale completion kept revision 1 and only recorded its own checkpoint');
+    // truncation / fork change below the checkpoint is refused
+    assert.match((await b3.verifyCore(id, fakeCore([], 0)) ?? { reason: 'empty' }).reason ?? 'empty', /empty|below/);
+    assert.match((await b3.verifyCore(id, fakeCore([...a.contact.records].slice(0, 1), 1))).reason, /below its verified checkpoint or changed fork/);
+    await a.close();
+  } finally { for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
 });

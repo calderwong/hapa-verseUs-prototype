@@ -110,45 +110,87 @@ export class OwnContact {
   async close() { await this.core?.close(); }
 }
 
+/** The comparable semantic content of one contact revision: what routes that revision authorizes. */
+export const revisionDigest = (seq, transports) => fingerprint({ seq, transports: [...transports].sort() });
+const MAX_REVISIONS = 32, MAX_CONFLICTS = 8;
+
 /**
- * Verified knowledge of other players' contact information: snapshots and core checkpoints, cached
- * in userData (a cache of verified public records; the authority is each player's own core).
+ * Verified knowledge of other players' contact information (Assignment 20, N20-01; Hapa
+ * connectivity v0.1 §7, HC-03/04/05).
+ *
+ * Per player the cache keeps separate evidence objects:
+ *  - `accepted`: the current descriptor (revision, routes, retired keys) and the source it came from
+ *    (`snapshot` or `core`), plus `proof`: `core-verified` only when a verified checkpoint covers that
+ *    exact revision with the same content; otherwise `snapshot`.
+ *  - `checkpoint`: the last verified core position (length, fork, head hash, revision, digest,
+ *    verifiedAt). A newer snapshot never upgrades it or refreshes its timestamp.
+ *  - `revisions`: revision → content digest seen from any authenticated source (bounded), so a
+ *    snapshot and a core record that disagree at the same revision are a conflict in either order.
+ *  - `conflicts`: bounded evidence of such contradictions; the last unconflicted accepted state stays.
+ * Verification is generation-fenced: a completion that started before newer accepted state does not
+ * overwrite it. Nothing here claims knowledge of a revocation it has not seen.
  */
 export class ContactBook {
   /** @param {{ dir: string, storeFile: string, self: string, log?: (s: string) => void }} o */
-  constructor(o) { this.o = o; this.log = o.log ?? (() => {}); this.cache = readJson(o.storeFile, { contacts: {} }); this.cores = new Map(); this.rejected = []; }
+  constructor(o) {
+    this.o = o; this.log = o.log ?? (() => {}); this.cores = new Map(); this.rejected = [];
+    const raw = readJson(o.storeFile, { contacts: {} });
+    this.cache = { schema: 'hapa-versus-contact-cache/v2', contacts: {} };
+    for (const [id, c] of Object.entries(raw.contacts ?? {})) this.cache.contacts[id] = raw.schema === this.cache.schema ? c : migrate(c);
+  }
 
   _save() {
     const ids = Object.keys(this.cache.contacts);
-    if (ids.length > MAX_CACHED) for (const id of ids.sort((a, b) => (this.cache.contacts[a].lastVerified ?? '').localeCompare(this.cache.contacts[b].lastVerified ?? '')).slice(0, ids.length - MAX_CACHED)) delete this.cache.contacts[id];
+    if (ids.length > MAX_CACHED) for (const id of ids.sort((a, b) => (this.cache.contacts[a].accepted?.at ?? '').localeCompare(this.cache.contacts[b].accepted?.at ?? '')).slice(0, ids.length - MAX_CACHED)) delete this.cache.contacts[id];
     writeJsonAtomic(this.o.storeFile, this.cache);
   }
   _reject(subject, reason) { this.rejected.push({ subject: fingerprintOf(keyOfPlayer(subject) ?? ''), reason, at: new Date().toISOString() }); if (this.rejected.length > 20) this.rejected.shift(); return { ok: false, reason }; }
+  _conflict(subject, c, seq, a, b) {
+    (c.conflicts ??= []).push({ seq, a, b, at: new Date().toISOString() });
+    if (c.conflicts.length > MAX_CONFLICTS) c.conflicts.shift();
+    this._save();
+    return this._reject(subject, `conflicting contact information at revision ${seq} (${a.source} vs ${b.source})`);
+  }
+  _remember(c, seq, digest) { c.revisions ??= {}; c.revisions[seq] = digest; const ks = Object.keys(c.revisions).map(Number).sort((x, y) => x - y); while (ks.length > MAX_REVISIONS) delete c.revisions[ks.shift()]; }
+  _proof(c) { const a = c.accepted, k = c.checkpoint; return a && k && k.seq === a.seq && k.digest === a.digest ? 'core-verified' : 'snapshot'; }
 
   /**
-   * Admit a signed snapshot (from an invitation or an authenticated peer). A newer sequence replaces
-   * the cached one; an older one is a known rollback; the same sequence with other content is a fork.
+   * Admit a signed snapshot (from an invitation or an authenticated peer). A newer revision becomes
+   * the accepted state with snapshot-only proof; an older one is a known rollback; the same revision
+   * with different routes (from a snapshot or an already verified core record) is a conflict.
    */
   admitSnapshot(s, { source = 'invitation', authenticatedAs = null } = {}) {
     const err = checkSnapshot(s);
     if (err) return this._reject(s?.subject, err);
     if (s.subject === this.o.self) return { ok: false, reason: 'own snapshot' };
     if (authenticatedAs && authenticatedAs !== s.subject) return this._reject(s.subject, 'the snapshot names someone other than the authenticated player');
-    const c = this.cache.contacts[s.subject];
+    const d = revisionDigest(s.seq, s.transports);
+    let c = this.cache.contacts[s.subject];
     if (c) {
       if (c.core !== s.core) return this._reject(s.subject, 'a different contact core for this player (unexpected fork)');
-      if (s.seq < c.seq) return this._reject(s.subject, `known rollback: sequence ${s.seq} is older than ${c.seq}`);
-      if (s.seq === c.seq && fingerprint(s.transports) !== fingerprint(c.transports)) return this._reject(s.subject, 'same sequence with different content (fork)');
-      if (c.checkpoint && s.length < c.checkpoint.length && s.seq <= c.seq) return this._reject(s.subject, 'shorter than the verified core');
-    }
-    const retired = new Set(c?.retired ?? []);
-    this.cache.contacts[s.subject] = { core: s.core, seq: s.seq, transports: s.transports.filter((t) => !retired.has(t) || s.seq > (c?.seq ?? -1)), retired: c?.retired ?? [], snapshot: s, checkpoint: c?.checkpoint ?? null, evidence: c?.checkpoint ? c.evidence : 'snapshot', source, lastVerified: new Date().toISOString() };
+      const known = c.revisions?.[s.seq];
+      if (known && known !== d) return this._conflict(s.subject, c, s.seq, { source: c.checkpoint?.seq === s.seq ? 'core' : 'snapshot', digest: known }, { source: `snapshot:${source}`, digest: d });
+      if (s.seq < (c.accepted?.seq ?? -1)) return this._reject(s.subject, `known rollback: revision ${s.seq} is older than ${c.accepted.seq}`);
+      if (c.checkpoint && s.length < c.checkpoint.length && s.seq <= c.checkpoint.seq) return this._reject(s.subject, 'shorter than the verified core');
+      if (known === d && s.seq === c.accepted?.seq) return { ok: true, unchanged: true };
+    } else c = this.cache.contacts[s.subject] = { core: s.core, accepted: null, checkpoint: null, revisions: {}, conflicts: [], retired: [], gen: 0 };
+    this._remember(c, s.seq, d);
+    c.accepted = { seq: s.seq, transports: s.transports, digest: d, source: `snapshot:${source}`, at: new Date().toISOString(), length: s.length };
+    c.snapshot = s;
+    c.gen = (c.gen ?? 0) + 1;
+    c.proof = this._proof(c);
     this._save();
-    return { ok: true };
+    return { ok: true, proof: c.proof };
   }
 
-  /** Transports cached for a player (verified records only; retired keys excluded). */
-  transportsOf(subject) { const c = this.cache.contacts[subject]; return c ? c.transports.filter((t) => !(c.retired ?? []).includes(t)) : []; }
+  /** Routes cached for a player: the accepted descriptor minus keys retired by verified history. */
+  transportsOf(subject) { const c = this.cache.contacts[subject]; return c?.accepted ? c.accepted.transports.filter((t) => !(c.retired ?? []).includes(t)) : []; }
+
+  /** The evidence state of one player (for diagnostics and tests). */
+  evidenceOf(subject) {
+    const c = this.cache.contacts[subject];
+    return c ? { revision: c.accepted?.seq ?? null, proof: c.proof ?? 'snapshot', source: c.accepted?.source ?? null, checkpoint: c.checkpoint ? { length: c.checkpoint.length, revision: c.checkpoint.seq, verifiedAt: c.checkpoint.verifiedAt } : null, conflicts: (c.conflicts ?? []).length } : null;
+  }
 
   /**
    * Replicate a known player's contact core over an authenticated connection and verify it: the
@@ -164,34 +206,60 @@ export class ContactBook {
     if (this.closed) { await core.close(); return; }
     this.cores.set(subject, core);
     core.replicate(conn);
-    core.on('truncate', (len, fork) => { const cc = this.cache.contacts[subject]; if (cc?.checkpoint && len < cc.checkpoint.length) { this._reject(subject, `contact core rewritten below the verified checkpoint (fork ${fork})`); cc.conflict = { len, fork, at: new Date().toISOString() }; this._save(); } });
+    core.on('truncate', (len, fork) => { const cc = this.cache.contacts[subject]; if (cc?.checkpoint && len < cc.checkpoint.length) { this._reject(subject, `contact core rewritten below the verified checkpoint (fork ${fork})`); cc.forkConflict = { len, fork, at: new Date().toISOString() }; this._save(); } });
     const verify = () => this.verifyCore(subject).catch((e) => this.log(`contact verify: ${e.message}`));
     core.on('append', verify);
     await core.update({ wait: false }).catch(() => {});
     verify();
   }
 
-  async verifyCore(subject) {
-    const core = this.cores.get(subject), c = this.cache.contacts[subject];
+  /** Verify a followed core (or any object with `length`, `fork` and `get(i)`), fenced against newer state. */
+  async verifyCore(subject, core = this.cores.get(subject)) {
+    const c = this.cache.contacts[subject];
     if (!core || !c || !core.length) return null;
-    if (c.checkpoint && (core.length < c.checkpoint.length || (c.checkpoint.fork !== undefined && core.fork !== c.checkpoint.fork))) return this._reject(subject, 'the contact core moved below its verified checkpoint or changed fork');
+    const gen = c.gen ?? 0, start = c.checkpoint;
+    if (start && (core.length < start.length || (start.fork !== undefined && core.fork !== start.fork))) return this._reject(subject, 'the contact core moved below its verified checkpoint or changed fork');
     let prev = null, last = null;
-    const n = Math.min(core.length, MAX_RECORDS);
+    const n = Math.min(core.length, MAX_RECORDS), seen = [];
     for (let i = 0; i < n; i++) {
       const rec = await core.get(i, { timeout: 5000 }).catch(() => null);
       if (!rec) return null; // not yet replicated: keep the previous evidence state
       const err = checkRecord(rec, { subject, core: c.core, seq: i, prev });
       if (err) return this._reject(subject, `contact record ${i}: ${err}`);
       prev = fingerprint(rec); last = rec;
+      seen.push([i, revisionDigest(i, rec.transports)]);
     }
-    if (last.seq < c.seq) return this._reject(subject, 'the verified core is older than an accepted snapshot (rollback)');
-    Object.assign(c, { seq: last.seq, transports: last.transports, retired: last.retired ?? [], checkpoint: { length: n, fork: core.fork, head: prev }, evidence: 'core-verified', lastVerified: new Date().toISOString() });
+    // equal-revision disagreement with anything already accepted is a conflict (either arrival order)
+    for (const [i, d] of seen) { const known = c.revisions?.[i]; if (known && known !== d) return this._conflict(subject, c, i, { source: 'snapshot', digest: known }, { source: 'core', digest: d }); }
+    // fence: a newer verification already committed a longer checkpoint; this completion is stale
+    if (c.checkpoint && c.checkpoint !== start && c.checkpoint.length >= n) return { ok: true, stale: true };
+    for (const [i, d] of seen) this._remember(c, i, d);
+    c.checkpoint = { length: n, fork: core.fork, head: prev, seq: last.seq, digest: revisionDigest(last.seq, last.transports), verifiedAt: new Date().toISOString() };
+    c.retired = [...new Set([...(c.retired ?? []), ...(last.retired ?? [])])].slice(-16);
+    // the core may only become the accepted state if it is at least as new as what was accepted, and
+    // nothing newer was accepted while this verification ran
+    if (!c.accepted || last.seq > c.accepted.seq || (last.seq === c.accepted.seq && (c.gen ?? 0) === gen)) {
+      if (!c.accepted || last.seq > c.accepted.seq) { c.accepted = { seq: last.seq, transports: last.transports, digest: c.checkpoint.digest, source: 'core', at: c.checkpoint.verifiedAt }; c.gen = (c.gen ?? 0) + 1; }
+    }
+    c.proof = this._proof(c);
     this._save();
-    return { ok: true, length: n };
+    return { ok: true, length: n, proof: c.proof };
   }
 
   /** Redacted view for diagnostics. */
-  summary() { return { known: Object.keys(this.cache.contacts).length, coreVerified: Object.values(this.cache.contacts).filter((c) => c.evidence === 'core-verified').length, rejected: this.rejected.slice(-5) }; }
+  summary() {
+    const all = Object.values(this.cache.contacts);
+    return { known: all.length, coreVerified: all.filter((c) => c.proof === 'core-verified').length, snapshotOnly: all.filter((c) => c.proof !== 'core-verified').length, conflicts: all.reduce((n, c) => n + (c.conflicts?.length ?? 0), 0), rejected: this.rejected.slice(-5) };
+  }
 
   async close() { this.closed = true; for (const c of this.cores.values()) await c.close().catch(() => {}); this.cores.clear(); }
+}
+
+/** v1 cache entries (one merged record) → separate accepted state and checkpoint; proof re-derived. */
+function migrate(old) {
+  const accepted = old.seq !== undefined ? { seq: old.seq, transports: old.transports ?? [], digest: revisionDigest(old.seq, old.transports ?? []), source: old.evidence === 'core-verified' ? 'core' : `snapshot:${old.source ?? 'cache'}`, at: old.lastVerified ?? null, length: old.snapshot?.length ?? null } : null;
+  const k = old.checkpoint ? { length: old.checkpoint.length, fork: old.checkpoint.fork, head: old.checkpoint.head, seq: old.checkpoint.length - 1, digest: null, verifiedAt: null } : null;
+  const c = { core: old.core, accepted, checkpoint: k, revisions: accepted ? { [accepted.seq]: accepted.digest } : {}, conflicts: [], retired: old.retired ?? [], snapshot: old.snapshot ?? null, gen: 0 };
+  c.proof = 'snapshot'; // a v1 entry did not record which revision its checkpoint covered: re-verify to promote
+  return c;
 }

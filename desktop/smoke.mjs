@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function runSmoke(o) {
   mkdirSync(o.out, { recursive: true });
   o.win.webContents.on('console-message', (e) => { if (o.consoleLines.length < 120 && (e.level === 'warning' || e.level === 'error')) o.consoleLines.push(`${e.level}: ${String(e.message).slice(0, 300)}`); });
-  const result = o.script === 'online' ? await online(o) : o.script === 'observe' ? await observe(o) : await local(o);
+  const result = o.script === 'online' ? await online(o) : o.script === 'observe' ? await observe(o) : o.script === 'lifecycle' ? await lifecycle(o) : await local(o);
   writeFileSync(join(o.out, 'smoke.json'), JSON.stringify({ ...result, console: o.consoleLines }, null, 1));
   o.app.quit();
 }
@@ -33,6 +33,28 @@ async function until(o, code, ms = 60_000, every = 400) {
   }
 }
 async function loaded(o) { if (o.win.webContents.isLoading()) await new Promise((r) => o.win.webContents.once('did-finish-load', r)); }
+
+/**
+ * `lifecycle` (R18-05 / N20-06): observe the peer worker's generations under a staged late or
+ * never-ready start (HAPA_VERSUS_PEER_STARTUP_MS / _DELAY_MS / _DELAY_GENS set by the caller): the
+ * retired generation is replaced or the bounded failure is reported, the page shows it, and once
+ * ready a runtime call succeeds on the current generation.
+ */
+async function lifecycle(o) {
+  const t0 = Date.now(), states = [];
+  let last = null;
+  while (Date.now() - t0 < 120_000) {
+    const cur = `${o.peer.state}#${o.peer.gen}`;
+    if (cur !== last) { states.push({ t: Date.now() - t0, state: o.peer.state, gen: o.peer.gen, error: o.peer.error ?? null }); last = cur; }
+    if (o.peer.state === 'ready' || (o.peer.state === 'failed' && !o.peer.proc)) break;
+    await sleep(100);
+  }
+  await loaded(o);
+  const page = await until(o, `(async () => { const s = await window.hapaDesktop.host('peerStatus'); return s ? JSON.stringify(s) : null; })()`, 10_000);
+  let call = null;
+  if (o.peer.state === 'ready') call = await o.callPeer('getStatus', {}, 10_000).then((s) => ({ ok: true, runtime: s.runtime, fingerprint: s.player?.fingerprint })).catch((e) => ({ ok: false, error: e.message }));
+  return { ok: o.peer.state === 'ready' ? !!call?.ok : o.peer.state === 'failed', script: 'lifecycle', states, final: o.peer.state, pageSees: page ? JSON.parse(page) : null, call, about: o.about() };
+}
 
 async function local(o) {
   const t0 = Date.now();

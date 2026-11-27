@@ -37,6 +37,7 @@ const MAX_RECORDS = 2000;
 /** The pinned hyperdht@6.37.0 `lib/constants.js` BOOTSTRAP_NODES (an IP hint @ host:port). */
 export const PUBLIC_BOOTSTRAP = ['88.99.3.86@node1.hyperdht.org:49737', '142.93.90.113@node2.hyperdht.org:49737', '138.68.147.8@node3.hyperdht.org:49737'];
 export const PUBLIC_OVERLAY = 'hyperdht-public';
+// note: PUBLIC_BOOTSTRAP only seeds the bundled defaults; effective options come from the projection
 
 const bare = ({ state, provenance, since, ...d }) => d; // eslint-disable-line no-unused-vars
 const digest = (v) => createHash('sha256').update(canonicalize(v)).digest('hex').slice(0, 32);
@@ -117,20 +118,31 @@ export function normalizeConfig(section) {
   return out;
 }
 
-/** Project an ordered list of policy records into the current service set and mode. */
+/**
+ * Project an ordered list of policy records into the current service set and mode (Assignment 20,
+ * N20-02; Hapa connectivity v0.1 §6, HC-06/07). Imports are logical transactions: their records
+ * carry `batch: { id, index, count }` and count only when the batch's `commit` record is present
+ * with the same count. A partial batch is kept as history (listed in `incomplete`) but never applied
+ * and never marks its configuration imported. Records without a batch are single decisions (user
+ * decisions; older histories). Retirement is final for a service id: seeding, a repeated import or
+ * a cached success cannot resurrect it.
+ */
 export function project(records, nowMs = Date.now()) {
-  const services = new Map(), imports = new Set();
+  const services = new Map(), imports = new Set(), seen = new Map(), committed = new Set(), incomplete = [];
+  for (const r of records) if (r?.batch?.id) { if (r.action === 'commit') { if ((seen.get(r.batch.id) ?? 0) === r.batch.count) committed.add(r.batch.id); } else seen.set(r.batch.id, (seen.get(r.batch.id) ?? 0) + 1); }
+  for (const [id, n] of seen) if (!committed.has(id)) incomplete.push({ id, records: n });
   let mode = 'default';
   for (const r of records) {
     if (r?.schema !== POLICY_SCHEMA) continue;
-    if (r.provenance?.digest) imports.add(`${r.provenance.kind}:${r.provenance.digest}`);
+    if (r.batch?.id && !committed.has(r.batch.id)) continue;
+    if (r.action === 'commit') { if (r.provenance?.digest) imports.add(`${r.provenance.kind}:${r.provenance.digest}`); continue; }
     if (r.action === 'mode' && MODES.includes(r.mode)) mode = r.mode;
     else if ((r.action === 'seed' || r.action === 'add' || r.action === 'update') && r.service) {
       const v = validateDescriptor(r.service);
       if (!v.ok) continue;
       const prev = services.get(v.descriptor.id);
       if (prev?.state === 'retired') continue; // retirement is final for that id
-      services.set(v.descriptor.id, { ...v.descriptor, state: prev?.state === 'disabled' && r.action !== 'add' ? 'disabled' : 'active', provenance: r.provenance, since: r.at });
+      services.set(v.descriptor.id, { ...v.descriptor, state: prev && prev.state !== 'active' && r.action !== 'add' ? prev.state : 'active', provenance: r.provenance, since: r.at });
     } else if ((r.action === 'disable' || r.action === 'retire' || r.action === 'enable') && services.has(r.serviceId)) {
       const s = services.get(r.serviceId);
       if (s.state === 'retired') continue;
@@ -138,32 +150,37 @@ export function project(records, nowMs = Date.now()) {
     }
   }
   for (const s of services.values()) if (s.state === 'active' && s.expiresAt && s.expiresAt < nowMs) s.state = 'expired';
-  return { mode, services, imports };
+  return { mode, services, imports, incomplete };
 }
 
-/** The effective runtime options from a projection (what actually reaches Lobby/Hyperswarm). */
+/**
+ * The effective runtime options from a projection (what actually reaches Lobby/Hyperswarm). Built
+ * only from accepted, eligible providers: a disabled, retired or expired entry never returns through a
+ * hard-coded fallback. When no eligible discovery provider remains the result is an explicit
+ * `noRoute` state (discovery stays off and says why) rather than a silent switch of overlay.
+ */
 export function effectivePolicy({ mode, services }, override = null) {
   const active = [...services.values()].filter((s) => s.state === 'active' && s.executable);
   const warnings = [];
   if (override?.bootstrap) {
     // an explicit test/development overlay passed by code (a local testnet): named, never the player default
-    return { mode: 'isolated', overlay: 'isolated-test', bootstrap: override.bootstrap, relays: relaysOf(active), archives: archivesOf(active), warnings: ['an isolated development overlay is in use'] };
+    return { mode: 'isolated', overlay: 'isolated-test', bootstrap: override.bootstrap, relays: relaysOf(active), archives: archivesOf(active), warnings: ['an isolated development overlay is in use'], noRoute: null };
   }
-  const isDefault = (s) => s.provenance?.kind === 'bundled-default';
-  const defaults = active.filter((s) => s.role === 'bootstrap' && isDefault(s)).map((s) => s.endpoint.node);
-  const added = active.filter((s) => s.role === 'bootstrap' && !isDefault(s));
-  let bootstrap, overlay = PUBLIC_OVERLAY;
-  if (mode === 'replace' || mode === 'isolated') {
-    const nodes = added.filter((s) => (mode === 'isolated') === (s.overlay !== PUBLIC_OVERLAY)).map((s) => s.endpoint.node);
-    if (nodes.length) { bootstrap = nodes; if (mode === 'isolated') overlay = added.find((s) => s.overlay !== PUBLIC_OVERLAY)?.overlay ?? 'isolated'; }
-    else { warnings.push(`an empty ${mode} bootstrap set was not applied; the public defaults stay in use`); bootstrap = defaults.length ? defaults : PUBLIC_BOOTSTRAP; mode = 'default'; }
+  const boot = active.filter((s) => s.role === 'bootstrap');
+  let nodes, overlay = PUBLIC_OVERLAY;
+  if (mode === 'isolated') {
+    const iso = boot.filter((s) => s.overlay !== PUBLIC_OVERLAY);
+    overlay = iso[0]?.overlay ?? 'isolated';
+    nodes = iso.filter((s) => s.overlay === overlay).map((s) => s.endpoint.node);
+  } else if (mode === 'replace') {
+    nodes = boot.filter((s) => s.overlay === PUBLIC_OVERLAY && s.provenance?.kind !== 'bundled-default').map((s) => s.endpoint.node);
   } else {
-    // default/extend: the public overlay plus accepted additions to the same overlay
-    bootstrap = [...(defaults.length ? defaults : PUBLIC_BOOTSTRAP), ...added.filter((s) => s.overlay === PUBLIC_OVERLAY).map((s) => s.endpoint.node)];
-    if (added.some((s) => s.overlay !== PUBLIC_OVERLAY)) warnings.push('bootstrap nodes of another overlay are ignored outside isolated mode');
-    if (!defaults.length) warnings.push('every bundled public bootstrap entry is disabled; the pinned defaults are still used so the player is not isolated');
+    nodes = boot.filter((s) => s.overlay === PUBLIC_OVERLAY).map((s) => s.endpoint.node);
+    if (boot.some((s) => s.overlay !== PUBLIC_OVERLAY)) warnings.push('bootstrap nodes of another overlay are ignored outside isolated mode');
   }
-  return { mode, overlay, bootstrap, relays: relaysOf(active), archives: archivesOf(active), warnings };
+  const noRoute = nodes.length ? null : `no eligible ${mode === 'isolated' ? `${overlay} ` : ''}discovery provider is adopted (every candidate is disabled, retired or expired, or none was added for ${mode} mode)`;
+  if (noRoute) warnings.push(`${noRoute}; discovery stays off until a provider is enabled or added`);
+  return { mode, overlay, bootstrap: nodes, relays: relaysOf(active), archives: archivesOf(active), warnings, noRoute };
 }
 const relaysOf = (active) => active.filter((s) => s.role === 'relay').map((s) => ({ id: s.id, key: s.publicKey, endpoint: s.endpoint ?? null, label: s.label }));
 const archivesOf = (active) => active.filter((s) => s.role === 'archive').map((s) => ({ id: s.id, player: s.player, transport: s.transport, label: s.label }));
@@ -182,10 +199,11 @@ export class ServicePolicy {
     this.records = [];
     for (let i = 0; i < Math.min(this.core.length, MAX_RECORDS); i++) this.records.push(await this.core.get(i));
     let p = project(this.records);
-    // 1) bundled defaults, once per descriptor digest
-    for (const d of defaultDescriptors()) {
-      const prov = { kind: 'bundled-default', source: 'hyperdht@6.37.0 lib/constants.js BOOTSTRAP_NODES', digest: digest(d) };
-      if (!p.imports.has(`bundled-default:${prov.digest}`)) await this._append({ action: 'seed', service: d, provenance: prov });
+    // 1) bundled defaults, one committed batch per descriptor set (a retired id is never resurrected)
+    {
+      const ds = defaultDescriptors();
+      const prov = { kind: 'bundled-default', source: 'hyperdht@6.37.0 lib/constants.js BOOTSTRAP_NODES', digest: digest(ds) };
+      if (!p.imports.has(`bundled-default:${prov.digest}`)) await this._appendBatch(ds.filter((d) => !p.services.has(d.id)).map((d) => ({ action: 'seed', service: d })), prov);
     }
     // 2) the build's bundled configuration, then 3) the player's local adoption, each imported once per content
     for (const [kind, section] of [['bundled-config', this.o.bundled], ['local-config-import', this.o.local]]) {
@@ -195,19 +213,44 @@ export class ServicePolicy {
       p = project(this.records);
       if (p.imports.has(`${kind}:${prov.digest}`)) continue;
       if (!n.ok) { this.errors.push(...n.errors.map((e) => `${prov.source}: ${e}`)); this.log(`service configuration refused (${prov.source}): ${n.errors.join('; ')}; the last valid policy stays in force`); continue; }
+      const batch = [];
       for (const d of n.services) {
         const prev = p.services.get(d.id);
         if (prev && canonicalize(bare(prev)) === canonicalize(bare(d))) continue;
-        await this._append({ action: prev ? 'update' : 'add', service: d, provenance: prov });
+        batch.push({ action: prev ? 'update' : 'add', service: d });
       }
-      for (const id of n.disable) await this._append({ action: 'disable', serviceId: id, provenance: prov });
-      for (const id of n.retire) await this._append({ action: 'retire', serviceId: id, provenance: prov });
-      if (n.mode && n.mode !== p.mode) await this._append({ action: 'mode', mode: n.mode, provenance: prov });
-      else if (!n.services.length && !n.disable.length && !n.retire.length && !n.mode) await this._append({ action: 'mode', mode: p.mode, provenance: prov }); // marks the import as seen
+      for (const id of n.disable) batch.push({ action: 'disable', serviceId: id });
+      for (const id of n.retire) batch.push({ action: 'retire', serviceId: id });
+      if (n.mode && n.mode !== p.mode) batch.push({ action: 'mode', mode: n.mode });
+      // adopt only a usable policy: a candidate that would leave no eligible discovery provider is
+      // refused before anything is appended (the previous policy, with its retirements, stays)
+      const trial = effectivePolicy(project([...this.records, ...batch.map((r) => ({ schema: POLICY_SCHEMA, ...r, provenance: prov }))]), this.o.override);
+      if (trial.noRoute && !effectivePolicy(p, this.o.override).noRoute) { this.errors.push(`${prov.source}: refused — ${trial.noRoute}`); this.log(`service configuration refused (${prov.source}): ${trial.noRoute}`); continue; }
+      await this._appendBatch(batch, prov);
     }
     this.projection = project(this.records);
     this.effective = effectivePolicy(this.projection, this.o.override);
     return this.effective;
+  }
+
+  /**
+   * Append one import as a logical transaction: its records (each tagged with the batch id, index and
+   * count) and a final `commit` record, in a single Hypercore append so the batch lands together;
+   * projection applies it only when the commit is present. `interruptAfter` (tests only) appends
+   * record by record and stops early to stage a crash at that durable boundary.
+   */
+  async _appendBatch(entries, provenance) {
+    if (this.records.length + entries.length + 1 > MAX_RECORDS) throw new Error('service policy history is full');
+    const id = `${provenance.kind}:${provenance.digest}:${this.records.length}`;
+    const at = new Date().toISOString();
+    const recs = [...entries.map((e, index) => ({ schema: POLICY_SCHEMA, seq: this.records.length + index, at, ...e, batch: { id, index, count: entries.length }, provenance })),
+      { schema: POLICY_SCHEMA, seq: this.records.length + entries.length, at, action: 'commit', batch: { id, count: entries.length }, provenance }];
+    if (Number.isInteger(this.o.interruptAfter)) {
+      for (const [k, r] of recs.entries()) { if (k >= this.o.interruptAfter) throw Object.assign(new Error('import interrupted (test hook)'), { code: 'INTERRUPTED' }); await this.core.append(r); this.records.push(r); }
+      return;
+    }
+    await this.core.append(recs);
+    this.records.push(...recs);
   }
 
   async _append(r) {
@@ -232,7 +275,7 @@ export class ServicePolicy {
   /** Diagnostics: provenance and state per service, no secrets (relay keys shortened). */
   summary() {
     return {
-      mode: this.effective?.mode, overlay: this.effective?.overlay, records: this.records?.length ?? 0, errors: this.errors, warnings: this.effective?.warnings ?? [],
+      mode: this.effective?.mode, overlay: this.effective?.overlay, records: this.records?.length ?? 0, errors: this.errors, warnings: this.effective?.warnings ?? [], noRoute: this.effective?.noRoute ?? null, incompleteImports: this.projection?.incomplete ?? [],
       services: [...(this.projection?.services.values() ?? [])].map((s) => ({ id: s.id, role: s.role, adapter: s.adapter, overlay: s.overlay, state: s.state, executable: s.executable, provenance: s.provenance?.kind, label: s.label, key: s.publicKey ? `${s.publicKey.slice(0, 8)}…` : undefined })),
     };
   }

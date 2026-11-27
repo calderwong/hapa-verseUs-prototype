@@ -42,6 +42,8 @@ export class Lobby {
 
   async start() {
     if (this.swarm) return;
+    // no eligible discovery provider (N20-02): stay off and say why; never fall back to library defaults
+    if (Array.isArray(this.o.bootstrap) && this.o.bootstrap.length === 0) { this.state = 'failed'; this.error = this.o.noRoute ?? 'no eligible discovery provider is adopted'; this._emitTransport(); return; }
     this.state = 'connecting';
     const opts = { keyPair: this.o.transportKeyPair };
     if (this.o.bootstrap?.length) opts.bootstrap = this.o.bootstrap;
@@ -50,7 +52,7 @@ export class Lobby {
     // that fails does not hide a second reachable one. A relay observed carrying a connection (its
     // published endpoint matched) is preferred for a while. `forceRelay` relays every connection
     // (for proving the relay path only).
-    this.relays = (this.o.relays ?? []).filter((r) => /^[0-9a-f]{64}$/.test(r?.key ?? '')).slice(0, 16).map((r) => ({ ...r, buf: b4a.from(r.key, 'hex'), handed: 0, observed: 0 }));
+    this.relays = (this.o.relays ?? []).filter((r) => /^[0-9a-f]{64}$/.test(r?.key ?? '')).slice(0, 16).map((r) => ({ ...r, buf: b4a.from(r.key, 'hex'), handed: 0, observed: 0, failures: 0, cooldownUntil: 0, pending: 0 }));
     if (this.relays.length) opts.relayThrough = (force) => (force || this.o.forceRelay ? this._nextRelay() : null);
     this.swarm = new Hyperswarm(opts);
     this.swarm.on('connection', (conn, info) => this._onConnection(conn, info));
@@ -61,12 +63,30 @@ export class Lobby {
     lobby.flushed().then(() => { if (this.swarm) { this.state = 'online'; this._emitTransport(); } }).catch((e) => { this.state = 'failed'; this.error = e.message; this._emitTransport(); });
   }
 
-  /** The next relay candidate: the one last observed working (for 10 min), else round-robin. */
+  /**
+   * The next relay candidate (Assignment 20, N20-03; Hapa connectivity v0.1 §6, HC-09). Hyperswarm
+   * asks again only when a relayed attempt did not produce a connection, so a handout not followed
+   * by an observed relayed connection before the next request counts as unsuccessful: that relay
+   * cools down (15 s doubling to 10 min) and eligible alternatives come first. A relay observed
+   * carrying a connection is preferred only while it has no failure since; a success clears its
+   * failures. When every candidate is cooling down the one whose cooldown ends first is tried (bounded,
+   * visible as `exhausted`). A relay without a published endpoint cannot be observed, so its use is
+   * treated as unconfirmed and it rotates with the others.
+   */
   _nextRelay() {
     const t = now();
-    const good = this.relays.filter((r) => r.observed && t - r.observed < 600_000).sort((a, b) => b.observed - a.observed)[0];
-    const pick = good ?? this.relays[(this._relayTurn = ((this._relayTurn ?? -1) + 1) % this.relays.length)];
+    for (const r of this.relays) {
+      if (r.pending && !(r.observed >= r.pending)) { r.failures++; r.cooldownUntil = t + Math.min(600_000, 15_000 * 2 ** (r.failures - 1)); }
+      r.pending = 0;
+    }
+    const eligible = this.relays.filter((r) => !(r.cooldownUntil > t));
+    this.relaysExhausted = !eligible.length;
+    const pool = eligible.length ? eligible : [...this.relays].sort((a, b) => a.cooldownUntil - b.cooldownUntil).slice(0, 1);
+    const good = pool.filter((r) => r.observed && t - r.observed < 600_000 && !r.failures).sort((a, b) => b.observed - a.observed)[0];
+    let pick = good;
+    if (!pick) { const order = this.relays.filter((r) => pool.includes(r)); this._relayTurn = ((this._relayTurn ?? -1) + 1) % order.length; pick = order[this._relayTurn]; }
     pick.handed++;
+    pick.pending = t;
     pick.lastHanded = t;
     return pick.buf;
   }
@@ -78,7 +98,7 @@ export class Lobby {
     if (path === 'relayed') {
       const raw = ctx.conn?.rawStream, ep = `${raw?.remoteHost}:${raw?.remotePort}`;
       const r = eps.find((x) => x.endpoint === ep || (x.endpoint.startsWith('*:') && ep.endsWith(x.endpoint.slice(1))));
-      if (r) { r.observed = now(); ctx.relayId = r.id; }
+      if (r) { r.observed = now(); r.failures = 0; r.cooldownUntil = 0; ctx.relayId = r.id; }
     }
     return path;
   }
@@ -87,6 +107,7 @@ export class Lobby {
   join(kind, id, { server = true, client = true } = {}) {
     const key = `${kind}:${id}`;
     if (this.topics.has(key)) return this.topics.get(key);
+    if (!this.swarm) return { flushed: async () => {}, destroy: async () => {} };
     const d = this.swarm.join(topicOf(kind, id), { server, client });
     this.topics.set(key, d);
     return d;
@@ -103,7 +124,7 @@ export class Lobby {
   dial(transportKeyHex) { if (this.swarm && /^[0-9a-f]{64}$/.test(transportKeyHex)) this.swarm.joinPeer(b4a.from(transportKeyHex, 'hex')); }
 
   transport() {
-    return { state: this.state, error: this.error ?? null, connections: this.swarm?.connections.size ?? 0, peers: this.peers.size, relay: !!this.relays?.length, relays: (this.relays ?? []).map((r) => ({ id: r.id, label: r.label, handed: r.handed, observed: !!r.observed })), dht: this.swarm?.dht ? { bootstrapped: !!this.swarm.dht.bootstrapped, firewalled: this.swarm.dht.firewalled ?? null, randomized: this.swarm.dht.randomized ?? null } : null };
+    return { state: this.state, error: this.error ?? null, connections: this.swarm?.connections.size ?? 0, peers: this.peers.size, relay: !!this.relays?.length, relays: (this.relays ?? []).map((r) => ({ id: r.id, label: r.label, handed: r.handed, observed: !!r.observed, failures: r.failures, coolingMs: Math.max(0, r.cooldownUntil - now()) })), relaysExhausted: !!this.relaysExhausted, dht: this.swarm?.dht ? { bootstrapped: !!this.swarm.dht.bootstrapped, firewalled: this.swarm.dht.firewalled ?? null, randomized: this.swarm.dht.randomized ?? null } : null };
   }
 
   _emitTransport() { this.o.onPeer(null, 'transport'); }
