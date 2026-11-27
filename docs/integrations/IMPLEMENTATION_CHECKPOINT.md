@@ -4,17 +4,15 @@
 records what is built, which owners it attaches to, the defaults CJ selected and what is still loose.
 CJ's acceptance is separate from technical completion and is not recorded here on his behalf.
 
-## Current candidate — Response 22, 27 November 2026
+## Current candidate and review — 27 November 2026
 
-[Response 22](../reviews/2026-11-27-implementation-response-22.md): friend.5 (`aabb62a`). Cancel/activation boundary, provider eligibility at use, honest relay attribution, installed Avatar journey, keychain-free macOS build, gated Windows qualification. Pending: relay carriage witness, consumer Windows download, two-home human game, Assignment 21.
+[Response 22](../reviews/2026-11-27-implementation-response-22.md) delivers friend.5 (`aabb62a`). [Review 21](../reviews/2026-11-27-lifecycle-and-delivery-review-21.md) assesses `d0be02d0e4a7b6f6132ce499bf0d45d82b30327f`; [Assignment 23](../reviews/2026-11-27-next-agent-assignment-23.md) is current. The original cancel/open cut, bootstrap/relay expiry, relay selection semantics, installed Avatar recovery and hard Windows qualification gate are credited.
 
-## Current review and assignment — 27 November 2026
+Remaining source work: prevent reconnect STARTED for a cancelled initializing authority; evaluate configured archives at new-use boundaries; refresh cached relay key/evidence when a dynamic descriptor changes. Default packages have no archives/live provider editor, so those latter extension corrections do not create friend-flow dependencies. Actual alternate-relay carriage remains partial; instrument the OPEN/direct hypothesis before repeating the failed namespace control.
 
-[Review 20](../reviews/2026-11-27-connectivity-and-delivery-review-20.md) assesses `da8c9e0`; [Assignment 22](../reviews/2026-11-27-next-agent-assignment-22.md) continues unfinished Assignment 20 work. Contact proof/conflicts, committed provider imports, retired-provider exclusions and accepted cancellation are credited. Cancel during match initialization and time-expired provider reuse remain reproduced defects.
+Friend.5 Mac arm64 and Windows x64 share clean source `aabb62a0a99b541b5bad41f54a827cbedbf102b6`. The reviewer verified the Windows archive and all six mandatory reports from run 46074882482. Consumer downloaded launch and the real Mac-to-Windows two-home game remain unverified. **Changes required before a dependable friend-test recommendation.**
 
-Friend.4 Mac arm64/Windows x64 artifacts exist from `bd35cec`. The reviewer verified Windows runner launch/reopen, same-VM invitation/concession/result and bounded worker-start evidence. Consumer downloaded launch and the real Mac-to-Windows two-home human game remain unverified. Relay carriage remains partial. **Changes required before a dependable friend-test recommendation.**
-
-A fresh live browser renders Red's pose-art package. The submitted installed-Mac screenshot has an empty chair; visible installed owner delivery and actual renderer kind still require proof. Current source/evidence lacks a dated Response 20 and its ledger source is a placeholder; Response 22 must reconcile the handoff. [Evidence](../reviews/evidence/2026-11-27/review-20/README.md) separates source diagnostics, reviewed CI artifacts and unversioned live browser observations.
+Installed Mac Red is visible with owner absent → recovered in one match, Home/orbit/close framing and Ready to Tick 2. The owner identity/manifest is recorded; it is a 2D mesh over pose art, not a demonstrated volumetric renderer. Legal play works with optional owners absent. Response 22 exists and replaces the old missing-response handoff gap. [Review evidence](../reviews/evidence/2026-11-27/review-21/README.md) distinguishes source fixtures, submitted installed images, verified CI and unversioned browser observations.
 
 ## Queued optional Avatar scope
 
@@ -24,7 +22,7 @@ The common connectivity contract remains unchanged; stabilize small shared seman
 
 ## Historical Review 18 checkpoint
 
-The observations below describe that earlier pinned review. The current Review 20 pointers supersede historical current-status wording where later evidence exists; unfinished compatible cases remain tracked through Assignment 22.
+The observations below describe that earlier pinned review. The current Review 21 pointers supersede historical current-status wording where later evidence exists; unfinished compatible cases remain tracked through Assignment 23.
 
 ### Review 18, 26 November 2026
 

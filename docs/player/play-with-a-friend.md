@@ -2,7 +2,7 @@
 
 The target is two people opening bundled apps on two computers and two internet connections.
 
-**Candidate status:** [Review 20](../reviews/2026-11-27-connectivity-and-delivery-review-20.md) requires further corrections before a dependable handoff. Friend.4 has actually run on a Windows runner, with native startup, retained identity and a same-machine invitation/result journey. Normal consumer downloaded launch and the separate-network human test remain pending. These are the intended player steps, not a claim that the full human journey passed.
+**Candidate status:** [Review 21](../reviews/2026-11-27-lifecycle-and-delivery-review-21.md) requires a further reconnect correction before a dependable handoff. Friend.5 has passed a gated Windows runner check, including native startup, retained identity and a same-machine invitation/result journey; installed Mac Red recovery is also evidenced. Normal consumer downloaded launch and the separate-network human test remain pending. These are the intended player steps, not a claim that the full human journey passed.
 
 **Current downloads:** see [Download and play](../../README.md#download-and-play) on the repository's front page. Each file names the computer it is for: **Windows PC (64-bit)** or **Mac with Apple Silicon** (M1 or newer). The intended Windows/Mac interoperability still needs a witnessed two-computer test.
 

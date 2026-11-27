@@ -1,0 +1,42 @@
+[
+  {
+    "repository": "holepunchto/hyperdht",
+    "ref": "v6.37.0",
+    "path": "lib/server.js",
+    "blob": "36f626ecd1ca2e57452d1a79efa7736f23c58bf5",
+    "git_blob_verified": true,
+    "sha256": "ad2565af3d47e9a12e16c302d70f85950d2a1daca4b18849c0ec818bda08eeee",
+    "bytes": 25568,
+    "url": "https://github.com/holepunchto/hyperdht/blob/v6.37.0/lib/server.js"
+  },
+  {
+    "repository": "holepunchto/hyperdht",
+    "ref": "v6.37.0",
+    "path": "lib/connect.js",
+    "blob": "5976a7214880047e160af4afadbc3f730081734c",
+    "git_blob_verified": true,
+    "sha256": "bfddedb9fc243e179c247d35f4714035c830b806683cf701719628866b6aee84",
+    "bytes": 25322,
+    "url": "https://github.com/holepunchto/hyperdht/blob/v6.37.0/lib/connect.js"
+  },
+  {
+    "repository": "holepunchto/hyperswarm",
+    "ref": "v4.17.2",
+    "path": "index.js",
+    "blob": "1b9fbaac2b8b29224404d16633a6313871760ee8",
+    "git_blob_verified": true,
+    "sha256": "8c00e34f3ced9d9391562a7a1b8202222108d22b9d41eede5153b0394a6c8777",
+    "bytes": 18788,
+    "url": "https://github.com/holepunchto/hyperswarm/blob/v4.17.2/index.js"
+  },
+  {
+    "repository": "holepunchto/blind-relay",
+    "ref": "v1.6.1",
+    "path": "README.md",
+    "blob": "a3b98a76aebad12d9f3eefc33b49b15d3175bbf4",
+    "git_blob_verified": true,
+    "sha256": "8d899ca3fc5e18f9dc7ab937e54fa83aa249c4b7799f30c85a0f0e9344fb477a",
+    "bytes": 2050,
+    "url": "https://github.com/holepunchto/blind-relay/blob/v1.6.1/README.md"
+  }
+]

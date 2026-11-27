@@ -1,0 +1,105 @@
+{
+  "reviewDate": "2026-11-27",
+  "reviewedRepository": "calderwong/hapa-verseUs-prototype",
+  "reviewedCommit": "d0be02d0e4a7b6f6132ce499bf0d45d82b30327f",
+  "release": {
+    "tag": "v0.1.0-friend.5",
+    "target": "aabb62a0a99b541b5bad41f54a827cbedbf102b6",
+    "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.5",
+    "assets": [
+      {
+        "name": "Hapa-Versus-0.1.0-friend5-macOS-AppleSilicon.dmg",
+        "bytes": 124520594,
+        "sha256": "72e4fc0fe5fdd7255a79bd610e406c4c986ce29c95520824549b57550e6fa02e",
+        "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.5/Hapa-Versus-0.1.0-friend5-macOS-AppleSilicon.dmg"
+      },
+      {
+        "name": "Hapa-Versus-0.1.0-friend5-Windows-x64.zip",
+        "bytes": 167156741,
+        "sha256": "c2ccca726b45d5c0a609dbbea1496064604c27de4ab3ddb109059306f36f1db9",
+        "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.5/Hapa-Versus-0.1.0-friend5-Windows-x64.zip"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 223,
+        "sha256": "eda416a75d1f78b8dbc42d94f8b243e38d9b77ace346c2698e2d22fd3ce56bd1",
+        "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.5/SHA256SUMS.txt"
+      }
+    ]
+  },
+  "windows": {
+    "run": 46074882482,
+    "job": 140760180688,
+    "workflowConclusion": "success",
+    "artifactId": 15233744634,
+    "evidenceZipBytes": 6541714,
+    "evidenceZipSha256": "073ea6e99c45e5ab9dc5177a1c770e4a2e4934141622deb11c5263483908d046",
+    "reviewerDownloadedAndHashVerified": true,
+    "requiredReports": 6,
+    "failures": 0,
+    "source": "aabb62a0a99b541b5bad41f54a827cbedbf102b6",
+    "dirty": false,
+    "environment": "Windows Server 2025 x64 GitHub-hosted VM",
+    "observedInReports": [
+      "two isolated-data launches retain identity and grow store",
+      "two OS-data launches retain identity and grow store",
+      "data outside application bundle",
+      "native transport and scoped bridge",
+      "two instances on same VM over public DHT; four Ready clicks each and explicit B concession",
+      "matching final hash and results/identities retained on reopen",
+      "late startup recovers generation 2",
+      "never-ready produces visible bounded failed state generation 4"
+    ],
+    "finalHash": "sha256:686e649aede96c67f4a9c0da0f4e961b426e242b552b429031cd04fd77394b03",
+    "ordinaryConsumerLaunch": false,
+    "markOfTheWeb": false,
+    "twoIndependentNetworks": false,
+    "reviewerExecutedApp": false
+  },
+  "relay": {
+    "run": 46073663908,
+    "job": 140756273158,
+    "source": "f31d7a569887a6e65c6fad1787e1cfa5581ed669",
+    "workflowConclusion": "failure",
+    "reviewerReadLogs": true,
+    "carriageQualified": false,
+    "nextHypothesis": "Advertised OPEN/direct branch may bypass server relay pairing in pairwise-filtered namespace topology; requires instrumented native control."
+  },
+  "mac": {
+    "reviewerExecutedApp": false,
+    "submittedInstalledResultsInspected": true,
+    "source": "aabb62a0a99b541b5bad41f54a827cbedbf102b6",
+    "visibleImagesInspected": [
+      "installed-b2-recovered-home.jpg",
+      "installed-b4-orbit-90.jpg",
+      "installed-b5-close.jpg"
+    ],
+    "visualAssessment": "Red visible at Home; usable close framing; limited 2D side view. Does not establish volumetric geometry or animation performance.",
+    "ownerPackage": "red-pose-art",
+    "ownerRevision": "2026-11-02.1",
+    "ownerManifestSha256": "fc2d4d6cf1ea70eb83403ab842a0d85374b71039bd5afc218677f14301be1098",
+    "submittedSameMatchOwnerRecovery": true
+  },
+  "liveBrowser": {
+    "url": "http://127.0.0.1:5199/versus.html",
+    "browser": "Chrome",
+    "sourceIdentityEstablished": false,
+    "observations": [
+      "Red selected by default, owner status ready",
+      "visible Red at Home",
+      "three songs available in table mix; audio output not measured",
+      "one Ready: resolving then Tick2 planning without second acknowledgement"
+    ],
+    "screenshot": "browser-red-home.jpg",
+    "screenshotSha256": "b67b8063425c81adcd9b966ac6832696732296ad728e6b6d61db0593a940bee7",
+    "multiplayerTest": false,
+    "animationPerformanceMeasured": false
+  },
+  "limits": [
+    "No reviewer native/installed execution",
+    "No human two-home acceptance",
+    "No consumer Windows SmartScreen/firewall witness",
+    "No successful forced alternate-relay stream",
+    "Local browser unversioned"
+  ]
+}

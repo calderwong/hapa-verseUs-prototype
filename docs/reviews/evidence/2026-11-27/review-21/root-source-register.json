@@ -1,0 +1,181 @@
+{
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "commit": "d0be02d0e4a7b6f6132ce499bf0d45d82b30327f",
+  "files": [
+    {
+      "path": "README.md",
+      "gitBlob": "0e0fd7d82aa12417dc1040563cb6f48bb89ebb12",
+      "sha256": "6f8d9221d54f77baf0cd8147f1dc23b57fe3ab274ea185311c570de2c4403b02",
+      "bytes": 16276,
+      "verified": true
+    },
+    {
+      "path": "forge.config.cjs",
+      "gitBlob": "eced43553a1170866bcbffd2ffcad4e5fa34be6b",
+      "sha256": "0f7a4257959ccc96a96179808278df9c5c3545d209d4c437046747fe810fbb00",
+      "bytes": 7145,
+      "verified": true
+    },
+    {
+      "path": "AGENTS.md",
+      "gitBlob": "c99e33e82cb2f9488276c365e8cc609425bcab87",
+      "sha256": "abd79d06da4c8af7b35d2ab0d6a01a76ec6aad840405e309a7d5f6247faf56dc",
+      "bytes": 7841,
+      "verified": true
+    },
+    {
+      "path": "desktop/smoke.mjs",
+      "gitBlob": "389e2f657139390a45c4b5e8eb98ba9345a14dc7",
+      "sha256": "2d65e18e1ae19b01a3be2241260fb5948848f6a241ed4b447a3defa23c9d78c2",
+      "bytes": 24264,
+      "verified": true
+    },
+    {
+      "path": "tools/hapa/desktop-avatar-journey.mjs",
+      "gitBlob": "8e4d75729264f2dd7b8704f8d6b98cbb58337cf9",
+      "sha256": "8475a30e7f13ff4fdb80571df933624735d045a6ce7a937a8409e8e82753b796",
+      "bytes": 4500,
+      "verified": true
+    },
+    {
+      "path": ".github/workflows/relay-witness.yml",
+      "gitBlob": "5df6fb7cbfe24343e4736fd3617a4e30ca4b694a",
+      "sha256": "b7c4aff02c219a6c9ac9dfd21b27cc383dba5df466a799fb6ce0d06d95f45fd1",
+      "bytes": 1411,
+      "verified": true
+    },
+    {
+      "path": ".github/workflows/windows-smoke.yml",
+      "gitBlob": "db6b14e8fc3ac7e747db7ea05384fdcef9ed5dc1",
+      "sha256": "621f5c009135ff7a80d697f3e825a8979caf50cb50eb169abcdfdee2068c029e",
+      "bytes": 6366,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/README.md",
+      "gitBlob": "3870d12831ffc4fe4ac00a9a8d9ec5e2443ff13c",
+      "sha256": "8f136be41088d4c6eaefa50534de24c3a1183060bc570723e22c45c024cefb31",
+      "bytes": 8796,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/IMPLEMENTATION_CHECKPOINT.md",
+      "gitBlob": "3ace08fb8a0b68fdea3b1c8e8bdc475f9e4f4976",
+      "sha256": "7bab93b102963eed8c0b972c98a6dc2bbf972e12b1c04332582ea99928fcd52d",
+      "bytes": 25243,
+      "verified": true
+    },
+    {
+      "path": "docs/integrations/online-desktop-runbook.md",
+      "gitBlob": "8e39500ce25ce0bb8d28aa1e58d03f345219dc76",
+      "sha256": "a88cd9764b5dfe96b9e7b48aff6d9f4aa5994bef9ed4f795350f1f02115634bf",
+      "bytes": 17506,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/README.md",
+      "gitBlob": "60655a91f2aa20abddfef3ba4f0c9a44eccc1ad1",
+      "sha256": "6441ed12037ce5fe7113babd4e59e082d600c773a57f96c1ffa550d4e4b1d4c4",
+      "bytes": 32255,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/2026-11-27-implementation-response-22.md",
+      "gitBlob": "a31f39d2f1ab9c05428c47a8c24fe1917677979f",
+      "sha256": "bde7c5ba401038456e50bdb668301be0d497605f6fcbab48305ee1c5e61d6366",
+      "bytes": 11932,
+      "verified": true
+    },
+    {
+      "path": "docs/player/play-with-a-friend.md",
+      "gitBlob": "dc9c166ef82a34c6e6e44b2ec707cac576570c9a",
+      "sha256": "7c030063c3e00b61bcb337f6363e61ac3e0ea0f05b5eaef8cfe4d36dfaee5b8c",
+      "bytes": 4176,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/mac-installed-smoke.json",
+      "gitBlob": "c6ced01218217475f478b4dca5eb6f3e2a2b644c",
+      "sha256": "d3cac96519ca2a920d4124405e4e36fb82067f77615b0adafcb294d65c5366a7",
+      "bytes": 3676,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/installed-b5-close.jpg",
+      "gitBlob": "511e19bacc859739b08735056eff9fbbe0d29898",
+      "sha256": "9275166fb355c3cc785aa45d9e40e45cc5578ea48d25a34fed363d4149389d16",
+      "bytes": 151485,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/installed-avatar-journey.json",
+      "gitBlob": "fce36648164b5aa96270e322162ff499eb1c48f2",
+      "sha256": "60a23dff257877dab54535ad33433acc5e21299b0695499b3d6fc8b8c76029e2",
+      "bytes": 3669,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/installed-b2-recovered-home.jpg",
+      "gitBlob": "5d21dfc8dba859d1a0fd4edf62091dfc20439582",
+      "sha256": "d7bbecee811e4a4aa921300925fefb600b5727944acc20527fa7c84750916d7a",
+      "bytes": 197940,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/installed-b4-orbit-90.jpg",
+      "gitBlob": "ecceb7cee7d924229897f93789af84ae6be49ed5",
+      "sha256": "0f9a9d248a2985f6ce455e7a3f28c1f52d9a55b45e6ab2993ac3c48083474baf",
+      "bytes": 260470,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/conformance-execution.json",
+      "gitBlob": "7dae2881f20c804ef74653169b3704aa7d4e24f8",
+      "sha256": "00a28456c48b77fefbf27e693eabb76e3d269bf476220b110f036ffbcf8ae664",
+      "bytes": 8539,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/mac-installed-invite-journey.json",
+      "gitBlob": "bc4aaf2833cc324db88e0f51995072f74542bcd5",
+      "sha256": "b365324895e95c7ef2fd0c80b8af9fbe2e51e9dc75c6d03498dc23a314715413",
+      "bytes": 1444,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/installed-b1-owner-absent-home.jpg",
+      "gitBlob": "e9362a628ecbf0c585e71a7bbb361a964b14d962",
+      "sha256": "a1aae029f92fc22e2f05ea5382b57ee5a11c47ee109be824ac3a30038d835eb3",
+      "bytes": 193685,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/npm-check-summary.txt",
+      "gitBlob": "468fd77b88dfc0a8600a6ed834f6e18a814d18bf",
+      "sha256": "9a9be81eeade426dd5806f4fbbe862245ab0115dd9f5a4eab1163d432e349f7b",
+      "bytes": 228,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/windows-run-46074882482/qualification.json",
+      "gitBlob": "030f6366d9115e71bf98ffd7e3e446dbd79afa1f",
+      "sha256": "6f40b2c9c539ece0dc6ba3ff163688b1e04f6a5fab14521a039cc9c3548853ba",
+      "bytes": 208,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/windows-run-46074882482/invite-journey.json",
+      "gitBlob": "9c48f796f774eb45d6096f60c5cd5d75bd8917c8",
+      "sha256": "1e8ea19e65ff2d8651d7dc11768a813c279f38c707465ceb67d46fbba439429c",
+      "bytes": 1611,
+      "verified": true
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-22/windows-run-46074882482/artifact.json",
+      "gitBlob": "1436b5883a040c11a6c0642c32805c9ad458af5d",
+      "sha256": "eba1ed688ca91a0b956b3895d0ef2666591f800ee72d86c89f52ba0bbbeb2bd4",
+      "bytes": 296,
+      "verified": true
+    }
+  ]
+}
