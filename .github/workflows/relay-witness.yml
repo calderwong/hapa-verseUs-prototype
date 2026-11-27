@@ -18,12 +18,12 @@ jobs:
         with: { node-version: '22' }
       - name: Install dependencies (no Electron binary, no install scripts)
         env: { ELECTRON_SKIP_BINARY_DOWNLOAD: '1' }
-        run: npm ci --ignore-scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Run the witness
         run: sudo env "PATH=$PATH" bash tools/hapa/relay-netns-witness.sh "$RUNNER_TEMP/relay-witness"
       - name: Record source identity
         if: always()
-        run: echo "{\"commit\":\"$GITHUB_SHA\",\"run\":\"$GITHUB_RUN_ID\",\"node\":\"$(node --version)\"}" | sudo tee "$RUNNER_TEMP/relay-witness/source.json"
+        run: sudo mkdir -p "$RUNNER_TEMP/relay-witness" && echo "{\"commit\":\"$GITHUB_SHA\",\"run\":\"$GITHUB_RUN_ID\",\"node\":\"$(node --version)\"}" | sudo tee "$RUNNER_TEMP/relay-witness/source.json"
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: relay-witness-evidence, path: '${{ runner.temp }}/relay-witness' }
