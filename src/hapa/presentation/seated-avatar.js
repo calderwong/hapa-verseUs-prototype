@@ -35,6 +35,33 @@ const TACTICAL_FADE = [62, 76]; // camera pitch degrees: full → gone
 const SAMPLE_MS = 50;
 
 /**
+ * Scene light on the owner's frame (VA-06 Red lighting integration, review 18). The owner renders
+ * Red evenly lit on a flat background; at the table he sits between warm practicals and the cool
+ * dusk. After matting, a restrained grade is painted only over his own pixels (source-atop): a warm
+ * key from the side of the nearest lanterns/brazier (following their current level), a cool fill
+ * from the opposite side and the sky, and the lower body falling into the table's shade. Likeness is
+ * untouched: no shape, feature or color is replaced, and the amounts stay small.
+ * @param {CanvasRenderingContext2D} g @param {number} W @param {number} H
+ * @param {{ side: number, level: number }} light side −1 (canvas left) … +1 (right); level 0…1.5
+ */
+export function gradeFrame(g, W, H, { side = -1, level = 1 } = {}) {
+  g.save();
+  g.globalCompositeOperation = 'source-atop';
+  const warmX = side < 0 ? 0 : W, coolX = W - warmX;
+  const k = Math.max(0, Math.min(1.5, level)) * Math.min(1, Math.abs(side) + 0.35);
+  const warm = g.createLinearGradient(warmX, 0, W / 2, 0);
+  warm.addColorStop(0, `rgba(255,148,66,${(0.2 * k).toFixed(3)})`); warm.addColorStop(1, 'rgba(255,148,66,0)');
+  g.fillStyle = warm; g.fillRect(0, 0, W, H);
+  const cool = g.createLinearGradient(coolX, 0, W / 2, H * 0.4);
+  cool.addColorStop(0, 'rgba(92,124,172,0.13)'); cool.addColorStop(1, 'rgba(92,124,172,0)');
+  g.fillStyle = cool; g.fillRect(0, 0, W, H);
+  const shade = g.createLinearGradient(0, H * 0.6, 0, H);
+  shade.addColorStop(0, 'rgba(26,17,12,0)'); shade.addColorStop(1, 'rgba(26,17,12,0.34)');
+  g.fillStyle = shade; g.fillRect(0, 0, W, H);
+  g.restore();
+}
+
+/**
  * Remove the owner's constant background where it touches the frame border; un-blend the rim.
  * @param {ImageData} img mutated in place
  */
@@ -141,9 +168,26 @@ export class SeatedAvatar {
     this.face = new THREE.Vector3(0, -sink + bodyH * 0.74, -1.2);
     o.root.add(this.group);
     this.root = o.root;
+    this.lightSource = o.light ?? null;
     this.source = null;
     this.visibility = 0;
     this._last = 0;
+  }
+
+  /** Where the warm practicals are, seen from the figure: canvas side and current level. */
+  _light() {
+    const ps = this.lightSource?.() ?? null;
+    if (!ps?.length) return { side: -1, level: 0.8 };
+    this.group.updateMatrix();
+    const inv = this.group.matrix.clone().invert(), v = new THREE.Vector3();
+    let sx = 0, sum = 0;
+    for (const p of ps) {
+      v.set(p.x, p.y, p.z).applyMatrix4(inv); // into the seat's frame (both live under the same root)
+      const wgt = p.w / Math.max(400, v.lengthSq());
+      sx += Math.sign(v.x) * wgt; sum += wgt;
+    }
+    // the plane faces local +z, so local −x is the canvas's left edge
+    return { side: sum ? Math.max(-1, Math.min(1, sx / sum)) : -1, level: Math.min(1.5, sum * 2200) };
   }
 
   /** Bind the owner's canvas (or null: chair only, e.g. text-only fallback). */
@@ -197,6 +241,7 @@ export class SeatedAvatar {
           g.drawImage(this.source, 0, 0, this.sample.width, this.sample.height);
           const img = g.getImageData(0, 0, this.sample.width, this.sample.height);
           g.putImageData(matte(img), 0, 0);
+          gradeFrame(g, this.sample.width, this.sample.height, this._light());
           this.texture.needsUpdate = true;
           this._hasFrame = true;
         } catch (e) { this.sampleError = e.message; }

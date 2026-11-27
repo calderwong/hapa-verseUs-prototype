@@ -20,7 +20,8 @@ import { signBody, verifyBody, randomHex, keyOfPlayer } from './control.js';
 import { fingerprint } from '../rules/encoding.js';
 import { HeuristicBot } from '../controllers/heuristic-bot.js';
 import { ResultIndex } from './result-index.js';
-import { buildBundle, verifyBundle } from './results.js';
+import { buildBundle, verifyBundle, resultKey } from './results.js';
+import { feedPrefix } from './prefix.js';
 
 export const RUNTIME_VERSION = 'hapa-versus-peer-runtime/0.2.0';
 const OFFER_MS = 120_000;
@@ -88,7 +89,29 @@ export class PeerRuntime {
     this.state = 'open';
     this.log(`runtime open ${this.networkId} ${fingerprintOf(identity.publicKey)} launch ${this.launch.index}`);
     await this._resumeMatches();
+    this._reconcileReservation();
     return this.status();
+  }
+
+  /**
+   * Startup reconciliation of the one reservation against the durable sessions (review 18, R18-03).
+   * An `active` reservation must name the live authority; when it does not, the reservation is
+   * released (durably) and the session's record is classified, never deleted: a legacy online
+   * version (not executed as v2) is labelled unsupported with its journals and bytes kept; a
+   * finishing, recorded, abandoned or missing session needs no reservation. Setup phases keep their
+   * own stalled/Retry/Leave handling.
+   */
+  _reconcileReservation() {
+    const r = this.reservation;
+    if (!r || r.phase !== 'active' || (this.match && this.match.matchId === r.matchId)) return;
+    const dir = this.store.path('matches', r.matchId ?? '-');
+    const s = readJson(join(dir, 'session.json'));
+    const p = readJson(join(dir, 'progress.json'));
+    if (s && s.descriptor?.online !== ONLINE_PROTOCOL && !['abandoned', 'abandoned_setup', 'recorded', 'unsupported'].includes(p?.status)) {
+      writeJsonAtomic(join(dir, 'progress.json'), { ...(p ?? {}), status: 'unsupported', previous: p?.status ?? s.phase ?? 'active', protocol: s.descriptor?.online ?? null, reason: `recorded by an older online version (${s.descriptor?.online ?? 'unknown'}); kept, not resumed`, at: new Date().toISOString() });
+      this.log(`released the reservation for legacy match ${r.matchId} (${s.descriptor?.online}); its record is kept as unsupported`);
+    } else this.log(`released a reservation with no live match (${r.matchId ?? 'no id'}, ${p?.status ?? 'no progress'})`);
+    this._reserve(null);
   }
 
   /**
@@ -144,6 +167,8 @@ export class PeerRuntime {
       });
       await this.lobby.start();
       if (this.match) this.lobby.join('match', this.match.matchId);
+      // every authority that still owns unfinished work is reachable too (review 18, R18-06)
+      for (const m of this.finishing.values()) this.lobby.join('match', m.matchId);
       // configured directory/archive services are dialled directly by their transport key (R16-03)
       for (const a of this.archives) this.lobby.dial(a.transport);
     }
@@ -167,7 +192,8 @@ export class PeerRuntime {
       joined: !!this.lobby, transport: this.lobby?.transport() ?? { state: 'off' }, me: { ...publicPlayer(this.identity), fingerprint: fingerprintOf(this.identity.publicKey), availability: this.availability(), manual: this.settings.availability, controller: this.controllerKind },
       roster: (this.lobby?.roster() ?? []).map((r) => ({ ...r, record: r.role === 'archive' ? null : recordLine(this.results.stats(r.playerId)) })), record: recordLine(this.results.stats(this.identity.participantId)), incoming: [...this.incoming.values()].map((x) => ({ challengeId: x.body.challengeId, from: x.body.from, label: x.fromLabel, fingerprint: fingerprintOf(keyOfPlayer(x.body.from)), controller: x.body.controller, expiresInMs: Math.max(0, OFFER_MS - (now() - x.receivedAt)) })),
       services: this._services(), reservation: this._publicReservation(), compat: { id: this.compat.id.slice(7, 19), profileId: this.compat.profileId, rules: this.compat.rulesImplementation.slice(7, 19) },
-      match: this.match ? { matchId: this.match.matchId, status: this.match.status, seat: this.match.seat, opponent: this.match.opponent.label } : null,
+      match: this.match ? { matchId: this.match.matchId, status: this.match.status, seat: this.match.seat, opponent: this.match.opponent.label, unstarted: this.match.history.length === 0 && !(this.match.remote?.length > 0) } : null,
+      finishing: [...this.finishing.values()].filter((m) => !m.closed && m.status === 'finishing').map((m) => ({ matchId: m.matchId, opponent: m.opponent.label })),
     };
   }
 
@@ -187,8 +213,14 @@ export class PeerRuntime {
     this.emit({ type: 'lobby', kind: ev === 'transport' ? 'transport' : 'roster', roster: this.lobby?.roster() ?? [], transport: this.lobby?.transport() });
   }
 
+  /**
+   * Route a connection to every owned authority with this opponent — the active match and any match
+   * still finishing (review 18, R18-06) — so a reopened terminal match replicates and can complete.
+   */
   _onConnection(peer, conn) {
-    if (this.match && peer.playerId === this.match.opponent.participantId) { this.match.attach(conn); this.lobby?.announce(); }
+    let any = false;
+    for (const m of new Set([this.match, ...this.finishing.values()])) if (m && !m.closed && peer.playerId === m.opponent.participantId) { m.attach(conn); any = true; }
+    if (any) this.lobby?.announce();
   }
 
   setAvailability(args) {
@@ -201,6 +233,7 @@ export class PeerRuntime {
 
   _sweepOffers() {
     const t = now();
+    if (this.finishing.size) this._recoverFinishing().catch((e) => this.log(`evidence recovery: ${e.message}`));
     for (const [id, x] of this.incoming) if (t - x.receivedAt > OFFER_MS) { this.incoming.delete(id); this.emit({ type: 'lobby', kind: 'challengeExpired', challengeId: id }); }
     const r = this.reservation;
     if (r && r.phase === 'open' && t - (r.localAt ?? 0) > TABLE_MS) { this._reserve(null); this.emit({ type: 'lobby', kind: 'tableExpired', challengeId: r.challengeId }); }
@@ -354,6 +387,12 @@ export class PeerRuntime {
       case 'cancel': if (this.incoming.delete(msg.challengeId)) this.emit({ type: 'lobby', kind: 'challengeCancelled', challengeId: msg.challengeId }); return;
       case 'decline': {
         const r = this.reservation;
+        // lost STARTED (R18-03): this side already opened the match, the other side never saw it start
+        // and has now left that attempt. With no agreed Tick and nothing in its feed, the match can never
+        // continue: it is closed as an unstarted setup (no result, no loss) and the seat is freed.
+        if (r?.phase === 'active' && msg.reason === 'left' && r.challengeId === msg.challengeId && r.opponent === peer.playerId && this.match?.matchId === r.matchId && this.match.history.length === 0 && !(this.match.remote?.length > 0)) {
+          return this._serial(() => this._releaseUnstarted('the other player left before the match started'));
+        }
         if ((r?.phase === 'accepted' || r?.phase === 'starting') && r.challengeId === msg.challengeId && r.opponent === peer.playerId) { this._reserve({ ...r, stalled: true, otherLeft: String(msg.reason ?? 'left').slice(0, 24) }); this.emit({ type: 'lobby', kind: 'setupStalled', challengeId: r.challengeId, phase: r.phase, opponent: r.opponentLabel, reason: 'the other player left this attempt' }); return; }
         if (r?.phase === 'offered' && r.challengeId === msg.challengeId && r.opponent === peer.playerId) { this._reserve(null); this.emit({ type: 'lobby', kind: 'challengeDeclined', challengeId: msg.challengeId, reason: String(msg.reason ?? 'declined').slice(0, 24), by: peer.player.label }); }
         return;
@@ -371,6 +410,7 @@ export class PeerRuntime {
       case 'players.query': { const page = this.results.players({ offset: Number.isSafeInteger(msg.offset) ? msg.offset : 0, limit: 50 }); this.lobby.send(peer.playerId, { t: 'players.page', req: msg.req, total: page.total, items: page.items }); return; }
       case 'players.page': { const q = this._requests.get(msg.req); if (q) { this._requests.delete(msg.req); q(msg); } return; }
       case 'result.get': return this._onResultGet(peer, msg);
+      case 'evidence.get': return this._onEvidenceGet(peer, msg);
       case 'results.page': case 'resultBundle': { const r = this._requests.get(msg.req); if (r) { this._requests.delete(msg.req); r(msg); } return; }
       case 'accept': if (this._tombstoned(msg.body?.challengeId, msg.body?.matchId)) { this.lobby.send(peer.playerId, { t: 'decline', challengeId: msg.body?.challengeId, reason: 'left' }); return; } return this._serial(() => this._onAccept(peer, msg));
       case 'start': if (this._tombstoned(null, msg.descriptor?.matchId)) return; return this._serial(() => this._onStart(peer, msg));
@@ -516,23 +556,80 @@ export class PeerRuntime {
 
   _onComplete(m) {
     if (this.reservation?.matchId === m.matchId || this.match === m) this._reserve(null);
-    this.lobby?.leaveTopic('match', m.matchId);
     if (this.match === m) { this.finishing.set(m.matchId, m); }
     this.lobby?.announce();
-    this._finalize(m).catch((e) => { this.log(`result not saved: ${e.message}`); this.emit({ type: 'match', matchId: m.matchId, kind: 'resultSaved', status: 'failed', reason: e.message }); });
+    if (m._finalizing) return;
+    m._finalizing = true;
+    this._finalize(m).catch((e) => { m._finalizing = false; this.log(`result not saved: ${e.message}`); this.emit({ type: 'match', matchId: m.matchId, kind: 'resultSaved', status: 'failed', reason: e.message }); });
+  }
+
+  // --- terminal evidence after the counterpart retired (review 18, R18-06) ----------------------
+  /**
+   * Serve this player's durable result evidence for a match: the verified bundle stored in the
+   * result index, never a live authority. A counterpart that crashed before receiving our closing
+   * record can finish from it after we retired and even after we restarted. Public evidence (the same
+   * bundles archives hold); at most one answer per peer per second.
+   */
+  _onEvidenceGet(peer, msg) {
+    const at = (this._evidenceAt ??= new Map()).get(peer.playerId) ?? 0;
+    if (Date.now() - at < 1000) return;
+    this._evidenceAt.set(peer.playerId, Date.now());
+    const key = resultKey(this.networkId, String(msg.matchId ?? '').slice(0, 80));
+    const want = this.results.bundles(key).find((b) => { const v = verifyBundle(b); return v.ok && v.descriptorHash === msg.descriptorHash; }) ?? null;
+    this.lobby.send(peer.playerId, { t: 'resultBundle', req: msg.req, key, bundle: want });
+  }
+
+  /**
+   * For each match still waiting for the other side's closing record, ask the counterpart and
+   * connected archives for the verified evidence, with a per-match backoff (5 s doubling to 60 s).
+   * Adopted only if it verifies completely, names this session, contains exactly this player's own
+   * stored history (same feed key, length and Merkle root) and the same final state.
+   */
+  async _recoverFinishing() {
+    if (!this.lobby || this._recovering) return;
+    this._recovering = true;
+    try {
+      for (const m of [...this.finishing.values()]) {
+        if (m.closed || m._finalizing || m.status !== 'finishing' || !m.finalHash) continue;
+        // replication normally delivers the closing record within moments; ask only after a pause
+        if (m._evidenceNext === undefined) { m._evidenceNext = Date.now() + 5000; continue; }
+        if (Date.now() < m._evidenceNext) continue;
+        m._evidenceDelay = Math.min(60_000, (m._evidenceDelay ?? 2500) * 2);
+        m._evidenceNext = Date.now() + m._evidenceDelay;
+        const peers = [this.lobby.peers.get(m.opponent.participantId), ...[...this.lobby.peers.values()].filter((p) => p.presence.role === 'archive')].filter(Boolean);
+        for (const p of peers) {
+          const got = await this._ask(p, { t: 'evidence.get', matchId: m.matchId, descriptorHash: fingerprint(m.descriptor) }, 10_000).catch(() => null);
+          if (got?.bundle && await this._adoptEvidence(m, got.bundle, p)) break;
+        }
+      }
+    } finally { this._recovering = false; }
+  }
+
+  async _adoptEvidence(m, bundle, from) {
+    const v = verifyBundle(bundle);
+    if (!v.ok || v.matchId !== m.matchId || v.descriptorHash !== fingerprint(m.descriptor) || v.finalStateHash !== m.finalHash) return false;
+    const mine = v.prefixes[m.seat];
+    const held = await feedPrefix(m.own, mine.length).catch(() => null);
+    if (!held || held.key !== mine.key || held.root !== mine.root || held.length !== mine.length) return false;
+    if (m.closed || m._finalizing) return false;
+    m._finalizing = true;
+    this.log(`finishing ${m.matchId} from verified evidence held by ${from.player.label}`);
+    this.emit({ type: 'match', matchId: m.matchId, kind: 'evidenceRecovered', from: from.player.label });
+    await this._finalize(m, bundle).catch((e) => { m._finalizing = false; this.log(`result not saved: ${e.message}`); });
+    return true;
   }
 
   /**
    * Idempotent finalization: verified result, then its sharing job, then `recorded`. Each step is
    * safe to repeat after a crash at any point; only then is the authority closed (once).
    */
-  async _finalize(m) {
+  async _finalize(m, given = null) {
     const session = readJson(join(m.dir, 'session.json'));
-    const bundle = buildBundle({ session, evidence: await m.evidence() });
+    const bundle = given ?? buildBundle({ session, evidence: await m.evidence() });
     const r = this.results.submit(bundle, { source: 'participant' });
     if (r.status !== 'added' && r.status !== 'duplicate' && r.status !== 'disputed') throw new Error(`own evidence did not verify: ${r.reason}`);
     if (!this.outbox[r.key]) { this.outbox[r.key] = { matchId: m.matchId, archivedBy: [] }; this._saveOutbox(); }
-    writeJsonAtomic(join(m.dir, 'progress.json'), { status: 'recorded', outcome: m.state.outcome, finalHash: m.finalHash, key: r.key, commitment: r.commitment, at: new Date().toISOString() });
+    writeJsonAtomic(join(m.dir, 'progress.json'), { status: 'recorded', outcome: m.state.outcome, finalHash: m.finalHash, key: r.key, commitment: r.commitment, at: new Date().toISOString(), ...(given ? { via: 'retrieved-evidence' } : {}) });
     this.emit({ type: 'match', matchId: m.matchId, kind: 'resultSaved', status: 'saved', key: r.key, commitment: r.commitment, record: this.results.stats(this.identity.participantId) });
     for (const p of this.lobby?.peers.values() ?? []) if (p.presence.role === 'archive') this._flushOutbox(p);
     await this._retire(m);
@@ -546,6 +643,7 @@ export class PeerRuntime {
     this.lastCompleted = m.snapshot();
     this.finishing.delete(m.matchId);
     if (this.match === m) this.match = null;
+    this.lobby?.leaveTopic('match', m.matchId);
     await m.close();
   }
 
@@ -573,7 +671,8 @@ export class PeerRuntime {
   }
 
   _onResultsQuery(peer, msg) {
-    const page = this.results.list({ playerId: typeof msg.playerId === 'string' ? msg.playerId : null, offset: Number.isSafeInteger(msg.offset) ? msg.offset : 0, limit: 20 });
+    // every verified commitment, not only the first of a conflict (R18-07)
+    const page = this.results.commitments({ playerId: typeof msg.playerId === 'string' ? msg.playerId : null, offset: Number.isSafeInteger(msg.offset) ? msg.offset : 0, limit: 20 });
     this.lobby.send(peer.playerId, { t: 'results.page', req: msg.req, total: page.total, items: page.items.map((x) => ({ key: x.key, commitment: x.commitment })) });
   }
 
@@ -595,20 +694,28 @@ export class PeerRuntime {
   /** Pull verified evidence from connected archives (optionally for one player); verify each locally. */
   async syncResults(args = {}) {
     const archives = [...(this.lobby?.peers.values() ?? [])].filter((p) => p.presence.role === 'archive');
-    const out = { archives: archives.length, fetched: 0, added: 0, duplicate: 0, refused: 0, disputed: 0 };
+    const out = { archives: archives.length, fetched: 0, added: 0, duplicate: 0, refused: 0, disputed: 0, sources: [] };
+    // completion is tracked per source (review 18, R18-08): a source is `complete` only when every page
+    // it advertised was enumerated and every missing item retrieved; a timeout on the first page is
+    // `failed`, a later gap `partial`. Only complete sources can support a checked zero.
     for (const a of archives) {
+      const src = { label: a.player.label, player: a.playerId, state: 'complete', error: null, advertised: 0 };
+      out.sources.push(src);
       for (let offset = 0; offset < 1000; offset += 20) {
-        const page = await this._ask(a, { t: 'results.query', playerId: args.playerId ?? null, offset }).catch(() => null);
-        if (!page) break;
+        let page;
+        try { page = await this._ask(a, { t: 'results.query', playerId: args.playerId ?? null, offset }); } catch (e) { src.state = offset === 0 ? 'failed' : 'partial'; src.error = e.message; break; }
+        src.advertised = page.total ?? src.advertised;
         for (const it of page.items ?? []) {
           if (this.results.has(it.key, it.commitment)) { out.duplicate++; continue; }
-          const got = await this._ask(a, { t: 'result.get', key: it.key, commitment: it.commitment }).catch(() => null);
-          if (!got?.bundle) continue;
+          let got;
+          try { got = await this._ask(a, { t: 'result.get', key: it.key, commitment: it.commitment }); } catch (e) { src.state = 'partial'; src.error = e.message; continue; }
+          if (!got?.bundle) { src.state = 'partial'; src.error = 'an advertised result was not returned'; continue; }
           out.fetched++;
           const r = this.results.submit(got.bundle, { source: `archive:${a.fingerprint}` });
           if (r.status === 'added') out.added++; else if (r.status === 'duplicate') out.duplicate++; else if (r.status === 'disputed') out.disputed++; else out.refused++;
         }
         if (!page.items?.length || offset + 20 >= page.total) break;
+        if (offset + 20 >= 1000) { src.state = 'partial'; src.error = 'more results than one sync reads'; }
       }
     }
     return out;
@@ -632,9 +739,16 @@ export class PeerRuntime {
     else {
       let job = this._syncInFlight.get(pid);
       if (!job) { job = this.syncResults({ playerId: pid }).finally(() => this._syncInFlight.delete(pid)); this._syncInFlight.set(pid, job); }
-      const r = await job.catch((e) => ({ error: e.message }));
-      sync = r.error ? { state: 'archive-unavailable', error: r.error } : { state: 'synced', at: new Date().toISOString(), sources: archives.map((a) => a.player.label), fetched: r.fetched, added: r.added, refused: r.refused };
-      this._profileCache.set(pid, { at: Date.now(), sync });
+      const r = await job.catch((e) => ({ error: e.message, sources: [] }));
+      const done = (r.sources ?? []).filter((s) => s.state === 'complete'), bad = (r.sources ?? []).filter((s) => s.state !== 'complete');
+      const sources = (r.sources ?? []).map((s) => ({ label: s.label, state: s.state, error: s.error }));
+      // synced only when every source completed; a failed or partial source is said, never cached as
+      // a checked answer, and retried on the next request (R18-08)
+      sync = r.error || !done.length ? { state: 'archive-unavailable', error: r.error ?? bad[0]?.error ?? 'no archive answered', sources }
+        : bad.length ? { state: 'partial', at: new Date().toISOString(), sources, fetched: r.fetched, added: r.added, refused: r.refused }
+          : { state: 'synced', at: new Date().toISOString(), sources, fetched: r.fetched, added: r.added, refused: r.refused };
+      if (sync.state === 'synced') this._profileCache.set(pid, { at: Date.now(), sync });
+      else this._profileCache.delete(pid);
       if (this._profileCache.size > 200) this._profileCache.delete(this._profileCache.keys().next().value);
     }
     const stats = this.results.stats(pid);
@@ -661,6 +775,20 @@ export class PeerRuntime {
   _matchFor(args) {
     if (!this.match || (args.matchId && args.matchId !== this.match.matchId)) throw Object.assign(new Error('no such active match'), { code: 'NO_MATCH' });
     return this.match;
+  }
+
+  /** Close an active match that never started on the other side; tombstoned, kept, no result (R18-03). */
+  async _releaseUnstarted(reason) {
+    const m = this.match, r = this.reservation;
+    this.tombstones.attempts[r?.challengeId ?? m.matchId] = { matchId: m.matchId, phase: 'active-unstarted', opponent: m.opponent.participantId, at: new Date().toISOString() };
+    writeJsonAtomic(this.store.path('tombstones.json'), this.tombstones);
+    writeJsonAtomic(join(m.dir, 'progress.json'), { status: 'abandoned_setup', previous: 'active', reason, at: new Date().toISOString(), lastAgreedTick: 0 });
+    await m.close();
+    this.lobby?.leaveTopic('match', m.matchId);
+    this.match = null;
+    this._reserve(null);
+    this.emit({ type: 'match', matchId: m.matchId, kind: 'unstarted', reason });
+    this.emit({ type: 'lobby', kind: 'setupLeft', challengeId: r?.challengeId ?? null, reason });
   }
 
   async abandon(args) {

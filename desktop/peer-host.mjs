@@ -13,6 +13,9 @@ const send = (m) => port.postMessage(m);
 port.on('message', async (e) => {
   const m = e.data;
   if (m?.type === 'init' && !runtime) {
+    // an isolated test may delay this worker's startup to stage a late or never-ready generation
+    const delay = (process.env.HAPA_VERSUS_PEER_DELAY_GENS === 'first' && m.gen > 1) ? 0 : Number(process.env.HAPA_VERSUS_PEER_DELAY_MS) || 0;
+    if (delay > 0) await new Promise((r) => setTimeout(r, delay));
     try {
       runtime = new PeerRuntime({ root: m.root, networkId: m.networkId, host: 'electron-utility', relayThrough: m.network?.relayThrough ?? null, relayEndpoints: m.network?.relayEndpoints ?? [], archives: m.network?.archives ?? [], log: (s) => process.stdout.write(`${s}\n`), onEvent: (event) => send({ type: 'event', event }) });
       const status = await runtime.open();

@@ -35,14 +35,19 @@ const stateRoot = () => join(app.getPath('userData'), 'state');
 
 // --- the app:// origin -------------------------------------------------------------------------
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8' };
-const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'";
+const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; frame-src http://red.versus.localhost; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'";
+// Red's renderer frame (review 18, R18-01; src/hapa/presentation/red-bridge.js): a loopback-only http
+// origin whose content is this game's bridge page plus Harbor's own forwarded routes. Harbor's player
+// mounts its package only on an http(s) page origin, which `app://versus/` is not.
+const RED_HOST = 'red.versus.localhost';
+const RED_CSP = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors app://versus; form-action 'none'";
 
 /** Owner configuration is explicit (userData/owners.json); none means every optional owner is absent. */
 function ownerConfig() {
   try { return JSON.parse(readFileSync(join(app.getPath('userData'), 'owners.json'), 'utf8')); } catch { return null; }
 }
 
-async function serveStatic(pathname) {
+async function serveStatic(pathname, csp = CSP) {
   let rel;
   try { rel = decodeURIComponent(pathname); } catch { return new Response('bad path', { status: 400 }); }
   if (rel === '/' || rel === '') rel = '/versus.html';
@@ -54,7 +59,7 @@ async function serveStatic(pathname) {
   } catch { return new Response('not found', { status: 404 }); }
   const type = MIME[extname(file).toLowerCase()] ?? 'application/octet-stream';
   const headers = { 'content-type': type, 'x-content-type-options': 'nosniff' };
-  if (type.startsWith('text/html')) headers['content-security-policy'] = CSP;
+  if (type.startsWith('text/html')) headers['content-security-policy'] = csp;
   return new Response(await readFile(file), { headers });
 }
 
@@ -91,9 +96,26 @@ async function handleApp(request) {
   return new Response('not found', { status: 404 });
 }
 
+/**
+ * The renderer session's http handler: only Red's frame origin exists; every other http request
+ * from the game page is refused (the page never needs one; its CSP already forbids them).
+ */
+async function handleRedFrame(request) {
+  const url = new URL(request.url);
+  if (url.host !== RED_HOST) return new Response('not found', { status: 404 });
+  if ((request.method === 'GET' || request.method === 'HEAD') && (url.pathname === '/red-frame.html' || url.pathname.startsWith('/assets/'))) {
+    const local = await serveStatic(url.pathname, RED_CSP);
+    if (local.status !== 404) return local;
+  }
+  const route = matchOwnerRoute(url.pathname);
+  if (route?.owner === 'harbor') return serveOwner(request, url, route);
+  return new Response('not found', { status: 404 });
+}
+
 // --- the peer utility process ------------------------------------------------------------------
-const peer = { proc: null, gen: 0, pending: new Map(), seq: 0, restarts: [], status: null, quitting: false, ready: null };
-const STARTUP_MS = 30_000;
+const peer = { proc: null, gen: 0, pending: new Map(), seq: 0, restarts: [], status: null, quitting: false, ready: null, state: 'starting', error: null };
+// the startup deadline; an isolated test may shorten it (HAPA_VERSUS_PEER_STARTUP_MS) to stage a late worker
+const STARTUP_MS = Number(process.env.HAPA_VERSUS_PEER_STARTUP_MS) > 0 ? Number(process.env.HAPA_VERSUS_PEER_STARTUP_MS) : 30_000;
 
 /**
  * Start one worker generation (review 16, R16-06). Its readiness settles exactly once — on ready,
@@ -103,6 +125,8 @@ const STARTUP_MS = 30_000;
  */
 function startPeer() {
   const gen = ++peer.gen;
+  let retired = false; // this generation missed its deadline: everything it says from now on is ignored
+  peer.state = 'starting'; peer.error = null;
   const entry = join(appRoot, 'desktop', 'peer-host.mjs');
   const proc = utilityProcess.fork(entry, [], { serviceName: 'Hapa Versus Peer', stdio: 'pipe' });
   peer.proc = proc;
@@ -112,12 +136,19 @@ function startPeer() {
   peer.ready = new Promise((resolveReady, rejectReady) => {
     let done = false;
     settle = (err, status) => { if (done) return; done = true; clearTimeout(timer); err ? rejectReady(err) : resolveReady(status); };
-    const timer = setTimeout(() => settle(Object.assign(new Error('the peer service did not start in time'), { code: 'RUNTIME_NOT_READY' })), STARTUP_MS);
+    // a missed deadline retires this generation (review 18, R18-05): its callers are settled with a
+    // recoverable error, the process is stopped, and the exit path below replaces it under the same
+    // bounded policy (or reports a usable failure); a late Ready from it is ignored
+    const timer = setTimeout(() => {
+      settle(Object.assign(new Error('the peer service did not start in time'), { code: 'RUNTIME_NOT_READY' }));
+      retired = true;
+      try { proc.kill(); } catch { /* already gone */ }
+    }, STARTUP_MS);
   });
-  peer.ready.catch((e) => { if (gen === peer.gen) broadcast({ type: 'runtime', state: 'failed', error: e.message }); });
+  peer.ready.catch((e) => { if (gen === peer.gen && !retired) { peer.state = 'failed'; peer.error = e.message; broadcast({ type: 'runtime', state: 'failed', error: e.message }); } });
   proc.on('message', (m) => {
-    if (gen !== peer.gen) return; // a stale generation's late message
-    if (m?.type === 'ready') { peer.status = m.status; settle(null, m.status); if (peer.restarts.length) broadcast({ type: 'runtime', state: 'ready', restarted: true }); }
+    if (gen !== peer.gen || retired) return; // a stale or retired generation's late message
+    if (m?.type === 'ready') { peer.status = m.status; peer.state = 'ready'; peer.error = null; settle(null, m.status); if (peer.restarts.length) broadcast({ type: 'runtime', state: 'ready', restarted: true }); }
     else if (m?.type === 'fatal') settle(Object.assign(new Error(m.error), { code: m.code ?? 'RUNTIME_FATAL' }));
     else if (m?.type === 'reply') { const p = peer.pending.get(m.id); if (p && p.gen === gen) { peer.pending.delete(m.id); m.ok ? p.resolve(m.value) : p.reject(Object.assign(new Error(m.error), { code: m.code })); } }
     else if (m?.type === 'event') broadcast(m.event);
@@ -130,12 +161,14 @@ function startPeer() {
     if (peer.quitting) return;
     const now = Date.now();
     peer.restarts = peer.restarts.filter((t) => now - t < 60_000);
-    if (peer.restarts.length >= 3) { broadcast({ type: 'runtime', state: 'failed', error: `the peer runtime stopped repeatedly (exit ${code})` }); return; }
+    const why = retired ? 'did not start in time' : `stopped (exit ${code})`;
+    if (peer.restarts.length >= 3) { peer.state = 'failed'; peer.error = `the peer service ${why} three times in a minute`; broadcast({ type: 'runtime', state: 'failed', error: peer.error, retry: true }); return; }
     peer.restarts.push(now);
-    broadcast({ type: 'runtime', state: 'restarting', exitCode: code });
+    peer.state = 'restarting';
+    broadcast({ type: 'runtime', state: 'restarting', exitCode: code, reason: why });
     setTimeout(startPeer, 500 * peer.restarts.length);
   });
-  proc.postMessage({ type: 'init', root: stateRoot(), networkId: NETWORK_ID, network: networkConfig() });
+  proc.postMessage({ type: 'init', gen, root: stateRoot(), networkId: NETWORK_ID, network: networkConfig() });
 }
 
 /** Wait for the current worker generation; a failed generation gives a recoverable error, never a hang. */
@@ -161,7 +194,9 @@ function callPeer(op, args, timeoutMs = 20_000) {
   if (!peer.proc) return Promise.reject(new Error('the peer runtime is not running'));
   const id = ++peer.seq;
   return new Promise((res, rej) => {
-    const t = setTimeout(() => { peer.pending.delete(id); rej(new Error(`${op} timed out`)); }, timeoutMs);
+    // a host deadline only ends this wait: the worker's operation is not cancelled and may still
+    // complete (the view asks the authority for the outcome; R18-02)
+    const t = setTimeout(() => { peer.pending.delete(id); rej(Object.assign(new Error(`${op} did not answer in time; it may still complete`), { code: 'HOST_TIMEOUT' })); }, timeoutMs);
     peer.pending.set(id, { gen: peer.gen, resolve: (v) => { clearTimeout(t); res(v); }, reject: (e) => { clearTimeout(t); rej(e); } });
     peer.proc.postMessage({ type: 'call', id, op, args });
   });
@@ -185,6 +220,12 @@ ipcMain.handle('versus:host', async (e, msg) => {
   if (!frameUrl.startsWith(`${ORIGIN}/`)) throw new Error('refused');
   if (msg?.op === 'about') return about();
   if (msg?.op === 'revealData') { shell.showItemInFolder(stateRoot()); return true; }
+  // the peer service's lifecycle and an explicit Retry after a bounded failure (R18-05)
+  if (msg?.op === 'peerStatus') return { state: peer.state, error: peer.error };
+  if (msg?.op === 'restartPeer') {
+    if (peer.state === 'failed' && !peer.proc) { peer.restarts = []; startPeer(); }
+    return { state: peer.state, error: peer.error };
+  }
   throw new Error('refused: unknown host operation');
 });
 
@@ -249,6 +290,7 @@ app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(
 app.whenReady().then(async () => {
   const ses = session.fromPartition(PARTITION);
   ses.protocol.handle('app', handleApp);
+  ses.protocol.handle('http', handleRedFrame);
   ses.setPermissionRequestHandler((_wc, permission, cb) => cb(permission === 'fullscreen' || permission === 'clipboard-sanitized-write'));
   buildMenu();
   startPeer();

@@ -21,7 +21,8 @@
     "desktop:make": "electron-forge make --arch=arm64",
     "desktop:smoke": "node tools/hapa/desktop-smoke.mjs",
     "lobby:serve": "node tools/hapa/lobby-serve.mjs",
-    "online": "node tools/hapa/online.mjs"
+    "online": "node tools/hapa/online.mjs",
+    "owners": "node tools/hapa/owners.mjs"
   },
   "dependencies": {
     "b4a": "^1.9.0",

@@ -650,5 +650,7 @@ export async function buildScenery(root, b) {
     group.removeFromParent();
   };
   const stats = () => ({ lights: lanterns.length, embers: EMBERS, liveEmbers: [...eLife].filter((v) => v > 0).length, glow, shimmer, inlay: inlay.emissiveIntensity, lantern0: lanterns[0]?.light.intensity, waterTime: clock });
-  return { group, update, dispose, stats };
+  /** The warm practicals (lanterns and brazier) in root space with their current level (Red's light, VA-06). */
+  const practicals = () => [...lanterns.map((l) => ({ x: l.x, y: l.y, z: l.z, w: l.light.intensity / l.base })), ...(brazier ? [{ x: brazierAt.x, y: brazierAt.y + 8, z: brazierAt.z, w: 1.4 }] : [])];
+  return { group, update, dispose, stats, practicals };
 }

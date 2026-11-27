@@ -53,19 +53,32 @@ export function paintGround(ctx, { cols, rows }) {
   for (let c = 1; c <= cols; c++) for (let r = 1; r <= rows; r++) {
     const colors = territoryColors(ctx.profile, c, r);
     const x0 = px(4 * c - 3.5), y0 = py(4 * r - 0.5), S = 3 * PX;
-    // stone slab: a base tone with slight per-slab variation, then two broad light/shade planes
-    const base = mix('A39886', 'B3A794', rnd()); // warm painted limestone
-    g.fillStyle = base; g.fillRect(x0, y0, S, S);
-    g.fillStyle = 'rgba(255,248,230,0.10)';
-    g.beginPath(); g.moveTo(x0, y0); g.lineTo(x0 + S * (0.55 + rnd() * 0.3), y0); g.lineTo(x0, y0 + S * (0.45 + rnd() * 0.3)); g.closePath(); g.fill();
-    g.fillStyle = 'rgba(20,16,12,0.16)';
-    g.beginPath(); g.moveTo(x0 + S, y0 + S); g.lineTo(x0 + S * (0.4 + rnd() * 0.3), y0 + S); g.lineTo(x0 + S, y0 + S * (0.35 + rnd() * 0.3)); g.closePath(); g.fill();
-    // sparse wear: a few compact brush clusters
-    for (let k = 0; k < 7; k++) {
-      g.fillStyle = rnd() < 0.5 ? 'rgba(40,34,28,0.22)' : 'rgba(255,250,236,0.16)';
-      const bx = x0 + 6 + rnd() * (S - 18), by = y0 + 6 + rnd() * (S - 12);
-      for (let q = 0; q < 4; q++) g.fillRect(bx + q * 3, by + (rnd() - 0.5) * 4, 4 + rnd() * 6, 2);
+    // stone slab in the cedar/slate trial's brush-pixel language (VA-06, review 18): a stepped
+    // limestone ramp, two or three broad value planes laid along the slab, clustered wear snapped to a
+    // 2-pixel grid, and one rubbed edge highlight; no speckle. The inlay, joints and plaque stay as they were.
+    const RAMP = ['#8e8472', '#9d927f', '#ab9f8b', '#b9ad98', '#c6baa4']; // dark → light limestone
+    const snap = (v) => Math.round(v / 2) * 2;
+    const tone = 1 + Math.floor(rnd() * 3);
+    g.fillStyle = RAMP[tone]; g.fillRect(x0, y0, S, S);
+    for (let k = 0; k < 3; k++) {
+      g.fillStyle = k === 1 ? RAMP[Math.min(4, tone + 1)] : RAMP[Math.max(0, tone - 1)];
+      g.globalAlpha = 0.55;
+      const hy = snap(y0 + 4 + rnd() * (S - 18)), hx = snap(x0 + rnd() * S * 0.4);
+      g.fillRect(hx, hy, snap(S * (0.35 + rnd() * 0.5)), snap(4 + rnd() * 8));
     }
+    g.globalAlpha = 1;
+    // lit upper-left plane and shaded lower-right plane, stepped (two values), not a smooth wash
+    g.fillStyle = 'rgba(255,248,230,0.09)'; g.fillRect(x0, y0, snap(S * 0.62), snap(S * 0.34));
+    g.fillStyle = 'rgba(20,16,12,0.13)'; g.fillRect(x0 + snap(S * 0.42), y0 + snap(S * 0.7), S - snap(S * 0.42), S - snap(S * 0.7));
+    // clustered wear: two or three compact clusters of stepped 2-pixel blocks
+    for (let k = 0; k < 3; k++) {
+      if (k === 2 && rnd() < 0.5) continue;
+      const dark = rnd() < 0.6, bx = snap(x0 + 8 + rnd() * (S - 26)), by = snap(y0 + 8 + rnd() * (S - 20));
+      g.fillStyle = dark ? RAMP[0] : RAMP[4]; g.globalAlpha = dark ? 0.6 : 0.5;
+      for (let q = 0; q < 5; q++) g.fillRect(bx + q * 2, by + (q % 2) * 2 - (q > 2 ? 2 : 0), 2 + (q % 3) * 2, 2);
+    }
+    g.globalAlpha = 1;
+    g.fillStyle = 'rgba(232,214,180,0.30)'; g.fillRect(snap(x0 + 6 + rnd() * S * 0.4), y0 + 4, snap(10 + rnd() * 16), 2);
     // broken edges: chip one or two corners into the earth
     g.fillStyle = '#3B3024';
     for (let k = 0; k < 2; k++) {

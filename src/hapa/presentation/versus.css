@@ -787,3 +787,9 @@ button.opp-hit:hover:not(:disabled) { background: transparent; border: 0; box-sh
   #matchbar .active, #matchbar .phase { display: none; }
   #matchbar .strip-btn { padding-left: 6px; padding-right: 6px; }
 }
+
+/* Red's owner renderer is not answering (review 18, R18-01): a dim light and a retry on the plate */
+.opp-social.unbound .opp-light { background: #6b6259; box-shadow: none; }
+.opp-retry { border-color: #c79a4a; }
+/* the desktop renderer bridge frame: on screen (so the owner keeps rendering) but invisible and inert */
+.red-frame { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; border: 0; opacity: 0.01; pointer-events: none; z-index: -1; }

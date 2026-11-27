@@ -60,9 +60,11 @@ export class HitFX {
    * recipient; `color` is the identity color of the attack's source (a member's or a Card's).
    * @param {{ channel: string, face: string, damage: number, protection: number }} hit
    */
-  hit(hit, from, to, color, U, { index = 0, total = null } = {}) {
+  hit(hit, from, to, color, U, { index = 0, total = null, quiet = false } = {}) {
     const magic = hit.channel === 'magic';
-    const tint = new THREE.Color(HUE[color] ?? (magic ? HUE.purple : INK.ivory));
+    const blocked = !(hit.damage > 0);
+    // a blocked hit is a small steel deflection, not a burst (review 18: brace)
+    const tint = new THREE.Color(blocked ? 0xC8D2DA : HUE[color] ?? (magic ? HUE.purple : INK.ivory));
     const mat = new THREE.SpriteMaterial({ map: magic ? this.tex.rune : this.tex.burst, color: tint, transparent: true, depthTest: false, toneMapped: false });
     const mark = new THREE.Sprite(mat); mark.renderOrder = 11;
     // fan several hits on one recipient so each separate hit stays countable
@@ -71,7 +73,7 @@ export class HitFX {
     this.group.add(mark);
     const parts = [mark];
     // the trail: angular (straight, solid) for Physical, open (dashed) for Magic; Above arrives vertically
-    if (hit.face === 'above' || hit.face === 'below') {
+    if ((hit.face === 'above' || hit.face === 'below') && index === 0) {
       const arrow = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.tex.arrow, color: tint, transparent: true, depthTest: false, toneMapped: false }));
       arrow.position.copy(to).add(new THREE.Vector3(0, hit.face === 'above' ? 2.6 : 0.2, 0));
       if (hit.face === 'below') arrow.material.rotation = Math.PI;
@@ -93,7 +95,19 @@ export class HitFX {
       label.position.copy(to).add(new THREE.Vector3(0, 2.1, 0));
       this.group.add(label); parts.push(label);
     }
-    this.items.push({ parts, t: 0, life: reduced() ? 0.9 : 0.75, base: to.clone(), label, mark });
+    this.items.push({ parts, t: 0, life: reduced() ? 0.9 : 0.75, base: to.clone(), label, mark, size: quiet || blocked ? 0.65 : 1 });
+  }
+
+  /**
+   * One total for a party that took hits on several members in one exchange (review 18 density):
+   * the members keep small marks; the numbers aggregate here, above the party, instead of stacking
+   * over every head.
+   */
+  partyTotal(at, text, blocked = false) {
+    const label = numberSprite(text, blocked ? '#C8D2DA' : '#FFE3D6');
+    label.position.copy(at).add(new THREE.Vector3(0, 2.7, 0));
+    this.group.add(label);
+    this.items.push({ parts: [label], t: 0, life: reduced() ? 1.1 : 0.95, base: at.clone(), label, mark: null, kind: 'total' });
   }
 
   /**
@@ -244,11 +258,13 @@ export class HitFX {
         if (it.label) it.label.position.y = it.base.y + 2.4 + (still ? 0 : k * 0.9);
         continue;
       }
+      if (it.kind === 'total') { if (!still) it.label.position.y = it.base.y + 2.7 + k * 0.6; continue; }
+      const z = it.size ?? 1;
       if (!still) {
-        const s = 0.6 + Math.min(1, k * 4) * 0.7;
+        const s = (0.6 + Math.min(1, k * 4) * 0.7) * z;
         it.mark.scale.set(s, s, 1);
         if (it.label) it.label.position.y = it.base.y + 2.1 + k * 0.8;
-      } else it.mark.scale.set(1.1, 1.1, 1);
+      } else it.mark.scale.set(1.1 * z, 1.1 * z, 1);
     }
   }
 }

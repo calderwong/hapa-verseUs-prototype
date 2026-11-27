@@ -74,6 +74,6 @@ export default defineConfig({
     outDir: 'dist',
     target: 'es2022',
     chunkSizeWarningLimit: 2500,
-    rollupOptions: { input: { index: resolve(ROOT, 'index.html'), versus: resolve(ROOT, 'versus.html') } },
+    rollupOptions: { input: { index: resolve(ROOT, 'index.html'), versus: resolve(ROOT, 'versus.html'), redFrame: resolve(ROOT, 'red-frame.html') } },
   },
 });

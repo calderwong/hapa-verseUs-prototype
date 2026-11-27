@@ -42,7 +42,7 @@ export class OnlineClient {
     if (!m) {
       // retained per Tick (review 17, R17-04): locked pairs, choices, agreed receipts and the
       // opponent's latest public plan/Ready, so a view that is behind still shows them when it catches up
-      m = { matchId, seat: null, locked: new Map(), choices: new Map(), agreed: new Map(), remote: new Map(), waiters: new Set(), status: 'active', connection: 'waiting' };
+      m = { matchId, seat: null, locked: new Map(), choices: new Map(), agreed: new Map(), remote: new Map(), own: new Map(), waiters: new Set(), status: 'active', connection: 'waiting', seq: 0 };
       this.projections.set(matchId, m);
       if (this.projections.size > 4) this.projections.delete(this.projections.keys().next().value);
     }
@@ -52,7 +52,14 @@ export class OnlineClient {
   /** Bind the view to one match, merging the snapshot with anything already received. */
   bind(snapshot) {
     const m = this._projection(snapshot.matchId);
-    Object.assign(m, { seat: snapshot.seat, status: snapshot.status, connection: snapshot.connection, disputed: snapshot.disputed ?? null });
+    m.seat = snapshot.seat;
+    // ordering (review 18, R18-04): a snapshot replaces the status only if it is not older than the
+    // last status event received — same authority generation with an equal or later sequence. A
+    // snapshot from another generation may update an active match, but never erases an observed
+    // dispute or completion (both are terminal at the authority and kept in its durable record).
+    const at = m.statusAt;
+    const newer = !at || (snapshot.boot && snapshot.boot === at.boot ? (snapshot.seq ?? 0) >= at.seq : !TERMINAL.has(m.status));
+    if (newer) { Object.assign(m, { status: snapshot.status, connection: snapshot.connection, disputed: snapshot.disputed ?? null }); if (snapshot.boot) m.statusAt = { boot: snapshot.boot, seq: snapshot.seq ?? 0 }; }
     const cur = snapshot.current;
     if (cur?.locked && !m.locked.has(cur.count)) m.locked.set(cur.count, cur.locked);
     for (const [i, c] of (cur?.choices ?? []).entries()) if (!m.choices.has(`${cur.count}:${i}`)) m.choices.set(`${cur.count}:${i}`, c);
@@ -70,11 +77,19 @@ export class OnlineClient {
   _event(e) {
     if (e.type === 'match' && e.matchId) {
       const m = this._projection(e.matchId);
+      if (['connection', 'disputed', 'complete'].includes(e.kind) && e.boot) {
+        // an event older than the status already held (same generation, lower sequence) does not move it
+        if (m.statusAt && m.statusAt.boot === e.boot && e.seq < m.statusAt.seq) { for (const fn of this.listeners) { try { fn(e); } catch (err) { console.error(err); } } return; }
+        m.statusAt = { boot: e.boot, seq: e.seq };
+      }
       if (e.kind === 'locked') m.locked.set(e.count, { plans: e.plans, hashes: e.hashes });
       else if (e.kind === 'choice') m.choices.set(`${e.count}:${e.index}`, { seat: e.seat, choiceId: e.choiceId, answer: e.answer });
       else if (e.kind === 'tickAgreed') m.agreed.set(e.count, { hash: e.hash, outcome: e.outcome });
       else if (e.kind === 'remotePlan') this._remote(m, e.count, e.revision, e.commands, false);
       else if (e.kind === 'remoteReady') this._remote(m, e.count, e.revision, e.commands, true);
+      // this seat's own Ready outcome as the authority settled it (R18-02), kept per Tick
+      else if (e.kind === 'ownCommitted') m.own.set(e.count, { state: 'committed', commitment: { commands: e.commands, revision: e.revision, hash: e.hash } });
+      else if (e.kind === 'ownRefused') { if (m.own.get(e.count)?.state !== 'committed') m.own.set(e.count, { state: 'refused', reason: e.reason, code: e.code, intent: e.intent }); }
       else if (e.kind === 'connection') m.connection = e.state;
       else if (e.kind === 'disputed') { m.status = 'disputed'; m.disputed = e.reason; }
       else if (e.kind === 'complete') m.status = 'complete';
@@ -115,6 +130,44 @@ export class OnlineClient {
     return c?.choiceId === choiceId ? c : null;
   }
 
+  /**
+   * The authority's outcome for this seat's Ready on a Tick (review 18, R18-02), after a failed, lost
+   * or late reply: `committed` (with the exact commitment), `committing` (an append is still in
+   * flight: keep the intent frozen), `refused` (the authority recorded that it did not commit) or
+   * `none` (nothing committed and nothing in flight). An event already received wins over a query.
+   * @returns {Promise<{ state: 'committed'|'committing'|'refused'|'none'|'unknown', commitment?: any, reason?: string }>}
+   */
+  async readyOutcome(count) {
+    const known = this.match?.own.get(count);
+    if (known?.state === 'committed') return known;
+    let snap;
+    try { snap = await this.call('match.get'); } catch (e) { return { state: 'unknown', reason: e.message }; }
+    if (!snap || snap.matchId !== this.match?.matchId) return { state: 'unknown', reason: 'the match is not open' };
+    const again = this.match?.own.get(count);
+    if (again?.state === 'committed') return again;
+    const cur = snap.current;
+    if (cur?.count === count) {
+      if (cur.own.ready) return { state: 'committed', commitment: { commands: cur.own.commands, revision: cur.ownReady?.revision ?? cur.own.revision, hash: cur.ownReady?.hash ?? null } };
+      if (cur.readyState === 'committing') return { state: 'committing' };
+      if (cur.readyState === 'refused') return { state: 'refused', reason: cur.readyRefused?.reason ?? 'the Ready was refused' };
+      return { state: 'none' };
+    }
+    const done = snap.history?.find((t) => t.tick === count);
+    if (done) return { state: 'committed', commitment: { commands: done.plans[snap.seat], revision: null, hash: null, resolved: true } };
+    return { state: 'unknown', reason: 'that Tick is not open' };
+  }
+
+  /** Resolve when any event touches the bound match, or after `ms` (an event-or-poll wait). */
+  nudge(ms) {
+    const m = this.match;
+    return new Promise((resolve) => {
+      if (!m) { resolve(); return; }
+      const t = setTimeout(done, ms);
+      function done() { clearTimeout(t); m.waiters.delete(done); resolve(); }
+      m.waiters.add(done);
+    });
+  }
+
   /** The authority's durable Ready for a Tick, if any (after a failed or lost Ready reply). */
   async committedReady(count) {
     const snap = await this.call('match.get').catch(() => null);
@@ -124,6 +177,8 @@ export class OnlineClient {
     return done ? { commands: done.plans[snap.seat], revision: null, hash: null, resolved: true } : null;
   }
 }
+
+const TERMINAL = new Set(['disputed', 'complete']);
 
 /** A session object for the existing table, built from the agreed manifest (no new authority). */
 export function sessionFromManifest(manifest) {
@@ -168,12 +223,23 @@ export function onlinePanel(app) {
   const name = h('input', { type: 'text', maxlength: '32', 'aria-label': 'Your display name', placeholder: 'Your name' });
   const paste = h('input', { type: 'text', 'aria-label': 'Paste an invitation code', placeholder: 'Paste an invitation (hvinv1.…)' });
   const act = async (fn) => { if (busy) return; busy = true; draw(); try { view = await fn(); note = ''; } catch (e) { note = e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, ''); } busy = false; draw(); };
-  const refresh = async () => { try { view = await client.call('lobby.list'); } catch (e) { note = e.message; } draw(); };
+  // the peer service's own state (R18-05): a bounded failure is shown with an explicit Retry
+  let peerState = null;
+  const refresh = async () => {
+    try { view = await client.call('lobby.list'); peerState = null; } catch (e) { note = hostMessage(e); peerState = await host.host('peerStatus').catch(() => null); }
+    draw();
+  };
   const draw = () => {
     if (!box.isConnected && view) return;
     const v = view;
     const rows = [];
     rows.push(h('h2', {}, 'Play online'));
+    if (peerState && peerState.state !== 'ready') {
+      rows.push(h('div', { class: 'warn', role: 'status' }, peerState.state === 'failed' ? `The game's peer service is not running: ${peerState.error ?? 'it stopped'}. Local play still works.` : `The game's peer service is ${peerState.state === 'restarting' ? 'restarting' : 'starting'}…`,
+        peerState.state === 'failed' ? h('button', { disabled: busy, onclick: async () => { peerState = await host.host('restartPeer').catch(() => peerState); note = ''; draw(); setTimeout(refresh, 1500); } }, 'Start it again') : null));
+      box.replaceChildren(...rows, note ? h('p', { class: 'dim small' }, note) : '');
+      return;
+    }
     if (sub) { box.replaceChildren(...rows, recordView(sub, { back: () => { sub = null; draw(); }, open: openProfile })); return; }
     if (!v?.joined) {
       if (v && !name.value) name.value = v.me.label;
@@ -191,7 +257,8 @@ export function onlinePanel(app) {
       if (v.match && (v.match.status === 'active' || v.match.status === 'disputed')) rows.push(h('div', { class: 'row' },
         h('span', {}, v.match.status === 'disputed' ? `Your match against ${v.match.opponent} is paused: its records disagree.` : `Your match against ${v.match.opponent} is in progress.`),
         h('button', { class: 'primary', onclick: () => app.resumeOnline() }, v.match.status === 'disputed' ? 'View the match' : 'Return to the table'),
-        v.match.status === 'disputed' ? h('button', { disabled: busy, onclick: () => { if (window.confirm('Leave this match? It stays recorded as unfinished/disputed; this is not a concession.')) act(() => client.call('match.leave', { matchId: v.match.matchId }).then(() => client.call('lobby.list'))); } }, 'Leave this match') : null));
+        v.match.status === 'disputed' || v.match.unstarted ? h('button', { disabled: busy, title: v.match.unstarted ? 'The other player has not started this match (no Tick has been agreed). Leaving keeps its record; it is not a concession and records no loss.' : undefined, onclick: () => { if (window.confirm(v.match.unstarted ? 'Leave this match? No Tick has been agreed; it stays recorded as unstarted. This is not a concession.' : 'Leave this match? It stays recorded as unfinished/disputed; this is not a concession.')) act(() => client.call('match.leave', { matchId: v.match.matchId }).then(() => client.call('lobby.list'))); } }, 'Leave this match') : null));
+      for (const f of v.finishing ?? []) rows.push(h('p', { class: 'small', role: 'status' }, `Finishing your match against ${f.opponent}: waiting for their final record. It is retrieved when they or an archive are reachable; nothing is replayed and no result is assumed.`));
       const r = v.reservation;
       if (!r && v.me.availability === 'available') rows.push(h('div', { class: 'row' },
         h('button', { disabled: busy, title: 'Anyone compatible in the lobby (or holding your invitation) can take the other seat; hosting is your consent', onclick: () => act(() => client.call('table.open')) }, 'Open a table'),
@@ -266,7 +333,11 @@ function recordView(sub, { back, open }) {
     return done();
   }
   const d = sub.data;
-  const sync = d.sync.state === 'synced' ? `Synced from ${d.sync.sources.join(', ')} just now${d.sync.refused ? ` · ${d.sync.refused} copy refused` : ''}.` : SYNC_TEXT[d.sync.state] ?? '';
+  const names = (list) => list.map((s) => (typeof s === 'string' ? s : s.label)).join(', ');
+  const failed = (d.sync.sources ?? []).filter((s) => typeof s === 'object' && s.state !== 'complete');
+  const sync = d.sync.state === 'synced' ? `Synced from ${names(d.sync.sources)} just now${d.sync.refused ? ` · ${d.sync.refused} copy refused` : ''}.`
+    : d.sync.state === 'partial' ? `Partly synced: ${names((d.sync.sources ?? []).filter((s) => s.state === 'complete'))} answered; ${failed.map((s) => `${s.label} ${s.state === 'failed' ? 'did not answer' : 'answered in part'}`).join(', ')}. These totals may be incomplete; open this again to retry.`
+      : d.sync.state === 'archive-unavailable' && d.sync.error ? `No archive answered (${d.sync.error}) — showing only results verified on this computer. Open this again to retry.` : SYNC_TEXT[d.sync.state] ?? '';
   const buckets = Object.entries(d.stats.buckets);
   wrap.append(h('h3', {}, d.label ?? sub.label ?? 'Player'),
     h('p', { class: 'dim small' }, `Fingerprint ${d.fingerprint} · `, h('code', { title: d.playerId }, d.playerId.slice(0, 20) + '…')),

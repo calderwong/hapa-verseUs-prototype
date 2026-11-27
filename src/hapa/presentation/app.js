@@ -325,8 +325,19 @@ export class VersusApp {
     const ctl = h('select', { 'aria-label': "Red's moves", onchange: (e) => { t.controller = e.target.value; save(); } },
       h('option', { value: 'heuristic', selected: t.controller === 'heuristic' }, 'Heuristic bot'),
       h('option', { value: 'model', selected: t.controller === 'model' }, 'Model-assisted (local model via Harness; heuristic fallback)'));
+    // whether Red's owner answers on this computer, said before the match rather than discovered as an
+    // empty chair (review 18, R18-01); the match itself keeps retrying, so this is information only
+    const ownerNote = h('div', { class: 'small dim owner-note', role: 'status' });
+    fetch('/capabilities').then(async (r) => {
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw Error(j.error || `Harbor ${r.status}`);
+      ownerNote.textContent = j.avatarPackage?.available ? `Red's figure: ${j.avatarPackage.id} ${j.avatarPackage.revision}, ready.` : `Red's figure is unavailable: ${j.avatarPackage?.reason ?? 'no renderer package'}.`;
+    }).catch((e) => {
+      ownerNote.textContent = `Red's figure and voice come from Harbor, which is not answering (${e.message}). Red plays as an empty chair with captions until it starts; the match picks it up by itself.${location.protocol === 'app:' ? ' Configure it in owners.json (see the runbook).' : ' Start the local owners with: npm run owners -- --start'}`;
+    });
     return h('div', { class: 'table-setup' },
       h('label', { class: 'inline' }, red, ' Red plays the bot seat at the table (portrait, voice, reactions and the music Red brings).'),
+      ownerNote,
       h('label', { class: 'inline small' }, "Red's moves: ", ctl),
       h('div', { class: 'small' }, h('b', {}, 'Your tracks (up to 3, alternating with Red\'s): '), chips),
       search, results);
@@ -461,7 +472,8 @@ export class VersusApp {
     const seat = bot[0];
     const rev = this.session.manifest.controllers?.[seat]?.revision ?? 'heuristic-bot/0.2.0';
     this.table = new Table({ world: this.el.world, scene: { root: this.view.root, board: { w: this.view.w, h: this.view.h, S: MEMBER_S } }, sessionId: this.session.manifest.matchId, epoch: gen, avatarSeat: seat, humanSeat: other(seat), avatarId: table.avatarId, songIds: table.songIds ?? [],
-      controller: this.deciders?.[seat] ? { kind: 'model-assisted', revision: rev, label: 'a local model (through Hapa Harness) choosing among my legal moves, with the heuristic bot as fallback' } : { kind: 'heuristic', revision: rev, label: `the heuristic bot (${rev}), not a model` }, partyLabel: (id) => spokenParty(this.state, id), onLayout: () => this._syncFreeSpace(), onPanel: (which) => this._onePanel(which) });
+      controller: this.deciders?.[seat] ? { kind: 'model-assisted', revision: rev, label: 'a local model (through Hapa Harness) choosing among my legal moves, with the heuristic bot as fallback' } : { kind: 'heuristic', revision: rev, label: `the heuristic bot (${rev}), not a model` }, partyLabel: (id) => spokenParty(this.state, id), onLayout: () => this._syncFreeSpace(), onPanel: (which) => this._onePanel(which),
+      onRendering: () => { if (gen === this.generation && this.cam?.atHome) this.cam._refit?.(); }, light: () => this.scenery?.practicals?.() ?? null });
     this.table.start().catch((err) => console.warn('[versus] table unavailable', err));
     // the Home composition now includes the seated opponent (addendum 05 §3): fitted once at setup
     if (this.cam) { this.cam.homeExtras = () => this.table?.homePoints() ?? []; if (seat === other(this.viewSeat)) this.cam.home(); }
@@ -695,7 +707,8 @@ export class VersusApp {
     this._closeSheet({ restore: false });
     this.el.overlay.hidden = true;
     await this.startMatch({ online: snap });
-    if (snap.status === 'disputed') this._showBlocked();
+    // the bound projection, not the possibly older snapshot, decides (R18-04)
+    if (this.onlineMatch?.status === 'disputed' || snap.status === 'disputed') this._showBlocked();
     return true;
   }
 
@@ -734,6 +747,12 @@ export class VersusApp {
     if (cur && cur.count === this.state.tick) {
       if (cur.own.revision > 0 || cur.own.commands.length) { this.plans[me] = cur.own.commands; this.rev[me] = Math.max(1, cur.own.revision); this._publish(me, 'plan'); this._syncDraftMana(me); }
       if (cur.own.ready) { this._publish(me, 'ready'); this.ready[me] = {}; }
+      // reattached while this seat's Ready append is still in flight (R18-02): freeze the exact intent
+      // and settle it from the authority instead of offering a second Ready
+      else if (cur.readyState === 'committing' && !this._readyPending) {
+        const p = this._readyPending = { count: cur.count, gen: this.generation, seat: me, intent: canonicalize(cur.own.commands) };
+        this._reconcileReady(p, { message: 'reattached while saving' });
+      }
     }
     // the opponent's latest public plan and Ready for this Tick, even if they arrived while this view
     // was still playing an earlier Tick (R17-04)
@@ -755,6 +774,13 @@ export class VersusApp {
     } else if (e.kind === 'locked' && e.count === tick) this._tryResolve();
     else if (e.kind === 'connection') { this._renderAll(); if (e.state === 'reconnecting') this._toast(`Connection to ${this.onlineMatch.opponentLabel} lost — reconnecting. Your committed plan is saved.`, true); }
     else if (e.kind === 'disputed') { this._renderAll(); this._showBlocked(); }
+    else if (e.kind === 'unstarted') { this._toast(`${e.reason ?? 'The other player left'}. The match never started: it is kept as unstarted, with no result and no loss.`, true); this.showSetup(); }
+    // a late authoritative outcome for a Ready whose reply was lost (R18-02): settle the frozen intent
+    else if ((e.kind === 'ownCommitted' || e.kind === 'ownRefused') && this._readyPending && e.count === this._readyPending.count && e.count === tick) {
+      const p = this._readyPending;
+      if (e.kind === 'ownCommitted') { if (this._settleReady(p, { commands: e.commands })) this._endReady(p); }
+      else this._endReady(p, `Ready was not recorded: ${e.reason}. Your plan is unchanged; press Ready again.`); // whichever of the event and the reply arrives first ends it once
+    }
     else if (e.kind === 'resultSaved' || e.kind === 'resultArchived') {
       this.onlineMatch.resultState = e.kind === 'resultArchived' ? `Result saved and archived by ${e.by}` : e.status === 'saved' ? 'Result saved on this computer · archive pending' : `Result not saved: ${e.reason}`;
       const el = document.querySelector('.result-saved'); if (el) el.textContent = this.onlineMatch.resultState;
@@ -767,23 +793,51 @@ export class VersusApp {
     const count = this.state.tick, gen = this.generation;
     // the exact plan committed is the one shown when Ready was pressed; editing is frozen meanwhile
     const sent = clone(this.plans[seat]);
-    this._readyPending = true;
+    const pending = this._readyPending = { count, gen, seat, intent: canonicalize(sent) };
     this._renderAll();
-    const settle = (committed) => {
-      if (gen !== this.generation || this.state.tick !== count || !committed) return false;
-      if (canonicalize(committed.commands) !== canonicalize(this.plans[seat])) { this.plans[seat] = committed.commands; this.rev[seat] += 1; this._publish(seat, 'plan'); this._syncDraftMana(seat); }
-      if (!this.agreement.ready[seat]) { this._publish(seat, 'ready'); this.ready[seat] = { seen: { A: this.plans.A.map(cmdKey), B: this.plans.B.map(cmdKey) } }; }
-      return true;
-    };
-    this.online.ready(count, sent).then((r) => { if (settle(r)) this.sound?.play('confirm', { volume: 0.6 }); })
-      .catch(async (e) => {
-        if (gen !== this.generation) return;
-        // a lost or failed acknowledgment: ask the authority what is durable before allowing a retry
-        const committed = await this.online.committedReady(count).catch(() => null);
-        if (committed && settle(committed)) return;
-        this._toast(`Ready was not committed: ${hostMessage(e)}. Your plan is unchanged; press Ready again.`, true);
-      })
-      .finally(() => { if (gen === this.generation) { this._readyPending = false; this._renderAll(); } });
+    this.online.ready(count, sent).then((r) => { if (this._settleReady(pending, r)) this.sound?.play('confirm', { volume: 0.6 }); this._endReady(pending); })
+      .catch((e) => this._reconcileReady(pending, e));
+  }
+
+  /** Show the authority's exact commitment as this seat's Ready (once; fenced by match, Tick and intent). */
+  _settleReady(pending, committed) {
+    const seat = pending.seat;
+    if (pending.gen !== this.generation || this.state.tick !== pending.count || !committed?.commands) return false;
+    if (canonicalize(committed.commands) !== canonicalize(this.plans[seat])) { this.plans[seat] = committed.commands; this.rev[seat] += 1; this._publish(seat, 'plan'); this._syncDraftMana(seat); }
+    if (!this.agreement.ready[seat]) { this._publish(seat, 'ready'); this.ready[seat] = { seen: { A: this.plans.A.map(cmdKey), B: this.plans.B.map(cmdKey) } }; }
+    return true;
+  }
+
+  _endReady(pending, message) {
+    if (this._readyPending !== pending) return;
+    this._readyPending = null;
+    if (message && pending.gen === this.generation) this._toast(message, true);
+    if (pending.gen === this.generation) this._renderAll();
+  }
+
+  /**
+   * A Ready whose reply failed or never came (review 18, R18-02). A host timeout does not cancel the
+   * worker's append, so the outcome is unknown until the authority says otherwise. The exact intent
+   * stays frozen while the authority reports `committing` (or cannot be asked); it settles to the one
+   * recorded plan on `committed` (from an event or a query, with no second Ready), and releases
+   * editing only on a recorded refusal or when nothing is committed and nothing is in flight. Bounded:
+   * after about two minutes of no answer at all the plan stays frozen and the player is told why.
+   */
+  async _reconcileReady(pending, err) {
+    const still = () => this._readyPending === pending && pending.gen === this.generation && this.state.tick === pending.count;
+    let waited = 0, said = false;
+    for (let delay = 500; still(); delay = Math.min(8000, delay * 2)) {
+      const o = await this.online.readyOutcome(pending.count);
+      if (!still()) return;
+      if (o.state === 'committed') { this._settleReady(pending, o.commitment); this._endReady(pending); return; }
+      if (o.state === 'refused') { this._endReady(pending, `Ready was not recorded: ${o.reason}. Your plan is unchanged; press Ready again.`); return; }
+      if (o.state === 'none') { this._endReady(pending, `Ready was not recorded (${hostMessage(err)}). Nothing was committed; your plan is unchanged — press Ready again.`); return; }
+      // committing or unknown: the intent stays frozen; say so once, then wait for an event or poll
+      if (!said) { said = true; this._toast(o.state === 'committing' ? 'Saving your Ready is taking longer than usual; your plan stays as committed while it finishes.' : `Checking whether your Ready was saved (${o.reason ?? hostMessage(err)}); your plan stays frozen meanwhile.`, true); }
+      if (waited > 120000 && o.state === 'unknown') { this._toast('The peer service has not answered for two minutes. Your Ready may still be saved; your plan stays frozen. Reopen the match from the lobby to check.', true); return; }
+      await this.online.nudge(delay);
+      waited += delay;
+    }
   }
 
   /**
@@ -932,7 +986,9 @@ export class VersusApp {
   _play(before, frames, events, moments = []) {
     const startPos = snapshot(before);
     const all = timeline(startPos, frames, events.length, eventsBeforeMovement(events), snapshot(this.state));
-    const duration = (this.watch ? 0.9 : 1.4) / this.speed;
+    // in battle seconds: the frame loop advances it by real time × speed (0 while paused), the same
+    // advance the bodies and effects receive, so a speed change never splits them (R18-10)
+    const duration = this.watch ? 0.9 : 1.4;
     this.view.setWalking(new Set()); // gait follows the displayed segment, frame by frame (VA-03)
     for (const t of this.view.supplyTokens?.values() ?? []) t.visible = false; // they return at their new places after playback
     this.view.syncPlanLinks(this.state, []); // the planned relationship ends where the resolved landing begins
@@ -993,25 +1049,46 @@ export class VersusApp {
       if (e.type === 'counter_applied' || e.type === 'ability_countered') { this.view.fx.settlePending(e.countered ?? e.stackId, 'countered'); continue; }
       if (e.type === 'ability_resolved' || e.type === 'ability_fizzled') { this.view.fx.settlePending(e.stackId, 'resolved'); continue; }
       if (e.type === 'parties_merged') { const mk = this.view.markers.get(e.partyId); if (mk) this.view.fx.absorbed(mk.position.clone(), `${e.members?.length ?? ''} together`); continue; }
-      if (e.type === 'terrain_changed') { const c = e.cell; const w = c && Number.isFinite(c.column) ? this.view.toWorld((c.column - 0.5) * 4 * this.ctx.U, (c.row - 0.5) * 4 * this.ctx.U) : null; if (w) this.view.fx.terrain(w.setY(this.view.partyY?.({ movementMode: 'ground', band: c.band ?? 1, region: c }) ?? w.y), !e.solid); continue; }
+      // the rules' work cell {x, y, band} (R18-09): the cue sits on the same cube the work UI drew
+      if (e.type === 'terrain_changed') { const c = e.cell; if (c && [c.x, c.y, c.band].every(Number.isFinite)) this.view.fx.terrain(this.view.terrain.cellCenter(c), !e.solid); continue; }
       const hits = e.type === 'exchange' ? e.hits : e.type === 'card_damage' ? [e] : [];
       const totals = new Map();
       for (const hit of hits) { const t = totals.get(hit.recipient) ?? { damage: 0, hits: 0, seen: 0 }; t.damage += hit.damage; t.hits++; totals.set(hit.recipient, t); }
       for (const hit of hits) {
         if (hit.kind === 'card') { const c = casterOf(hit.source); if (c) this.view.act(c, 'cast', 0.6); }
         else this.view.act(hit.source, actOf(hit.source), 0.45);
-        if (hit.damage > 0) this.view.act(hit.recipient, 'hurt', 0.35);
+        // injury, or a short brace when the hit was fully blocked (review 18)
+        if (!totals.get(hit.recipient).braced) this.view.act(hit.recipient, totals.get(hit.recipient).damage > 0 ? 'hurt' : 'brace', 0.35);
+        totals.get(hit.recipient).braced = true;
+      }
+      // density (review 18): a party hit on more than three members gets one total above it; each
+      // member keeps a small mark (two at most; ×n is in the number). At most three trails per party.
+      const parties = new Map();
+      for (const [rid, t] of totals) {
+        const pid = this.state.members[rid]?.party ?? rid;
+        const g = parties.get(pid) ?? { recipients: 0, damage: 0, hits: 0, trails: 0, at: null };
+        g.recipients++; g.damage += t.damage; g.hits += t.hits; g.at ??= this.view.markers.get(pid)?.position ?? posOf(rid);
+        parties.set(pid, g);
       }
       for (const hit of hits) {
         // bounded marks, but never at the cost of an affected member's one consequential cue (VA-10)
         const t = totals.get(hit.recipient);
         if (n >= 48 && cued.has(hit.recipient)) continue;
+        if (t.seen >= 2) { t.seen++; continue; }
         const to = posOf(hit.recipient);
         if (!to) continue;
-        const from = hit.kind === 'card' ? (posOf(casterOf(hit.source)) ?? null) : posOf(hit.source);
+        const g = parties.get(this.state.members[hit.recipient]?.party ?? hit.recipient);
+        const dense = g.recipients > 3;
+        const from = g.trails >= 3 || t.seen > 0 ? null : hit.kind === 'card' ? (posOf(casterOf(hit.source)) ?? null) : posOf(hit.source);
+        if (from) g.trails++;
         const color = hit.kind === 'card' ? activeCatalog.cards[this.state.cards[hit.cardId]?.abilityId]?.color : colorOfMember(hit.source);
-        this.view.fx.hit(hit, from, to, color, this.ctx.U, { index: t.seen, total: t.seen === 0 || n >= 48 ? t : null });
+        this.view.fx.hit(hit, from, to, color, this.ctx.U, { index: t.seen, total: !dense && (t.seen === 0 || n >= 48) ? t : null, quiet: dense });
         t.seen++; n++; cued.add(hit.recipient);
+      }
+      for (const g of parties.values()) {
+        if (g.recipients <= 3 || !g.at) continue;
+        const dmg = g.damage / this.ctx.U;
+        this.view.fx.partyTotal(g.at.clone(), dmg > 0 ? `−${+dmg.toFixed(2)} across ${g.recipients} · ${g.hits} hits` : `${g.hits} hits blocked`, !(dmg > 0));
       }
     }
   }
@@ -1790,14 +1867,17 @@ export class VersusApp {
   _frame(dt) {
     if (!this.cam) return;
     this.cam.update(dt, this.keys);
-    this._stepPlayback(dt);
+    // one presentation-time advance (review 18, R18-10): movement, the accepted-event reveal, pose
+    // phase and battle effects all take battle time = real time × speed, nothing while paused; a speed
+    // change (playing or paused) keeps the displayed moment. Ambient scenery and music keep real time.
+    const battleDt = this.playback ? (this.playback.paused ? 0 : dt * (this.speed ?? 1)) : dt;
+    this._stepPlayback(battleDt);
     // the setting responds to the music actually playing (read-only; never a rule, camera or target)
     const music = this.table?.music;
     this.scenery?.update(dt, music ? { frame: music.sample(dt, { accentGap: music.settings.response === 'expressive' ? 3 : 6 }), response: music.settings.response, still: music.still, busy: !!(this.cardDrag?.active || this.cam?.dragging || this.tool) } : { frame: null, response: 'off', still: reducedMotionPref(), busy: false });
     // battle bodies and transient effects share the playback clock (VA-03): a paused Tick holds its
     // poses and marks; at 0.5×–4× they run with the playback. Ambient scenery keeps its own clock.
-    const pb = this.playback;
-    this.view.update(pb ? (pb.paused ? 0 : dt * (this.speed ?? 1)) : dt, this.engine.camera);
+    this.view.update(battleDt, this.engine.camera);
     if (this.table) this.table.update(this.engine.camera, { width: this.el.world.clientWidth, height: this.el.world.clientHeight });
     this.view.viewportH = this.engine.renderer.domElement.clientHeight;
     const busy = !!(this.cardDrag?.active || this.cam?.dragging || this.tool);

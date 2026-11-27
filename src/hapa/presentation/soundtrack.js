@@ -161,6 +161,7 @@ export class Soundtrack extends EventTarget {
     this._changed('status');
     this.refreshKept().catch(() => {}); // the durable library, independent of this match's queue
     const lists = [];
+    this.missing = [];
     for (const p of parts) {
       try {
         let ids = p.songIds;
@@ -172,6 +173,7 @@ export class Soundtrack extends EventTarget {
         lists.push(snap.entries.map((e) => ({ ...e, playlistId: snap.playlistId, playlistRevision: snap.revision, contributor: snap.contributor, fromLibrary: p.library, own: p.library === this.listener.library })));
       } catch (e) {
         this.errors = [...(this.errors ?? []), `${p.participant?.label ?? p.library}: ${e.message}`];
+        this.missing.push(p);
         console.warn(`[versus] music contribution unavailable (${p.library}): ${e.message}`);
       }
     }
@@ -182,6 +184,43 @@ export class Soundtrack extends EventTarget {
     this.status = this.queue.entries.length ? 'ready' : 'unavailable';
     this._changed('queue');
     return this.queue;
+  }
+
+  /**
+   * Retry the contributions whose library did not answer at setup (review 18, R18-01). A late
+   * contribution is appended after the queue as it stands, so nothing playing or already played
+   * moves; the queue revision advances once. Fenced by the match epoch; one retry at a time.
+   * @returns {Promise<boolean>} whether every contribution is now present
+   */
+  async retryMissing() {
+    if (this.disposed || !this.missing?.length) return !this.missing?.length;
+    if (this._retrying) return this._retrying;
+    const epoch = this.epoch;
+    this._retrying = (async () => {
+      const still = [];
+      for (const p of this.missing) {
+        try {
+          let ids = p.songIds;
+          if (!ids) ids = (await (await call(`/music/${p.library}/songs`)).json()).songs.slice(0, p.max ?? 3).map((s) => s.id);
+          if (!ids.length) continue;
+          const snap = await (await call(`/music/${p.library}/contributions`, { songIds: ids, participant: p.participant })).json();
+          if (epoch !== this.epoch || this.disposed) return false;
+          this.contributions.push({ library: p.library, participant: p.participant, snapshot: snap });
+          const base = this.queue.entries.length;
+          const add = snap.entries.map((e, i) => ({ ...e, playlistId: snap.playlistId, playlistRevision: snap.revision, contributor: snap.contributor, fromLibrary: p.library, own: p.library === this.listener.library, queueEntryId: `q${base + i + 1}:${e.entryId}`, assetId: e.offer.manifest.files[0].assetId }));
+          for (const e of add) e.item = offerItem(e);
+          this.queue.entries.push(...add);
+          this.queue.revision++;
+          this.errors = (this.errors ?? []).filter((x) => !x.startsWith(`${p.participant?.label ?? p.library}:`));
+        } catch { still.push(p); }
+      }
+      if (epoch !== this.epoch || this.disposed) return false;
+      this.missing = still;
+      if (this.queue.entries.length && this.status === 'unavailable') this.status = 'ready';
+      this._changed('queue');
+      return !still.length;
+    })().finally(() => { this._retrying = null; });
+    return this._retrying;
   }
 
   /** Begin (after the human's sound gesture). */

@@ -47,8 +47,9 @@ export class Table {
     // a remote human (review 16, R16-07) gets a neutral nameplate: the local music stays, but no Avatar
     // speaks, reacts or plays for a stranger
     this.opponent = o.avatarId ? new AvatarOpponent({ host: this.el, seat: o.avatarSeat, avatarId: o.avatarId, sessionId: o.sessionId, epoch: o.epoch, controller: o.controller }) : new RemoteOpponent({ host: this.el, label: o.opponentLabel ?? 'Opponent' });
-    this.seated = o.scene && o.avatarId ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: 'Red' }) : null;
+    this.seated = o.scene && o.avatarId ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: 'Red', light: o.light }) : null;
     this.opponent.addEventListener('rendering', (e) => this.seated?.setSource(e.detail.canvas));
+    this.opponent.addEventListener('retry', () => { clearTimeout(this._retryTimer); this.retryOwners({ manual: true }); });
     this.music = new Soundtrack({ sessionId: o.sessionId, epoch: o.epoch, listener: { library: 'cj', seat: o.humanSeat, label: 'You' }, controller: true });
     this.deck = new MusicDeck(this.music, this.musicEl, { onLayout: () => o.onLayout?.(), onOpen: () => o.onPanel?.('music') });
     // an expanded side panel may need the others to collapse at compact widths (R13-04; the app decides)
@@ -71,9 +72,39 @@ export class Table {
       : [{ library: 'cj', participant: { seat: this.o.humanSeat, label: 'You' }, ...(this.o.songIds?.length ? { songIds: this.o.songIds } : { max: 4 }) }];
     const [, queue] = await Promise.all([this.opponent.attach(), this.music.prepare(sources)]);
     if (epoch !== this.epoch) return;
+    this._scheduleOwnerRetry();
     if (!this.o.avatarId) return;
     const redTracks = queue?.entries.filter((e) => e.fromLibrary === 'red').length ?? 0;
     this.opponent.say(greeting({ name: 'Red', contributedTracks: redTracks }));
+  }
+
+  /**
+   * Owner recovery (review 18, R18-01): while Red's renderer or a music contribution is missing,
+   * retry with a bounded backoff (4 s doubling to 60 s, then every 60 s) for the life of this match.
+   * "Show Red" retries at once. Every attempt is fenced by this table's epoch and the owners' own
+   * one-attempt-at-a-time guards, so nothing is seated or queued twice.
+   */
+  _scheduleOwnerRetry(reset = false) {
+    clearTimeout(this._retryTimer);
+    if (this.epoch < 0) return;
+    const missing = (this.opponent.unbound ?? false) || !!this.music.missing?.length;
+    if (!missing) { this._retryDelay = 0; this.opponent.nextRetry = null; return; }
+    this._retryDelay = reset || !this._retryDelay ? 4000 : Math.min(60000, this._retryDelay * 2);
+    const at = Date.now() + this._retryDelay;
+    this.opponent.nextRetry = `in ${Math.round(this._retryDelay / 1000)} s`;
+    this.opponent._render?.();
+    this._retryTimer = setTimeout(() => { if (Date.now() >= at - 50) this.retryOwners(); }, this._retryDelay);
+  }
+
+  async retryOwners({ manual = false } = {}) {
+    const epoch = this.epoch;
+    if (epoch < 0) return;
+    const hadRed = !this.opponent.unbound;
+    await Promise.all([this.opponent.unbound ? this.opponent.attach() : null, this.music.retryMissing()]);
+    if (epoch !== this.epoch) return;
+    // Red arrived late: the Home composition now includes the seated figure
+    if (!hadRed && !this.opponent.unbound) this.o.onRendering?.();
+    this._scheduleOwnerRetry(manual);
   }
 
   /** Events the playback just revealed to the viewer. */
@@ -203,6 +234,7 @@ export class Table {
 
   dispose() {
     this.epoch = -1;
+    clearTimeout(this._retryTimer);
     this.seated?.dispose();
     this._ro?.disconnect();
     this.hit.remove();

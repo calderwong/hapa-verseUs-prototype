@@ -22,6 +22,7 @@ import { signRecord } from '../protocol/messages.js';
 import { admitRecord } from '../protocol/admission.js';
 import { writeJsonAtomic } from './store.js';
 import { feedPrefix, rawBlocks } from './prefix.js';
+import { randomUUID } from 'node:crypto';
 
 const DRAFT_COALESCE_MS = 600;
 const MAX_INBOX = 512; // unconsumed opponent records held at once
@@ -33,6 +34,10 @@ export class OnlineMatch {
    */
   constructor(o) {
     this.o = o;
+    // authority ordering (review 18, R18-04): this authority instance's generation and a sequence on
+    // every event and snapshot, so a view can tell a stale snapshot from a newer one
+    this.boot = randomUUID();
+    this.seq = 0;
     this.dir = o.dir;
     this.identity = o.identity;
     this.descriptor = o.session.descriptor;
@@ -52,7 +57,7 @@ export class OnlineMatch {
     this._chain = Promise.resolve();
   }
 
-  emit(kind, data = {}) { this.o.emit({ type: 'match', matchId: this.matchId, kind, ...data }); }
+  emit(kind, data = {}) { this.o.emit({ type: 'match', matchId: this.matchId, kind, ...data, boot: this.boot, seq: ++this.seq }); }
 
   async open() {
     this.own = new Hypercore(join(this.dir, 'own'), { valueEncoding: 'json' });
@@ -289,7 +294,7 @@ export class OnlineMatch {
     await this._publish('plan', cur.count, 'plan', () => (fingerprint(cmds) !== ag.plans[this.seat].hash || ag.plans[this.seat].revision === 0 ? { planRevision: ag.plans[this.seat].revision + 1, commands: cmds } : null), receive);
     await this._publish('ready', cur.count, 'plan', () => ag.readyPayload(this.seat), receive);
     cur.committed = true;
-    this.emit('ownCommitted', { count: cur.count, revision: ag.plans[this.seat].revision, hash: ag.plans[this.seat].hash });
+    this.emit('ownCommitted', { count: cur.count, revision: ag.plans[this.seat].revision, hash: ag.plans[this.seat].hash, commands: ag.plans[this.seat].commands });
     this._wake();
   }
 
@@ -329,8 +334,16 @@ export class OnlineMatch {
     if (cur.committing) return cur.committing;
     clearTimeout(cur.draftTimer);
     if (Array.isArray(args.commands)) cur.draft = args.commands;
-    // the reply names the exact durable commitment so the view can show precisely what was committed
-    cur.committing = this._commit(cur).then(() => ({ ok: true, revision: ag.ready[this.seat].revision, hash: ag.ready[this.seat].hash, commands: ag.plans[this.seat].commands, count: cur.count })).finally(() => { cur.committing = null; });
+    // explicit outcome states (review 18, R18-02): 'committing' from here until the append settles,
+    // then 'committed' or a recorded refusal; a host timeout never cancels the append, and a view that
+    // lost the reply asks for this state instead of guessing from an early snapshot
+    cur.readyIntent = fingerprint(cur.draft ?? ag.plans[this.seat].commands);
+    cur.readyRefused = null;
+    cur.committing = this._commit(cur).then(() => ({ ok: true, revision: ag.ready[this.seat].revision, hash: ag.ready[this.seat].hash, commands: ag.plans[this.seat].commands, count: cur.count }), (e) => {
+      cur.readyRefused = { reason: e.message, code: e.code ?? null, intent: cur.readyIntent };
+      this.emit('ownRefused', { count: cur.count, reason: e.message, code: e.code ?? null, intent: cur.readyIntent });
+      throw e;
+    }).finally(() => { cur.committing = null; });
     return cur.committing;
   }
 
@@ -373,6 +386,7 @@ export class OnlineMatch {
     const ag = cur?.agreement;
     return {
       matchId: this.matchId, seat: this.seat, status: this.status, disputed: this.disputed ?? null, connection: this.connection,
+      boot: this.boot, seq: this.seq,
       manifest: this.manifest, descriptor: { matchId: this.matchId, initialStateHash: this.descriptor.initialStateHash, players: this.descriptor.players, online: this.descriptor.online },
       opponent: { participantId: this.opponent.participantId, label: this.opponent.label, publicKey: this.opponent.publicKey },
       controllers: this.manifest.controllers,
@@ -384,6 +398,8 @@ export class OnlineMatch {
         locked: cur.locked ? { plans: { A: cur.locked.A, B: cur.locked.B }, hashes: cur.locked.hashes } : null,
         choices: cur.choices, pendingChoice: cur.pendingChoice ? { index: cur.pendingChoice.index, request: cur.pendingChoice.req, submitting: !!cur.pendingChoice.submitting } : null,
         ownReady: ag.ready[this.seat] ? { revision: ag.ready[this.seat].revision, hash: ag.ready[this.seat].hash } : null,
+        readyState: cur.committed ? 'committed' : cur.committing ? 'committing' : cur.readyRefused ? 'refused' : 'none',
+        readyIntent: cur.readyIntent ?? null, readyRefused: cur.readyRefused ?? null,
       } : null,
       outcome: this.state?.outcome ?? null, finalHash: this.finalHash ?? null,
       feeds: { own: { length: this.own?.length ?? 0, fork: this.own?.fork ?? 0 }, remote: { length: this.remote?.length ?? 0, read: this.remoteRead, fork: this.remote?.fork ?? 0 } },

@@ -16,6 +16,7 @@ import { createHash } from 'node:crypto';
 import { readJson, writeJsonAtomic } from './store.js';
 import { verifyBundle, bucketOf } from './results.js';
 
+const MAX_TWINS = 4; // contradictory verified histories kept per result (a dispute needs two)
 const fileKey = (key) => createHash('sha256').update(key).digest('hex').slice(0, 32);
 
 export class ResultIndex {
@@ -82,6 +83,22 @@ export class ResultIndex {
       out.push({ key, session: v.descriptorHash, matchId: v.matchId, commitment: v.commitment, disputed: !!e.disputed, outcome: v.outcome, players: v.players, controllers: v.controllers, bucket: bucketOf(v.controllers), ticks: v.ticks });
     }
     out.sort((a, b) => a.key.localeCompare(b.key) || a.session.localeCompare(b.session));
+    return { total: out.length, items: out.slice(offset, offset + Math.min(limit, 50)) };
+  }
+
+  /**
+   * Every verified commitment to advertise (review 18, R18-07): one item per commitment, so a genuine
+   * conflict travels as its own evidence and an observer who already holds one history fetches the
+   * other and verifies the dispute itself. Bounded: at most `MAX_TWINS` commitments per result.
+   */
+  commitments({ playerId = null, offset = 0, limit = 20 } = {}) {
+    const out = [];
+    for (const e of this.entries.values()) {
+      const v0 = e.verified[0];
+      if (playerId && v0.players.A.participantId !== playerId && v0.players.B.participantId !== playerId) continue;
+      for (const v of e.verified.slice(0, MAX_TWINS)) out.push({ key: e.key, session: v.descriptorHash, commitment: v.commitment });
+    }
+    out.sort((a, b) => a.key.localeCompare(b.key) || a.session.localeCompare(b.session) || a.commitment.localeCompare(b.commitment));
     return { total: out.length, items: out.slice(offset, offset + Math.min(limit, 50)) };
   }
 

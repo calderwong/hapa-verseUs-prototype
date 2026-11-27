@@ -41,6 +41,37 @@ const SUIT_GLYPH = { wands: '♣', pentacles: '✪', cups: '♥', swords: '♠',
  * proportion and material language per owner: A slate-blue, B oxblood, both with ivory trim and
  * brass accents (Design Companion's slate / ivory / brass); shields keep the owner value.
  */
+const discTex = new Map();
+/** The painted owner disc (A solid, B ring), 32×32 brush pixels; shared per owner. */
+function ownerDiscTexture(owner) {
+  if (discTex.has(owner)) return discTex.get(owner);
+  const N = 32, cv = document.createElement('canvas'); cv.width = cv.height = N;
+  const g = cv.getContext('2d'), img = g.createImageData(N, N), d = img.data;
+  const base = new THREE.Color(OWNER_HEX[owner]);
+  const ramp = [0.55, 0.78, 1, 1.18].map((k) => base.clone().multiplyScalar(k));
+  const ink = new THREE.Color(0x17212d);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const dx = x + 0.5 - N / 2, dy = y + 0.5 - N / 2, r = Math.hypot(dx, dy) / (N / 2);
+    const inner = owner === 'A' ? -1 : 0.52, outer = 0.86, rim = 0.98;
+    let c = null, a = 0;
+    if (r <= outer && r >= inner) {
+      // two broad value planes (upper-left lit, lower-right shaded), stepped, not a smooth gradient
+      const lit = -(dx + dy) / N; const step = lit > 0.18 ? 3 : lit > -0.05 ? 2 : lit > -0.28 ? 1 : 0;
+      c = ramp[step]; a = 235;
+    } else if (r <= rim && r > outer) { c = ink; a = 210; } else if (owner === 'B' && r < inner && r > inner - 0.12) { c = ink; a = 190; } else if (owner === 'B' && r < inner) { c = ink; a = 120; }
+    if (!c) continue;
+    const o = (y * N + x) * 4;
+    d[o] = Math.min(255, c.r * 255); d[o + 1] = Math.min(255, c.g * 255); d[o + 2] = Math.min(255, c.b * 255); d[o + 3] = a;
+  }
+  g.putImageData(img, 0, 0);
+  // one rubbed highlight on the lit shoulder
+  g.fillStyle = 'rgba(255,248,232,0.55)'; g.fillRect(owner === 'A' ? 9 : 7, owner === 'A' ? 8 : 9, 5, 1); g.fillRect(owner === 'A' ? 8 : 6, owner === 'A' ? 9 : 10, 2, 1);
+  const t = new THREE.CanvasTexture(cv);
+  t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestFilter; t.colorSpace = THREE.SRGBColorSpace;
+  discTex.set(owner, t);
+  return t;
+}
+
 function spriteSpec(role, mount, owner) {
   const top = owner === 'A' ? '#2f4a6e' : '#7a2e2a';
   const trim = owner === 'A' ? '#e8e2d0' : '#efe3d0';
@@ -323,7 +354,13 @@ export class BoardView {
   _sheet(role, mount, owner) {
     const key = `${role}:${mount}:${owner}`;
     // the pinned engine's combat sheet keeps the plain frames and adds attack/aim/cast/hurt/down (VA-07)
-    if (!this.sheets.has(key)) this.sheets.set(key, createCharacterSheet(spriteSpec(role, mount, owner), { combat: true }));
+    if (!this.sheets.has(key)) {
+      const sheet = createCharacterSheet(spriteSpec(role, mount, owner), { combat: true });
+      // a blocked hit (review 18): a short brace on the sheet's own compact 'tuck' pose, one frame per
+      // direction, composed from the engine's sheet data (no engine change)
+      if (sheet.poses?.tuck != null) for (const [k, a] of Object.entries(sheet.animations)) if (k.startsWith('hurt_')) sheet.animations[`brace_${k.slice(5)}`] = { frames: a.frames.map((f) => ({ col: sheet.poses.tuck, row: f.row })), fps: a.fps, loop: false };
+      this.sheets.set(key, sheet);
+    }
     return this.sheets.get(key);
   }
 
@@ -382,6 +419,9 @@ export class BoardView {
       if (spr.userData.gear) {
         const F = FACINGS[spr.userData.facing] ?? FACINGS.N;
         // rules (x, y) → world (x, −z)
+        // eligibility comes from the body as now displayed (alive, on a shown layer, visible); a pose
+        // only suspends it, so gear returns with the idle body (review 18, R18-10)
+        spr.userData.gearEligible = spr.visible;
         placeGear(spr.userData.gear, { x: F.fx, z: -F.fy }, { x: F.rx, z: -F.ry }, spr.visible);
       }
     }
@@ -430,12 +470,11 @@ export class BoardView {
   }
 
   _ownerDisc(owner) {
-    // A: a solid disc; B: an open ring with a dark centre — ownership by shape and value as well as hue
-    const geo = owner === 'A' ? new THREE.CircleGeometry(0.34 * S, 20) : new THREE.RingGeometry(0.22 * S, 0.37 * S, 20);
-    const disc = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: OWNER_HEX[owner], transparent: true, opacity: 0.85, depthWrite: false }));
-    const edge = new THREE.Mesh(new THREE.RingGeometry(owner === 'A' ? 0.34 * S : 0.37 * S, owner === 'A' ? 0.39 * S : 0.42 * S, 20), new THREE.MeshBasicMaterial({ color: 0x17212d, transparent: true, opacity: 0.8, depthWrite: false }));
-    if (owner === 'B') { const hole = new THREE.Mesh(new THREE.CircleGeometry(0.22 * S, 20), new THREE.MeshBasicMaterial({ color: 0x17212d, transparent: true, opacity: 0.55, depthWrite: false })); disc.add(hole); }
-    disc.add(edge);
+    // A: a solid disc; B: an open ring with a dark centre — ownership by shape and value as well as hue.
+    // Painted in the scene's brush-pixel material language (VA-06 party materials, review 18): an
+    // enamel ramp lit from the upper left, an inked rim and one rubbed highlight; one shared texture
+    // per owner (nearest filtering), the same footprint and shape as before.
+    const disc = new THREE.Mesh(new THREE.PlaneGeometry(0.84 * S, 0.84 * S), new THREE.MeshBasicMaterial({ map: ownerDiscTexture(owner), transparent: true, opacity: 0.92, depthWrite: false }));
     disc.rotation.x = -Math.PI / 2;
     disc.position.y = 0.02;
     disc.renderOrder = 2;
@@ -517,7 +556,8 @@ export class BoardView {
       const want = act ? `${act.kind}_${spr.direction}` : `${spr.userData.walking && !still ? 'walk' : 'idle'}_${spr.direction}`;
       if (spr.animation !== want) spr.play(want, act ? {} : { keepPhase: true });
       // combat frames draw their own weapon: the separately attached gear steps aside meanwhile
-      if (spr.userData.gear) for (const g of Object.values(spr.userData.gear)) g.visible = g.visible && !act;
+      // a brace keeps its shield up; other combat frames draw their own weapon
+      if (spr.userData.gear) for (const [name, g] of Object.entries(spr.userData.gear)) g.visible = spr.userData.gearEligible !== false && (!act || (act.kind === 'brace' && name === 'shield'));
       spr.update(dt, camera);
     }
   }

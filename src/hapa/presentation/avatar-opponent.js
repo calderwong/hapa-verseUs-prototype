@@ -24,6 +24,7 @@
  */
 import { h } from './dom.js';
 import { answer, MODES } from './reactions.js';
+import { FramedRedPlayer } from './red-bridge.js';
 
 const STALE_MS = 35000; // a prepared line older than this is not played
 const PREPARE_MS = 30000; // the voice preparation deadline (the owner takes ~9–10 s per line)
@@ -65,9 +66,41 @@ export class AvatarOpponent extends EventTarget {
 
   // --- binding ------------------------------------------------------------------------------
 
-  /** Resolve and pin the exact identity, renderer package and Voice Card; mount the puppet. */
-  async attach() {
+  /** Whether the owner's renderer is still missing (text-only); a retry may restore it. */
+  get unbound() { return !this.disposed && !this.player; }
+
+  /**
+   * Resolve and pin the exact identity, renderer package and Voice Card; mount the puppet.
+   * Idempotent and fenced (review 18, R18-01): one attempt at a time; an attempt superseded by a new
+   * match, dispose or a newer attempt releases what it loaded; once a player is bound, further calls
+   * do nothing, so a retry can never seat a second performer.
+   * @returns {Promise<boolean>} whether the renderer is bound after this call
+   */
+  attach() {
+    if (this.disposed) return Promise.resolve(false);
+    if (this.player) return Promise.resolve(true);
+    if (this._attaching) return this._attaching;
+    const gen = this._attachGen = (this._attachGen ?? 0) + 1;
+    this.attempts = (this.attempts ?? 0) + 1;
+    this.binding.status = 'binding';
+    this._render();
+    this._attaching = this._attach(gen).finally(() => { if (this._attachGen === gen) this._attaching = null; });
+    return this._attaching;
+  }
+
+  /** A player-requested retry ("Try again"): an immediate attempt. */
+  retry() { this.dispatchEvent(new CustomEvent('retry')); return this.attach(); }
+
+  /** The owner renderer: Harbor's module on an http(s) page; the loopback frame bridge in the desktop app. */
+  async _makePlayer() {
+    if (location.protocol === 'app:') return new FramedRedPlayer(this.canvas);
+    const { RedPlayer } = await import(/* @vite-ignore */ PUPPET_URL); // served by Harbor (the renderer owner), not bundled
+    return new RedPlayer(this.canvas, { packageURL: '/v1/avatar-package', audioURL: (p) => p });
+  }
+
+  async _attach(gen) {
     const epoch = this.epoch;
+    const live = () => !this.disposed && epoch === this.epoch && gen === this._attachGen;
     let player = null;
     try {
       const [caps, performer] = await Promise.all([this._get('/capabilities'), this._get('/v1/performer')]);
@@ -82,24 +115,28 @@ export class AvatarOpponent extends EventTarget {
         const card = (voices.cards || []).find((c) => c.title === want) ?? voices.cards?.[0];
         this.binding.voice = card && voices.provider?.ready ? { cardId: card.id, label: card.title, provider: 'omnivoice', owner: 'hapa-avatar-builder' } : null;
       } catch (e) { this.binding.voice = null; this.voiceError = e.message; }
-      if (epoch !== this.epoch || this.disposed) return;
-      const { RedPlayer } = await import(/* @vite-ignore */ PUPPET_URL); // served by Harbor (the renderer owner), not bundled
-      player = new RedPlayer(this.canvas, { packageURL: '/v1/avatar-package', audioURL: (p) => p });
+      if (!live()) return false;
+      player = await this._makePlayer();
       await player.load();
-      if (epoch !== this.epoch || this.disposed) { player.dispose(); return; } // superseded while loading
+      if (!live() || this.player) { player.dispose(); return !!this.player; } // superseded while loading
       this.player = player;
+      this.bindingError = null;
       this.player.reduced = reducedMotion();
       this.player.addEventListener('playback', (e) => this._onPlayback(e.detail));
       if (this.voiceVolume != null) this.player.audio.volume = this.voiceVolume;
       this.binding.status = this.binding.voice ? 'ready' : 'ready-text-only';
       this.dispatchEvent(new CustomEvent('rendering', { detail: { canvas: this.canvas } }));
+      this._render();
+      return true;
     } catch (e) {
       try { if (player && player !== this.player) player.dispose(); } catch { /* released */ } // a failed load releases its renderer
+      if (!live()) return false;
       this.binding.status = 'text-only';
       this.bindingError = e.message;
       console.warn(`[versus] Avatar opponent in text-only mode: ${e.message}`);
+      this._render();
+      return false;
     }
-    this._render();
   }
 
   async _get(url) {
@@ -279,7 +316,9 @@ export class AvatarOpponent extends EventTarget {
     u.sound = h('button', { class: 'opp-sound', title: 'Let your opponent speak and play the table music (browsers need one click before sound)', onclick: () => this.enableSound() }, '🔈 Sound on');
     u.mute = h('button', { title: "Mute only the opponent's voice (captions stay)", onclick: () => { this.settings.voice = !this.settings.voice; if (!this.settings.voice) this.stop(); this._save(); this._render(); } });
     u.stop = h('button', { title: 'Stop speaking now', onclick: () => this.stop() }, 'Stop');
-    u.controls = h('div', { class: 'opp-controls' }, u.sound, u.mute, u.stop);
+    // the owner renderer is not answering: say so on the plate and offer an immediate retry (R18-01)
+    u.retry = h('button', { class: 'opp-retry', title: "Red's figure and voice come from Harbor on this computer, which is not answering. Try again now (it also retries by itself).", onclick: () => this.retry() }, 'Show Red');
+    u.controls = h('div', { class: 'opp-controls' }, u.retry, u.sound, u.mute, u.stop);
     u.log = h('div', { class: 'opp-log', 'aria-live': 'off' });
     u.input = h('input', { type: 'text', maxlength: 200, placeholder: 'Ask about a move or the music…', 'aria-label': 'Ask your opponent',
       onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Escape') { this.toggleConversation(false); return; } if (e.key === 'Enter' && u.input.value.trim()) { const q = u.input.value.trim(); u.input.value = ''; this.ask(q); } } });
@@ -298,6 +337,9 @@ export class AvatarOpponent extends EventTarget {
     if (this.disposed || !this.ui) return;
     const u = this.ui, b = this.binding, s = this.settings;
     this.el.classList.toggle('speaking', this.speaking);
+    this.el.classList.toggle('unbound', !this.player);
+    u.retry.hidden = !!this.player || !this.bindingError;
+    u.retry.textContent = b.status === 'binding' ? 'Connecting…' : 'Show Red';
     this.el.classList.toggle('expanded', !!this.expanded);
     u.name.setAttribute('aria-expanded', String(!!this.expanded));
     u.name.querySelector('.opp-label').textContent = `${b.avatar.label}${this.current?.state === 'preparing-voice' ? ' …' : ''}`;
@@ -318,7 +360,7 @@ export class AvatarOpponent extends EventTarget {
     u.captions.checked = s.captions;
     const detail = [
       `${b.avatar.label} (${b.avatar.id}) plays seat ${b.seat}. Moves: ${this.controller.label}.`,
-      b.renderer ? `Renderer ${b.renderer.packageId} ${b.renderer.revision} (${b.renderer.renderer}) via Harbor.` : `Renderer unavailable${this.bindingError ? `: ${this.bindingError}` : ''}.`,
+      b.renderer && this.player ? `Renderer ${b.renderer.packageId} ${b.renderer.revision} (${b.renderer.renderer}) via Harbor${location.protocol === 'app:' ? ' (desktop renderer frame)' : ''}.` : `Renderer unavailable${this.bindingError ? `: ${this.bindingError}` : ''}; the seat shows an empty chair. ${this.nextRetry ? `Trying again ${this.nextRetry}.` : ''} (attempt ${this.attempts ?? 0})`,
       b.voice ? `Voice: ${b.voice.label} (Builder Voice Card, ${b.voice.provider}).` : `Voice unavailable${this.voiceError ? `: ${this.voiceError}` : ''}; captions only.`,
       this.lastVoice ? `Last voice: prepared in ${(this.lastVoice.preparationMs / 1000).toFixed(1)} s${this.lastVoice.playbackStartedAt ? ', played' : ''}.` : null,
       this.voiceError && b.voice ? `Last voice problem: ${this.voiceError}.` : null,

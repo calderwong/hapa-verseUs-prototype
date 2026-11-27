@@ -197,6 +197,17 @@ export class TerrainView {
    * with its words; a running task is a solid amber cube with its completion Tick; a completed dig
    * is the void the terrain already draws. Presentation of the public plan and the task records only.
    */
+  /**
+   * The center of a work cell — the rules' and work UI's `{x, y, band}` cube (cell units; x = cellOf
+   * of a member's x) — in world space: its column center, half a band above the band's floor. One
+   * conversion for the work cubes and the accepted terrain_changed cue (review 18, R18-09).
+   * @param {{ x: number, y: number, band: number }} cell
+   */
+  cellCenter(cell) {
+    const U = this.ctx.U;
+    return this.toWorld(cell.x * U, cell.y * U).setY(bandY(cell.band) + BAND_H / 2);
+  }
+
   syncWork(state, planned = []) {
     this.work ??= new THREE.Group();
     if (!this.work.parent) this.group.parent?.add(this.work);
@@ -204,11 +215,11 @@ export class TerrainView {
     this.work.clear();
     const U = this.ctx.U, S = this.S;
     const cube = (t, color, dashed, text) => {
-      const w = this.toWorld(t.x * U, t.y * U);
+      const w = this.cellCenter(t);
       const geo = new THREE.EdgesGeometry(new THREE.BoxGeometry(S * 0.96, BAND_H * 0.96, S * 0.96));
       const line = new THREE.LineSegments(geo, dashed ? new THREE.LineDashedMaterial({ color, dashSize: 0.18, gapSize: 0.12, depthTest: false, transparent: true }) : new THREE.LineBasicMaterial({ color, depthTest: false, transparent: true }));
       if (dashed) line.computeLineDistances();
-      line.position.set(w.x, bandY(t.band) + BAND_H / 2, w.z);
+      line.position.copy(w);
       line.renderOrder = 9;
       const lab = textLabel(text, { color: dashed ? '#8FD3A0' : '#F2C14E', size: 0.38 });
       lab.position.set(0, BAND_H * 0.9, 0);
