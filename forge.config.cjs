@@ -84,7 +84,10 @@ module.exports = {
     new FusesPlugin({
       version: FuseVersion.V1,
       [FuseV1Options.RunAsNode]: false,
-      [FuseV1Options.EnableCookieEncryption]: true,
+      // off: the game keeps no cookies or secrets in Chromium storage (player keys live in the game's own
+      // files), and the encryption key lives in the macOS keychain — every unsigned rebuild then asked the
+      // player for keychain access again. Without it the app never touches the keychain.
+      [FuseV1Options.EnableCookieEncryption]: false,
       [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
       [FuseV1Options.EnableNodeCliInspectArguments]: false,
       [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,

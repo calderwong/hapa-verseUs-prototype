@@ -17,6 +17,9 @@ const PARTITION = 'persist:versus';
 const NETWORK_ID = process.env.HAPA_VERSUS_NETWORK || 'public-alpha';
 
 app.setName('Hapa Versus');
+// never use the OS keychain ("Hapa Versus Safe Storage"): nothing the game stores in Chromium needs it,
+// and an unsigned app is asked for keychain access again after every update
+app.commandLine.appendSwitch('use-mock-keychain');
 // An explicit data root is for isolated test players and operators; players use the OS default.
 const dataOverride = process.env.HAPA_VERSUS_DATA_DIR;
 if (dataOverride) {
