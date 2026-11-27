@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function runSmoke(o) {
   mkdirSync(o.out, { recursive: true });
   o.win.webContents.on('console-message', (e) => { if (o.consoleLines.length < 120 && (e.level === 'warning' || e.level === 'error')) o.consoleLines.push(`${e.level}: ${String(e.message).slice(0, 300)}`); });
-  const result = o.script === 'online' ? await online(o) : o.script === 'observe' ? await observe(o) : o.script === 'lifecycle' ? await lifecycle(o) : await local(o);
+  const result = o.script === 'online' ? await online(o) : o.script === 'observe' ? await observe(o) : o.script === 'lifecycle' ? await lifecycle(o) : o.script === 'red' ? await red(o) : await local(o);
   writeFileSync(join(o.out, 'smoke.json'), JSON.stringify({ ...result, console: o.consoleLines }, null, 1));
   o.app.quit();
 }
@@ -54,6 +54,24 @@ async function lifecycle(o) {
   let call = null;
   if (o.peer.state === 'ready') call = await o.callPeer('getStatus', {}, 10_000).then((s) => ({ ok: true, runtime: s.runtime, fingerprint: s.player?.fingerprint })).catch((e) => ({ ok: false, error: e.message }));
   return { ok: o.peer.state === 'ready' ? !!call?.ok : o.peer.state === 'failed', script: 'lifecycle', states, final: o.peer.state, pageSees: page ? JSON.parse(page) : null, call, about: o.about() };
+}
+
+/**
+ * `red` (R18-01 / N20-07): the installed default Avatar. Starts the default local match (Red seated for
+ * the bot seat) and waits for the owner renderer — Harbor's player inside the loopback renderer frame —
+ * to bind and draw; records the package identity, the frame, one performer, and a Home capture.
+ * Needs userData/owners.json naming a running Harbor; without it, records the truthful fallback.
+ */
+async function red(o) {
+  const t0 = Date.now();
+  await loaded(o);
+  await js(o, `window.__versus?.startMatch ? true : false`);
+  const bound = await until(o, `(() => { const op = window.__versus?.table?.opponent; return op && (op.player || (op.attempts >= 1 && op.binding.status === 'text-only' && op.bindingError)) ? JSON.stringify({ player: !!op.player, status: op.binding.status, renderer: op.binding.renderer, error: op.bindingError ?? null, frames: document.querySelectorAll('iframe.red-frame').length, performers: document.querySelectorAll('.opp-social').length, drawn: !!window.__versus.table.seated?._hasFrame }) : null; })()`, 90_000, 500);
+  await sleep(3000);
+  const after = await js(o, `JSON.stringify({ drawn: !!window.__versus?.table?.seated?._hasFrame, visibility: window.__versus?.table?.seated?.visibility ?? null })`);
+  await shot(o, 'red-home');
+  const r = bound ? JSON.parse(bound) : null;
+  return { ok: !!r?.player && JSON.parse(after).drawn, script: 'red', seconds: (Date.now() - t0) / 1000, binding: r, after: JSON.parse(after), origin: await js(o, 'location.origin'), about: o.about() };
 }
 
 async function local(o) {
