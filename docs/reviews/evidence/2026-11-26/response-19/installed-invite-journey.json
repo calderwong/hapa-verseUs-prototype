@@ -1,0 +1,80 @@
+{
+ "network": "test-invite-mwydlghv",
+ "app": "<scratch>/install/Hapa Versus.app",
+ "build": {
+  "source": "c7a00c1308321a79d9bba1bcacf68382cf6626df",
+  "dirty": false,
+  "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "builtAt": "2026-11-27T02:40:25.262Z",
+  "target": "darwin-arm64"
+ },
+ "host": {
+  "exit": 0,
+  "ok": true,
+  "seat": "A",
+  "steps": [
+   "join",
+   "invitationCopied",
+   "tableOpen",
+   "result"
+  ],
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 4,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:3f986a815ffd825986fcfff49bacde70fb70a46a812527eaf0621e958f63c1e8",
+  "readyClicks": 4,
+  "fingerprint": "32c3-c7c4-3d1b"
+ },
+ "joiner": {
+  "exit": 0,
+  "ok": true,
+  "seat": "B",
+  "steps": [
+   "join",
+   "joinedByInvitation",
+   "tableOpen",
+   "concede",
+   "result"
+  ],
+  "stages": [
+   "finding-player",
+   "negotiating"
+  ],
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 4,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:3f986a815ffd825986fcfff49bacde70fb70a46a812527eaf0621e958f63c1e8",
+  "readyClicks": 4,
+  "fingerprint": "f907-debd-2bbb"
+ },
+ "reopen": {
+  "hostSameIdentity": true,
+  "joinerSameIdentity": true,
+  "hostRecorded": [
+   "recorded"
+  ],
+  "joinerRecorded": [
+   "recorded"
+  ]
+ },
+ "sameResult": true,
+ "ok": true
+}

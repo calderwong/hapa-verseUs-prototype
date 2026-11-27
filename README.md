@@ -22,13 +22,19 @@ This is not yet a publicly delivered multiplayer release. Signing/notarization, 
 
 For current gameplay and presentation, follow the [review index](docs/reviews/README.md) and newer addenda: the current default is `hapa_open_10x9_v3_07` with one commitment to each own plan.
 
+## Download and play
+
+**Friend-test candidate (macOS, Apple Silicon M1 or newer): [download Hapa-Versus-0.1.0-friend1-macOS-AppleSilicon.dmg](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.1)** · 124,514,266 bytes · SHA-256 `5bc9778ff980e7a09bc516fa7b5b0f4fd4d3d8b380ba06adacfdb83023b35369` · source `c7a00c1`.
+
+Open the DMG, drag Hapa Versus to Applications and open it. This test build is not yet signed with an Apple Developer ID: the first time, macOS says it cannot verify the developer; approve it once in **System Settings → Privacy & Security → Open Anyway**. Then choose **Play online** and **Challenge** your friend, or **Open a table → Copy invitation** and send it. Full player steps: [Play with a friend](docs/player/play-with-a-friend.md). There is no Intel-Mac or Windows build yet. A two-network human game has not been verified yet ([Response 19](docs/reviews/2026-11-26-friend-test-implementation-response-19.md)).
+
 ## Play (desktop app)
 
-**Friend handoff target:** download the app matching your machine, open it, choose Play online, then Challenge/Accept or Join by invitation. The coding agent must publish a verified artifact link here when available. No new downloadable artifact is supplied by Assignment 19. Contributor commands below are separate from the friend's install path.
+Contributor commands below are separate from the player download above.
 
 The following describes the intended prototype player path. Review 18 records the remaining observed recovery, result and presentation limitations; no downloadable release is published by these reviews.
 
-Open **Hapa Versus.app** (macOS Apple Silicon; from the DMG). **Play on this computer** starts a local match against the heuristic bot with no network and no other Hapa apps. **Play online → Join lobby** shows available players: **Challenge** one, **Open a table** (and copy its invitation), or **Join by invitation**. Each player controls only their own seat; Ready commits your plan once; closing the app is never a concession and reopening returns you to the match. Finished matches are verified from the signed moves and saved on your computer, then shared with a result archive when one is reachable. Player data lives in `~/Library/Application Support/Hapa Versus/`, never inside the app.
+Open **Hapa Versus.app** (macOS Apple Silicon; from the DMG). **Play on this computer** starts a local match against the heuristic bot with no network and no other Hapa apps. **Play online** starts discovery by itself and shows available players: **Challenge** one, **Open a table** (and copy its invitation), or **Join by invitation**. Each player controls only their own seat; Ready commits your plan once; closing the app is never a concession and reopening returns you to the match. Finished matches are verified from the signed moves and saved on your computer, then shared with a result archive when one is reachable. Player data lives in `~/Library/Application Support/Hapa Versus/`, never inside the app.
 
 ## Start a visible local match
 

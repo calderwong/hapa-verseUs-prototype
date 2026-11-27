@@ -18,7 +18,7 @@ Qualify applicable known faults before that handoff. The longer fault/third-obse
 1. Get `Hapa Versus.dmg` (or the `.zip`) for `darwin-arm64` and check its SHA-256 against the release record.
 2. Open the DMG and drag **Hapa Versus** to Applications. Open it.
 3. Local play works immediately and offline: **Play on this computer → Start match** (you against the heuristic bot).
-4. Online: **Play online → Join lobby**. Your name, availability and finished match evidence (moves, choices, result — never chat, voice or music) are shared with the lobby.
+4. Online: **Play online** (discovery starts by itself; Leave lobby stops it). Your name, availability and finished match evidence (moves, choices, result — never chat, voice or music) are shared with the lobby.
 
 Nothing else is required: no Git, Node, npm, terminal, Vite server, engine credentials or other Hapa apps.
 
@@ -36,7 +36,7 @@ Nothing else is required: no Git, Node, npm, terminal, Vite server, engine crede
 | `state/<network>/results/` | verified result evidence and the rebuildable index |
 | `state/<network>/outbox.json`, `settings.json`, `reservation.json` | sharing state, Available/Busy and joined preference, the one active reservation |
 | `owners.json` (optional) | loopback owner endpoints for optional Hapa owners (below) |
-| `network.json` (optional) | operator-provided relay/archive configuration overriding the bundled public config |
+| `network.json` (optional) | a local adoption of extra services (bootstrap nodes, relays, archives), imported once into the append-only service history; it extends the bundled public defaults unless it names `replace` or `isolated` (§10) |
 | `window.json`, Chromium profile data | window placement and the `app://versus` origin's local preferences |
 
 **Help → Show Player Data Folder** opens it. Replacing or moving the app keeps this data. Deleting the folder is the only reset; a new key is a new, unlinked player.
@@ -79,13 +79,13 @@ For the simpler current first-session criteria, use the preceding friend-test se
 
 Needs two Macs (Apple Silicon) on **different internet connections** (for example home broadband and a phone hotspot), each with the same DMG, plus — for journey 4 — an archive host that stays online.
 
-1. On both: install from the DMG, open, **Join lobby** with distinct names. Note each fingerprint (shown beside the name).
+1. On both: install from the DMG, open, **Play online** with distinct names. Note each fingerprint (shown beside the name).
 2. Confirm each sees the other as **Available** within a few seconds. Toggle **Set Busy** on one: the other's Challenge must disable with the reason; toggle back.
 3. A challenges B; B sees the challenge and presses **Accept**. Both tables open: A's shows "vs B", B's shows "vs A". Neither shows Red or a local bot for the remote seat.
 4. Play several Ticks: plan, **Ready** once per Tick ("Ready · waiting for …"), and answer any response window on its owner's machine only.
 5. Recovery on one machine mid-match: reload (View → Reload), then quit (⌘Q) right after pressing Ready, then reopen. The match must return to the same Tick with the committed plan still committed and no second Ready.
 6. Finish (or concede by adding the concession order before Ready). Both result sheets must show the same outcome; "Result saved…" then "archived by …" when an archive is reachable.
-7. On a third machine (or a fresh user account), install, **Join lobby**: with A and B quit, the observer's lobby must show both players' verified records from the archive.
+7. On a third machine (or a fresh user account), install, **Play online**: with A and B quit, the observer's lobby must show both players' verified records from the archive.
 
 Record per machine: OS version, app SHA-256, network type (no IP addresses), Ready acknowledgment feel, any "relay"/"unknown" path label, and the outcome hash from **Download replay**. A same-machine or same-LAN run does not satisfy this journey.
 
@@ -154,3 +154,25 @@ The installed app already contains the compiled engine code it needs (inside `di
 - **Notices.** `Contents/Resources/app.asar/desktop/THIRD_PARTY_NOTICES.txt` lists the game notice, the compiled engine (revision and MIT text), the packages compiled into the game and every production package in the app.
 - **Tester additions for the two-Mac session (§3):** after finishing, open **Player records** and each **Profile** on a third Mac with both players quit; on one Mac, accept a challenge and quit the other side before the table opens to see **Retry / Leave this attempt**; during play, open the match menu and confirm **Leave this match** is offered (do not use it in the counted game).
 
+
+
+## 10. Connectivity services and diagnostics (Assignment 19)
+
+Players need none of this: the bundled public HyperDHT defaults are used automatically. It is for an operator or a friend helping out.
+
+- **Policy.** `cores/service-policy` (in the network's state folder) is an append-only Hypercore of accepted service decisions with provenance: `bundled-default` (the three public HyperDHT entries, copied from hyperdht@6.37.0), `bundled-config` (`desktop/network.json`), `local-config-import` (`userData/network.json`), `user`. The effective policy is its projection; *Copy connection report* shows it.
+- **Adding services** (`userData/network.json`, then restart the app):
+
+```json
+{ "networks": { "public-alpha": {
+  "bootstrap": { "mode": "extend", "nodes": ["203.0.113.7@dht.example.net:49737"] },
+  "relays": [{ "id": "friend-relay", "key": "<64-hex relay public key>", "endpoint": "198.51.100.2:49737", "label": "Friend's relay" }],
+  "archives": [{ "player": "hv1:<64 hex>", "transport": "<64 hex>", "label": "Hapa Archive" }],
+  "disable": [], "retire": []
+} } }
+```
+
+  `extend` adds nodes to the same public overlay (the default); `replace` uses only the listed nodes (an empty list is refused rather than isolating you); `isolated` is a named development overlay that cannot see public players. Relays are tried in order per relayed attempt; one observed carrying a connection is preferred. A relay's published endpoint lets the app report a connection as *relayed*; otherwise the path is reported *unknown*. An invalid file is refused and the last valid policy stays (the report lists the refusal).
+- **Running a relay:** `node tools/hapa/relay-serve.mjs --seed relay-seed.txt` prints its public key. It forwards encrypted streams only; it holds no game, identity or history authority.
+- **Contacts.** `cores/contact` is this player's signed contact history (binding + transport changes); `contacts.json` caches verified snapshots/checkpoints of other players. Invitations are `hvinv2.` (with a signed contact snapshot); `hvinv1.` codes still work.
+- **Connection report.** Play online → *Copy connection report* / *Save diagnostics*: build/platform, compatibility, discovery/DHT state, services with provenance, relays tried, the current attempt and its stage, fingerprints only. No keys, addresses, paths or invitations.

@@ -4,6 +4,8 @@ This folder is the shared handoff between CJ, the reviewing assistant, and the l
 
 ## Start here
 
+- **Latest implementation response:** [Response 19 — friend test candidate](2026-11-26-friend-test-implementation-response-19.md), source `c7a00c1`, macOS Apple Silicon DMG on the [friend-test-1 pre-release](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.1) with [evidence](evidence/2026-11-26/response-19/). **Candidate prepared; ready for the friend to try only once CJ confirms the friend's computer type and either supplies Developer ID signing or accepts the one-time Open Anyway step; friend test passed: pending.** Also reconciles Assignment 18 (committed `7ebe1c5`) with its staged/unstaged qualification listed per finding. Player sheet: [Play with a friend](../player/play-with-a-friend.md).
+
 - **Latest user direction / queued next assignment:** [Assignment 19 — a friend opens the app and plays across town](2026-11-26-next-agent-assignment-19.md), under [Addendum 09](../requirements/2026-11-26-human-feedback-addendum-09.md) and [the connectivity companion](../integrations/friend-test-and-resilient-connectivity-v1.md). Prepare the real native two-network friend test and minimal signed contact/provider extensibility, without requiring a VPS maintained by CJ. Reconcile in-flight Assignment 18 and newer local work first. This is tasking, not implementation, a release or a new readiness approval.
 
 - **In-flight correctness handoff:** [Assignment 18 — complete the representative candidate and recovery paths](2026-11-26-next-agent-assignment-18.md). Continue as the same agent, preserve newer work and Response 17's corrected behavior, close Review 18 and finish the selected core under Loose Screws.

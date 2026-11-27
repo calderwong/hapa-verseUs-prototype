@@ -1,0 +1,8 @@
+npm run check — source c7a00c1 (+ uncommitted docs/tools only; app source identical) — 2026-11-27T02:47:15Z
+ℹ tests 180
+ℹ pass 180
+ℹ fail 0
+✔ rules tests (35804 ms)
+✔ two-process peer-verified match (3142 ms)
+✔ build (692 ms)
+exit 0

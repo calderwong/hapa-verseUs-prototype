@@ -4,6 +4,10 @@
 records what is built, which owners it attaches to, the defaults CJ selected and what is still loose.
 CJ's acceptance is separate from technical completion and is not recorded here on his behalf.
 
+## Current candidate — Response 19, 26 November 2026
+
+[Response 19](../reviews/2026-11-26-friend-test-implementation-response-19.md): source `c7a00c1`, macOS Apple Silicon DMG on the [friend-test-1 pre-release](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.1). Built: service policy history and real bootstrap/relay plumbing (`services.js`), connection attempts and redacted diagnostics, signed contact core and `hvinv2` (`contact.js`), Assignment 18 corrections (`7ebe1c5`). Candidate prepared; friend-test readiness waits on the friend's computer type and signing (or CJ accepting Open Anyway); the two-network human test is pending. Services and contacts: [runbook §10](online-desktop-runbook.md).
+
 ## Queued delivery — Assignment 19, 26 November 2026
 
 CJ's latest target is [a friend across town opening a bundled app and playing over independent internet connections](../requirements/2026-11-26-human-feedback-addendum-09.md). [Assignment 19](../reviews/2026-11-26-next-agent-assignment-19.md) and [the connectivity companion](friend-test-and-resilient-connectivity-v1.md) add the concrete download/open journey, public-DHT-first attempt, typed replaceable provider selection and signed Hypercore contact/service history. Reconcile in-flight Assignment 18 and newer local work before implementation; its unresolved findings are not closed by these notes.
