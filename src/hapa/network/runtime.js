@@ -258,7 +258,8 @@ export class PeerRuntime {
     if (ev === 'joined' && this.reservation) this._resendStart(peer);
     if (ev === 'joined' && this.contact) this.lobby.send(peer.playerId, { t: 'contact', snapshot: this.contact.snapshot() });
     if (ev === 'joined' && peer.presence.role === 'archive') this._flushOutbox(peer);
-    if ((ev === 'lost' || ev === 'replaced') && this.match && peer?.playerId === this.match.opponent.participantId && ev === 'lost') { this.match.detached(); this.lobby?.dial(peer.transportKey); this.lobby?.announce(); }
+    if ((ev === 'lost' || ev === 'replaced') && this.match && peer?.playerId === this.match.opponent.participantId && ev === 'lost') { this.log(`opponent connection lost during the match; redialling`); this.match.detached(); this.lobby?.dial(peer.transportKey); this.lobby?.announce(); }
+    if (ev === 'joined' && this.match && peer?.playerId === this.match.opponent.participantId) this.log(`opponent connected (path ${peer.path})`);
     this.emit({ type: 'lobby', kind: ev === 'transport' ? 'transport' : 'roster', roster: this.lobby?.roster() ?? [], transport: this.lobby?.transport() });
   }
 

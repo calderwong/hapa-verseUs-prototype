@@ -143,8 +143,8 @@ export class Lobby {
     ctx.channel = channel;
     ctx.message = channel.addMessage({ encoding: c.raw, onmessage: (buf) => this._onFrame(ctx, buf) });
     channel.open();
-    conn.on('error', () => {});
-    conn.on('close', () => this._drop(ctx, 'connection closed'));
+    conn.on('error', (e) => { ctx.lastError = e?.code ?? e?.message ?? 'error'; });
+    conn.on('close', () => this._drop(ctx, `connection closed${ctx.lastError ? ` (${ctx.lastError})` : ''}`));
     setTimeout(() => { if (!ctx.authed && !ctx.dropped) { this.log(`unauthenticated connection ${remoteKey.slice(0, 8)} timed out`); conn.destroy(); } }, 20_000);
   }
 
@@ -239,6 +239,9 @@ export class Lobby {
       if (p && p.ctx === ctx) {
         const next = (p.standby ?? []).find((c) => !c.dropped);
         if (next) { p.ctx = next; p.standby = p.standby.filter((c) => c !== next && !c.dropped); p.transportKey = next.remoteKey; p.path = this._path(next); p.lastSeen = now(); this.o.onConnection?.(p, next.conn); this.o.onPeer(p, 'presence'); return; }
+        // why an authenticated player went away, for the log and the connection report (no addresses)
+        this.log(`player ${p.fingerprint} lost: ${why} after ${Math.round((now() - p.since) / 1000)} s (path ${p.path})`);
+        this._note('dropped', `${why} after ${Math.round((now() - p.since) / 1000)} s`);
         this.peers.delete(ctx.player.participantId); this.o.onPeer(p, 'lost');
       } else if (p?.standby) p.standby = p.standby.filter((c) => c !== ctx);
     }
@@ -251,7 +254,7 @@ export class Lobby {
   _expire() {
     const t = now();
     for (const p of [...this.peers.values()]) {
-      if (t - p.lastSeen > EXPIRY_MS) { this.log(`presence of ${p.fingerprint} expired`); p.ctx.conn.destroy(); }
+      if (t - p.lastSeen > EXPIRY_MS) { this.log(`presence of ${p.fingerprint} expired`); p.ctx.expired = true; p.ctx.lastError = 'presence expired'; p.ctx.conn.destroy(); }
     }
   }
 
