@@ -15,12 +15,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PeerRuntime } from '../../src/hapa/network/runtime.js';
 
-const [name, boot, liveKey, liveEp, out, expect] = process.argv.slice(2);
+const [name, boot, liveKey, liveEp, out, expect, mode = 'fallback'] = process.argv.slice(2);
 const local = {
   bootstrap: { mode: 'isolated', overlay: 'netns-witness', nodes: [boot] },
-  relays: [{ id: 'gone', key: '7'.repeat(64), label: 'unreachable first relay' }, { id: 'live', key: liveKey, endpoint: liveEp, label: 'second relay' }],
+  // `single`: only the live relay (does relay carriage work in this topology?); `fallback`: an
+  // unreachable relay first, the live relay second
+  relays: [...(mode === 'single' ? [] : [{ id: 'gone', key: '7'.repeat(64), label: 'unreachable first relay' }]), { id: 'live', key: liveKey, endpoint: liveEp, label: 'second relay' }],
 };
-const rt = new PeerRuntime({ root: mkdtempSync(join(tmpdir(), `hv-netns-${name}-`)), networkId: 'test-netns-relay', displayName: name, forceRelay: true, services: { bundled: null, local }, log: (s) => process.stderr.write(`[${name}] ${s}\n`) });
+const rt = new PeerRuntime({ root: mkdtempSync(join(tmpdir(), `hv-netns-${name}-`)), networkId: `test-netns-relay-${mode}`, displayName: name, forceRelay: true, services: { bundled: null, local }, log: (s) => process.stderr.write(`[${name}] ${s}\n`) });
 await rt.open();
 await rt.joinLobby({});
 const t0 = Date.now();
@@ -34,7 +36,7 @@ await new Promise((r) => setTimeout(r, 3000)); // let late upgrades or drops hap
 roster = rt.lobbyView().roster;
 const dht = rt.lobby.swarm?.dht;
 const transport = { ...rt.lobby.transport(), dhtNodes: dht?.nodes?.length ?? null, dhtHost: dht?.host ?? null, dhtPort: dht?.port ?? null, firewalled: dht?.firewalled ?? null, swarmPeers: rt.lobby.swarm?.peers?.size ?? null, connecting: rt.lobby.swarm?.connecting ?? null, stats: rt.lobby.swarm?.stats ?? null };
-const result = { name, transport, seconds: (Date.now() - t0) / 1000, roster: roster.map((p) => ({ label: p.label, fingerprint: p.fingerprint, path: p.path, relay: p.relay })), relays: rt.lobby.transport().relays, exhausted: rt.lobby.transport().relaysExhausted, policyRelays: rt.policy.relays.map((r) => r.id) };
+const result = { name, mode, transport, seconds: (Date.now() - t0) / 1000, roster: roster.map((p) => ({ label: p.label, fingerprint: p.fingerprint, path: p.path, relay: p.relay })), relays: rt.lobby.transport().relays, exhausted: rt.lobby.transport().relaysExhausted, policyRelays: rt.policy.relays.map((r) => r.id) };
 result.ok = roster.length >= Number(expect) && roster.every((p) => p.path === 'relayed' && p.relay === 'live');
 writeFileSync(out, JSON.stringify(result, null, 1));
 console.log(JSON.stringify(result));

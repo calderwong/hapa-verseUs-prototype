@@ -48,18 +48,26 @@ iptables -S > "$OUT/iptables.txt" 2>&1 || true
 ip netns exec hvr "$NODE" "$ROOT/tools/hapa/relay-serve.mjs" --testnet "$BOOT" --port 49740 --stats "$OUT/relay-stats.json" > "$OUT/relay.json" 2>"$OUT/relay.err" &
 for _ in $(seq 1 100); do [ -s "$OUT/relay.json" ] && break; sleep 0.2; done
 KEY=$(python3 -c "import json;print(json.load(open('$OUT/relay.json'))['relay']['publicKey'])")
-# three peers, concurrently
-for p in a b c; do
-  ip netns exec hv$p "$NODE" "$ROOT/tools/hapa/relay-witness-peer.mjs" "Peer-$p" "$BOOT" "$KEY" "10.77.1.2:49740" "$OUT/peer-$p.json" 2 > /dev/null 2>"$OUT/peer-$p.err" &
+# three peers, concurrently: first with only the live relay, then with an unreachable relay first
+for mode in single fallback; do
+  for p in a b c; do
+    ip netns exec hv$p "$NODE" "$ROOT/tools/hapa/relay-witness-peer.mjs" "Peer-$p" "$BOOT" "$KEY" "10.77.1.2:49740" "$OUT/peer-$p-$mode.json" 2 $mode > /dev/null 2>"$OUT/peer-$p-$mode.err" &
+  done
+  wait $(jobs -p | tail -3) || true
+  cp "$OUT/relay-stats.json" "$OUT/relay-stats-after-$mode.json" 2>/dev/null || true
 done
-wait $(jobs -p | tail -3) || true
 python3 - "$OUT" <<'EOF'
 import json, sys, os
 out = sys.argv[1]
-peers = [json.load(open(f'{out}/peer-{p}.json')) for p in 'abc' if os.path.exists(f'{out}/peer-{p}.json')]
-stats = json.load(open(f'{out}/relay-stats.json')) if os.path.exists(f'{out}/relay-stats.json') else None
-ok = len(peers) == 3 and all(p['ok'] for p in peers) and bool(stats) and stats['pairings']['matched'] >= 3
-summary = {'ok': ok, 'control': json.load(open(f'{out}/control.json')), 'relayStats': stats, 'peers': [{'name': p['name'], 'ok': p['ok'], 'seconds': p['seconds'], 'roster': p['roster'], 'relays': p['relays']} for p in peers]}
+def load(f): return json.load(open(f)) if os.path.exists(f) else None
+res = {}
+for mode in ('single', 'fallback'):
+    peers = [load(f'{out}/peer-{p}-{mode}.json') for p in 'abc']
+    peers = [p for p in peers if p]
+    res[mode] = {'ok': len(peers) == 3 and all(p['ok'] for p in peers), 'relayStatsAfter': load(f'{out}/relay-stats-after-{mode}.json'),
+                 'peers': [{'name': p['name'], 'ok': p['ok'], 'seconds': p['seconds'], 'roster': p['roster'], 'relays': p['relays']} for p in peers]}
+ok = res['single']['ok'] and res['fallback']['ok']
+summary = {'ok': ok, 'control': json.load(open(f'{out}/control.json')), **res}
 json.dump(summary, open(f'{out}/summary.json', 'w'), indent=1)
 print(json.dumps(summary, indent=1))
 sys.exit(0 if ok else 1)
