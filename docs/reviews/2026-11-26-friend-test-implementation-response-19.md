@@ -24,6 +24,18 @@
 | Download | GitHub pre-release **[friend-test-1](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.1)**, linked from the README's *Download and play* section |
 | Friend instructions | [Play with a friend](../player/play-with-a-friend.md) · [two-network evidence form](../player/two-network-evidence-form.md) |
 
+## Windows build for the friend (added after CJ confirmed a Windows PC)
+
+| Item | Value |
+| --- | --- |
+| Artifact | `Hapa-Versus-0.1.0-friend2-Windows-x64.zip` · 167,148,994 bytes · SHA-256 `28b147741db6a7b515bce46e9aaa11daa2909f6e4e52d6bde8eddce168c97650` · portable zip (extract, open `Hapa Versus.exe`) |
+| Source | `fa51315b773e3d336991849a7d868bde0453163c` — app source identical to `c7a00c1`; adds only the win32 zip target, `.ico` and exe metadata (`npm run desktop:make:win`). Same rules/compatibility as the Mac candidate, so the two play each other. |
+| Download | GitHub pre-release **[friend-test-2](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.2)** |
+| Signing | None (no Authenticode certificate). Expected SmartScreen "Windows protected your PC" → More info → Run anyway; Windows Defender Firewall may ask to allow network access. |
+| Verified | Built on this Mac and inspected only: PE32+ x86-64 GUI exe; all six native modules from their `win32-x64` prebuilds (PE32+ x86-64 DLLs); fuses identical to the Mac build; the embedded `ELECTRONASAR` integrity resource matches the recomputed asar header hash. **Not run on Windows** — no Windows machine or VM is available here. FT-01/FT-02 for Windows remain open until the first launch on a Windows PC; the friend's first launch is that run. |
+
+Status: candidate prepared for Windows x64. Ready for the friend to try, with three stated caveats: it has never been run on Windows; SmartScreen and the firewall will each ask once; and your Mac needs Open Anyway the first time. Friend test passed: pending.
+
 ## What changed
 
 **N19-03 — replaceable providers, end to end.** `src/hapa/network/services.js` defines typed descriptors (`bootstrap`, `relay`, `archive`, `gateway`) with role, adapter version, overlay scope and real provenance: the three public HyperDHT entries are recorded as *bundled defaults copied from hyperdht@6.37.0* (no operator signature is claimed), `desktop/network.json` as bundled configuration, `userData/network.json` as a local adoption. Accepted decisions (seed/add/update/disable/retire/mode) are appended to a local single-writer Hypercore (`cores/service-policy`); importing the same content again appends nothing; an invalid update is refused and the last valid policy stays. Modes: `default`/`extend` (public overlay plus accepted nodes of the same overlay), `replace` (only accepted non-default nodes; an empty replacement is refused rather than isolating the player), `isolated` (an explicitly named development overlay). Electron main now forwards the raw sections; the utility host passes them on; the runtime validates and hands the **effective bootstrap list and every relay candidate** to Hyperswarm (before: no bootstrap forwarding, only `relays[0]`). The Lobby rotates relay candidates per relayed attempt and prefers one observed carrying a connection. `tools/hapa/relay-serve.mjs` is a native blind relay any operator (friend, community, third-party VPS) can run. Future adapters are retained as data and never executed.
@@ -75,7 +87,7 @@ These unstaged cases are agent-side qualification still owed before a broad QE h
 ## Remaining, separately
 
 **External inputs (CJ):**
-1. The friend's computer: Apple Silicon Mac (this build), Intel Mac, or Windows PC. All native modules ship `darwin-x64` and `win32-x64` binaries, so either target can be built here; only Apple Silicon can be exercised on this machine.
+1. ~~The friend's computer~~ — CJ answered: Windows PC. Windows x64 build published (above); its first real run is on the friend's PC.
 2. Apple Developer ID signing + notarization credentials, **or** CJ's acceptance of the one-time Open Anyway step for this test.
 3. The two-network session itself (CJ + friend), recorded on the evidence form.
 

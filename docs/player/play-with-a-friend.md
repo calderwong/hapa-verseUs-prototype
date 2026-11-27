@@ -2,9 +2,20 @@
 
 For two people on two computers and two internet connections. No setup beyond opening the app.
 
-**Current download:** see [Downloads](../../README.md#download-and-play) on the repository's front page. It names the computer each file is for (the current file is for **Macs with Apple Silicon**: M1 or newer).
+**Current downloads:** see [Download and play](../../README.md#download-and-play) on the repository's front page. Each file names the computer it is for: **Windows PC (64-bit)** or **Mac with Apple Silicon** (M1 or newer). The Windows and Mac versions play each other.
 
-## 1. Install
+## 1. Install on Windows
+
+1. Download the Windows `.zip` file.
+2. Right-click it → **Extract All…** → **Extract**. Open the extracted folder.
+3. Double-click **Hapa Versus.exe**. (You can make a desktop shortcut to it; keep it inside its folder.)
+4. This test build is not yet signed, so Windows may show **"Windows protected your PC"**. Click **More info**, check that the app is *Hapa Versus.exe*, then **Run anyway**. You only do this once.
+5. If Windows Defender Firewall asks whether Hapa Versus may communicate on networks, choose **Allow** (private networks is enough). This lets your friend's game reach yours.
+6. The game opens on its title screen. **Play on this computer** works without internet.
+
+Your name, history and results are kept in your Windows profile (`AppData\Roaming\Hapa Versus`), not in the extracted folder, so you can replace the folder with a newer version later.
+
+## 1. Install on a Mac
 
 1. Download the `.dmg` file and open it.
 2. Drag **Hapa Versus** into **Applications**, then open it from Applications.

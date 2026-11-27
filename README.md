@@ -24,9 +24,12 @@ For current gameplay and presentation, follow the [review index](docs/reviews/RE
 
 ## Download and play
 
-**Friend-test candidate (macOS, Apple Silicon M1 or newer): [download Hapa-Versus-0.1.0-friend1-macOS-AppleSilicon.dmg](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.1)** · 124,514,266 bytes · SHA-256 `5bc9778ff980e7a09bc516fa7b5b0f4fd4d3d8b380ba06adacfdb83023b35369` · source `c7a00c1`.
+Friend-test candidates (the two versions play each other):
 
-Open the DMG, drag Hapa Versus to Applications and open it. This test build is not yet signed with an Apple Developer ID: the first time, macOS says it cannot verify the developer; approve it once in **System Settings → Privacy & Security → Open Anyway**. Then choose **Play online** and **Challenge** your friend, or **Open a table → Copy invitation** and send it. Full player steps: [Play with a friend](docs/player/play-with-a-friend.md). There is no Intel-Mac or Windows build yet. A two-network human game has not been verified yet ([Response 19](docs/reviews/2026-11-26-friend-test-implementation-response-19.md)).
+- **Windows PC, 64-bit: [download Hapa-Versus-0.1.0-friend2-Windows-x64.zip](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.2)** · 167,148,994 bytes · SHA-256 `28b147741db6a7b515bce46e9aaa11daa2909f6e4e52d6bde8eddce168c97650` · source `fa51315`. Extract the zip and open **Hapa Versus.exe**. Not code-signed: on "Windows protected your PC" click **More info → Run anyway**; if the firewall asks, choose **Allow**. Built and inspected on a Mac; **not yet run on a Windows computer**.
+- **Mac with Apple Silicon (M1 or newer): [download Hapa-Versus-0.1.0-friend1-macOS-AppleSilicon.dmg](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.1)** · 124,514,266 bytes · SHA-256 `5bc9778ff980e7a09bc516fa7b5b0f4fd4d3d8b380ba06adacfdb83023b35369` · source `c7a00c1`. Open the DMG and drag Hapa Versus to Applications. Not signed with an Apple Developer ID: approve it once in **System Settings → Privacy & Security → Open Anyway**.
+
+Then choose **Play online** and **Challenge** your friend, or **Open a table → Copy invitation** and send it. Full player steps: [Play with a friend](docs/player/play-with-a-friend.md). A two-network human game has not been verified yet ([Response 19](docs/reviews/2026-11-26-friend-test-implementation-response-19.md)).
 
 ## Play (desktop app)
 
