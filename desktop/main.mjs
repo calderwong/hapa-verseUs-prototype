@@ -168,7 +168,11 @@ function startPeer() {
     broadcast({ type: 'runtime', state: 'restarting', exitCode: code, reason: why });
     setTimeout(startPeer, 500 * peer.restarts.length);
   });
-  proc.postMessage({ type: 'init', gen, root: stateRoot(), networkId: NETWORK_ID, network: networkConfig() });
+  // staged-start test hook (isolated qualification runs only): main forwards it explicitly, because the
+  // packaged utility process does not see main's environment
+  const delayMs = Number(process.env.HAPA_VERSUS_PEER_DELAY_MS) || 0;
+  const testDelayMs = delayMs && !(process.env.HAPA_VERSUS_PEER_DELAY_GENS === 'first' && gen > 1) ? delayMs : 0;
+  proc.postMessage({ type: 'init', gen, root: stateRoot(), networkId: NETWORK_ID, network: networkConfig(), testDelayMs, forceRelay: process.env.HAPA_VERSUS_FORCE_RELAY === '1' });
 }
 
 /** Wait for the current worker generation; a failed generation gives a recoverable error, never a hang. */
