@@ -1,10 +1,16 @@
 # Integrations and online play
 
-## Latest selected direction — friend test, 26 November 2026
+## Current work and queued Avatar scope — 26 November 2026
 
-[Addendum 09](../requirements/2026-11-26-human-feedback-addendum-09.md) selects a bundled app that CJ's friend can open on his own machine/network and use to play CJ. [Assignment 19](../reviews/2026-11-26-next-agent-assignment-19.md) queues the implementation after reconciling in-flight [Assignment 18](../reviews/2026-11-26-next-agent-assignment-18.md). [Friend test and resilient connectivity v1](friend-test-and-resilient-connectivity-v1.md) defines real provider fallback, signed Hypercore contact/service history, packaging and evidence. No CJ-maintained VPS is a prerequisite; optional relay/archive services remain separate roles.
+[Review 19](../reviews/2026-11-26-connectivity-review-19.md) remains the latest review; [Assignment 20](../reviews/2026-11-26-next-agent-assignment-20.md) is the current connectivity/friend-test work under Addenda 09–10. CJ has said the agents are awaiting their allowance window and are not ready for a new review. This update records future requirements only.
 
-This pointer supersedes older “current/next” labels in the historical milestone summary below. Review 18 remains the latest readiness decision; no implementation, release or two-network pass is claimed here.
+[Addendum 11](../requirements/2026-11-26-human-feedback-addendum-11.md) selects **Mimi / Falka, Leo and Thor** as optional Mesh Avatar players. [Optional Avatar players v1](optional-avatar-players-v1.md) defines a descriptor-driven roster, separate roster/seat/online controls, actual owner presentation bindings, one authority per seat and explicit controller/result attribution. [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md) queues local roster delivery and then online Avatar participation after the relevant current work.
+
+Keep the current two-seat game, Red default and direct human-versus-human path. An unavailable optional Avatar is not a blocker for the across-town human friend test. No new owner IDs, packages, implementations or acceptance results are asserted here.
+
+The [friend-test companion](friend-test-and-resilient-connectivity-v1.md), [desktop runbook](online-desktop-runbook.md), [implementation checkpoint](IMPLEMENTATION_CHECKPOINT.md) and [Hapa Connectivity v0.1](../protocols/hapa-connectivity-v0.1.md) remain the integration boundaries. Existing [Avatar decision/observer/performer notes](avatar-opponents-and-music-discovery-v1-contracts.md) supply the historical adapter rationale; refresh actual owner contracts when coding. No CJ-maintained VPS is a prerequisite.
+
+The current pointers above supersede the historical “current/next” labels below.
 
 ## Historical milestone summary
 
@@ -39,6 +45,4 @@ CJ's selected feature is standalone P2P play and matchmaking in a bundled Electr
 
 Follow [the review index](../reviews/README.md) and [Loose Screws](../workflows/LOOSE_SCREWS.md). The current soundtrack is local to one browser. Response 13 delivers retained-library playback UI using the inspected owner, with subsequent corrections in Responses 14–15 and scoped closure in Review 15. It does not establish remote synchronized listening, re-sharing/export or complete cross-session listening history. Preserve the existing seated opponent and source/owner boundaries while changing the authored environment around the match.
 
-The next coding action is Assignment 17 under the same desktop/P2P goal. Preserve the delivered scene and restore locally available music in online mode. Remote music synchronization, song transfer and voice streaming remain separate owner integrations. The source now includes a real peer runtime and packaged local candidate; Review 16 explains why the installed player journey and dependable public records still need correction before the wider release gates.
-
-
+The historical next coding action in this milestone record was Assignment 17 under the same desktop/P2P goal; use the current pointers above for the present assignment. Preserve the delivered scene and restore locally available music in online mode. Remote music synchronization, song transfer and voice streaming remain separate owner integrations. The source now includes a real peer runtime and packaged local candidate; Review 16 explains why the installed player journey and dependable public records still need correction before the wider release gates.

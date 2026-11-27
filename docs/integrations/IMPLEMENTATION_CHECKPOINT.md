@@ -4,6 +4,12 @@
 records what is built, which owners it attaches to, the defaults CJ selected and what is still loose.
 CJ's acceptance is separate from technical completion and is not recorded here on his behalf.
 
+## Queued optional Avatar scope — 26 November 2026
+
+[Addendum 11](../requirements/2026-11-26-human-feedback-addendum-11.md), [optional Avatar players v1](optional-avatar-players-v1.md) and [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md) record CJ's request for Mimi/Falka, Leo and Thor Mesh Avatar player options. Separate local roster enablement, per-game controller/presentation selection and opted-in online availability. Preserve Red's existing default, one authority per seat and the two-player rules; use actual owner packages and distinguish Avatar-controlled outcomes from human-versus-human results.
+
+**Queued, not built or newly reviewed.** CJ says the agents are waiting for an allowance window and are not ready to submit the previous work. Keep Assignment 20 current, preserve in-flight changes and qualify this scope later as local roster and online participation slices. No new asset discovery, runtime test, release, Overwatch update or readiness approval is claimed by this requirements publication.
+
 ## Current review and assignment — 26 November 2026
 
 [Review 19](../reviews/2026-11-26-connectivity-review-19.md), pinned to `b42f555e35f7686dd3391e4f00f64a03875b5fb5`, qualifies [Response 19](../reviews/2026-11-26-friend-test-implementation-response-19.md). [Assignment 20](../reviews/2026-11-26-next-agent-assignment-20.md) is the next work: close six contact/provider/attempt findings, qualify the pertinent inherited native recovery cuts, verify the downloaded Windows candidate and complete the actual independent-network friend journey. Preserve newer local work and all corrected behavior.

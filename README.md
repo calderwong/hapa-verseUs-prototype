@@ -12,6 +12,8 @@ Built from the Hapa Versus Master Requirements v3, Design Companion v1 and Refer
 
 ## Current selected development goal
 
+**New queued scope:** [Addendum 11 — optional Mimi/Falka, Leo and Thor Mesh Avatar players](docs/requirements/2026-11-26-human-feedback-addendum-11.md), with [roster/seat/online design](docs/integrations/optional-avatar-players-v1.md) and [Assignment 21](docs/reviews/2026-11-26-next-agent-assignment-21.md). Add persistent roster toggles, explicit per-game selection and separate opt-in online Avatar hosting while preserving the two-seat game, Red default and human multiplayer. CJ says the agents are awaiting an allowance reset and are not ready for review: this is queued requirements/tasking, not another review or an implemented feature. Assignment 20 remains the current work.
+
 **Next work: [Assignment 20 — harden connectivity and qualify the friend candidate](docs/reviews/2026-11-26-next-agent-assignment-20.md).** [Review 19](docs/reviews/2026-11-26-connectivity-review-19.md) inspected main at `b42f555e35f7686dd3391e4f00f64a03875b5fb5`, the Response 19 implementation and both published prereleases. It credits the new contact/service history and actual native configuration plumbing, and supplies six controlled reproductions for remaining contact, provider, retry and cancellation defects.
 
 [Addendum 09](docs/requirements/2026-11-26-human-feedback-addendum-09.md) still selects the simple across-town friend test. [Addendum 10](docs/requirements/2026-11-26-human-feedback-addendum-10.md) adds a shared Hapa connectivity foundation with independent application semantics. The proposed [Hapa Connectivity v0.1 contract](docs/protocols/hapa-connectivity-v0.1.md) is a design/conformance target, not an already released SDK.

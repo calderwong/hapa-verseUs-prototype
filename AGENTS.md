@@ -28,6 +28,13 @@ as specified; do not silently reinterpret old records. Addenda 07–08 select P2
 bundled Electron player app through amended Assignment 16; the desktop companion governs
 packaging/storage/IPC while existing gameplay and archived records keep their meanings.
 
+Addendum 11 selects optional Mimi/Falka, Leo and Thor Mesh Avatar players through a local roster,
+per-game selection and separately opted-in online participation. Read its companion and queued
+Assignment 21 through the review index. Assignment 20 remains current while the implementing
+agents await their allowance window; this new scope does not trigger another review, replace
+in-flight work or gate the existing human-versus-human friend test. Preserve two seats, actual
+owner bindings, one authority per seat and explicit human/Avatar result attribution.
+
 The `.docx` originals stay local in `reference_documents/` (ignored: large binaries).
 
 ## Check for recent work first
