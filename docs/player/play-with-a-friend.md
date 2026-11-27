@@ -1,16 +1,18 @@
 # Play Hapa Versus with a friend
 
-For two people on two computers and two internet connections. No setup beyond opening the app.
+The target is two people opening bundled apps on two computers and two internet connections.
 
-**Current downloads:** see [Download and play](../../README.md#download-and-play) on the repository's front page. Each file names the computer it is for: **Windows PC (64-bit)** or **Mac with Apple Silicon** (M1 or newer). The Windows and Mac versions play each other.
+**Candidate status:** [Review 19](../reviews/2026-11-26-connectivity-review-19.md) withholds a broad ready-to-play handoff pending the listed corrections and artifact checks. The Windows zip has not yet been run on Windows; the separate-network human test is pending. These are the intended player steps, not a record that they have passed.
+
+**Current downloads:** see [Download and play](../../README.md#download-and-play) on the repository's front page. Each file names the computer it is for: **Windows PC (64-bit)** or **Mac with Apple Silicon** (M1 or newer). The intended Windows/Mac interoperability still needs a witnessed two-computer test.
 
 ## 1. Install on Windows
 
 1. Download the Windows `.zip` file.
 2. Right-click it → **Extract All…** → **Extract**. Open the extracted folder.
 3. Double-click **Hapa Versus.exe**. (You can make a desktop shortcut to it; keep it inside its folder.)
-4. This test build is not yet signed, so Windows may show **"Windows protected your PC"**. Click **More info**, check that the app is *Hapa Versus.exe*, then **Run anyway**. You only do this once.
-5. If Windows Defender Firewall asks whether Hapa Versus may communicate on networks, choose **Allow** (private networks is enough). This lets your friend's game reach yours.
+4. This test build is not yet signed, so Windows may show **"Windows protected your PC"**. Click **More info**, check that the app is *Hapa Versus.exe*, then **Run anyway**. Record the actual prompts; this exact Windows launch path is not yet verified.
+5. If Windows Defender Firewall asks whether Hapa Versus may communicate on networks, record the request and use the policy appropriate to the actual network. The required profile and successful connectivity must be verified on Windows; a firewall prompt alone does not establish a working route.
 6. The game opens on its title screen. **Play on this computer** works without internet.
 
 Your name, history and results are kept in your Windows profile (`AppData\Roaming\Hapa Versus`), not in the extracted folder, so you can replace the folder with a newer version later.
@@ -19,7 +21,7 @@ Your name, history and results are kept in your Windows profile (`AppData\Roamin
 
 1. Download the `.dmg` file and open it.
 2. Drag **Hapa Versus** into **Applications**, then open it from Applications.
-3. This test build is not yet signed with an Apple Developer ID, so the first time macOS says it cannot verify the developer. To open it anyway: click **Done**, open **System Settings → Privacy & Security**, scroll to the message about Hapa Versus and click **Open Anyway**, then confirm. You only do this once. (Do not use Terminal commands to change security settings.)
+3. This test build is not yet signed with an Apple Developer ID, so the first time macOS says it cannot verify the developer. To open it anyway: click **Done**, open **System Settings → Privacy & Security**, scroll to the message about Hapa Versus and click **Open Anyway**, then confirm. This manual-open path is an experimental exception and does not establish the normal downloaded launch target. Record the actual result. (Do not use Terminal commands to change security settings.)
 4. The game opens on its title screen. **Play on this computer** works without internet.
 
 ## 2. Find each other

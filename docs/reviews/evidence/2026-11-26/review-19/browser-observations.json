@@ -1,0 +1,22 @@
+{
+  "observedLocalDate": "2026-11-26",
+  "timezone": "America/Los_Angeles",
+  "surface": "http://127.0.0.1:5199/versus.html",
+  "runningSourceRevision": "not exposed or independently established",
+  "observations": [
+    "Home selected Red and reported red-pose-art 2026-11-02.1 ready.",
+    "Started a fresh local match; Tick 1 Prologue, visible Red pose art and table.",
+    "No game completion, native peer, installed package, or volumetric mesh witness."
+  ],
+  "screenshots": [
+    {
+      "file": "versus-local-red.jpg",
+      "bytes": 267494,
+      "sha256": "476942964f12e0bc7fd3cc4f6c29696554849c3cc6c18533dd1053d8acaca8e5"
+    }
+  ],
+  "limitations": [
+    "Separate from pinned-source diagnostics.",
+    "Not native, installed, WAN, performance or human acceptance evidence."
+  ]
+}

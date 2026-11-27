@@ -1,0 +1,181 @@
+{
+  "reviewedCommit": "b42f555e35f7686dd3391e4f00f64a03875b5fb5",
+  "level": "controlled exact-source-method diagnostics; fixture persistence/transport; valid Node Ed25519 signatures",
+  "limitations": [
+    "No native Hypercore/Hyperswarm dependency execution",
+    "No Electron or Windows process execution",
+    "No public-network or forced-relay success witness",
+    "Diagnostics deliberately assert current undesired behavior to make review reproductions deterministic"
+  ],
+  "checkedFilesSha256": {
+    "src/hapa/rules/encoding.js": "58fcb62ee318ab6b461a01f6cc108d650807595e1dc2722c2ba8023c7af0396e",
+    "src/hapa/network/control.js": "db50d4c8d3f735f7b46cc3d85bc0d3df1e62e16048cac3756eb67380b46940d0",
+    "src/hapa/network/services.js": "aabbd077b8c981aea70bedae45a6b8b3752bb8ed99cea485daf734a6d909fe8d",
+    "src/hapa/network/contact.js": "94310f158829e43ee2c17b3e9c7e86af5d6bc0ee22dafd420104f605125c9eb6",
+    "src/hapa/network/lobby.js": "d1fcc589ecbee8c6def02b270a0e3df98101f0848482648b7505d73deaa15c2c",
+    "src/hapa/network/runtime.js": "656522a749f7c4c922904ef4ac0d8b4f4c6f35efde3abb6cf31b2cac874e3ace"
+  },
+  "resultCount": 6,
+  "results": [
+    {
+      "id": "C1_newer_snapshot_inherits_old_core_proof",
+      "reproduced": true,
+      "actual": {
+        "acceptedSequence": 1,
+        "verifiedCheckpointLength": 1,
+        "evidence": "core-verified",
+        "summary": {
+          "known": 1,
+          "coreVerified": 1,
+          "rejected": []
+        }
+      },
+      "expected": {
+        "currentEvidence": "snapshot",
+        "verifiedSequence": 0,
+        "acceptedSequence": 1
+      },
+      "sourceLocations": [
+        "src/hapa/network/contact.js:132-148",
+        "src/hapa/network/contact.js:194"
+      ]
+    },
+    {
+      "id": "C2_conflicting_same_sequence_snapshot_and_core_accepted",
+      "reproduced": true,
+      "actual": {
+        "snapshotRoute": "1111111111111111111111111111111111111111111111111111111111111111",
+        "recordRoute": "2222222222222222222222222222222222222222222222222222222222222222",
+        "result": {
+          "ok": true,
+          "length": 1
+        },
+        "cacheRoute": "2222222222222222222222222222222222222222222222222222222222222222",
+        "rejections": []
+      },
+      "expected": {
+        "result": "conflict",
+        "preserveBothSignedStatements": true,
+        "noSilentRouteReplacement": true
+      },
+      "sourceLocations": [
+        "src/hapa/network/contact.js:174-191"
+      ]
+    },
+    {
+      "id": "P1_retired_bootstrap_nodes_resurrected",
+      "reproduced": true,
+      "actual": {
+        "projectedStates": {
+          "hyperdht-public-1": "retired",
+          "hyperdht-public-2": "retired",
+          "hyperdht-public-3": "retired",
+          "replacement": "active"
+        },
+        "effectiveBootstrap": [
+          "88.99.3.86@node1.hyperdht.org:49737",
+          "142.93.90.113@node2.hyperdht.org:49737",
+          "138.68.147.8@node3.hyperdht.org:49737",
+          "bootstrap.example.test:49737"
+        ],
+        "warnings": [
+          "every bundled public bootstrap entry is disabled; the pinned defaults are still used so the player is not isolated"
+        ]
+      },
+      "expected": {
+        "effectiveBootstrap": [
+          "bootstrap.example.test:49737"
+        ],
+        "retiredNodesUsed": 0
+      },
+      "sourceLocations": [
+        "src/hapa/network/services.js:121-142",
+        "src/hapa/network/services.js:145-166"
+      ]
+    },
+    {
+      "id": "P2_partial_policy_import_never_resumed",
+      "reproduced": true,
+      "actual": {
+        "atCrash": [
+          {
+            "action": "add",
+            "id": "bootstrap-4306a90d-0",
+            "mode": null
+          }
+        ],
+        "afterRestart": [
+          {
+            "action": "add",
+            "id": "bootstrap-4306a90d-0",
+            "mode": null
+          }
+        ],
+        "effectiveMode": "default",
+        "effectiveBootstrap": [
+          "88.99.3.86@node1.hyperdht.org:49737",
+          "142.93.90.113@node2.hyperdht.org:49737",
+          "138.68.147.8@node3.hyperdht.org:49737",
+          "one.example.test:49737"
+        ]
+      },
+      "expected": {
+        "allAcceptedConfigEventsDurable": true,
+        "mode": "replace",
+        "bootstrap": [
+          "one.example.test:49737",
+          "two.example.test:49737"
+        ]
+      },
+      "sourceLocations": [
+        "src/hapa/network/services.js:126",
+        "src/hapa/network/services.js:190-208"
+      ]
+    },
+    {
+      "id": "R1_recent_success_starves_alternate_relay",
+      "reproduced": true,
+      "actual": {
+        "selectionCount": 8,
+        "selectedIds": [
+          "previously-good-now-offline",
+          "previously-good-now-offline",
+          "previously-good-now-offline",
+          "previously-good-now-offline",
+          "previously-good-now-offline",
+          "previously-good-now-offline",
+          "previously-good-now-offline",
+          "previously-good-now-offline"
+        ],
+        "alternateHanded": 0
+      },
+      "expected": {
+        "afterUnsuccessfulRetry": "bounded rotation or cooldown reaches alternate; historical success does not pin every retry"
+      },
+      "sourceLocations": [
+        "src/hapa/network/lobby.js:46-55",
+        "src/hapa/network/lobby.js:64-72"
+      ]
+    },
+    {
+      "id": "A1_accepted_attempt_cancel_reports_failed",
+      "reproduced": true,
+      "actual": {
+        "stage": "failed",
+        "error": "the table setup ended before the match started",
+        "reservation": null,
+        "tombstoneWritten": true
+      },
+      "expected": {
+        "stage": "cancelled",
+        "durableTombstone": true,
+        "reservation": null
+      },
+      "sourceLocations": [
+        "src/hapa/network/runtime.js:170-173",
+        "src/hapa/network/runtime.js:333-342",
+        "src/hapa/network/runtime.js:393-415"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "observedDate": "2026-11-26",
+  "method": "GitHub release metadata read; no binary download or execution by this review",
+  "releases": [
+    {
+      "tag": "v0.1.0-friend.2",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.2",
+      "targetCommit": "fa51315b773e3d336991849a7d868bde0453163c",
+      "publishedAt": "2026-11-27T03:07:41Z",
+      "prerelease": true,
+      "assets": [
+        {
+          "name": "Hapa-Versus-0.1.0-friend2-Windows-x64.zip",
+          "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.2/Hapa-Versus-0.1.0-friend2-Windows-x64.zip",
+          "size": 167148994,
+          "digest": "sha256:28b147741db6a7b515bce46e9aaa11daa2909f6e4e52d6bde8eddce168c97650"
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.2/SHA256SUMS.txt",
+          "size": 108,
+          "digest": "sha256:44557350629bfa1356cb2dccef7634e0cab726eae1b87cba5e33faee8cfca577"
+        }
+      ]
+    },
+    {
+      "tag": "v0.1.0-friend.1",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.1",
+      "targetCommit": "c7a00c1308321a79d9bba1bcacf68382cf6626df",
+      "publishedAt": "2026-11-27T02:48:58Z",
+      "prerelease": true,
+      "assets": [
+        {
+          "name": "Hapa-Versus-0.1.0-friend1-macOS-AppleSilicon.dmg",
+          "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.1/Hapa-Versus-0.1.0-friend1-macOS-AppleSilicon.dmg",
+          "size": 124514266,
+          "digest": "sha256:5bc9778ff980e7a09bc516fa7b5b0f4fd4d3d8b380ba06adacfdb83023b35369"
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.1/SHA256SUMS.txt",
+          "size": 115,
+          "digest": "sha256:ca06e9ed41d80bbfb6f84299454b151b9e19dcac16aae64c0b3d336c8c8da9eb"
+        }
+      ]
+    }
+  ]
+}

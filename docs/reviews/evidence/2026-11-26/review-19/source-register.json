@@ -1,0 +1,106 @@
+{
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "commit": "b42f555e35f7686dd3391e4f00f64a03875b5fb5",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "blob": "44b2bebd2d19110e57f1aa5493558b227e27cdf3"
+    },
+    {
+      "path": "docs/reviews/README.md",
+      "blob": "0d0e8775650f3d9e6c3fc04cff8b8e16e32df829"
+    },
+    {
+      "path": "docs/reviews/2026-11-26-friend-test-implementation-response-19.md",
+      "blob": "767aaf796e15ab290b077ffb7e40f015445a2b34"
+    },
+    {
+      "path": "docs/reviews/2026-11-26-next-agent-assignment-19.md",
+      "blob": "9becf1366cbd99b2816f8ee7a65fa40b6ec2c3ec"
+    },
+    {
+      "path": "docs/requirements/2026-11-26-human-feedback-addendum-09.md",
+      "blob": "0603e48f8055ba66178af7450414fd1f7e956ed4"
+    },
+    {
+      "path": "src/hapa/network/contact.js",
+      "blob": "8bddae0d87f3d93c503c923083ccbc0502ffe851"
+    },
+    {
+      "path": "src/hapa/network/services.js",
+      "blob": "8219d794af47a487ba79a0998444387cdaa37dbe"
+    },
+    {
+      "path": "src/hapa/network/lobby.js",
+      "blob": "738aeef9d58f37f204e5d3d2d7b762cceddaef2f"
+    },
+    {
+      "path": "src/hapa/network/runtime.js",
+      "blob": "12a3d63bec6cdfc0bd1b4f7885dd7fd4d2080b13"
+    },
+    {
+      "path": "src/hapa/network/control.js",
+      "blob": "055bdb0d8f62e986bcb44be53ca064301c0cbd5b"
+    },
+    {
+      "path": "src/hapa/rules/encoding.js",
+      "blob": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12"
+    },
+    {
+      "path": "desktop/main.mjs",
+      "blob": "224f864f5b9eb5e2ea5b322cddb896a531228b19"
+    },
+    {
+      "path": "desktop/peer-host.mjs",
+      "blob": "36ec1c685c33541fc339de980dc34fe60fb113b1"
+    },
+    {
+      "path": "package.json",
+      "blob": "0cf18638a48a8c33a449dd3050e40e4192af832c"
+    },
+    {
+      "path": "forge.config.cjs",
+      "blob": "403ebfcaac2abc736eb6e9ddd5a61cdadbc563f6"
+    },
+    {
+      "path": "tests/hapa/connectivity.test.js",
+      "blob": "3060e0e96a193c7346616eb98a5f0b47c08a581d"
+    },
+    {
+      "path": "tests/hapa/contact.test.js",
+      "blob": "187aa9cf8108f13572caf5375fb18b589f2d7b92"
+    },
+    {
+      "path": "docs/player/play-with-a-friend.md",
+      "blob": "6965ec4ad54154f4642849b6dc2d829b8981f2a1"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-26/response-19/installed-invite-journey.json",
+      "blob": "ed4cebd2b9276e478e219a3e97557da1aa80f1eb"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-26/response-19/installed-smoke.json",
+      "blob": "012ea82f08388df12461313066235098a9f40d74"
+    },
+    {
+      "path": "src/hapa/presentation/app.js",
+      "blob": "56dbb4f74d2fb1dd1874f4d7c89ac49d81682471"
+    },
+    {
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "blob": "386212d5fddddabb1d8634754d146ea20481c419"
+    },
+    {
+      "path": "src/hapa/presentation/seated-avatar.js",
+      "blob": "ed8840d290ab2ca18418f3f866f37d3a2986e9ee"
+    },
+    {
+      "path": "docs/requirements/2026-11-24-human-feedback-addendum-05.md",
+      "blob": "407c06cb3a70271f6a75eb241f56d957c8e28b2e"
+    },
+    {
+      "path": "docs/reviews/2026-11-26-readiness-review-18.md",
+      "blob": "382cc04f91e9ba63bef28d21201c0c092467f80d"
+    }
+  ]
+}

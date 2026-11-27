@@ -4,19 +4,23 @@
 records what is built, which owners it attaches to, the defaults CJ selected and what is still loose.
 CJ's acceptance is separate from technical completion and is not recorded here on his behalf.
 
-## Current candidate — Response 19, 26 November 2026
+## Current review and assignment — 26 November 2026
 
-[Response 19](../reviews/2026-11-26-friend-test-implementation-response-19.md): source `c7a00c1`, macOS Apple Silicon DMG on the [friend-test-1 pre-release](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.1). Built: service policy history and real bootstrap/relay plumbing (`services.js`), connection attempts and redacted diagnostics, signed contact core and `hvinv2` (`contact.js`), Assignment 18 corrections (`7ebe1c5`). Candidate prepared; friend-test readiness waits on the friend's computer type and signing (or CJ accepting Open Anyway); the two-network human test is pending. Services and contacts: [runbook §10](online-desktop-runbook.md).
+[Review 19](../reviews/2026-11-26-connectivity-review-19.md), pinned to `b42f555e35f7686dd3391e4f00f64a03875b5fb5`, qualifies [Response 19](../reviews/2026-11-26-friend-test-implementation-response-19.md). [Assignment 20](../reviews/2026-11-26-next-agent-assignment-20.md) is the next work: close six contact/provider/attempt findings, qualify the pertinent inherited native recovery cuts, verify the downloaded Windows candidate and complete the actual independent-network friend journey. Preserve newer local work and all corrected behavior.
 
-## Queued delivery — Assignment 19, 26 November 2026
+The Mac friend.1 DMG and Windows friend.2 zip are published. The friend's Windows PC is confirmed. The Windows zip was cross-built and inspected; it has not run on Windows. The same-Mac installed invitation/concession/reopen evidence is not a two-network or Mac-to-Windows witness. **Candidate prepared; broad friend-test/desktop-P2P QE go-ahead withheld; human friend test pending.** No new executable is created by this review publication.
 
-CJ's latest target is [a friend across town opening a bundled app and playing over independent internet connections](../requirements/2026-11-26-human-feedback-addendum-09.md). [Assignment 19](../reviews/2026-11-26-next-agent-assignment-19.md) and [the connectivity companion](friend-test-and-resilient-connectivity-v1.md) add the concrete download/open journey, public-DHT-first attempt, typed replaceable provider selection and signed Hypercore contact/service history. Reconcile in-flight Assignment 18 and newer local work before implementation; its unresolved findings are not closed by these notes.
+Built foundations include typed service-policy history and bootstrap/relay plumbing, asynchronous connection attempts/diagnostics, root-signed contact history and hvinv2, plus A18 corrections. Review 19 documents why the new edge cases remain material. A fresh unversioned browser match renders Red's pose-art output; that narrows the old empty-chair observation without establishing an installed owner frame or volumetric mesh.
 
-This is documentation-only tasking. No artifact, runtime, live service, human test or Overwatch update is claimed. A VPS maintained by CJ and an offline archive are not prerequisites for the two-player native test. The friend's OS/architecture is not yet known. Candidate prepared, friend-test readiness and actual two-network human success must be reported separately.
+[Addendum 10](../requirements/2026-11-26-human-feedback-addendum-10.md) and [Hapa Connectivity v0.1](../protocols/hapa-connectivity-v0.1.md) define shared contracts while game semantics stay application-owned. Stabilize the existing implementation before extracting a shared package. A CJ-maintained VPS and public archive remain optional for the first live friend game. Overwatch was not accessed by this reviewer; reconcile the local board when implementing.
 
-## In-flight continuation — Review 18, 26 November 2026
+## Historical Review 18 checkpoint
 
-[Response 17](../reviews/2026-11-26-three-pass-implementation-response-17.md) is pushed at `b2a31f4`, implementation candidate `7cc30a1`. [Review 18](../reviews/2026-11-26-readiness-review-18.md) preserves its substantial corrections and withholds the representative-local/desktop-P2P QE handoff pending specific remaining boundaries. **Current work: [Assignment 18](../reviews/2026-11-26-next-agent-assignment-18.md)**, continuing [the three-pass scope](../reviews/2026-11-26-three-pass-coding-handoff.md) under Loose Screws.
+The observations below describe that earlier pinned review. Response 19 and Review 19 supersede their current-status wording where later evidence exists; unfinished compatible cases remain tracked in Assignment 20.
+
+### Review 18, 26 November 2026
+
+[Response 17](../reviews/2026-11-26-three-pass-implementation-response-17.md) is pushed at `b2a31f4`, implementation candidate `7cc30a1`. [Review 18](../reviews/2026-11-26-readiness-review-18.md) preserves its substantial corrections and withholds the representative-local/desktop-P2P QE handoff pending specific remaining boundaries. **Then-current work: [Assignment 18](../reviews/2026-11-26-next-agent-assignment-18.md)**, continuing [the three-pass scope](../reviews/2026-11-26-three-pass-coding-handoff.md) under Loose Screws.
 
 - **Default appearance:** fresh local human/bot play has Red selected but an empty chair after `/capabilities 502`; music also reports its owner unavailable. Identify the live build/expected owner renderer and restore the existing default, including retry/rebind. The source still selects Red; no deleted mesh mode is established.
 - **Connected correctness:** ambiguous Ready, asymmetric/legacy reservation release, stale dispute snapshots, worker-deadline recovery, reconnecting terminal ownership, distribution of genuine result conflicts and truthful archive failure states.
@@ -282,5 +286,3 @@ Five focused source-level probe groups and scope limits are recorded in the [rev
 **Remaining selected scope:** browser online adapter, Rematch, diagnostics export, lifecycle/platform checks, installed witnesses for the fault cases, and the rest of VA-06.
 
 **Blockers:** signing, a second Mac on another connection, operated hosts, the engine snapshot, and Harbor's app origin.
-
-

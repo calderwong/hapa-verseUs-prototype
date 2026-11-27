@@ -1,0 +1,264 @@
+{
+  "catalogSchema": "hapa-connectivity-conformance-catalog/v0.1",
+  "contractVersion": "0.1",
+  "contractFile": "hapa-connectivity-v0.1.md",
+  "status": "declarative-not-executed",
+  "purpose": "Review-selected case requirements for future implementation fixtures and recorded acceptance evidence. This catalog is not an executable test suite and asserts no passing result, registered schema, Protocol Card, SDK or deployed service.",
+  "canonicalDestination": "calderwong/hapa-verseUs-prototype/docs/protocols/hapa-connectivity-v0.1-conformance.json",
+  "mirrorDestination": "calderwong/hapa-flowcraft/docs/protocols/hapa-connectivity-v0.1-conformance.json",
+  "mirrorRule": "Publish the same bytes at both destinations. Keep execution records in separate implementation-owned evidence files.",
+  "ownership": {
+    "foundation": "Versus agent stabilizes the existing native primitives first; a designated foundation owner accepts common-contract changes.",
+    "secondConsumer": "Flowcraft agent implements its application adapter and supplies independent compatibility evidence.",
+    "extractionGate": "Extract a versioned reusable implementation only after both consumers demonstrate these boundaries. Do not depend on a nonexistent package or mutable sibling checkout.",
+    "review": "Reviewer records evidence level, outcomes, limitations and unresolved cases for each pinned implementation."
+  },
+  "executionRecordRequirements": [
+    "Record case ID, application/build/commit, dependency versions, fixture version or digest, date and environment.",
+    "Report source inspection, controlled model, native integration, installed package, independent-network exercise and human acceptance as distinct evidence levels.",
+    "Record observed assertions, failures, artifacts and limitations; an unexecuted or unsupported case is not a pass.",
+    "Redact secrets, complete invitations, private endpoints and personal paths from exported evidence."
+  ],
+  "cases": [
+    {
+      "id": "HC-01",
+      "title": "Identity and key roles remain distinct",
+      "contractSections": ["3", "5"],
+      "scope": "foundation",
+      "setup": ["Create two subjects with distinct root, transport and feed keys; give them identical display names.", "Prepare a core discovery key and a provider endpoint that resemble valid identifiers."],
+      "actions": ["Attempt to substitute each key or name for another role.", "Attempt cross-application identity linking without an authenticated binding."],
+      "expected": ["Only explicitly bound key roles are accepted.", "Names, discovery keys, endpoints and session IDs confer no subject or writer authority.", "No root secret is copied and no separate identities are silently merged."],
+      "evidenceRequired": ["Positive authenticated binding fixture and negative substitution assertions."]
+    },
+    {
+      "id": "HC-02",
+      "title": "Namespace, resource and handshake isolation",
+      "contractSections": ["5"],
+      "scope": "foundation",
+      "setup": ["Use the same transport for two applications, two resources and two protocol versions.", "Prepare a valid invitation and handshake for one combination."],
+      "actions": ["Replay frames under a different application, resource, role or unsupported version.", "Replay an old handshake on a new connection or substitute an unexpected peer."],
+      "expected": ["Incompatible contexts are rejected before application data admission.", "Fresh authenticated context binds both endpoints and the expected subject.", "A transport URL or raw stream alone is not accepted as identity proof."],
+      "evidenceRequired": ["Handshake transcript digests or redacted assertions, plus explicit adapter channel-binding semantics."]
+    },
+    {
+      "id": "HC-03",
+      "title": "Newer snapshots do not inherit an older core proof",
+      "contractSections": ["7"],
+      "scope": "foundation",
+      "setup": ["Verify a contact core checkpoint at revision N.", "Create a correctly signed contact snapshot for revision N+1."],
+      "actions": ["Accept the newer snapshot without fetching its matching history.", "Restart and read the cached contact evidence.", "Later verify the matching N+1 core history."],
+      "expected": ["The N+1 current descriptor remains snapshot-only before matching history verification.", "The independently verified N checkpoint remains available with its own position and digest.", "Only matching verified history promotes evidence for N+1; restart preserves this distinction."],
+      "evidenceRequired": ["Per-revision evidence assertions before and after restart and promotion."]
+    },
+    {
+      "id": "HC-04",
+      "title": "Same-revision contact conflicts are symmetric",
+      "contractSections": ["7"],
+      "scope": "foundation",
+      "setup": ["Create two valid authenticated descriptors with the same subject, core and revision but different comparable content."],
+      "actions": ["Observe snapshot A followed by conflicting core descriptor B.", "Repeat with core B followed by snapshot A.", "Repeat either observation and restart."],
+      "expected": ["Both arrival orders produce a recorded conflict.", "Neither source silently overwrites the conflicting accepted state.", "Conflict evidence and the last unconflicted state survive deduplication and restart."],
+      "evidenceRequired": ["Actual signature verification and equivalent conflict outcomes for both orders."]
+    },
+    {
+      "id": "HC-05",
+      "title": "Contact rollback, fork and freshness limits are explicit",
+      "contractSections": ["7", "8"],
+      "scope": "foundation",
+      "setup": ["Retain a verified contact checkpoint and an accepted route retirement.", "Prepare an older descriptor, inconsistent core binding and unexpected replacement history."],
+      "actions": ["Present each candidate and then operate disconnected from the contact history."],
+      "expected": ["Known rollback and inconsistent or unexpected history are not silently adopted.", "Already retired routes are not dialed from stale contact caches.", "Diagnostics state the last locally verified revision/freshness and do not claim absence of unseen revocations.", "Root succession is not inferred from transport-key rotation."],
+      "evidenceRequired": ["Persisted checkpoint/conflict assertions and displayed freshness fields."]
+    },
+    {
+      "id": "HC-06",
+      "title": "Retired providers cannot reappear through defaults",
+      "contractSections": ["6"],
+      "scope": "foundation",
+      "setup": ["Accept all bundled defaults as retired and an alternative provider as active.", "Also retain a previously successful connection through a retired provider."],
+      "actions": ["Restart, seed defaults again, re-import old configuration and trigger fallback.", "Test the deliberate zero-eligible-route state.", "Test explicit enable for a disabled provider separately from retirement."],
+      "expected": ["Retired providers never reappear through default seeding, fallback, repeated imports or cached success.", "A disabled provider is reused only after an explicit enable decision.", "No eligible route is reported honestly without resetting identity or committed data.", "Any supported re-adoption requires a distinct authorized decision with documented provenance semantics."],
+      "evidenceRequired": ["Projected effective provider IDs and actual dial candidates across restart and fallback."]
+    },
+    {
+      "id": "HC-07",
+      "title": "Interrupted configuration imports resume or remain unapplied",
+      "contractSections": ["6"],
+      "scope": "foundation",
+      "setup": ["Start from a completed valid policy.", "Prepare a replacement import with multiple providers, retirement decisions and a mode change."],
+      "actions": ["Inject failure after each persisted entry and before/after the completion marker.", "Restart and submit the identical import again.", "Repeat a fully completed import."],
+      "expected": ["An observed digest on a partial entry is not treated as completion.", "An incomplete import resumes idempotently or remains unapplied as a whole.", "Partial replacement state cannot become the silently accepted policy.", "Completed decisions are not duplicated, and remaining entries and mode changes are not skipped.", "The append-only partial history remains auditable."],
+      "evidenceRequired": ["Fault-injection matrix with effective projections, completion markers and persisted entry counts."]
+    },
+    {
+      "id": "HC-08",
+      "title": "Provider roles, overlays and provenance remain accurate",
+      "contractSections": ["6"],
+      "scope": "foundation",
+      "setup": ["Declare bootstrap, relay and replica candidates on compatible and isolated overlays.", "Include bundled defaults and an untrusted signed advertisement."],
+      "actions": ["Evaluate default, extend, replace and isolated modes.", "Attempt to use a candidate for an unsupported role or adopt it solely because its advertisement is signed."],
+      "expected": ["Role, adapter/version and overlay compatibility control eligibility.", "Different isolated overlays are not claimed to discover each other automatically.", "Bundled defaults retain actual build/upstream provenance without fabricated operator signatures.", "Local adoption remains distinct from advertisement verification and observed availability."],
+      "evidenceRequired": ["Mode projection fixtures and provenance fields for every candidate type."]
+    },
+    {
+      "id": "HC-09",
+      "title": "A failed preferred relay yields to eligible alternatives",
+      "contractSections": ["6"],
+      "scope": "foundation-native-integration",
+      "setup": ["Provide two eligible relay candidates with distinct key/endpoint bindings.", "Record a successful attempt through the first candidate, then make it fail."],
+      "actions": ["Connect again and observe actual native attempts, feedback and cooldown.", "Exercise terminal failure and bounded retries when both candidates fail."],
+      "expected": ["Observed failure updates candidate selection rather than preserving stale preference indefinitely.", "The second eligible candidate receives a bounded actual attempt with its own key and endpoint.", "Configured or dialed relays are not reported as having forwarded traffic without evidence.", "Exhaustion leaves an actionable bounded failure state."],
+      "evidenceRequired": ["Native controlled-relay trace and selection assertions; mocks alone do not establish native fallback."]
+    },
+    {
+      "id": "HC-10",
+      "title": "Cancelled generations cannot mutate a later session",
+      "contractSections": ["9"],
+      "scope": "foundation",
+      "setup": ["Delay handshake, discovery, join and admission callbacks for attempt A.", "Create attempt B after A is cancelled or times out."],
+      "actions": ["Deliver every late callback from A after B is active.", "Exercise a durable action that committed before A was cancelled.", "Repeat while changing providers at a safe connection boundary."],
+      "expected": ["Late callbacks cannot grant a second authority, revive reservations or mutate B.", "Host and runtime agree about active, pending, cancelled, failed and committed stages.", "Already committed actions are reconciled through the application protocol.", "Transport replacement preserves roots, writer logs and committed application authority."],
+      "evidenceRequired": ["Controlled timing trace with generation IDs, authority counts and persisted-state assertions."]
+    },
+    {
+      "id": "HC-11",
+      "title": "Uncertain durable append is reconciled without duplication",
+      "contractSections": ["4", "8"],
+      "scope": "foundation-and-application-adapter",
+      "setup": ["Give a locally authored operation a stable operation ID.", "Delay or drop its append acknowledgment after the storage outcome becomes uncertain."],
+      "actions": ["Show the pending state, restart if applicable, reconcile the operation and retry through the supported path."],
+      "expected": ["Renderer state alone never produces a durable receipt.", "Timeout produces a pending/unknown outcome when commitment cannot yet be determined.", "Reconciliation finds an existing commit or safely retries without a duplicate authored operation.", "Durability and peer replication are separate reported outcomes."],
+      "evidenceRequired": ["Operation-ID reconciliation trace and durable log assertions after restart."]
+    },
+    {
+      "id": "HC-12",
+      "title": "Discovery does not grant membership or unscoped replication",
+      "contractSections": ["5", "8"],
+      "scope": "foundation-and-application-adapter",
+      "setup": ["Create a resource grant binding subject, writer core, role and epoch/cutoff.", "Add an ungranted peer that knows the discovery secret and a replica holding authorized history."],
+      "actions": ["Request arbitrary feeds, present an unbound writer core and replay an expired invitation.", "Serve valid history through the replica without author credentials.", "Exercise the specified offline revocation/cutoff rule."],
+      "expected": ["Discovery success confers no edit authority and no arbitrary Corestore replication.", "Only explicitly admitted resource/feed bindings are exposed and accepted.", "A replica can serve valid authorized history without impersonating its writer.", "Expiry, recipient binding and epoch/cutoff are enforced as specified.", "Previously retained data is not claimed to become forgotten after revocation."],
+      "evidenceRequired": ["Positive replica fixture, negative membership fixtures and precise permission-cut assertions."]
+    },
+    {
+      "id": "HC-13",
+      "title": "Bounds and transport semantics are enforced",
+      "contractSections": ["4", "8", "9"],
+      "scope": "foundation",
+      "setup": ["Declare supported frame formats and limits for bytes, feeds, pending work and replay.", "Include a transport that does not supply the required framing or authenticated binding."],
+      "actions": ["Send oversized, malformed, unsupported and excessive concurrent requests.", "Reach storage/replay bounds and cancel a blocked operation."],
+      "expected": ["Limits hold before unbounded allocation or application exposure.", "Unsupported adapters fail explicitly instead of pretending to be drop-in streams.", "Backpressure and cancellation remain bounded.", "Limits do not silently skip later history, truncate evidence or reset identity."],
+      "evidenceRequired": ["Recorded resource bounds, negative-frame fixtures and recovery behavior."]
+    },
+    {
+      "id": "HC-14",
+      "title": "Native bridge authority stays scoped to the authorized renderer",
+      "contractSections": ["4", "9"],
+      "scope": "host-adapter",
+      "setup": ["Start a loopback bridge with an authorized exact origin and session capability.", "Create unrelated web origins and a portable offline export."],
+      "actions": ["Call native operations without the capability, from a different origin, or from file/null-origin content.", "Inspect the offline export and renderer-accessible API."],
+      "expected": ["Loopback reachability alone grants no authorization.", "Only explicitly authorized origins/capabilities may use bounded typed operations.", "Offline exports contain no native session capability and do not auto-grant native authority.", "Root secrets remain outside renderer APIs."],
+      "evidenceRequired": ["Origin/capability rejection fixtures and offline-export inspection."]
+    },
+    {
+      "id": "HC-15",
+      "title": "Presence expires without creating durable authority",
+      "contractSections": ["10"],
+      "scope": "foundation-and-application-adapter",
+      "setup": ["Connect two authenticated subjects and configure presence schemas, rate limits and TTL.", "Prepare a presence payload claiming another subject's identity."],
+      "actions": ["Publish valid presence, spoofed presence and an over-rate stream.", "Disconnect without a final leave message and advance beyond the TTL."],
+      "expected": ["The claimed author is bound to the authenticated session or verified forwarded origin.", "Rate/coalescing and size bounds are enforced.", "Presence expires and is not appended as permanent pointer/heartbeat history.", "Expiry does not itself trigger concession, revocation, deletion or loss of durable state."],
+      "evidenceRequired": ["Expiry and impersonation assertions plus durable-log growth checks."]
+    },
+    {
+      "id": "HC-16",
+      "title": "Application authority remains outside the transport layer",
+      "contractSections": ["4", "8", "10"],
+      "scope": "application-adapters",
+      "setup": ["Implement separate game and collaborative-document admission/projection adapters.", "Prepare authenticated records that violate each application's own rules."],
+      "actions": ["Deliver invalid game intents or result claims and unsupported document operations through otherwise valid connections.", "Inspect shared primitives for imports of application rule/projection modules."],
+      "expected": ["Authentication is not treated as proof of a legal move, valid graph or truthful result.", "Each application applies its own authority and deterministic state rules.", "The shared transport need not understand either payload's domain semantics."],
+      "evidenceRequired": ["Application-owned negative admission fixtures and dependency-boundary evidence."]
+    },
+    {
+      "id": "HC-17",
+      "title": "Existing identities and archived signatures remain compatible",
+      "contractSections": ["2", "3", "10"],
+      "scope": "legacy-application-adapter",
+      "setup": ["Retain known valid hv1 identities, archived signed records and agreed game outcomes from the supported baseline."],
+      "actions": ["Read, verify, replay and export the fixtures through the revised application.", "Exercise a versioned legacy adapter alongside the new connection contract."],
+      "expected": ["Existing identity encodings and signature domains retain their original meanings.", "Archived records do not require re-encoding, re-signing or key regeneration.", "Known valid verification and replay outcomes remain unchanged, or an explicit unsupported-version error is returned where support was not promised."],
+      "evidenceRequired": ["Pinned legacy fixture digests and before/after verification and replay results."]
+    },
+    {
+      "id": "HC-18",
+      "title": "Yjs session IDs and update origins do not impersonate writers",
+      "contractSections": ["3", "8", "10"],
+      "scope": "yjs-application-adapter",
+      "setup": ["Open separate editing sessions under the same persistent subject, each with its own Y.Doc client ID.", "Distinguish local, import and remote transaction origins."],
+      "actions": ["Generate local updates, receive remote updates, reconnect and exercise local undo.", "Attempt to claim subject authority using only a Yjs client ID or transaction origin."],
+      "expected": ["Yjs client IDs remain session identifiers and are not persisted/reused as cryptographic user identities.", "Locally authored operations are durably attributed through the authenticated writer envelope.", "Received updates are not reappended as new local authorship.", "Local undo targets the user's intended transactions according to documented capture/origin rules.", "Transaction origins do not serve as security proof."],
+      "evidenceRequired": ["Per-session identity assertions, no-echo log counts and selective-undo fixtures."]
+    },
+    {
+      "id": "HC-19",
+      "title": "Document convergence survives supported update order and duplication",
+      "contractSections": ["8", "10"],
+      "scope": "yjs-application-adapter",
+      "setup": ["Generate a finite concurrent-edit fixture set with property edits, deletion, ordering and temporary dangling references.", "Define authenticated-envelope admission and deterministic projection/recovery rules."],
+      "actions": ["Deliver the same accepted update set in supported permutations with duplicates and reconnect gaps.", "Include malformed or unauthorized envelopes and a valid update whose dependencies arrive later."],
+      "expected": ["Peers given the same accepted updates reach equivalent declared document projections.", "Unauthorized/malformed inputs are handled before unsafe UI exposure.", "Temporary arrival-order incompleteness does not cause peers to drop different valid updates.", "Fine-grained ACL guarantees are not claimed solely from Yjs convergence."],
+      "evidenceRequired": ["Accepted-update-set digests, normalized projection comparisons and documented authorization scope."]
+    },
+    {
+      "id": "HC-20",
+      "title": "Asset digests remain stable across storage locators",
+      "contractSections": ["11"],
+      "scope": "optional-blob-adapter",
+      "setup": ["Store identical bytes at two independent locators and incorrect bytes at another.", "Create an asset reference with digest algorithm/value, length/type and concrete core/bounds locators."],
+      "actions": ["Fetch from each locator, tamper with bounds or bytes and switch after source failure."],
+      "expected": ["Correct copies share the content identity independently of locator.", "Hyperblobs byte/block bounds are not interpreted as a content hash.", "Bounds, length and digest are checked before verified-local/available status.", "Known metadata or a reachable source alone is not reported as verified retained content."],
+      "evidenceRequired": ["Digest verification assertions, locator-failover trace and rejected tamper fixtures."]
+    },
+    {
+      "id": "HC-21",
+      "title": "Retention and history claims match the retained inputs",
+      "contractSections": ["7", "8", "11"],
+      "scope": "storage-and-application-adapter",
+      "setup": ["Define retained writer-feed cuts, permission versions, checkpoints, assets and compaction/garbage-collection policy.", "Create a claimed historical replay/export scope."],
+      "actions": ["Rebuild at the declared cut, then remove an asset or permitted retained block and repeat.", "Take all known holders offline and inspect availability.", "Exercise a policy with narrower retained history."],
+      "expected": ["Reproducible replay uses the declared retained inputs rather than arrival-time assumptions.", "Missing bytes or unavailable holders are reported explicitly.", "Exports do not claim self-contained completeness while omitting required assets.", "Compaction/GC either preserves promised history or narrows the stated replay scope.", "Signatures and replication observations do not become unsupported permanence guarantees."],
+      "evidenceRequired": ["Replay cut and input manifest, missing-data results and export completeness report."]
+    },
+    {
+      "id": "HC-22",
+      "title": "Diagnostics describe measured evidence and redact secrets",
+      "contractSections": ["6", "7", "9", "12"],
+      "scope": "foundation-and-product",
+      "setup": ["Prepare source-only, controlled-fixture, native and installed-package evidence records.", "Include secret invitations, private endpoints and personal paths in internal state."],
+      "actions": ["Export diagnostics during discovery, failed connection, pending append and confirmed peer exchange."],
+      "expected": ["App/build/protocol, stage, attempt, provider provenance, proof level and observed outcome are intelligible.", "Configured, selected, connected, relayed, replicated and retained are not conflated.", "Private or secret details are redacted from the default export.", "Unexecuted catalog cases and mocked/local exchanges are never labeled as live WAN acceptance."],
+      "evidenceRequired": ["Redacted export samples and assertions against unsupported readiness claims."]
+    },
+    {
+      "id": "HC-23",
+      "title": "Installed applications demonstrate independent-network readiness",
+      "contractSections": ["1", "2", "9", "12"],
+      "scope": "application-release-acceptance",
+      "setup": ["Use pinned packaged builds on two independent machines and internet connections.", "Use the documented recipient flow without requiring development tools, manual network configuration or a new CJ-operated VPS."],
+      "actions": ["Open both applications, share the supported invitation, authenticate and complete the application's representative interaction.", "Exercise disconnect/reconnect and export useful redacted diagnostics for failures."],
+      "expected": ["Each application records its own observed supported-platform and network outcome.", "A game adapter demonstrates a complete agreed game; a document adapter demonstrates concurrent edits and consistent recovery as applicable.", "Local fixtures, loopback or multiple tabs cannot substitute for this acceptance evidence.", "A successful pair of environments does not claim universal NAT or platform support."],
+      "evidenceRequired": ["Build digests, redacted network/environment description, interaction outcomes and human recipient observations."]
+    },
+    {
+      "id": "HC-24",
+      "title": "Common contract and extraction remain versioned and reviewable",
+      "contractSections": ["2", "12"],
+      "scope": "integration-governance",
+      "setup": ["Identify canonical and mirror contract/catalog bytes and each consumer's implementation location.", "Identify foundation and application owners."],
+      "actions": ["Compare canonical/mirror digests at an integration checkpoint.", "Review a proposed extraction or contract revision against both consumers' evidence."],
+      "expected": ["Mirrors are byte-identical at the declared version.", "Actual implementation and evidence locations are pinned explicitly.", "Extraction follows successful use by both consumers and does not depend on missing packages or mutable sibling paths.", "Proposed Protocol Card mapping remains a proposal until the appropriate existing owner registers it.", "Private application implementation details do not enter the public common contract."],
+      "evidenceRequired": ["Contract/catalog digests, implementation pins, ownership acknowledgment and compatibility records."]
+    }
+  ]
+}
