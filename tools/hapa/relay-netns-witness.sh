@@ -3,8 +3,8 @@
 #
 #   sudo bash tools/hapa/relay-netns-witness.sh <out dir>
 #
-# Topology: the host routes between four namespaces — the blind relay (10.77.1.2) and three peers
-# (10.77.2.2, .3.2, .4.2). A HyperDHT testnet runs on the host. The host firewall DROPS every packet
+# Topology: the host routes between five namespaces — the blind relay (10.77.1.2), three peers
+# (10.77.2.2, .3.2, .4.2) and a HyperDHT testnet (10.77.5.2). The host firewall DROPS every packet
 # forwarded between peer subnets, so no direct or holepunched peer-to-peer path exists; peers reach only
 # the host (DHT) and the relay. Each peer's policy lists an unreachable relay first and the live relay
 # second. Success = every peer authenticates every other peer over a stream observed arriving from the
@@ -14,11 +14,11 @@ set -euo pipefail
 OUT=${1:?out dir}; mkdir -p "$OUT"
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 NODE=$(command -v node)
-cleanup() { for n in hvr hva hvb hvc; do ip netns del $n 2>/dev/null || true; done; iptables -F HVWITNESS 2>/dev/null || true; iptables -D FORWARD -j HVWITNESS 2>/dev/null || true; iptables -X HVWITNESS 2>/dev/null || true; kill $(jobs -p) 2>/dev/null || true; }
+cleanup() { for n in hvr hva hvb hvc hvd; do ip netns del $n 2>/dev/null || true; done; iptables -F HVWITNESS 2>/dev/null || true; iptables -D FORWARD -j HVWITNESS 2>/dev/null || true; iptables -X HVWITNESS 2>/dev/null || true; kill $(jobs -p) 2>/dev/null || true; }
 trap cleanup EXIT
 sysctl -qw net.ipv4.ip_forward=1
 i=1
-for n in hvr hva hvb hvc; do
+for n in hvr hva hvb hvc hvd; do
   ip netns add $n
   ip link add v$n type veth peer name p$n
   ip link set p$n netns $n
@@ -36,8 +36,9 @@ iptables -P FORWARD ACCEPT
 if ip netns exec hva ping -c1 -W1 10.77.3.2 >/dev/null 2>&1; then echo '{"ok":false,"error":"peer-to-peer path is open"}' > "$OUT/control.json"; exit 1; fi
 ip netns exec hva ping -c1 -W2 10.77.1.2 >/dev/null
 echo '{"peerToPeerBlocked":true,"peerToRelay":true}' > "$OUT/control.json"
-# DHT testnet on the host (reachable from every namespace through its gateway)
-(cd "$ROOT" && "$NODE" -e "require('hyperdht/testnet')(3, { host: '10.77.1.1' }).then((t) => { console.log(JSON.stringify(t.bootstrap)); setInterval(() => {}, 1e6); })" > "$OUT/testnet.json" 2>"$OUT/testnet.err") &
+# DHT testnet in its own namespace (10.77.5.2): a single address, so its replies come from the address
+# peers asked (dht-rpc discards replies from another source address)
+(cd "$ROOT" && ip netns exec hvd "$NODE" -e "require('hyperdht/testnet')(3, { host: '10.77.5.2' }).then((t) => { console.log(JSON.stringify(t.bootstrap)); setInterval(() => {}, 1e6); })" > "$OUT/testnet.json" 2>"$OUT/testnet.err") &
 for _ in $(seq 1 50); do [ -s "$OUT/testnet.json" ] && break; sleep 0.2; done
 BOOT=$(python3 -c "import json;b=json.load(open('$OUT/testnet.json'))[0];print(f\"{b['host']}:{b['port']}\")")
 # diagnostics: can a plain DHT node inside a peer namespace bootstrap from the host testnet?
