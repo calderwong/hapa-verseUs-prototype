@@ -62,6 +62,7 @@ module.exports = {
     asar: true,
     prune: true,
     ignore,
+    win32metadata: { CompanyName: 'Hapa', FileDescription: 'Hapa Versus', ProductName: 'Hapa Versus' },
     extendInfo: { NSHumanReadableCopyright: 'Hapa Versus prototype. Luminati engine © its authors (MIT).' },
     ...(process.env.APPLE_SIGN_IDENTITY ? {
       osxSign: { identity: process.env.APPLE_SIGN_IDENTITY, optionsForFile: () => ({ hardenedRuntime: true, entitlements: join(ROOT, 'desktop', 'entitlements.mac.plist') }) },
@@ -73,7 +74,9 @@ module.exports = {
     } : {}),
   },
   makers: [
-    { name: '@electron-forge/maker-zip', platforms: ['darwin'] },
+    // Windows x64 is delivered as a portable zip (extract, open Hapa Versus.exe): no installer, so it
+    // builds on macOS without Wine; Authenticode signing is not configured (SmartScreen will warn)
+    { name: '@electron-forge/maker-zip', platforms: ['darwin', 'win32'] },
     { name: '@electron-forge/maker-dmg', platforms: ['darwin'], config: { name: 'Hapa Versus', format: 'ULFO' } },
   ],
   plugins: [

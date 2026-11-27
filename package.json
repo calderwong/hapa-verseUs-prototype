@@ -22,7 +22,8 @@
     "desktop:smoke": "node tools/hapa/desktop-smoke.mjs",
     "lobby:serve": "node tools/hapa/lobby-serve.mjs",
     "online": "node tools/hapa/online.mjs",
-    "owners": "node tools/hapa/owners.mjs"
+    "owners": "node tools/hapa/owners.mjs",
+    "desktop:make:win": "HAPA_TARGET_PLATFORM=win32 HAPA_TARGET_ARCH=x64 electron-forge make --platform=win32 --arch=x64"
   },
   "dependencies": {
     "b4a": "^1.9.0",
