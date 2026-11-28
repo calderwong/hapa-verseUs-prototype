@@ -1,0 +1,81 @@
+{
+ "ok": true,
+ "script": "lifecycle",
+ "states": [
+  {
+   "t": 0,
+   "state": "starting",
+   "gen": 1,
+   "error": null
+  },
+  {
+   "t": 4056,
+   "state": "restarting",
+   "gen": 1,
+   "error": null
+  },
+  {
+   "t": 4559,
+   "state": "starting",
+   "gen": 2,
+   "error": null
+  },
+  {
+   "t": 8500,
+   "state": "restarting",
+   "gen": 2,
+   "error": null
+  },
+  {
+   "t": 9502,
+   "state": "starting",
+   "gen": 3,
+   "error": null
+  },
+  {
+   "t": 13581,
+   "state": "restarting",
+   "gen": 3,
+   "error": null
+  },
+  {
+   "t": 15093,
+   "state": "starting",
+   "gen": 4,
+   "error": null
+  },
+  {
+   "t": 19066,
+   "state": "failed",
+   "gen": 4,
+   "error": "the peer service did not start in time three times in a minute"
+  }
+ ],
+ "final": "failed",
+ "pageSees": {
+  "state": "failed",
+  "error": "the peer service did not start in time three times in a minute"
+ },
+ "call": null,
+ "about": {
+  "app": "Hapa Versus",
+  "version": "0.1.0",
+  "packaged": true,
+  "electron": "45.3.0",
+  "chrome": "156.0.8078.96",
+  "node": "24.22.2",
+  "platform": "win32",
+  "arch": "x64",
+  "network": "test-lifecycle",
+  "build": {
+   "source": "73a74eec05f0f39b46b6a4bba5e1358d33bcade3",
+   "dirty": false,
+   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+   "builtAt": "2026-11-28T07:44:12.743Z",
+   "target": "win32-x64"
+  },
+  "peer": null,
+  "name": "Hapa Versus"
+ },
+ "console": []
+}

@@ -1,0 +1,11 @@
+{
+  "failures": [],
+  "required": [
+    "artifact.json",
+    "smoke-isolated.json",
+    "smoke-os-data.json",
+    "invite-journey.json",
+    "lifecycle-late.json",
+    "lifecycle-never.json"
+  ]
+}

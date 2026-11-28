@@ -1,0 +1,82 @@
+{
+ "network": "test-invite-mx03xnxv",
+ "app": "D:\\a\\hapa-verseUs-prototype\\hapa-verseUs-prototype\\app\\Hapa Versus-win32-x64\\Hapa Versus.exe",
+ "build": {
+  "source": "73a74eec05f0f39b46b6a4bba5e1358d33bcade3",
+  "dirty": false,
+  "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "builtAt": "2026-11-28T07:44:12.743Z",
+  "target": "win32-x64"
+ },
+ "host": {
+  "exit": 0,
+  "ok": true,
+  "seat": "A",
+  "steps": [
+   "join",
+   "invitationCopied",
+   "tableOpen",
+   "result"
+  ],
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 4,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:caa1b30b0e77bddf7395fb55a648dca973af9d8513c5776daa6cebb32c994edb",
+  "readyClicks": 4,
+  "fingerprint": "fe70-106b-ce4c"
+ },
+ "joiner": {
+  "exit": 0,
+  "ok": true,
+  "seat": "B",
+  "steps": [
+   "join",
+   "joinedByInvitation",
+   "tableOpen",
+   "concede",
+   "result"
+  ],
+  "stages": [
+   "finding-player",
+   "authenticating",
+   "negotiating",
+   "opened"
+  ],
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 4,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:caa1b30b0e77bddf7395fb55a648dca973af9d8513c5776daa6cebb32c994edb",
+  "readyClicks": 4,
+  "fingerprint": "3bb0-b7dc-808e"
+ },
+ "reopen": {
+  "hostSameIdentity": true,
+  "joinerSameIdentity": true,
+  "hostRecorded": [
+   "recorded"
+  ],
+  "joinerRecorded": [
+   "recorded"
+  ]
+ },
+ "sameResult": true,
+ "ok": true
+}

@@ -1,0 +1,208 @@
+{
+ "artifact": {
+  "name": "Hapa-Versus-0.1.0-friend8-macOS-AppleSilicon.dmg",
+  "sha256": "e86ea662c7b5a70f1bb9a506231e440f66d8664015819641c15c7b0d35706824",
+  "installedFrom": "released DMG (downloaded from the friend.8 pre-release, hash-verified, copied out of the mounted image)"
+ },
+ "ownersJson": {
+  "mesh": {
+   "url": "http://127.0.0.1:8860"
+  }
+ },
+ "runs": [
+  {
+   "ok": false,
+   "app": "<scratch>",
+   "results": [
+    {
+     "avatarId": "avatar-8",
+     "ok": false,
+     "exit": 0,
+     "ownerServed": {
+      "id": "falka-human-assisted",
+      "revision": "2026-11-17.1",
+      "renderer": "human-connected-forward-mesh-r1",
+      "status": "candidate",
+      "avatarId": "avatar-8",
+      "sha256": "bf28b4121349160ee4100b0121522b7a9abdfb70742d8f42df6b99c0d6f456d7",
+      "bytes": 6891
+     },
+     "binding": {
+      "player": true,
+      "status": "ready-text-only",
+      "label": "Falka",
+      "renderer": {
+       "owner": "hapa-mesh-avatar",
+       "packageId": "falka-human-assisted",
+       "revision": "2026-11-17.1",
+       "renderer": "human-connected-forward-mesh-r1",
+       "status": "candidate",
+       "integrity": "package identity checked at bind"
+      },
+      "error": null,
+      "frames": [
+       "http://red.versus.localhost/mesh-frame.html?avatar=falka"
+      ],
+      "performers": 1
+     },
+     "drawn": false,
+     "tickBefore": 1,
+     "tickAfter": 1,
+     "origin": "app://versus",
+     "build": {
+      "source": "73a74eec05f0f39b46b6a4bba5e1358d33bcade3",
+      "dirty": false,
+      "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+      "builtAt": "2026-11-28T07:43:53.240Z",
+      "target": "darwin-arm64"
+     },
+     "seconds": 104.724,
+     "capture": "avatar-8/out/mesh-avatar-8-home.png"
+    },
+    {
+     "avatarId": "avatar-46",
+     "ok": false,
+     "exit": 0,
+     "ownerServed": {
+      "id": "leo-canine-assisted",
+      "revision": "2026-11-17.1",
+      "renderer": "canine-forward-mesh-r1",
+      "status": "candidate",
+      "avatarId": "avatar-46",
+      "sha256": "16fff911ae49dc0c3e5503022c5e986d8e9bb54d7b2de657d3006e7a4ccf6a33",
+      "bytes": 6694
+     },
+     "binding": {
+      "player": true,
+      "status": "ready-text-only",
+      "label": "Leo",
+      "renderer": {
+       "owner": "hapa-mesh-avatar",
+       "packageId": "leo-canine-assisted",
+       "revision": "2026-11-17.1",
+       "renderer": "canine-forward-mesh-r1",
+       "status": "candidate",
+       "integrity": "package identity checked at bind"
+      },
+      "error": null,
+      "frames": [
+       "http://red.versus.localhost/mesh-frame.html?avatar=leo"
+      ],
+      "performers": 1
+     },
+     "drawn": true,
+     "tickBefore": 1,
+     "tickAfter": 1,
+     "origin": "app://versus",
+     "build": {
+      "source": "73a74eec05f0f39b46b6a4bba5e1358d33bcade3",
+      "dirty": false,
+      "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+      "builtAt": "2026-11-28T07:43:53.240Z",
+      "target": "darwin-arm64"
+     },
+     "seconds": 63.938,
+     "capture": "avatar-46/out/mesh-avatar-46-home.png"
+    }
+   ],
+   "note": "first run: window throttled (empty chair, no Tick; 105 s) \u2014 not a build defect"
+  },
+  {
+   "ok": true,
+   "app": "<scratch>",
+   "results": [
+    {
+     "avatarId": "avatar-8",
+     "ok": true,
+     "exit": 0,
+     "ownerServed": {
+      "id": "falka-human-assisted",
+      "revision": "2026-11-17.1",
+      "renderer": "human-connected-forward-mesh-r1",
+      "status": "candidate",
+      "avatarId": "avatar-8",
+      "sha256": "bf28b4121349160ee4100b0121522b7a9abdfb70742d8f42df6b99c0d6f456d7",
+      "bytes": 6891
+     },
+     "binding": {
+      "player": true,
+      "status": "ready-text-only",
+      "label": "Falka",
+      "renderer": {
+       "owner": "hapa-mesh-avatar",
+       "packageId": "falka-human-assisted",
+       "revision": "2026-11-17.1",
+       "renderer": "human-connected-forward-mesh-r1",
+       "status": "candidate",
+       "integrity": "package identity checked at bind"
+      },
+      "error": null,
+      "frames": [
+       "http://red.versus.localhost/mesh-frame.html?avatar=falka"
+      ],
+      "performers": 1
+     },
+     "drawn": true,
+     "tickBefore": 1,
+     "tickAfter": 2,
+     "origin": "app://versus",
+     "build": {
+      "source": "73a74eec05f0f39b46b6a4bba5e1358d33bcade3",
+      "dirty": false,
+      "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+      "builtAt": "2026-11-28T07:43:53.240Z",
+      "target": "darwin-arm64"
+     },
+     "seconds": 5.819,
+     "capture": "avatar-8/out/mesh-avatar-8-home.png"
+    },
+    {
+     "avatarId": "avatar-46",
+     "ok": true,
+     "exit": 0,
+     "ownerServed": {
+      "id": "leo-canine-assisted",
+      "revision": "2026-11-17.1",
+      "renderer": "canine-forward-mesh-r1",
+      "status": "candidate",
+      "avatarId": "avatar-46",
+      "sha256": "16fff911ae49dc0c3e5503022c5e986d8e9bb54d7b2de657d3006e7a4ccf6a33",
+      "bytes": 6694
+     },
+     "binding": {
+      "player": true,
+      "status": "ready-text-only",
+      "label": "Leo",
+      "renderer": {
+       "owner": "hapa-mesh-avatar",
+       "packageId": "leo-canine-assisted",
+       "revision": "2026-11-17.1",
+       "renderer": "canine-forward-mesh-r1",
+       "status": "candidate",
+       "integrity": "package identity checked at bind"
+      },
+      "error": null,
+      "frames": [
+       "http://red.versus.localhost/mesh-frame.html?avatar=leo"
+      ],
+      "performers": 1
+     },
+     "drawn": true,
+     "tickBefore": 1,
+     "tickAfter": 2,
+     "origin": "app://versus",
+     "build": {
+      "source": "73a74eec05f0f39b46b6a4bba5e1358d33bcade3",
+      "dirty": false,
+      "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+      "builtAt": "2026-11-28T07:43:53.240Z",
+      "target": "darwin-arm64"
+     },
+     "seconds": 5.373,
+     "capture": "avatar-46/out/mesh-avatar-46-home.png"
+    }
+   ],
+   "note": "rerun on the same released app: pass"
+  }
+ ]
+}
