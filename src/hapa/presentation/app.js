@@ -37,6 +37,7 @@ import { standingOf, fmtBand, bandY } from './terrain-view.js';
 import { snapshot, poseAt, timeline, eventsBeforeMovement } from './playback.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
+import { ROSTER, loadRoster, saveRoster, playable } from './roster.js';
 import { VersusSound } from './sound.js';
 import { Table, spokenParty } from './table.js';
 import { buildScenery } from './scenery.js';
@@ -320,7 +321,22 @@ export class VersusApp {
       }, 220);
     } });
     drawChips();
-    const red = h('input', { type: 'checkbox', checked: !!t.avatarId, onchange: (e) => { t.avatarId = e.target.checked ? 'red-reaper' : null; save(); } });
+    const red = h('input', { type: 'checkbox', checked: !!t.avatarId, onchange: (e) => { t.avatarId = e.target.checked ? 'red-reaper' : null; save(); drawPlayers(); } });
+    // the Players roster (Addendum 11, local slice): roster enablement, this game's choice and online
+    // availability are three separate controls; only an owner-served figure can be chosen
+    const enabled = loadRoster();
+    const players = h('div', { class: 'roster' });
+    const drawPlayers = () => players.replaceChildren(h('div', { class: 'small' }, h('b', {}, 'Players'), ' — Avatar players for the bot seat. The moves come from the controller below; the figure is presentation only.'),
+      ...ROSTER.map((e) => {
+        const can = playable(e, enabled), chosen = t.avatarId === e.id;
+        return h('div', { class: `roster-row${chosen ? ' chosen' : ''}` },
+          h('label', { class: 'inline small', title: 'Keep this Avatar in your local roster' }, h('input', { type: 'checkbox', checked: enabled[e.id], onchange: (ev) => { enabled[e.id] = ev.target.checked; saveRoster(enabled); if (!ev.target.checked && t.avatarId === e.id) { t.avatarId = null; save(); red.checked = false; } drawPlayers(); } }), ' In my roster'),
+          h('label', { class: 'inline small' }, h('input', { type: 'radio', name: 'roster-choice', checked: chosen, disabled: !can.ok, onchange: () => { t.avatarId = e.id; save(); red.checked = true; drawPlayers(); } }), ' Play this game'),
+          h('span', { class: 'small' }, h('b', {}, e.label), e.aliases.length ? ` (also ${e.aliases.join(', ')})` : '', ` · ${e.species} · ${e.renderer}`),
+          h('span', { class: 'dim small' }, can.ok ? ` · figure from ${e.owner}` : ` · ${can.why}`),
+          h('label', { class: 'inline small dim', title: 'Hosting an Avatar player online is not supported yet' }, h('input', { type: 'checkbox', disabled: true }), ' Available online (not yet)'));
+      }));
+    drawPlayers();
     t.controller ??= 'heuristic';
     const ctl = h('select', { 'aria-label': "Red's moves", onchange: (e) => { t.controller = e.target.value; save(); } },
       h('option', { value: 'heuristic', selected: t.controller === 'heuristic' }, 'Heuristic bot'),
@@ -336,7 +352,8 @@ export class VersusApp {
       ownerNote.textContent = `Red's figure and voice come from Harbor, which is not answering (${e.message}). Red plays as an empty chair with captions until it starts; the match picks it up by itself.${location.protocol === 'app:' ? ' Configure it in owners.json (see the runbook).' : ' Start the local owners with: npm run owners -- --start'}`;
     });
     return h('div', { class: 'table-setup' },
-      h('label', { class: 'inline' }, red, ' Red plays the bot seat at the table (portrait, voice, reactions and the music Red brings).'),
+      h('label', { class: 'inline' }, red, ' An Avatar plays the bot seat at the table (figure, voice, reactions and the music it brings) — Red by default.'),
+      players,
       ownerNote,
       h('label', { class: 'inline small' }, "Red's moves: ", ctl),
       h('div', { class: 'small' }, h('b', {}, 'Your tracks (up to 3, alternating with Red\'s): '), chips),

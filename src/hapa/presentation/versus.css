@@ -794,3 +794,7 @@ button.opp-hit:hover:not(:disabled) { background: transparent; border: 0; box-sh
 /* the desktop renderer bridge frame: on screen (so the owner keeps rendering) but invisible and inert */
 .red-frame { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; border: 0; opacity: 0.01; pointer-events: none; z-index: -1; }
 .online-panel .invite-text { flex: 1 1 12rem; min-width: 8rem; font-size: 11px; }
+/* Players roster (Addendum 11): roster, this-game choice and online availability are separate controls */
+.roster { display: grid; gap: 4px; margin: 6px 0; }
+.roster-row { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 2px 4px; border-radius: 4px; }
+.roster-row.chosen { background: rgba(201, 166, 94, 0.12); }
