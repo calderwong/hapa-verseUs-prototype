@@ -513,7 +513,9 @@ export class VersusApp {
 
   /**
    * Red shares the table (Milestone A): only for a human against one bot seat in ordinary play;
-   * the Avatar plays that seat, its moves still come from that seat's controller.
+   * the Avatar plays that seat, its moves still come from that seat's controller. The table's music
+   * does not depend on a figure (Addendum 12 HF12-03): online play and local No figure games get an
+   * Avatar-free Table with the same single Soundtrack; only diagnostic fixtures start none.
    */
   _attachTable(table, gen) {
     this.table?.dispose();
@@ -530,7 +532,17 @@ export class VersusApp {
       this.table.start().catch((err) => console.warn('[versus] music unavailable', err));
       return;
     }
-    if (!table?.avatarId || bot.length !== 1 || this.session.fixture) return;
+    if (this.session.fixture) return; // diagnostic fixtures start no music
+    if (!table?.avatarId || bot.length !== 1) {
+      // no figure at this table (Addendum 12 HF12-03): your music and the scene's response stay; no
+      // Avatar is created and each seat keeps its own controller
+      const humanSeat = this.viewSeat, oppSeat = other(humanSeat);
+      const label = this.seats[oppSeat] === 'bot' ? 'Heuristic bot' : `Seat ${oppSeat}`;
+      this.table = new Table({ world: this.el.world, scene: { root: this.view.root, board: { w: this.view.w, h: this.view.h, S: MEMBER_S } }, sessionId: this.session.manifest.matchId, epoch: gen, avatarSeat: oppSeat, humanSeat, avatarId: null, opponentLabel: label, opponentNote: 'no figure', songIds: table?.songIds ?? [],
+        controller: { kind: this.seats[oppSeat] === 'bot' ? 'heuristic' : 'human', revision: this.session.manifest.controllers?.[oppSeat]?.revision ?? 'ui/0.2.0', label: label.toLowerCase() }, partyLabel: (id) => spokenParty(this.state, id), onLayout: () => this._syncFreeSpace(), onPanel: (which) => this._onePanel(which) });
+      this.table.start().catch((err) => console.warn('[versus] music unavailable', err));
+      return;
+    }
     const seat = bot[0];
     const rev = this.session.manifest.controllers?.[seat]?.revision ?? 'heuristic-bot/0.2.0';
     this.table = new Table({ world: this.el.world, scene: { root: this.view.root, board: { w: this.view.w, h: this.view.h, S: MEMBER_S } }, sessionId: this.session.manifest.matchId, epoch: gen, avatarSeat: seat, humanSeat: other(seat), avatarId: table.avatarId, songIds: table.songIds ?? [],
@@ -1937,7 +1949,9 @@ export class VersusApp {
     this._stepPlayback(battleDt);
     // the setting responds to the music actually playing (read-only; never a rule, camera or target)
     const music = this.table?.music;
-    this.scenery?.update(dt, music ? { frame: music.sample(dt, { accentGap: music.settings.response === 'expressive' ? 3 : 6 }), response: music.settings.response, still: music.still, busy: !!(this.cardDrag?.active || this.cam?.dragging || this.tool) } : { frame: null, response: 'off', still: reducedMotionPref(), busy: false });
+    const mframe = music ? music.sample(dt, { accentGap: music.settings.response === 'expressive' ? 3 : 6 }) : null;
+    this.scenery?.update(dt, music ? { frame: mframe, response: music.settings.response, still: music.still, busy: !!(this.cardDrag?.active || this.cam?.dragging || this.tool) } : { frame: null, response: 'off', still: reducedMotionPref(), busy: false });
+    this.table?.deck.signal(mframe, dt);
     // battle bodies and transient effects share the playback clock (VA-03): a paused Tick holds its
     // poses and marks; at 0.5×–4× they run with the playback. Ambient scenery keeps its own clock.
     this.view.update(battleDt, this.engine.camera);

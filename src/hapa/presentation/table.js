@@ -48,7 +48,9 @@ export class Table {
     this._ro?.observe(this.el); this._ro?.observe(this.musicEl);
     // a remote human (review 16, R16-07) gets a neutral nameplate: the local music stays, but no Avatar
     // speaks, reacts or plays for a stranger
-    this.opponent = o.avatarId ? new AvatarOpponent({ host: this.el, seat: o.avatarSeat, avatarId: o.avatarId, sessionId: o.sessionId, epoch: o.epoch, controller: o.controller }) : new RemoteOpponent({ host: this.el, label: o.opponentLabel ?? 'Opponent' });
+    // a local game with No figure (Addendum 12 HF12-03) gets the same neutral plate: the music and the
+    // scene's response stay, no Avatar is created and the seat keeps its own controller
+    this.opponent = o.avatarId ? new AvatarOpponent({ host: this.el, seat: o.avatarSeat, avatarId: o.avatarId, sessionId: o.sessionId, epoch: o.epoch, controller: o.controller }) : new RemoteOpponent({ host: this.el, label: o.opponentLabel ?? 'Opponent', note: o.opponentNote ?? 'online' });
     this.seated = o.scene && o.avatarId ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: this.name, light: o.light }) : null;
     this.opponent.addEventListener('rendering', (e) => this.seated?.setSource(e.detail.canvas));
     this.opponent.addEventListener('retry', () => { clearTimeout(this._retryTimer); this.retryOwners({ manual: true }); });
@@ -251,16 +253,17 @@ export class Table {
 }
 
 /**
- * The opponent's place at the table when the opponent is a remote person: their actual name on a
- * neutral nameplate and the one sound gesture the local music needs. It never speaks or reacts.
+ * The opponent's place at the table when no Avatar sits there: a remote person (their actual name,
+ * "online") or a local seat with No figure (its controller, "no figure"), on a neutral nameplate with
+ * the one sound gesture the local music needs. It never speaks or reacts.
  */
 class RemoteOpponent extends EventTarget {
-  constructor({ host, label }) {
+  constructor({ host, label, note = 'online' }) {
     super();
     this.expanded = false;
     this.lastOrders = [];
     this.el = h('aside', { class: 'opp-social remote', role: 'complementary', 'aria-label': 'Your opponent' },
-      h('div', { class: 'opp-name remote-plate' }, h('span', { class: 'opp-light on', 'aria-hidden': 'true' }), h('span', { class: 'opp-label' }, label), h('span', { class: 'dim small' }, ' · online')),
+      h('div', { class: 'opp-name remote-plate' }, h('span', { class: 'opp-light on', 'aria-hidden': 'true' }), h('span', { class: 'opp-label' }, label), h('span', { class: 'dim small' }, ` · ${note}`)),
       this.sound = h('button', { class: 'opp-sound', title: 'Play your table music (browsers need one click before sound)', onclick: () => this.enableSound() }, '🔈 Music on'));
     host.append(this.el);
   }

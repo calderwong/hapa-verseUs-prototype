@@ -14,11 +14,14 @@
  * height bands, picking and the seated opponent are untouched. Nothing here is pickable, blocks a
  * rule, or changes with play. Layout is deterministic.
  *
- * Music response (three bounded jobs, §5.1): slow warm practical/trim glow from the smoothed
- * full-mix energy; subdued shoreline/reflection shimmer from the low/high bands; rare embers and one
- * light travelling along the outer trim after an accent with a cooldown. The playable grid and its
- * light are never modulated: no exposure, camera, rule color or target changes. Off keeps quiet
- * ambient life; Still holds every decorative motion and musical intensity animation.
+ * Music response (§5.1, extended by Addendum 12 HF12-01 so the Home view sees it): fast measured
+ * low-band onsets send light pulses round the top rail's brass line and, in Expressive, rings of
+ * warm light across the terrace; the slow energy swell breathes the lanterns, their pools and a
+ * wash round the table, its emphasis turning lantern to lantern at a pace set by the middle band;
+ * the high band twinkles finely along the rail and shimmers the water; rare embers and one trim
+ * glint follow an accent with a cooldown. The playable grid and its light are never modulated: no
+ * exposure, camera, rule color or target changes. Off keeps quiet ambient life; Still holds every
+ * decorative motion and musical intensity animation.
  */
 import * as THREE from 'three';
 import { TextureLibrary } from '../../../vendor/lumina/src/engine/pixel/Textures.js';
@@ -589,36 +592,175 @@ export async function buildScenery(root, b) {
   };
   const clearEmbers = () => { eLife.fill(0); eCol.fill(0); eGeo.attributes.color.needsUpdate = true; glintT = -1; glint.material.opacity = 0; };
 
+  // --- the dance (Addendum 12 HF12-01): what the Home view sees move with the song -------------
+  // (a) the rail chase: a light ribbon on the top rail's brass line. Each low-band onset sends a
+  // pulse from the home side's centre round both ways, meeting behind the opponent; fine twinkles
+  // follow the high band; the line's own level follows the low band and the slow swell. Outside
+  // the painted top and the banks: the grid, its colors and every target are untouched.
+  const PULSES = 10, rail = { x0: b.x0 - lineIn, x1: b.x1 + lineIn, z0: b.z0 - lineIn, z1: b.z1 + lineIn };
+  const railLen = 2 * (rail.x1 - rail.x0) + 2 * (rail.z1 - rail.z0);
+  const chaseMat = keep(new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
+    uniforms: { uPulse: { value: Array.from({ length: PULSES }, () => new THREE.Vector4()) }, uHome: { value: 0 }, uLevel: { value: 0 }, uSpark: { value: 0 }, uTime: { value: 0 }, uLen: { value: railLen }, uColor: { value: new THREE.Color(0xffc27a) } },
+    vertexShader: 'attribute float aU; attribute float aV; varying float vU; varying float vV; void main(){ vU = aU; vV = aV; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
+    fragmentShader: `uniform vec4 uPulse[${PULSES}]; uniform float uHome; uniform float uLevel; uniform float uSpark; uniform float uTime; uniform float uLen; uniform vec3 uColor; varying float vU; varying float vV;
+      float cd(float a, float b){ float d = abs(fract(a - b + 0.5) - 0.5); return d * uLen; }
+      float hash(float n){ return fract(sin(n * 127.1) * 43758.5453); }
+      void main(){
+        float across = exp(-vV * vV * 5.0), core = exp(-vV * vV * 40.0);
+        float p = 0.0;
+        for (int i = 0; i < ${PULSES}; i++) { vec4 q = uPulse[i]; if (q.y <= 0.0) continue;
+          float d = min(cd(vU, uHome + q.x), cd(vU, uHome - q.x));
+          p += q.y * exp(-d * d / (q.z * q.z)); }
+        float cell = floor(vU * uLen / 0.9), ph = hash(cell * 1.7);
+        float tw = step(1.0 - 0.22 * uSpark, hash(cell + floor(uTime * 9.0 + ph * 9.0))) * uSpark * (0.6 + 0.4 * sin(uTime * 23.0 + ph * 6.28));
+        float a = uLevel * (0.3 * across + 0.5 * core) + p * (0.9 * across + 1.2 * core) + tw * core * 1.6;
+        gl_FragColor = vec4(uColor * a, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+  }));
+  const chaseGeo = (() => {
+    // four flat quads following the line; aU runs round the rectangle from the (x0, z0) corner
+    const pos = [], aU = [], aV = [], idx = [], hw = 1.1, y = lineY + 0.04;
+    const C = [[rail.x0, rail.z0], [rail.x1, rail.z0], [rail.x1, rail.z1], [rail.x0, rail.z1]];
+    let u0 = 0;
+    for (let i = 0; i < 4; i++) {
+      const [ax, az] = C[i], [bx, bz] = C[(i + 1) % 4], L = Math.hypot(bx - ax, bz - az);
+      const nx = -(bz - az) / L, nz = (bx - ax) / L, n = pos.length / 3; // the in-plane normal
+      for (const [x, z, u] of [[ax, az, u0], [bx, bz, u0 + L / railLen]]) for (const v of [-1, 1]) { pos.push(x + nx * hw * v, y, z + nz * hw * v); aU.push(u); aV.push(v); }
+      idx.push(n, n + 1, n + 2, n + 1, n + 3, n + 2);
+      u0 += L / railLen;
+    }
+    const g = keep(new THREE.BufferGeometry());
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('aU', new THREE.Float32BufferAttribute(aU, 1));
+    g.setAttribute('aV', new THREE.Float32BufferAttribute(aV, 1));
+    g.setIndex(idx);
+    return g;
+  })();
+  // the home side's centre in that coordinate (the z1 side runs x1 → x0, the z0 side x0 → x1)
+  chaseMat.uniforms.uHome.value = nearZ > 0 ? ((rail.x1 - rail.x0) + (rail.z1 - rail.z0) + (rail.x1 - cx)) / railLen : (cx - rail.x0) / railLen;
+  const chase = new THREE.Mesh(chaseGeo, chaseMat);
+  chase.renderOrder = 1; chase.visible = false; chase.frustumCulled = false; group.add(chase);
+  // (b) terrace ripples: a stronger onset sends a ring of warm light out across the flagstones from
+  // the table's edge; the slow swell warms a wash round the table. Expressive only.
+  const RINGS = 5;
+  const floorMat = keep(new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
+    uniforms: { uRing: { value: Array.from({ length: RINGS }, () => new THREE.Vector4()) }, uSwell: { value: 0 }, uC: { value: new THREE.Vector2(cx, cz) }, uHalf: { value: new THREE.Vector2(W / 2 + RAIL, D / 2 + RAIL) }, uColor: { value: new THREE.Color(0xffb46a) } },
+    vertexShader: 'varying vec2 vP; void main(){ vec4 w = modelMatrix * vec4(position,1.0); vP = w.xz; gl_Position = projectionMatrix * viewMatrix * w; }',
+    fragmentShader: `uniform vec4 uRing[${RINGS}]; uniform float uSwell; uniform vec2 uC; uniform vec2 uHalf; uniform vec3 uColor; varying vec2 vP;
+      void main(){
+        float d = length(max(abs(vP - uC) - uHalf, 0.0));
+        float r = 0.0;
+        for (int i = 0; i < ${RINGS}; i++) { vec4 q = uRing[i]; if (q.y <= 0.0) continue; float x = (d - q.x) / q.z; r += q.y * exp(-x * x); }
+        float a = r * 0.42 + uSwell * 0.07 * exp(-d / 24.0);
+        gl_FragColor = vec4(uColor * a, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+  }));
+  const ripple = new THREE.Mesh(keep(new THREE.PlaneGeometry(T.x1 - T.x0, T.z1 - T.z0)), floorMat);
+  ripple.rotation.x = -Math.PI / 2; ripple.position.set((T.x0 + T.x1) / 2, TERRACE_Y + 0.2, (T.z0 + T.z1) / 2);
+  ripple.renderOrder = 1; ripple.visible = false; group.add(ripple);
+  const pulses = Array.from({ length: PULSES }, () => ({ s: 0, k: 0, life: 0 }));
+  const rings = Array.from({ length: RINGS }, () => ({ r: 0, k: 0, life: 0 }));
+  const clearDance = () => { for (const q of pulses) q.life = 0; for (const q of rings) q.life = 0; };
+  // (c) the lanterns' swell turns slowly round the table: the four lights and their pools breathe
+  // with the broad energy, and the emphasis travels lantern to lantern at a speed set by the middle
+  // band (an integrated phase: it never jumps when the music changes)
+  const lampAng = lanterns.map((l) => Math.atan2(l.z - cz, l.x - cx));
+  const pools = [], halos = [];
+  group.traverse((o) => { if (o.material === poolMat) pools.push(o); else if (o.material === haloMat) halos.push(o); });
+  let lampPhase = 0, lastOnsets = 0, lastResets = -1, sinceRing = 9, sincePulse = 9;
+
   // --- the update: ambient life on its own clock, music response from the sampled frame ---------
   const tmp = new THREE.Vector3();
   const lampU = water.uniforms.uLamps.value;
   let clock = 0, glow = 0, shimmer = 0, lastKey = null, lastAccent = 0, ambient = 0;
+  const dance = { pulses: 0, rings: 0, rail: 0, spark: 0, lampPhase: 0 };
   const update = (dt, m = {}) => {
     dt = Math.min(Math.max(dt || 0, 0), 0.1);
     const still = !!m.still, resp = m.response ?? 'subtle', fr = m.frame;
     const amp = still || resp === 'off' ? 0 : resp === 'expressive' ? 1 : 0.42;
+    const expressive = amp >= 1;
     // a new song, generation or no song: no previous song's response lingers
     const key = fr && fr.playing ? `${fr.itemKey}|${fr.generation}` : null;
-    if (key !== lastKey) { if (lastKey) clearEmbers(); lastKey = key; }
-    const e = fr ? fr.energy01 : 0, lo = fr ? fr.low01 : 0, hi = fr ? fr.high01 : 0;
+    // a seek inside the same song: the pulses and rings already travelling belong to the old passage
+    if (fr && fr.resets !== lastResets) { lastResets = fr.resets; clearDance(); lastOnsets = fr.onsetCount ?? 0; }
+    if (key !== lastKey) { if (lastKey) clearEmbers(); clearDance(); lastKey = key; lastOnsets = fr?.onsetCount ?? 0; }
+    const e = fr ? fr.energy01 : 0, lo = fr ? fr.low01 : 0, hi = fr ? fr.high01 : 0, mid = fr ? fr.mid01 ?? 0 : 0;
     glow += (amp * e - glow) * lerpK(dt, still ? 0.05 : 0.35);
-    shimmer += (amp * (0.6 * lo + 0.4 * hi) - shimmer) * lerpK(dt, still ? 0.05 : 0.25);
+    shimmer += (amp * (0.35 * lo + 0.65 * hi) - shimmer) * lerpK(dt, still ? 0.05 : 0.25);
     if (!still) { clock += dt; ambient = 1; } else ambient = 0;
     for (const u of updates) if (!still) u(dt);
-    // 1) slow practical / trim glow (a fixed readable baseline; tactical light is not touched)
+    // 1) the swell: the practicals breathe with the broad energy, and the emphasis turns lantern to
+    // lantern round the table at a pace from the middle band (phase integrated, so never a jump)
+    if (!still) lampPhase += dt * amp * (0.35 + 1.6 * mid);
+    const turn = amp * (0.25 + 0.75 * mid);
     for (let i = 0; i < lanterns.length; i++) {
       const l = lanterns[i];
       const flick = ambient ? 0.035 * Math.sin(clock * 6.3 + l.phase) + 0.02 * Math.sin(clock * 11.7 + l.phase * 2) : 0;
-      l.light.intensity = l.base * (1 + flick + 0.5 * glow);
+      const rot = turn * Math.cos(lampPhase - lampAng[i]);
+      const w = 1 + flick + 0.5 * glow + 0.4 * rot * glow;
+      l.light.intensity = l.base * Math.max(0.3, w);
       lampU[i].set(l.x, l.z, 70 + 22 * glow, (1 + 0.6 * glow) * (1 + flick));
+      if (pools[i]) pools[i].scale.setScalar(1 + 0.35 * glow + 0.3 * rot * glow);
+      if (halos[i]) halos[i].scale.setScalar(26 * (1 + 0.3 * glow + 0.25 * rot * glow));
     }
     for (const g of glassMats) g.emissiveIntensity = 1.8 + 1.6 * glow;
     poolMat.opacity = 0.2 + 0.16 * glow; haloMat.opacity = 0.5 + 0.35 * glow;
     inlay.emissiveIntensity = 0.08 + 0.85 * glow;
-    // 2) subdued shoreline / reflection motion
+    // 2) subdued shoreline / reflection motion; the high band is its fine texture
     water.uniforms.uTime.value = clock;
     water.uniforms.uShimmer.value = shimmer;
-    // 3) rare accents: a few embers and one light travelling along the outer trim (never while busy)
+    // 3) the fast cue: measured low-band onsets send pulses round the rail (both modes; Subtle only
+    // the stronger ones, dimmer) and, in Expressive, rings across the terrace. Busy interaction
+    // halves the rail and holds new rings; nothing is queued, so a hidden tab replays nothing.
+    sincePulse += dt; sinceRing += dt;
+    const onsets = fr?.onsetCount ?? 0;
+    if (onsets !== lastOnsets) {
+      const k = fr.onsetStrength ?? 0;
+      if (amp > 0 && key && onsets > lastOnsets) {
+        if (expressive || (k >= 0.35 && sincePulse >= 0.25)) {
+          const q = pulses.reduce((a, c) => (c.life < a.life ? c : a));
+          Object.assign(q, { s: 0, k: (expressive ? 0.55 + 0.75 * k : 0.25 + 0.35 * k) * (m.busy ? 0.5 : 1), life: 1 });
+          sincePulse = 0;
+        }
+        if (expressive && !m.busy && k >= 0.4 && sinceRing >= 0.3) {
+          const q = rings.reduce((a, c) => (c.life < a.life ? c : a));
+          Object.assign(q, { r: 0, k: 0.45 + 0.55 * k, life: 1 });
+          sinceRing = 0;
+        }
+      }
+      lastOnsets = onsets;
+    }
+    let livePulses = 0, liveRings = 0;
+    const pu = chaseMat.uniforms.uPulse.value, ru = floorMat.uniforms.uRing.value;
+    for (let i = 0; i < PULSES; i++) {
+      const q = pulses[i];
+      if (q.life > 0 && !still && amp > 0) { q.s += dt * 0.42; q.life = Math.max(0, 1 - q.s / 0.5); }
+      else if (still || amp === 0) q.life = 0;
+      if (q.life > 0) livePulses++;
+      pu[i].set(q.s, q.life > 0 ? q.k * Math.pow(q.life, 0.5) : 0, 4.5 + 4 * (1 - q.life), 0);
+    }
+    for (let i = 0; i < RINGS; i++) {
+      const q = rings[i];
+      if (q.life > 0 && !still && amp > 0) { q.r += dt * 62; q.life = Math.max(0, 1 - q.r / 95); }
+      else if (still || amp === 0) q.life = 0;
+      if (q.life > 0) liveRings++;
+      ru[i].set(q.r, q.life > 0 ? q.k * q.life * Math.min(1, q.r / 6) : 0, 5 + q.r * 0.08, 0);
+    }
+    const railLevel = still ? 0 : amp * (0.22 * glow + 0.45 * lo);
+    chaseMat.uniforms.uLevel.value = railLevel;
+    chaseMat.uniforms.uSpark.value = still ? 0 : amp * hi;
+    chaseMat.uniforms.uTime.value = clock;
+    chase.visible = railLevel > 0.004 || livePulses > 0 || chaseMat.uniforms.uSpark.value > 0.02;
+    floorMat.uniforms.uSwell.value = expressive && !still ? glow : 0;
+    ripple.visible = liveRings > 0 || floorMat.uniforms.uSwell.value > 0.01;
+    dance.pulses = livePulses; dance.rings = liveRings; dance.rail = railLevel; dance.spark = chaseMat.uniforms.uSpark.value; dance.lampPhase = lampPhase;
+    // 4) rare accents: a few embers and one light travelling along the outer trim (never while busy)
     const acc = fr ? fr.accent01 : 0;
     if (acc >= 1 && lastAccent < 1 && amp > 0 && !m.busy && key) { spawnEmbers(resp === 'expressive' ? 10 : 5); glintT = 0; glintU = rnd(); }
     lastAccent = acc;
@@ -649,7 +791,7 @@ export async function buildScenery(root, b) {
     textures.dispose();
     group.removeFromParent();
   };
-  const stats = () => ({ lights: lanterns.length, embers: EMBERS, liveEmbers: [...eLife].filter((v) => v > 0).length, glow, shimmer, inlay: inlay.emissiveIntensity, lantern0: lanterns[0]?.light.intensity, waterTime: clock });
+  const stats = () => ({ lights: lanterns.length, embers: EMBERS, liveEmbers: [...eLife].filter((v) => v > 0).length, glow, shimmer, inlay: inlay.emissiveIntensity, lantern0: lanterns[0]?.light.intensity, waterTime: clock, ...dance, lanterns: lanterns.map((l) => +(l.light.intensity / l.base).toFixed(3)) });
   /** The warm practicals (lanterns and brazier) in root space with their current level (Red's light, VA-06). */
   const practicals = () => [...lanterns.map((l) => ({ x: l.x, y: l.y, z: l.z, w: l.light.intensity / l.base })), ...(brazier ? [{ x: brazierAt.x, y: brazierAt.y + 8, z: brazierAt.z, w: 1.4 }] : [])];
   return { group, update, dispose, stats, practicals };

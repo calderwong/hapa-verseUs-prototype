@@ -73,9 +73,18 @@ export class MusicDeck {
     const radio = (v, label) => h('label', { class: 'np-opt' }, h('input', { type: 'radio', name: `np-resp-${music.sessionId}`, value: v, onchange: () => this.m.setResponse(v) }), label);
     this.respRadios = [radio('off', 'Off'), radio('subtle', 'Subtle'), radio('expressive', 'Expressive')];
     this.stillBox = h('input', { type: 'checkbox', onchange: (ev) => this.m.setStill(ev.target.checked) });
+    // what the scene is following now (HF12-04): a compact line, live meters only in Signal
+    this.sceneState = h('span', { class: 'np-scene-state dim small' });
+    const meter = (name, tip) => { const bar = h('span', { class: 'np-meter-bar' }); return { bar, el: h('span', { class: 'np-meter', title: tip }, h('span', { class: 'np-meter-name' }, name), h('span', { class: 'np-meter-track', 'aria-hidden': 'true' }, bar)) }; };
+    this.meters = { onset: meter('Onset', 'A measured low-band rise (not a detected beat): pulses on the rail, rings on the terrace'), low: meter('Low', 'Low band 40–180 Hz: the rail line\'s level'), swell: meter('Swell', 'Slow broad energy: the lanterns and their pools'), high: meter('High', 'High band 2.5–9 kHz: fine twinkles and water shimmer') };
+    this.signalEl = h('details', { class: 'np-signal' }, h('summary', { class: 'small' }, 'Signal'),
+      h('div', { class: 'np-meters' }, ...Object.values(this.meters).map((x) => x.el)),
+      h('p', { class: 'dim small' }, 'Measured live from this song\'s music player, before your volume and mute (your voice and game sounds are not included). Onsets are low-band rises, not detected beats; no tempo is measured.'));
     this.settingsEl = h('div', { class: 'np-settings', title: 'Mute lowers the sound only; the scene can still respond to a playing song. Off or Still calms the scene without stopping the music.' },
       h('span', { class: 'np-set-label' }, 'Scene response'), h('span', { class: 'np-seg', role: 'radiogroup', 'aria-label': 'Scene response to music' }, ...this.respRadios),
-      h('label', { class: 'np-opt' }, this.stillBox, 'Still atmosphere'));
+      h('label', { class: 'np-opt' }, this.stillBox, 'Still atmosphere'),
+      h('p', { class: 'np-help dim small' }, 'Expressive: pulses run round the rail and rings cross the terrace with the song; Subtle is gentler. Off or Still calms the scene; the music keeps playing.'),
+      this.sceneState, this.signalEl);
     this.drawer = h('div', { class: 'np-drawer', hidden: true },
       h('div', { class: 'np-tabs', role: 'tablist', 'aria-label': 'Music collections' }, ...Object.values(this.tabs)),
       this.filterEl, this.listEl, this.emptyEl, this.settingsEl);
@@ -178,6 +187,33 @@ export class MusicDeck {
     this.stillBox.checked = m.still;
     this._patchTime();
     if (this.open) this._renderList(false);
+  }
+
+  /**
+   * The scene's state and live meters (per frame from the app; written at most ~8 times a second and
+   * only while the drawer is open). Nothing here is announced.
+   * @param {any} f the music frame (or null)
+   */
+  signal(f, dt = 0) {
+    if (!this.open) return;
+    this._sigT = (this._sigT ?? 0) + dt;
+    if (this._sigT < 0.12 && this._sigShown) return;
+    this._sigT = 0; this._sigShown = true;
+    const m = this.m, s = m.settings;
+    const st = f?.state ?? 'idle';
+    const text = m.still ? 'Still atmosphere: the scene is holding still; the music continues'
+      : s.response === 'off' ? 'Response off: the scene keeps its quiet ambient life'
+      : st === 'following' ? `Following this song · ${s.response === 'expressive' ? 'Expressive' : 'Subtle'}`
+      : st === 'silence' ? 'Following this song · quiet passage'
+      : st === 'paused' ? 'Paused: the scene is settling'
+      : st === 'blocked' ? 'Waiting for Play: the browser holds the sound'
+      : st === 'unavailable' ? 'Song analysis unavailable here: ambient motion only'
+      : 'No song playing: ambient motion only';
+    if (this.sceneState.textContent !== text) this.sceneState.textContent = text;
+    if (!this.signalEl.open) return;
+    const live = st === 'following' || st === 'silence';
+    const v = { onset: live ? f.onset01 : 0, low: live ? f.low01 : 0, swell: live ? f.energy01 : 0, high: live ? f.high01 : 0 };
+    for (const [k, x] of Object.entries(this.meters)) x.bar.style.width = `${Math.round(100 * Math.max(0, Math.min(1, v[k])))}%`;
   }
 
   _statusText(it, k) {

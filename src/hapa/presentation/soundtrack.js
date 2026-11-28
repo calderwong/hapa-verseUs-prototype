@@ -618,7 +618,7 @@ export class Soundtrack extends EventTarget {
     const live = !!a && a.gen === this.playGen && a.item === this.now;
     const playing = live && this.status === 'playing' && !this.audio.paused && !this.audio.ended;
     return this.signal.sample(dt, { itemKey: live ? a.item.key : null, assetId: live ? a.item.assetId : null, recordingId: live ? a.item.recordingId : null, generation: live ? a.gen : -1,
-      playing, listening: this.settings.listening, muted: this.settings.muted, time: this.audio.currentTime || 0, duration: this.audio.duration }, opts);
+      playing, listening: this.settings.listening, muted: this.settings.muted, time: this.audio.currentTime || 0, duration: this.audio.duration, status: this.status }, opts);
   }
 
   // --- Keep (HF6-03) -----------------------------------------------------------------------------
