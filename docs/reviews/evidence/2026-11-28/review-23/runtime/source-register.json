@@ -1,0 +1,84 @@
+{
+  "head": "29c7c1d466f94b5534fce1634f775a4df944a93f",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "blob": "ec1a7d1b17a9f7061fb93b7e63d0958ab08be10b",
+      "sha256": "70c5dd010ae74182757bdcd399218074d7a5c445570e3a2652f836e3883734d1",
+      "size": 8482,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/AGENTS.md"
+    },
+    {
+      "path": "docs/workflows/LOOSE_SCREWS.md",
+      "blob": "949fdd2c37f30fba591ba32535e1f32e66c94ef7",
+      "sha256": "1600060555f0e9cc7330ba05020c0e13dead356d0ec56e2d8f164bfb93601e87",
+      "size": 19476,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/workflows/LOOSE_SCREWS.md"
+    },
+    {
+      "path": "docs/reviews/2026-11-27-implementation-response-24.md",
+      "blob": "6f73625840d815cac49757127373f935c0cf8e81",
+      "sha256": "a1c702a135aa82a25510ca6d0f51fd12d442c86548c1357629c108ac0a823d2a",
+      "size": 12305,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/2026-11-27-implementation-response-24.md"
+    },
+    {
+      "path": "src/hapa/network/online-match.js",
+      "blob": "93bb5a0d3e48ab3973c892c6b77fc17b7336b5d8",
+      "sha256": "dacd2268cc970ea173d8d18523ee8f64c97fd0f076eaff26e9b186ef445ab6f8",
+      "size": 26309,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/src/hapa/network/online-match.js"
+    },
+    {
+      "path": "src/hapa/network/runtime.js",
+      "blob": "f7f8462b66cc46092763f0ad5cc064b32e419dfb",
+      "sha256": "869d8c9a55685e9e1e75ef87e74f8676089b92c42b5a10d30e4fda63fc27a67b",
+      "size": 78685,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/src/hapa/network/runtime.js"
+    },
+    {
+      "path": "tests/hapa/connectivity.test.js",
+      "blob": "a6dfc2a54de34c2832fae76ffc61e48e44994eab",
+      "sha256": "83f9344e9fccac362e6d8dcaab5ba3d7d7a77e3cf03e4aa05b205c09fbca0e29",
+      "size": 36488,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/tests/hapa/connectivity.test.js"
+    },
+    {
+      "path": "src/hapa/network/lobby.js",
+      "blob": "449a233f25f575b5d0c0696ba66bd645e4a05e79",
+      "sha256": "f8d0105dc3aeb711742643f9afdee889e4a022ace4acb485d994636485fc9b57",
+      "size": 19714,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/src/hapa/network/lobby.js"
+    },
+    {
+      "path": "src/hapa/rules/encoding.js",
+      "blob": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+      "sha256": "58fcb62ee318ab6b461a01f6cc108d650807595e1dc2722c2ba8023c7af0396e",
+      "size": 8381,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/src/hapa/rules/encoding.js"
+    },
+    {
+      "path": "src/hapa/network/control.js",
+      "blob": "055bdb0d8f62e986bcb44be53ca064301c0cbd5b",
+      "sha256": "db50d4c8d3f735f7b46cc3d85bc0d3df1e62e16048cac3756eb67380b46940d0",
+      "size": 2790,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/src/hapa/network/control.js"
+    },
+    {
+      "path": "tests/hapa/recovery-native.test.js",
+      "blob": "0389fac13fdf95c1a0ff667de9fb43c337f140df",
+      "sha256": "1d94644508dd954603dc328e4eff33971b71a0e2ba8582b5bab7d67bb3655b45",
+      "size": 9902,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/tests/hapa/recovery-native.test.js"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-24/npm-check-summary.txt",
+      "blob": "b19d5f1ffabbea3252295d1bcad3bda5c77c9117",
+      "sha256": "c89650393d3bdeee7e89564614d1c68feb262bb2118ab5764ec648f2ad5008e0",
+      "size": 1834,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-24/npm-check-summary.txt"
+    }
+  ],
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "ref": "29c7c1d466f94b5534fce1634f775a4df944a93f"
+}

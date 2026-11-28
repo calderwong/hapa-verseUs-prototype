@@ -1,0 +1,240 @@
+{
+  "review": 23,
+  "reviewed_main": "29c7c1d466f94b5534fce1634f775a4df944a93f",
+  "candidate": {
+    "tag": "v0.1.0-friend.9",
+    "source": "977f14944cdb978a0ab456fc9878ddae4e72f78e",
+    "tag_release_run_job_align": true,
+    "release_url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.9",
+    "assets": [
+      {
+        "id": 803771092,
+        "name": "Hapa-Versus-0.1.0-friend9-macOS-AppleSilicon.dmg",
+        "size": 124503664,
+        "digest": "sha256:91c0ae80adb69e12b51ab771472e55f1fdb0e67e88688d8cea9c07b423230879",
+        "browser_download_url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.9/Hapa-Versus-0.1.0-friend9-macOS-AppleSilicon.dmg"
+      },
+      {
+        "id": 803771100,
+        "name": "Hapa-Versus-0.1.0-friend9-Windows-x64.zip",
+        "size": 167162718,
+        "digest": "sha256:83b3edb93f1b0ac154b66da08f6b6b1d38edb24a4a920f3876eb86eb7f1f2191",
+        "browser_download_url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.9/Hapa-Versus-0.1.0-friend9-Windows-x64.zip"
+      },
+      {
+        "id": 803771095,
+        "name": "SHA256SUMS.txt",
+        "size": 223,
+        "digest": "sha256:27238087b3b67b2e9bf0a47273c53c855ff79e6288a3a880347c84d2837f11ec",
+        "browser_download_url": "https://github.com/calderwong/hapa-verseUs-prototype/releases/download/v0.1.0-friend.9/SHA256SUMS.txt"
+      }
+    ]
+  },
+  "windows_primary_verification": {
+    "run_id": 46124422768,
+    "job_id": 140915741824,
+    "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46124422768/job/140915741824",
+    "status": "completed",
+    "conclusion": "success",
+    "machine": "GitHub-hosted Windows Server 2025 x64",
+    "decoded_log_sha256": "ba2c1d2fffef1d4ac9b091468998d24c92f5bfb4c05607c75d06fa047181c00e",
+    "qualification": {
+      "required": [
+        "artifact.json",
+        "smoke-isolated.json",
+        "smoke-os-data.json",
+        "invite-journey.json",
+        "lifecycle-late.json",
+        "lifecycle-never.json"
+      ],
+      "failures": []
+    },
+    "primary_log_matches_to_submitted_reports": [
+      {
+        "report": "artifact.json",
+        "primary_log_start_line": 136,
+        "semantic_match": true
+      },
+      {
+        "report": "smoke-isolated.json",
+        "primary_log_start_line": 158,
+        "semantic_match": true
+      },
+      {
+        "report": "smoke-os-data.json",
+        "primary_log_start_line": 347,
+        "semantic_match": true
+      },
+      {
+        "report": "invite-journey.json",
+        "primary_log_start_line": 570,
+        "semantic_match": true
+      },
+      {
+        "report": "qualification.json",
+        "primary_log_start_line": 691,
+        "semantic_match": true
+      }
+    ],
+    "gate_logic": "Missing or unreadable required report, artifact.match != true, or report.ok != true is accumulated in failures and causes the Assert required results step to throw.",
+    "zip_digest_and_size_match_release_metadata": true,
+    "native_launch": "Two launches in each of an isolated test root and the OS user-data folder; native listener starts, renderer remains isolated, identity retained and launch ledger grows.",
+    "invitation": {
+      "same_machine": true,
+      "public_dht": true,
+      "human_seat_automation": true,
+      "ok": true,
+      "source": "977f14944cdb978a0ab456fc9878ddae4e72f78e",
+      "dirty": false,
+      "tick": 4,
+      "ending": "concession",
+      "same_result": true,
+      "both_final_hashes_match": true,
+      "reopen": {
+        "hostSameIdentity": true,
+        "joinerSameIdentity": true,
+        "hostRecorded": [
+          "recorded"
+        ],
+        "joinerRecorded": [
+          "recorded"
+        ]
+      }
+    },
+    "lifecycle_submitted_reports_confirmed_present_and_ok_by_primary_gate": {
+      "late": {
+        "ok": true,
+        "final": "ready",
+        "generation": 2
+      },
+      "never": {
+        "ok": true,
+        "final": "failed",
+        "generation": 4
+      }
+    },
+    "authenticode": "Primary output reports that executable is not digitally signed; consumer prompts were not exercised.",
+    "evidence_artifact": {
+      "id": 15255511667,
+      "name": "windows-smoke-evidence",
+      "size_in_bytes": 5439787,
+      "digest": "sha256:29616d171e6363412a5bc092a2a9d2972a341441a1e45de1b763f7ac5556458f",
+      "expired": false
+    }
+  },
+  "mac_submitted_evidence": {
+    "scope": "Review of committed reports, not an independent macOS execution or binary download.",
+    "artifact_digest_matches_github_release_metadata": true,
+    "smoke": {
+      "ok": true,
+      "same_identity": true,
+      "launch_ledger_grows": true,
+      "both_launches_clean_source": true,
+      "security_agent_seen": false
+    },
+    "invitation": {
+      "ok": true,
+      "tick": 4,
+      "same_result": true,
+      "both_final_hashes_match": true,
+      "reopen": {
+        "hostSameIdentity": true,
+        "joinerSameIdentity": true,
+        "hostRecorded": [
+          "recorded"
+        ],
+        "joinerRecorded": [
+          "recorded"
+        ]
+      },
+      "security_agent_seen": false
+    },
+    "mesh": {
+      "ok": true,
+      "requires_local_mesh_avatar_owner": true,
+      "owner_url": "http://127.0.0.1:8860",
+      "results": [
+        {
+          "avatar_id": "avatar-8",
+          "label": "Falka",
+          "package_id": "falka-human-assisted",
+          "revision": "2026-11-17.1",
+          "renderer": "human-connected-forward-mesh-r1",
+          "owner_status": "candidate",
+          "binding_status": "ready-text-only",
+          "performers": 1,
+          "drawn": true,
+          "tick_before": 1,
+          "tick_after": 2,
+          "ok": true
+        },
+        {
+          "avatar_id": "avatar-46",
+          "label": "Leo",
+          "package_id": "leo-canine-assisted",
+          "revision": "2026-11-17.1",
+          "renderer": "canine-forward-mesh-r1",
+          "owner_status": "candidate",
+          "binding_status": "ready-text-only",
+          "performers": 1,
+          "drawn": true,
+          "tick_before": 1,
+          "tick_after": 2,
+          "ok": true
+        },
+        {
+          "avatar_id": "avatar-39",
+          "label": "Thor",
+          "package_id": "thor-feline-assisted",
+          "revision": "2026-11-17.1",
+          "renderer": "feline-forward-mesh-r1",
+          "owner_status": "candidate",
+          "binding_status": "ready-text-only",
+          "performers": 1,
+          "drawn": true,
+          "tick_before": 1,
+          "tick_after": 2,
+          "ok": true
+        }
+      ]
+    }
+  },
+  "relay_membership_regression": {
+    "finding": "V22-03 / N24-03",
+    "status": "closed for the reviewed two-stage harness",
+    "execution": "independently executed by delivery reviewer in a source snapshot verified against the pinned Git tree",
+    "command": "node --test tests/hapa/relay-witness-aggregate.test.js",
+    "node_version": "v24.22.3",
+    "exit_code": 0,
+    "tests": 2,
+    "pass": 2,
+    "fail": 0,
+    "duration_ms": 178.918215,
+    "positive_stage_cases": 2,
+    "negative_mutations": 13,
+    "original_missing_peer_c_case_rejected": true,
+    "cases": "Published stages 1/2 pass; missing Peer-c/Peer-b, duplicate report, misidentified report, malformed JSON, ok:false, direct path, missing roster entry, duplicate roster entry, stray Peer-c in stage1, wrong mode, failed control, too few pairings all fail.",
+    "harness_wiring": "relay-nat-witness.sh line69 invokes this aggregator under set -euo pipefail; aggregator CLI exits1 when summary.ok is false.",
+    "native_network_experiment_repeated": false,
+    "prior_controlled_relay_evidence": "46101799012 retained for its randomized-NAT fixture scope; native relay exhaustion still unit-only."
+  },
+  "delivery_verdict": {
+    "blocking_findings": [],
+    "bounded_cj_mac_friend_windows_human_test": "delivery evidence supports proceeding, subject to root review of other changed code",
+    "remaining_observations": [
+      "Consumer download and launch/security prompts on the actual computers",
+      "A two-person, two-home Mac/Windows connection and game",
+      "Both users see the same saved result and retain identity/history after quit/reopen",
+      "CJ acceptance"
+    ],
+    "optional_avatar_limits": "Local served figures use a separate owner and heuristic controller/captions; online avatar hosting remains unbuilt, visual acceptance is pending, and these do not gate human-versus-human play.",
+    "not_performed": [
+      "New native relay experiment",
+      "CI dispatch",
+      "Independent Mac or Windows binary execution",
+      "Binary download or artifact archive extraction",
+      "Human WAN game",
+      "GitHub mutation"
+    ]
+  }
+}

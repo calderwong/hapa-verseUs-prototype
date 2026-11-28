@@ -29,14 +29,19 @@ bundled Electron player app through amended Assignment 16; the desktop companion
 packaging/storage/IPC while existing gameplay and archived records keep their meanings.
 
 Addendum 11 selects optional Mimi/Falka, Leo and Thor Mesh Avatar players through a local roster,
-per-game selection and separately opted-in online participation. Read its companion and queued
-Assignment 21 through the review index. Review 22 evaluates Response 23 and friend.6;
-Response 24 answers Assignment 24 with friend.7 (readiness-aware attachment, one Avatar choice,
-exact relay report set) and awaits review; the next step is the real two-home human test.
-Credit the previous activation/provider fixes and actual relay-carriage evidence.
-Preserve in-flight work and the optional roster queue; it does not gate the existing
-human-versus-human friend test. Preserve two seats, actual owner bindings, one authority per seat
-and explicit human/Avatar result attribution.
+per-game selection and separately opted-in online participation. Read the companion through the
+review index. **Review 23 / Assignment 25 are current**: reviewed main `29c7c1d`, friend.9 code
+`977f149`. All Review 22 findings (V22-01–03) are closed. The existing friend.9 Mac/Windows
+candidate is ready to attempt the bounded CJ-Mac/friend-Windows two-home human test; consumer
+launch/security prompts, actual WAN success and CJ acceptance are still pending.
+
+Optional Avatar Slice A is substantially delivered: the local roster, one choice including No figure,
+and actual Red/Falka/Leo/Thor presentations. Online Avatar hosting remains disabled/unbuilt.
+Assignment 25 also carries V23-01 renderer cleanup and V23-02 truthful owner/music wording;
+these may proceed in parallel without delaying the human test. Use focused regressions and,
+if app code changes, at most one integrated final gate for the coherent batch. Reuse unchanged
+relay/delivery evidence. Preserve two seats, actual owner bindings, one authority per seat and
+explicit human/Avatar result attribution; optional owners are not a human-game prerequisite.
 
 The `.docx` originals stay local in `reference_documents/` (ignored: large binaries).
 

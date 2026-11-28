@@ -2,8 +2,10 @@
 
 **Date:** 26 November 2026.  
 **Authority:** [Addendum 11](../requirements/2026-11-26-human-feedback-addendum-11.md).  
-**Status:** partly implemented. Local roster, one coherent choice (Responses 23–24) and served **Falka**, **Leo** and **Thor** through Mesh Avatar's player node ([evidence](../reviews/evidence/2026-11-27/avatar-players/README.md)); voices and online hosting remain open.  
-**Task:** [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md), after reconciling the current Assignment 20 work.
+**Status (28 November 2026):** **Slice A substantially delivered**, reviewed in [Review 23](../reviews/2026-11-28-friend-test-and-avatar-review-23.md): persistent roster, one choice including No figure, and real local Red/Falka/Leo/Thor presentations. Online Avatar hosting remains disabled/unbuilt. V23-01 renderer cleanup (P2) and V23-02 truthful owner/music wording (P3) remain nonblocking follow-up work.  
+**Task:** [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md) retains the selected scope; [Assignment 25](../reviews/2026-11-28-next-agent-assignment-25.md) selects the immediate follow-up without delaying the friend.9 two-human test.
+
+**Current implementation and evidence:** Falka (`avatar-8`, Mimi alias), Leo (`avatar-46`) and Thor (`avatar-39`) are served by the separate local Mesh Avatar player node, with captions and heuristic control ([owner delivery](../reviews/evidence/2026-11-27/avatar-players/README.md), [friend.9 installed reports](../reviews/evidence/2026-11-28/friend-9/README.md)). Owner media is not bundled. Package id, revision and Avatar id are checked against the roster at binding; this is **not runtime digest attestation**. No voice or Avatar music library is provided for these three; music depends on the user's separately available library. [Review 23 evidence](../reviews/evidence/2026-11-28/review-23/README.md) separates exact source/package evidence from a fresh local browser observation whose runtime revision is unasserted. The requirements below remain the target; this status does not mark every acceptance case or CJ's visual acceptance complete.
 
 ## 1. Experience to deliver
 
@@ -130,11 +132,11 @@ Existing records without participant-kind metadata remain legacy/unknown for tha
 
 ## 9. Delivery slices and focused acceptance
 
-Implement in two slices after reconciling the current assignment:
+The selected scope has two slices. Read the current status above and Assignment 25 before reopening delivered work:
 
-**Slice A — local roster and real presentation.** Resolve the actual owner mappings, add the descriptor-driven roster, preserve the default, select each requested Avatar, attach its actual Mesh presentation and play with the legal controller. Persist preferences and exercise lifecycle/fallback boundaries. This slice can proceed independently of an external second machine once the agent resumes.
+**Slice A — local roster and real presentation.** Resolve the actual owner mappings, add the descriptor-driven roster, preserve the default, select each requested Avatar, attach its actual Mesh presentation and play with the legal controller. Persist preferences and exercise lifecycle/fallback boundaries. This slice is substantially delivered; its remaining renderer cleanup and truthful capability wording can proceed independently of the human two-home session.
 
-**Slice B — online Avatar participant.** Add opted-in availability, authenticated host/participant metadata, negotiated setup, one-runtime capacity, explicit result classification and the actual connected journey. Use the corrected Assignment 20 foundation. Keep human friend-test qualification independent from these optional opponents.
+**Slice B — online Avatar participant.** Add opted-in availability, authenticated host/participant metadata, negotiated setup, one-runtime capacity, explicit result classification and the actual connected journey. Preserve the corrected human-networking foundation assessed by Review 23. Keep human friend-test qualification independent from these optional opponents.
 
 | Case | Required result when implemented |
 | --- | --- |
@@ -152,10 +154,10 @@ Implement in two slices after reconciling the current assignment:
 | Results and replay | Correct mode/provenance, no human-stat contamination, no inference on replay, legacy records preserved |
 | Installed scene | Selected package at Home/close/orbit with appropriate framing and cleanup, in the actual artifact |
 
-These are future acceptance criteria, not executed tests. Use the smallest checks during assembly, then the required final implementation gate and changed local/native/installed journeys. Label source/model fixtures, real native connections, installed platforms, independent networks and CJ acceptance separately.
+This table defines acceptance criteria, not a blanket record of executed tests; use the linked review/evidence for each delivered or still-open case. Use the smallest checks during assembly, then the required final implementation gate and changed local/native/installed journeys. Label source/model fixtures, real native connections, installed platforms, independent networks and CJ acceptance separately.
 
 ## 10. Owner-resolution worksheet for the implementation response
 
 For Red and each requested entry, record: requested label, canonical owner reference, aliases, identity revision, Mesh package/revision/digest/renderer kind, controller modes actually available, optional voice, scoped actor API, distribution permission/allowlist, and unresolved dependency. Leave unknowns explicit; no made-up IDs or endpoint names.
 
-The owner lookup is implementation preparation, not a demand for CJ to answer another abstract identity question now. Inspect the existing local ecosystem first. If it cannot resolve a material distinction, present the exact owner records or missing package after completing independent work. This document itself does not claim that any of the new owner packages has been inspected or installed.
+The owner lookup is implementation preparation, not a demand for CJ to answer another abstract identity question now. Inspect the existing local ecosystem first. If it cannot resolve a material distinction, present the exact owner records or missing package after completing independent work. The linked delivery reports now record actual local owner packages and installed journeys; distinguish those receipts and runtime identity-field checks from digest attestation, distribution permission and human acceptance.

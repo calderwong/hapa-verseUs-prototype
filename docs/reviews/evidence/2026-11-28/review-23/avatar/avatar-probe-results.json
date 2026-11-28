@@ -1,0 +1,235 @@
+{
+  "head": "29c7c1d466f94b5534fce1634f775a4df944a93f",
+  "sourceFiles": [
+    {
+      "path": "src/hapa/presentation/app.js",
+      "sha256": "d52cc7912bb2722340664111c397bac5cb17c5dd72a94d96c574f8231b60e9b4",
+      "gitBlob": "ef979ac4695e16318da4f32498d363b8617344a4"
+    },
+    {
+      "path": "src/hapa/presentation/roster.js",
+      "sha256": "ff7f61b976a4668b59223482a27d5270b83d5b435b3c16f87ce59cb25bae8a06",
+      "gitBlob": "1650072fa40c3073c384c4b4cdc9a161caaf101d"
+    },
+    {
+      "path": "src/hapa/presentation/avatar-opponent.js",
+      "sha256": "010d6eaf6347a375f08254cd2332a2a3db24caa1a53f1ea315f919d2caa6253e",
+      "gitBlob": "7ade98db0cfeae3b29805314f024b4fc025a9f3e"
+    },
+    {
+      "path": "src/hapa/presentation/red-bridge.js",
+      "sha256": "d09312bd1e19745678d03364a5066605e9888efa168ac3a6b6d34b8b2fffd3a9",
+      "gitBlob": "891b206f47352ff093078d82ba5daefcd6ac887d"
+    }
+  ],
+  "scope": "Exact application method/module probe with controlled DOM, localStorage, owner responses and frame messages. No live browser, native owner/WebGL or installed-app claim.",
+  "roster": {
+    "clean": {
+      "choice": "red-reaper",
+      "enabled": {
+        "red-reaper": true,
+        "avatar-8": false,
+        "avatar-46": false,
+        "avatar-39": false
+      },
+      "selectedRadios": [
+        {
+          "id": "red-reaper",
+          "disabled": false
+        }
+      ]
+    },
+    "removeRed": {
+      "choice": null,
+      "enabled": {
+        "red-reaper": false,
+        "avatar-8": false,
+        "avatar-46": false,
+        "avatar-39": false
+      },
+      "selectedRadios": [
+        {
+          "id": "",
+          "disabled": false
+        }
+      ]
+    },
+    "forcedOldSelection": {
+      "choice": null,
+      "enabled": {
+        "red-reaper": false,
+        "avatar-8": false,
+        "avatar-46": false,
+        "avatar-39": false
+      },
+      "selectedRadios": [
+        {
+          "id": "",
+          "disabled": false
+        }
+      ]
+    },
+    "reopenContradictoryLegacyState": {
+      "choice": null,
+      "enabled": {
+        "red-reaper": false,
+        "avatar-8": false,
+        "avatar-46": false,
+        "avatar-39": false
+      },
+      "selectedRadios": [
+        {
+          "id": "",
+          "disabled": false
+        }
+      ]
+    },
+    "optionalSelection": {
+      "choice": "avatar-39",
+      "enabled": {
+        "red-reaper": false,
+        "avatar-8": true,
+        "avatar-46": true,
+        "avatar-39": true
+      },
+      "selectedRadios": [
+        {
+          "id": "avatar-39",
+          "disabled": false
+        }
+      ]
+    }
+  },
+  "binding": [
+    {
+      "id": "avatar-8",
+      "binding": {
+        "seat": "B",
+        "sessionId": "probe-avatar-8",
+        "epoch": 1,
+        "avatar": {
+          "id": "avatar-8",
+          "label": "Falka",
+          "identityRevision": "falka-human-assisted@2026-11-17.1"
+        },
+        "renderer": {
+          "owner": "hapa-mesh-avatar",
+          "packageId": "falka-human-assisted",
+          "revision": "2026-11-17.1",
+          "renderer": "2D forward mesh (human-connected-forward-mesh-r1), candidate",
+          "status": "candidate",
+          "integrity": "package identity checked at bind"
+        },
+        "voice": null,
+        "controller": {
+          "kind": "heuristic",
+          "revision": "heuristic-bot/0.2.0",
+          "label": "the heuristic bot, not a model"
+        },
+        "status": "ready-text-only"
+      },
+      "renderingEvents": 1,
+      "framesWhileBound": 1
+    },
+    {
+      "id": "avatar-46",
+      "binding": {
+        "seat": "B",
+        "sessionId": "probe-avatar-46",
+        "epoch": 2,
+        "avatar": {
+          "id": "avatar-46",
+          "label": "Leo",
+          "identityRevision": "leo-canine-assisted@2026-11-17.1"
+        },
+        "renderer": {
+          "owner": "hapa-mesh-avatar",
+          "packageId": "leo-canine-assisted",
+          "revision": "2026-11-17.1",
+          "renderer": "2D forward mesh (canine-forward-mesh-r1), candidate",
+          "status": "candidate",
+          "integrity": "package identity checked at bind"
+        },
+        "voice": null,
+        "controller": {
+          "kind": "heuristic",
+          "revision": "heuristic-bot/0.2.0",
+          "label": "the heuristic bot, not a model"
+        },
+        "status": "ready-text-only"
+      },
+      "renderingEvents": 1,
+      "framesWhileBound": 1
+    },
+    {
+      "id": "avatar-39",
+      "binding": {
+        "seat": "B",
+        "sessionId": "probe-avatar-39",
+        "epoch": 3,
+        "avatar": {
+          "id": "avatar-39",
+          "label": "Thor",
+          "identityRevision": "thor-feline-assisted@2026-11-17.1"
+        },
+        "renderer": {
+          "owner": "hapa-mesh-avatar",
+          "packageId": "thor-feline-assisted",
+          "revision": "2026-11-17.1",
+          "renderer": "2D forward mesh (feline-forward-mesh-r1), candidate",
+          "status": "candidate",
+          "integrity": "package identity checked at bind"
+        },
+        "voice": null,
+        "controller": {
+          "kind": "heuristic",
+          "revision": "heuristic-bot/0.2.0",
+          "label": "the heuristic bot, not a model"
+        },
+        "status": "ready-text-only"
+      },
+      "renderingEvents": 1,
+      "framesWhileBound": 1
+    }
+  ],
+  "wrongIdentity": {
+    "status": "text-only",
+    "error": "Mesh Avatar serves falka-human-assisted 2026-11-17.1 for avatar-46, not falka-human-assisted 2026-11-17.1",
+    "frames": 0
+  },
+  "explicitRetry": {
+    "attempts": 2,
+    "status": "ready-text-only",
+    "frames": 1
+  },
+  "pendingLoadDisposal": {
+    "afterDispose": {
+      "oldDisposed": true,
+      "oldEpoch": -1,
+      "frames": 1,
+      "listeners": 1,
+      "oldFrameReceivedDispose": false
+    },
+    "duringReplacement": {
+      "frames": 2,
+      "listeners": 2,
+      "newAvatar": "avatar-46",
+      "oldRenderingEvents": 0
+    },
+    "afterOldCompletion": {
+      "lateResult": false,
+      "frames": 1,
+      "listeners": 1,
+      "oldRenderingEvents": 0,
+      "newAvatar": "avatar-46"
+    },
+    "directDispose": {
+      "loadPromiseAfterDispose": "pending",
+      "loadingSlotStillPresent": true,
+      "frames": 0,
+      "listeners": 0
+    },
+    "remainingFramesAtEnd": 0,
+    "remainingListenersAtEnd": 0
+  }
+}

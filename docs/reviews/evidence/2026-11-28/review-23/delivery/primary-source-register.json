@@ -1,0 +1,316 @@
+{
+  "review": 23,
+  "reviewed_main": "29c7c1d466f94b5534fce1634f775a4df944a93f",
+  "candidate_source": "977f14944cdb978a0ab456fc9878ddae4e72f78e",
+  "api_sources": [
+    {
+      "key": "run",
+      "url": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/actions/runs/46124422768"
+    },
+    {
+      "key": "jobs",
+      "url": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/actions/runs/46124422768/jobs?per_page=100"
+    },
+    {
+      "key": "artifacts",
+      "url": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/actions/runs/46124422768/artifacts"
+    },
+    {
+      "key": "release",
+      "url": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/releases/tags/v0.1.0-friend.9"
+    },
+    {
+      "key": "tag",
+      "url": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/git/ref/tags/v0.1.0-friend.9"
+    }
+  ],
+  "workflow_job": {
+    "job_id": 140915741824,
+    "run_id": 46124422768,
+    "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46124422768/job/140915741824",
+    "decoded_log_sha256": "ba2c1d2fffef1d4ac9b091468998d24c92f5bfb4c05607c75d06fa047181c00e",
+    "decoded_log_bytes": 50722
+  },
+  "files": [
+    {
+      "path": ".github/workflows/relay-witness.yml",
+      "git_blob_sha": "75f1bbd9ee5615a0e0c147ea95bb059f38c44ea1",
+      "sha256": "61178b1cef75bbcd322ce3a51869afa2f4872d6ac946efc9ec61367c351ee40d",
+      "bytes": 2022,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/.github/workflows/relay-witness.yml"
+    },
+    {
+      "path": "AGENTS.md",
+      "git_blob_sha": "ec1a7d1b17a9f7061fb93b7e63d0958ab08be10b",
+      "sha256": "70c5dd010ae74182757bdcd399218074d7a5c445570e3a2652f836e3883734d1",
+      "bytes": 8482,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/AGENTS.md"
+    },
+    {
+      "path": "docs/player/play-with-a-friend.md",
+      "git_blob_sha": "c990a4cd1a461e54bdd3a3eb3a5b9b339f0bca68",
+      "sha256": "d469b61e1c17c9fbb4326e452ead16f10630e7ca64a34346ade646b3ca273452",
+      "bytes": 4435,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/player/play-with-a-friend.md"
+    },
+    {
+      "path": "docs/player/two-network-evidence-form.md",
+      "git_blob_sha": "da269354b9462cbc0ecb10b987812b0ec136c760",
+      "sha256": "3174ec6a6bb0d900570dc22a03f455c45b6027a690e4643e48e62e769769c456",
+      "bytes": 1898,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/player/two-network-evidence-form.md"
+    },
+    {
+      "path": "docs/reviews/2026-11-27-implementation-response-24.md",
+      "git_blob_sha": "6f73625840d815cac49757127373f935c0cf8e81",
+      "sha256": "a1c702a135aa82a25510ca6d0f51fd12d442c86548c1357629c108ac0a823d2a",
+      "bytes": 12305,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/2026-11-27-implementation-response-24.md"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/avatar-players/README.md",
+      "git_blob_sha": "ba810375e72a8118730e82cd040315b038599372",
+      "sha256": "68f8cb9c295e30bf8614f42e20bd863ec98ca094100d085a382a32f4dbc16dfd",
+      "bytes": 4333,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/avatar-players/README.md"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/source.json",
+      "git_blob_sha": "5829ba8918c82b71088eac201229767c35fddba9",
+      "sha256": "2f1c9294d035a8e6dc360ccce7c0dd61b5ffe632958488cba9adc2d6b98c9142",
+      "bytes": 92,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/source.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/control.json",
+      "git_blob_sha": "81d771cdcc811642fa474049408e4d09ff45a894",
+      "sha256": "f738bf0ac2b9cb3206cb00c73b1bf96a73cbd73d1abf85352a08f286fb86e292",
+      "bytes": 86,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/control.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/peer-a.json",
+      "git_blob_sha": "312bda89287a34a7175a723d797e5e08d14f8dd2",
+      "sha256": "066e974d345372673b08add18b209710364c597c81f44e0c74e9267c2c652e86",
+      "bytes": 1355,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/peer-a.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/peer-b.json",
+      "git_blob_sha": "c7501265f1992ca82cdc2315864710dff5694b5b",
+      "sha256": "679d040c19b39035198edadde9e32b4c82c7fce31adad4ab4e492c1b072802ee",
+      "bytes": 1384,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/peer-b.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/relay-stats.json",
+      "git_blob_sha": "c0e311aba1a18049cd42cb5cfb9cb43350b57d6d",
+      "sha256": "db485c9e9c6c6b5ac31f7c3ca64413d4c640b69607f4369ed5586aa2159770f7",
+      "bytes": 224,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/relay-stats.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/summary.json",
+      "git_blob_sha": "5609afa07bcb612f480f1bcd20caac76c6ebbd83",
+      "sha256": "230242f61ca596a4111c20aa8baab4105619814fc036f056f1132d5455e33b74",
+      "bytes": 1732,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/summary.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/control.json",
+      "git_blob_sha": "81d771cdcc811642fa474049408e4d09ff45a894",
+      "sha256": "f738bf0ac2b9cb3206cb00c73b1bf96a73cbd73d1abf85352a08f286fb86e292",
+      "bytes": 86,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/control.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/peer-a.json",
+      "git_blob_sha": "5b5d719cb8cf87aa72bdc09455edf1a54fdb8287",
+      "sha256": "46e84a867a94568f5b86e50813d535401da04a601c7b047b0609c4f1bbad3572",
+      "bytes": 1871,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/peer-a.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/peer-b.json",
+      "git_blob_sha": "568f8be86c087ec107ac7db6a78668f44b3cf19c",
+      "sha256": "ede8a2e17613fdcc4b973c35f339b27f766ec15944117118a42edf94f2c30305",
+      "bytes": 1873,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/peer-b.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/peer-c.json",
+      "git_blob_sha": "96d5f1af713350a649c2b590b509b7045e7f15af",
+      "sha256": "77d18db89607454fb66a926795aaf1c6f27b9c74e0693ae3a722f7fcdb405c88",
+      "bytes": 1899,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/peer-c.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/relay-stats.json",
+      "git_blob_sha": "c5e3c7d71a320e4bc52a8c1f5b419499306a95dc",
+      "sha256": "09808fa1eb678ee9a617c78d7a6965d7f49c967ff09fbbf544ca928c4c3ae568",
+      "bytes": 224,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/relay-stats.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/summary.json",
+      "git_blob_sha": "3151ea94439c442cf97556a472ddb5ccc84a9f91",
+      "sha256": "186382a4ae258f872613a98fd74e32bd0ebd8dbcef1b9a420fe772080c012948",
+      "bytes": 3384,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/summary.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/README.md",
+      "git_blob_sha": "d04eaa3069324e543dcfa6fad318b8265b0b5143",
+      "sha256": "25802c1690d65c6db344f369a1824d649064a2e7345f9312fd1ad757363e5f95",
+      "bytes": 1859,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/README.md"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/mac-installed-invite-journey.json",
+      "git_blob_sha": "eff95307326dec2bd43f2adadc5eb67ccdf245f3",
+      "sha256": "84b803ae89528f019fe87eb1a464003cd4a8d6624b45e73f3fd38ee3c29d1017",
+      "bytes": 1758,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/mac-installed-invite-journey.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/mac-installed-mesh-journey.json",
+      "git_blob_sha": "f1dcb9219559259c0c9b2e757827ecbc08ff178a",
+      "sha256": "abcbcabeb577e5e6b8354ed392bb7f1be36694f790699fec326ac5a123b0513a",
+      "bytes": 4094,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/mac-installed-mesh-journey.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/mac-installed-smoke.json",
+      "git_blob_sha": "f9d436dc18c9e46848282c834d43d1295227aa40",
+      "sha256": "4c686b09ea21a5057a7ec3f5f0f94439787b7c27c7e3401e29a4f63ab888a1ee",
+      "bytes": 3990,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/mac-installed-smoke.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/artifact.json",
+      "git_blob_sha": "4ba8dafe862ad58ab4127113040cc1586a31ce33",
+      "sha256": "578019f23bc9c656a715881fac4ae9645ab1195f1cbf3bfd105fd6e046124778",
+      "bytes": 296,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/artifact.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/invite-journey.json",
+      "git_blob_sha": "bc6d034a920e7aa5d051935ec9c8a5378496a88d",
+      "sha256": "59f636889e680f281ecaa901d142dcff85dd4141aade1dc62c11c017cf9fb43d",
+      "bytes": 1614,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/invite-journey.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/lifecycle-late.json",
+      "git_blob_sha": "b20fa8710eef4ea7c3f7992bbba39ecd5a2e4d7e",
+      "sha256": "6938d86ed58280cea63c27c16554104ab9438492a99650e2b460cc79231d5561",
+      "bytes": 1128,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/lifecycle-late.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/lifecycle-never.json",
+      "git_blob_sha": "f926fadc4658d835e3a3f08c40a6b6bf8daceaed",
+      "sha256": "f99fec62a37dac281f55f6483b1665bcd43bf7dbfe7c5a3d2e554baf0deaa742",
+      "bytes": 1387,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/lifecycle-never.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/qualification.json",
+      "git_blob_sha": "030f6366d9115e71bf98ffd7e3e446dbd79afa1f",
+      "sha256": "6f40b2c9c539ece0dc6ba3ff163688b1e04f6a5fab14521a039cc9c3548853ba",
+      "bytes": 208,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/qualification.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/smoke-isolated.json",
+      "git_blob_sha": "795aa595d635b33714f8934d5745b671c2280a41",
+      "sha256": "9d223ac828bca04c2e641ae1da2043b0fd8f11aff5c4315547523b5ad8a4b55d",
+      "bytes": 3928,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/smoke-isolated.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/smoke-os-data.json",
+      "git_blob_sha": "41d467be07f9e57aca405eabc5527171257b7060",
+      "sha256": "6008b358729f06197d73d505726040d29a645dc1a45383819709de934e1415d4",
+      "bytes": 3943,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/docs/reviews/evidence/2026-11-28/friend-9/windows-run-46124422768/smoke-os-data.json"
+    },
+    {
+      "path": "package.json",
+      "git_blob_sha": "0cf18638a48a8c33a449dd3050e40e4192af832c",
+      "sha256": "27a5c89631b98bdc7ee4d6b7aad468796db521d5f1fa71b6a74ee16cb28b126e",
+      "bytes": 2301,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/package.json"
+    },
+    {
+      "path": "tests/hapa/relay-witness-aggregate.test.js",
+      "git_blob_sha": "032d29f49f515ab4e4a51d8216a27e89d3d7c21d",
+      "sha256": "469bf35ec6db398b297317e2ad1d02ceedb6fa8ca8622bfe85cfd6a50ede11fe",
+      "bytes": 4042,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/tests/hapa/relay-witness-aggregate.test.js"
+    },
+    {
+      "path": "tools/hapa/relay-nat-witness.sh",
+      "git_blob_sha": "f790795b3c7b3d5e21c1739973334e9f2f041275",
+      "sha256": "a8362e4e2c0f0ce98d07ab7ecfcfe9be864dcb5641d6373dba9aa0e395a2cf90",
+      "bytes": 5091,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/tools/hapa/relay-nat-witness.sh"
+    },
+    {
+      "path": "tools/hapa/relay-netns-witness.sh",
+      "git_blob_sha": "3958768f775905c4a47ade57013c6afe8aa3bfb8",
+      "sha256": "de7c8cf0c56889dda69fd1909328ad808d0101be38b35c651d707784f49a4294",
+      "bytes": 5513,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/tools/hapa/relay-netns-witness.sh"
+    },
+    {
+      "path": "tools/hapa/relay-witness-aggregate.mjs",
+      "git_blob_sha": "1bff43972fad194f490db4ff32907a9373b6fd5f",
+      "sha256": "c798698c9f74c55118c00c52dcda92b7d0f9134e5f0b3408d0b150a55e1aeb6e",
+      "bytes": 5390,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/tools/hapa/relay-witness-aggregate.mjs"
+    },
+    {
+      "path": "tools/hapa/relay-witness-peer.mjs",
+      "git_blob_sha": "9a7f04ea1e01d9d56552a378052436335f6fefa1",
+      "sha256": "935e97f4a0e46300e31466936eb39cc0710cd242994fb41d95cab3d2dbfeb6a3",
+      "bytes": 4189,
+      "verified_against_pinned_tree": true,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/29c7c1d466f94b5534fce1634f775a4df944a93f/tools/hapa/relay-witness-peer.mjs"
+    }
+  ]
+}

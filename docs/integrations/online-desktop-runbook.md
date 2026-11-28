@@ -1,17 +1,17 @@
 # Hapa Versus desktop and online play: install, test and operate
 
-**Date:** 25 November 2026. **Applies to:** the Assignment 16 candidate (see [Response 16](../reviews/2026-11-25-p2p-implementation-response-16.md)).
+**Started:** 25 November 2026. **Current status updated:** 28 November 2026 for friend.9; later sections explicitly marked historical retain their original scope.
 This runbook covers what exists, how to run it, and the steps still owned by an operator or by CJ. It does not claim that any public service is running.
 
-**Current review (27 November 2026):** [Review 22](../reviews/2026-11-27-runtime-and-roster-review-22.md), source `164aa5d`, assesses [Response 23](../reviews/2026-11-27-implementation-response-23.md) / friend.6. [Assignment 24](../reviews/2026-11-27-next-agent-assignment-24.md) is answered by [Response 24](../reviews/2026-11-27-implementation-response-24.md) / friend.7 (readiness-aware attachment, one Avatar choice, exact relay report set; awaiting review). Previous activation/provider fixes, controlled relay carriage and primary Windows evidence are credited.
+**Current review:** [Review 23](../reviews/2026-11-28-friend-test-and-avatar-review-23.md), pinned main `29c7c1d`, friend.9 source `977f149`, closes V22-01–03 from [Response 24](../reviews/2026-11-27-implementation-response-24.md). [Assignment 25](../reviews/2026-11-28-next-agent-assignment-25.md) prioritizes the existing candidate's human handoff. Optional renderer cleanup and owner/music wording remain nonblocking; prior activation/provider corrections and controlled relay carriage stay credited.
 
 ## Current delivery target — the simple friend test
 
 [Addendum 09](../requirements/2026-11-26-human-feedback-addendum-09.md) retains the target: obtain the matching bundled app, open it normally, choose Play online, Challenge/Accept or exchange an invitation, complete a human game and quit/reopen with matching results. No terminal, provider JSON, private engine checkout, owner app or CJ-maintained VPS belongs in the normal friend flow.
 
-**Friend's platform: Windows PC, confirmed.** [Friend.9](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.9) (friend.7 plus local Falka, Leo and Thor; gated Windows run [46124422768](https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46124422768) passed all six reports) supersedes friend.8 and [friend.7](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.7), which contains Mac arm64/Windows x64 builds from clean `7efa3b9050cc4061e521c1e202da14b65ab35e9c`. Gated run [46118198321](https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46118198321) passed all six required reports on the released zip (artifact hash, isolated and `%APPDATA%` launches/reopen, same-VM invitation/result, late/never-ready startup). The CLI download carries no Mark-of-the-Web. (Friend.6's run 46102314253 was verified by Review 22.) Ordinary consumer prompts/download behavior and two-home Mac-to-Windows play remain unverified. See [downloads](../../README.md#download-and-play), [player sheet](../player/play-with-a-friend.md) and [evidence](../reviews/evidence/2026-11-27/review-22/README.md).
+**Friend's platform: Windows PC, confirmed.** [Friend.9](https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.9) provides Mac arm64/Windows x64 builds from clean `977f14944cdb978a0ab456fc9878ddae4e72f78e`. Primary Windows run [46124422768](https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46124422768), job 140915741824, passed all six required reports on the released zip: artifact hash, isolated and OS-data launches/reopen, same-VM invitation/result, and late/never-ready startup. Submitted Mac installed smoke, invitation/reopen and Falka/Leo/Thor reports identify the same release. Consumer security prompts and a real two-home Mac-to-Windows game remain unobserved. See [downloads](../../README.md#download-and-play), [player sheet](../player/play-with-a-friend.md), [evidence form](../player/two-network-evidence-form.md) and [Review 23 evidence](../reviews/evidence/2026-11-28/review-23/README.md).
 
-Candidate prepared, platform-executed, dependable friend-test recommendation, actual two-network success and CJ acceptance are different statuses. Review 22 required the connection-readiness correction and its focused qualification; Response 24 reports both done with friend.7 (awaiting review), and the two-home human test is next. Continue authorized implementation and concrete qualification; do not make unrelated optional Avatar or archive work a blanket prerequisite for exploratory human networking. Historical steps below remain useful where compatible with the actual artifact.
+**Ready to attempt the bounded human test.** Keep prepared candidate, platform qualification, actual consumer launch, WAN game and CJ acceptance distinct. Use the existing friend.9 packages now; record prompts, both connection reports, game outcome and persistence after reopening. If the session fails, its observed failing stage chooses the next repair. Optional Avatar cleanup/online hosting or archive work does not delay this two-human test. Historical steps below remain useful where compatible with the actual artifact.
 
 ## 1. Player install (macOS Apple Silicon)
 
@@ -43,7 +43,7 @@ Nothing else is required: no Git, Node, npm, terminal, Vite server, engine crede
 
 ### Optional Hapa owners
 
-The game needs no owner. To connect your own Music Library, Harbor (Red's renderer and voice) or the Harness, write `owners.json` in the user-data folder:
+Human-versus-human play and the legal local bot need no owner app. Optional figures, voice, model assistance and music each depend on their own configured owner. To connect Music Library, Harbor (Red's renderer and voice), Mesh Avatar (Falka/Leo/Thor) or the Harness, write `owners.json` in the user-data folder:
 
 ```json
 { "harbor": { "url": "http://127.0.0.1:8862", "tokenFile": "/absolute/path/to/harbor/api-token" },
@@ -52,7 +52,7 @@ The game needs no owner. To connect your own Music Library, Harbor (Red's render
   "music": { "cj": { "url": "http://127.0.0.1:8811", "tokenFile": "/absolute/path/to/api-token" } } }
 ```
 
-`mesh` is Mesh Avatar's player node (`cd ~/hapa-mesh-avatar && node server/api.mjs`, or `npm run owners -- --start` from this repository): it serves Falka's, Leo's and Thor's figures, read-only and without a token. Only `/mesh/apps/player/falka|leo|thor/…` is forwarded.
+`mesh` is Mesh Avatar's player node (`cd ~/hapa-mesh-avatar && node server/api.mjs`, or `npm run owners -- --start` from this repository): it serves Falka's, Leo's and Thor's figures, read-only and without a token. Only `/mesh/apps/player/falka|leo|thor/…` is forwarded. These local players currently use captions and the heuristic controller; they have no voice or Avatar music library. Music requires its own configured, available library. The runtime checks package identity fields at binding, not package digests. Online Avatar hosting remains disabled/unbuilt; see [current optional scope](optional-avatar-players-v1.md).
 
 Only loopback `http://` origins are accepted; tokens are read by the desktop host and never reach the page. Unconfigured owners answer *not configured* and their features stay unavailable.
 

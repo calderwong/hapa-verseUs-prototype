@@ -1,0 +1,81 @@
+{
+  "review": "Review 23",
+  "date": "2026-11-28",
+  "timezone": "America/Los_Angeles",
+  "surface": "Independent live local Chrome browser preview",
+  "url": "http://127.0.0.1:5199/versus.html",
+  "viewport": {
+    "width": 2223,
+    "height": 1016
+  },
+  "revision": {
+    "verified": false,
+    "note": "The inspected UI did not expose a verified code revision. These fresh UI observations are separate from the pinned source and released-package reports."
+  },
+  "observations": [
+    {
+      "id": "UI23-01",
+      "result": "observed",
+      "detail": "On entry Red was in the roster and selected; Falka/Mimi, Leo and Thor were not in the roster; No figure was explicit; all Available online controls were disabled."
+    },
+    {
+      "id": "UI23-02",
+      "result": "pass",
+      "detail": "Unchecking Red selected No figure and disabled Red selection. Reload retained No figure. Start match opened a figure-free local table; Ready advanced Tick 1 through resolving to Tick 2."
+    },
+    {
+      "id": "UI23-03",
+      "result": "observed",
+      "detail": "Falka, Leo and Thor were individually enabled and selected through the actual setup controls. All three visibly rendered at the opponent seat with their own nameplate. Leo and Thor advanced Tick 1 to Tick 2 with Ready."
+    },
+    {
+      "id": "UI23-04",
+      "result": "observed",
+      "detail": "Falka Who is playing identified avatar-8, falka-human-assisted 2026-11-17.1, human-connected-forward-mesh-r1, heuristic-bot/0.2.0 and captions-only/no voice. It incorrectly said via Harbor."
+    },
+    {
+      "id": "UI23-05",
+      "result": "observed",
+      "detail": "Red was restored and visibly rendered at the table. Who is playing identified red-reaper, red-pose-art 2026-11-02.1 and red-pose-art-speech-v2-idle-v2 via Harbor; the details reported its Voice Card. No independent audio-quality claim."
+    },
+    {
+      "id": "UI23-06",
+      "result": "observed",
+      "detail": "At this viewport setup rows, Details, Start match, table/nameplate and Ready were usable. Short rendering/turn observations only: no animation performance benchmark, long-session soak or human aesthetic acceptance."
+    },
+    {
+      "id": "UI23-07",
+      "result": "observed",
+      "detail": "All five radio controls exposed the same accessible name Play this game, and the four roster checkboxes the same name In my roster. Include Avatar-specific accessible names in the small label follow-up."
+    },
+    {
+      "id": "UI23-08",
+      "result": "observed",
+      "detail": "Error-log reads returned [] at the two inspected points (after Thor rendering and after the final setup reload). This is not an assertion that every possible journey is error-free."
+    }
+  ],
+  "restoration": {
+    "redInRoster": true,
+    "redSelected": true,
+    "falkaInRoster": false,
+    "leoInRoster": false,
+    "thorInRoster": false,
+    "finalState": "Reloaded setup; live tab retained for CJ to inspect."
+  },
+  "screenshots": {
+    "published": [
+      "setup.jpg"
+    ],
+    "privateOwnerArtwork": "Inspected live, not published to the public repository."
+  },
+  "notPerformed": [
+    "Installed desktop execution by the reviewer",
+    "Verified local-preview commit identity",
+    "Two-home human game",
+    "Intentional live-owner outage or delayed-load fault injection",
+    "FPS benchmark or long-session animation test",
+    "Online Avatar hosting",
+    "CJ acceptance"
+  ]
+}
+

@@ -2,7 +2,7 @@
 
 The target is two people opening bundled apps on two computers and two internet connections.
 
-**Candidate status:** friend.9 — friend.7 ([Response 24](../reviews/2026-11-27-implementation-response-24.md)) plus Falka, Leo and Thor as local opponents — carries the connection-readiness correction [Review 22](../reviews/2026-11-27-runtime-and-roster-review-22.md) asked for; independent review is pending. It passed a gated Windows runner check (native startup, retained identity, a same-machine invitation/result journey) and the Mac installed checks. This is the build for the two-home test: CJ on the Mac, the friend on Windows, each at home. Normal consumer downloaded launch and the separate-network human game have not happened yet — record them on the [evidence form](two-network-evidence-form.md).
+**Candidate status:** **friend.9 is ready to try with your friend**, following [Review 23](../reviews/2026-11-28-friend-test-and-avatar-review-23.md). The intended test is CJ on Mac and the friend on Windows, each at home on their own internet connection. The released packages have native startup, retained-identity and same-machine invitation/result evidence. Actual consumer launch/security prompts and the two-home human game have not yet been observed — record them on the [evidence form](two-network-evidence-form.md). No extra Hapa app is needed for this human-versus-human test.
 
 **Current downloads:** see [Download and play](../../README.md#download-and-play) on the repository's front page. Each file names the computer it is for: **Windows PC (64-bit)** or **Mac with Apple Silicon** (M1 or newer). The intended Windows/Mac interoperability still needs a witnessed two-computer test.
 

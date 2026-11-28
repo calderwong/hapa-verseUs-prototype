@@ -1,0 +1,59 @@
+# Review 23: primary Windows job log excerpts
+Source: https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46124422768/job/140915741824
+Full decoded log SHA-256: ba2c1d2fffef1d4ac9b091468998d24c92f5bfb4c05607c75d06fa047181c00e
+Only selected actual log lines; full original retained locally.
+
+Lines 136-143:
+136: 2026-11-28T08:09:09.5273802Z {
+137: 2026-11-28T08:09:09.5274096Z   "tag": "v0.1.0-friend.9",
+138: 2026-11-28T08:09:09.5274583Z   "expected": "83b3edb93f1b0ac154b66da08f6b6b1d38edb24a4a920f3876eb86eb7f1f2191",
+139: 2026-11-28T08:09:09.5275163Z   "asset": "Hapa-Versus-0.1.0-friend9-Windows-x64.zip",
+140: 2026-11-28T08:09:09.5275501Z   "match": true,
+141: 2026-11-28T08:09:09.5275950Z   "sha256": "83b3edb93f1b0ac154b66da08f6b6b1d38edb24a4a920f3876eb86eb7f1f2191",
+142: 2026-11-28T08:09:09.5276440Z   "bytes": 167162718
+143: 2026-11-28T08:09:09.5276779Z }
+
+Lines 233-239:
+233: 2026-11-28T08:09:30.7047619Z     "build": {
+234: 2026-11-28T08:09:30.7049234Z      "source": "977f14944cdb978a0ab456fc9878ddae4e72f78e",
+235: 2026-11-28T08:09:30.7050738Z      "dirty": false,
+236: 2026-11-28T08:09:30.7052607Z      "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+237: 2026-11-28T08:09:30.7054012Z      "builtAt": "2026-11-28T08:06:30.381Z",
+238: 2026-11-28T08:09:30.7055234Z      "target": "win32-x64"
+239: 2026-11-28T08:09:30.7056901Z     },
+
+Lines 638-650:
+638: 2026-11-28T08:12:07.8122448Z  "reopen": {
+639: 2026-11-28T08:12:07.8123573Z   "hostSameIdentity": true,
+640: 2026-11-28T08:12:07.8124841Z   "joinerSameIdentity": true,
+641: 2026-11-28T08:12:07.8125987Z   "hostRecorded": [
+642: 2026-11-28T08:12:07.8127038Z    "recorded"
+643: 2026-11-28T08:12:07.8128150Z   ],
+644: 2026-11-28T08:12:07.8129322Z   "joinerRecorded": [
+645: 2026-11-28T08:12:07.8130495Z    "recorded"
+646: 2026-11-28T08:12:07.8131634Z   ]
+647: 2026-11-28T08:12:07.8133155Z  },
+648: 2026-11-28T08:12:07.8134545Z  "sameResult": true,
+649: 2026-11-28T08:12:07.8136003Z  "ok": true
+650: 2026-11-28T08:12:07.8137278Z }
+
+Lines 691-701:
+691: 2026-11-28T08:12:32.7623174Z {
+692: 2026-11-28T08:12:32.7623373Z   "required": [
+693: 2026-11-28T08:12:32.7623820Z     "artifact.json",
+694: 2026-11-28T08:12:32.7624422Z     "smoke-isolated.json",
+695: 2026-11-28T08:12:32.7624712Z     "smoke-os-data.json",
+696: 2026-11-28T08:12:32.7624987Z     "invite-journey.json",
+697: 2026-11-28T08:12:32.7625242Z     "lifecycle-late.json",
+698: 2026-11-28T08:12:32.7625491Z     "lifecycle-never.json"
+699: 2026-11-28T08:12:32.7625727Z   ],
+700: 2026-11-28T08:12:32.7625916Z   "failures": []
+701: 2026-11-28T08:12:32.7626123Z }
+
+Lines 735-740:
+735: 2026-11-28T08:12:35.4105469Z Finished uploading artifact content to blob storage!
+736: 2026-11-28T08:12:35.4106195Z SHA256 digest of uploaded artifact zip is 29616d171e6363412a5bc092a2a9d2972a341441a1e45de1b763f7ac5556458f
+737: 2026-11-28T08:12:35.4108061Z Finalizing artifact upload
+738: 2026-11-28T08:12:35.8080709Z Artifact windows-smoke-evidence.zip successfully finalized. Artifact ID 15255511667
+739: 2026-11-28T08:12:35.8081657Z Artifact windows-smoke-evidence has been successfully uploaded! Final size is 5439787 bytes. Artifact ID is 15255511667
+740: 2026-11-28T08:12:35.8090668Z Artifact download URL: https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46124422768/artifacts/15255511667
