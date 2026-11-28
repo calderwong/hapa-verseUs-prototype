@@ -7,7 +7,7 @@
  * late work.
  */
 import { h } from './dom.js';
-import { shortName } from './roster.js';
+import { shortName, soundOf } from './roster.js';
 import { AvatarOpponent } from './avatar-opponent.js';
 import { Soundtrack } from './soundtrack.js';
 import { MusicDeck } from './music-deck.js';
@@ -69,9 +69,10 @@ export class Table {
   async start() {
     const epoch = this.epoch;
     // online, only the local listener's own library contributes (no Avatar library, no remote audio)
-    // only Red has an Avatar music library (Red's own); another Avatar brings none, so your library plays
-    const sources = this.o.avatarId === 'red-reaper'
-      ? [{ library: 'red', participant: { seat: this.o.avatarSeat, avatarId: this.o.avatarId, label: 'Red' }, max: 3 }, ...(this.o.songIds?.length ? [{ library: 'cj', songIds: this.o.songIds, participant: { seat: this.o.humanSeat, label: 'You' } }] : [])]
+    // the figure's own music library, if its roster entry has one (only Red's exists); otherwise your library plays
+    const own = soundOf(this.o.avatarId).music;
+    const sources = own
+      ? [{ library: own, participant: { seat: this.o.avatarSeat, avatarId: this.o.avatarId, label: shortName(this.o.avatarId) }, max: 3 }, ...(this.o.songIds?.length ? [{ library: 'cj', songIds: this.o.songIds, participant: { seat: this.o.humanSeat, label: 'You' } }] : [])]
       : [{ library: 'cj', participant: { seat: this.o.humanSeat, label: 'You' }, ...(this.o.songIds?.length ? { songIds: this.o.songIds } : { max: 4 }) }];
     const [, queue] = await Promise.all([this.opponent.attach(), this.music.prepare(sources)]);
     if (epoch !== this.epoch) return;

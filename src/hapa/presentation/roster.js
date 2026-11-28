@@ -26,7 +26,7 @@
  * figure.
  */
 export const ROSTER = [
-  { id: 'red-reaper', label: 'Red', aliases: [], species: 'human', owner: 'Harbor', package: { id: 'red-pose-art', revision: '2026-11-02.1', source: 'Mesh Avatar pin a6fc511' }, renderer: '2D mesh over pose art', served: 'harbor', defaultOn: true },
+  { id: 'red-reaper', label: 'Red', aliases: [], species: 'human', owner: 'Harbor', package: { id: 'red-pose-art', revision: '2026-11-02.1', source: 'Mesh Avatar pin a6fc511' }, renderer: '2D mesh over pose art', served: 'harbor', music: 'red', voice: true, defaultOn: true },
   { id: 'avatar-8', label: 'Falka', aliases: ['Mimi'], aliasSource: 'Avatar Builder echo cast registry (user-authorized aliases)', species: 'human', owner: 'Mesh Avatar', package: { id: 'falka-human-assisted', revision: '2026-11-17.1', file: 'falka-package.json' }, renderer: '2D forward mesh (human-connected-forward-mesh-r1), candidate', served: 'mesh', player: 'falka' },
   { id: 'avatar-46', label: 'Leo / The Dig-Lamp', aliases: [], species: 'dog', owner: 'Mesh Avatar', package: { id: 'leo-canine-assisted', revision: '2026-11-17.1', file: 'leo-package.json' }, renderer: '2D forward mesh (canine-forward-mesh-r1), candidate', served: 'mesh', player: 'leo' },
   { id: 'avatar-39', label: 'Thor / The Oranginal', aliases: [], species: 'cat', owner: 'Mesh Avatar', package: { id: 'thor-feline-assisted', revision: '2026-11-17.1', file: 'thor-package.json' }, renderer: '2D forward mesh (feline-forward-mesh-r1), candidate', served: 'mesh', player: 'thor' },
@@ -70,6 +70,17 @@ export function selectAvatar(id, enabled) {
 export function resolveChoice(table, enabled) {
   const r = selectAvatar(table?.avatarId ?? null, enabled);
   return r.ok ? { avatarId: r.avatarId, changed: false } : { avatarId: null, changed: true, why: r.why };
+}
+
+/**
+ * What the bot seat's figure brings to the table's sound, from its roster entry (Review 23 V23-02):
+ * `music` names the Avatar's own music library (only Red's exists), `voice` whether its owner offers a
+ * voice. No figure brings neither. Used for the table's music sources and the setup wording alike.
+ * @returns {{ music: string|null, voice: boolean, name: string|null }}
+ */
+export function soundOf(id) {
+  const e = entryOf(id);
+  return { music: e?.music ?? null, voice: !!e?.voice, name: e ? shortName(id) : null };
 }
 
 /** The roster entry for an Avatar id (or undefined). */

@@ -36,6 +36,8 @@ const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(pre
 export const OPPONENT_AVATARS = { 'red-reaper': { label: 'Red', voice: 'Red · natural' }, 'avatar-8': { label: 'Falka', mesh: true }, 'avatar-46': { label: 'Leo', mesh: true }, 'avatar-39': { label: 'Thor', mesh: true } };
 /** Whether this Avatar's figure comes from Mesh Avatar's player node (Falka, Leo, Thor) rather than Harbor. */
 const isMesh = (id) => !!OPPONENT_AVATARS[id]?.mesh && entryOf(id)?.served === 'mesh';
+/** Display names for the renderer owners a binding can name (Review 23 V23-02: say the actual owner). */
+const OWNER_NAMES = { 'hapa-mesh-avatar': "Mesh Avatar's player node", 'hapa-harbor-storefront': 'Harbor' };
 
 /** Local, per-browser social settings (never game state). */
 function loadSettings() {
@@ -110,34 +112,43 @@ export class AvatarOpponent extends EventTarget {
   async _attach(gen) {
     const epoch = this.epoch;
     const live = () => !this.disposed && epoch === this.epoch && gen === this._attachGen;
+    // this attempt owns its owner requests and its still-loading renderer, so dispose can release
+    // them at once instead of waiting for the load to finish or time out (Review 23 V23-01 / N25-02)
+    const attempt = this._attempt = { abort: new AbortController(), player: null };
+    attempt.cancelled = new Promise((_, reject) => { attempt.cancel = reject; });
+    attempt.cancelled.catch(() => {}); // observed through the race below, or not at all
+    const { signal } = attempt.abort;
+    const step = (p) => Promise.race([p, attempt.cancelled]); // every wait ends when the attempt is released
     let player = null;
     try {
       if (isMesh(this.avatarId)) {
         // Mesh Avatar serves the figure (read-only): bind exactly the package the roster names
         const e = entryOf(this.avatarId);
-        const pkg = await this._get(`/mesh/apps/player/${encodeURIComponent(e.player)}/${encodeURIComponent(e.package.file)}`);
+        const pkg = await step(this._get(`/mesh/apps/player/${encodeURIComponent(e.player)}/${encodeURIComponent(e.package.file)}`, signal));
         if (pkg.avatarId !== this.avatarId || pkg.id !== e.package.id || pkg.revision !== e.package.revision) throw Error(`Mesh Avatar serves ${pkg.id} ${pkg.revision} for ${pkg.avatarId}, not ${e.package.id} ${e.package.revision}`);
         this.binding.avatar.identityRevision = `${pkg.id}@${pkg.revision}`;
         this.binding.renderer = { owner: 'hapa-mesh-avatar', packageId: pkg.id, revision: pkg.revision, renderer: pkg.renderer, status: pkg.status, integrity: 'package identity checked at bind' };
         this.binding.voice = null; this.voiceError = `${this.binding.avatar.label} has no voice yet`;
       } else {
-        const [caps, performer] = await Promise.all([this._get('/capabilities'), this._get('/v1/performer')]);
+        const [caps, performer] = await step(Promise.all([this._get('/capabilities', signal), this._get('/v1/performer', signal)]));
         if (performer.avatarId !== this.avatarId) throw Error(`Harbor's admitted Avatar is ${performer.avatarId}, not ${this.avatarId}`);
         if (!caps.avatarPackage?.available) throw Error(caps.avatarPackage?.reason || 'renderer package unavailable');
         if (!caps.operations?.includes('utterance')) throw Error('Harbor has no utterance operation');
         this.binding.avatar.identityRevision = `${performer.puppetRevision}#${performer.revision}`;
         this.binding.renderer = { owner: 'hapa-harbor-storefront', packageId: caps.avatarPackage.id, revision: caps.avatarPackage.revision, renderer: caps.avatarPackage.renderer, integrity: caps.avatarPackage.integrity };
         try {
-          const voices = await this._get(`/v1/cms/voices/${encodeURIComponent(this.avatarId)}`);
+          const voices = await step(this._get(`/v1/cms/voices/${encodeURIComponent(this.avatarId)}`, signal));
           const want = OPPONENT_AVATARS[this.avatarId]?.voice;
           const card = (voices.cards || []).find((c) => c.title === want) ?? voices.cards?.[0];
           this.binding.voice = card && voices.provider?.ready ? { cardId: card.id, label: card.title, provider: 'omnivoice', owner: 'hapa-avatar-builder' } : null;
         } catch (e) { this.binding.voice = null; this.voiceError = e.message; }
       }
       if (!live()) return false;
-      player = await this._makePlayer();
-      await player.load();
-      if (!live() || this.player) { player.dispose(); return !!this.player; } // superseded while loading
+      player = attempt.player = await step(this._makePlayer());
+      if (!live()) { if (!attempt.released) player.dispose(); return false; } // released while the renderer module arrived
+      // a dispose during the load settles this race at once, whatever the renderer does with its own load
+      await step(player.load());
+      if (!live() || this.player) { if (!attempt.released) player.dispose(); return !!this.player; } // superseded while loading
       this.player = player;
       this.bindingError = null;
       this.player.reduced = reducedMotion();
@@ -148,18 +159,31 @@ export class AvatarOpponent extends EventTarget {
       this._render();
       return true;
     } catch (e) {
-      try { if (player && player !== this.player) player.dispose(); } catch { /* released */ } // a failed load releases its renderer
+      try { if (player && player !== this.player && !attempt.released) player.dispose(); } catch { /* released */ } // a failed load releases its renderer (once: a cancel already did)
       if (!live()) return false;
       this.binding.status = 'text-only';
       this.bindingError = e.message;
       console.warn(`[versus] Avatar opponent in text-only mode: ${e.message}`);
       this._render();
       return false;
+    } finally {
+      if (this._attempt === attempt) this._attempt = null;
     }
   }
 
-  async _get(url) {
-    const r = await fetch(url, { headers: { 'Content-Type': 'application/json' } });
+  /** Release the attempt in progress: abort its owner requests, dispose its loading renderer, settle it. */
+  _cancelAttempt() {
+    const a = this._attempt;
+    if (!a) return;
+    this._attempt = null;
+    a.released = true;
+    a.abort.abort();
+    try { a.player?.dispose(); } catch { /* already released */ }
+    a.cancel(Object.assign(Error('the Avatar opponent was released while its renderer was loading'), { code: 'released' }));
+  }
+
+  async _get(url, signal) {
+    const r = await fetch(url, { signal, headers: { 'Content-Type': 'application/json' } });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw Error(j.error || `${url} ${r.status}`);
     return j;
@@ -303,6 +327,7 @@ export class AvatarOpponent extends EventTarget {
     this.stop({ keepCaption: false });
     this.disposed = true;
     this.epoch = -1;
+    this._cancelAttempt();
     this.player?.dispose();
     this.player = null;
     this.el.remove();
@@ -380,7 +405,7 @@ export class AvatarOpponent extends EventTarget {
     u.captions.checked = s.captions;
     const detail = [
       `${b.avatar.label} (${b.avatar.id}) plays seat ${b.seat}. Moves: ${this.controller.label}.`,
-      b.renderer && this.player ? `Renderer ${b.renderer.packageId} ${b.renderer.revision} (${b.renderer.renderer}) via Harbor${location.protocol === 'app:' ? ' (desktop renderer frame)' : ''}.` : `Renderer unavailable${this.bindingError ? `: ${this.bindingError}` : ''}; the seat shows an empty chair. ${this.nextRetry ? `Trying again ${this.nextRetry}.` : ''} (attempt ${this.attempts ?? 0})`,
+      b.renderer && this.player ? `Renderer ${b.renderer.packageId} ${b.renderer.revision} (${b.renderer.renderer}) via ${OWNER_NAMES[b.renderer.owner] ?? b.renderer.owner}${location.protocol === 'app:' ? ' (desktop renderer frame)' : ''}.` : `Renderer unavailable${this.bindingError ? `: ${this.bindingError}` : ''}; the seat shows an empty chair. ${this.nextRetry ? `Trying again ${this.nextRetry}.` : ''} (attempt ${this.attempts ?? 0})`,
       b.voice ? `Voice: ${b.voice.label} (Builder Voice Card, ${b.voice.provider}).` : `Voice unavailable${this.voiceError ? `: ${this.voiceError}` : ''}; captions only.`,
       this.lastVoice ? `Last voice: prepared in ${(this.lastVoice.preparationMs / 1000).toFixed(1)} s${this.lastVoice.playbackStartedAt ? ', played' : ''}.` : null,
       this.voiceError && b.voice ? `Last voice problem: ${this.voiceError}.` : null,

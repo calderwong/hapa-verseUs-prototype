@@ -37,7 +37,7 @@ import { standingOf, fmtBand, bandY } from './terrain-view.js';
 import { snapshot, poseAt, timeline, eventsBeforeMovement } from './playback.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
-import { ROSTER, loadRoster, saveRoster, selectAvatar, resolveChoice, statusOf } from './roster.js';
+import { ROSTER, loadRoster, saveRoster, selectAvatar, resolveChoice, statusOf, soundOf } from './roster.js';
 import { VersusSound } from './sound.js';
 import { Table, spokenParty } from './table.js';
 import { buildScenery } from './scenery.js';
@@ -334,23 +334,24 @@ export class VersusApp {
       note.textContent = r.ok ? '' : `Not selected — ${r.why}.`;
       drawPlayers();
       checkOwner();
+      drawMusic();
     };
     const players = h('div', { class: 'roster', role: 'radiogroup', 'aria-label': 'Who sits in the bot seat' });
     const drawPlayers = () => players.replaceChildren(
       h('div', { class: 'small' }, h('b', {}, 'Players'), ' — who sits in the bot seat: its figure, voice, reactions and music. The moves come from the controller below; the figure is presentation only.'),
       h('div', { class: `roster-row${t.avatarId == null ? ' chosen' : ''}` },
-        h('label', { class: 'inline small' }, h('input', { type: 'radio', name: 'roster-choice', value: '', checked: t.avatarId == null, onchange: () => choose(null) }), ' Play this game'),
+        h('label', { class: 'inline small' }, h('input', { type: 'radio', name: 'roster-choice', value: '', 'aria-label': 'Play this game with no figure', checked: t.avatarId == null, onchange: () => choose(null) }), ' Play this game'),
         h('span', { class: 'small' }, h('b', {}, 'No figure'), ' · the bot plays without an Avatar')),
       ...ROSTER.map((e) => {
-        const chosen = t.avatarId === e.id, can = selectAvatar(e.id, enabled);
+        const chosen = t.avatarId === e.id, can = selectAvatar(e.id, enabled), who = e.label.split(' / ')[0];
         return h('div', { class: `roster-row${chosen ? ' chosen' : ''}`, 'data-avatar': e.id },
-          h('label', { class: 'inline small', title: can.ok ? '' : can.why }, h('input', { type: 'radio', name: 'roster-choice', value: e.id, checked: chosen, disabled: !can.ok, onchange: () => choose(e.id) }), ' Play this game'),
+          h('label', { class: 'inline small', title: can.ok ? '' : can.why }, h('input', { type: 'radio', name: 'roster-choice', value: e.id, 'aria-label': `Play this game with ${who}`, checked: chosen, disabled: !can.ok, onchange: () => choose(e.id) }), ' Play this game'),
           h('span', { class: 'small' }, h('b', {}, e.label), e.aliases.length ? ` (also ${e.aliases.join(', ')})` : '', ` · ${e.species}`),
           h('span', { class: 'dim small' }, ` · ${statusOf(e, enabled)}`),
           h('div', { class: 'roster-ctl' },
-          h('label', { class: 'inline small', title: 'Keep this Avatar in your local roster' }, h('input', { type: 'checkbox', checked: enabled[e.id], onchange: (ev) => { enabled[e.id] = ev.target.checked; saveRoster(enabled); if (!ev.target.checked && t.avatarId === e.id) choose(null); else drawPlayers(); } }), ' In my roster'),
-          h('label', { class: 'inline small dim', title: 'Hosting an Avatar player online is not supported yet' }, h('input', { type: 'checkbox', disabled: true }), ' Available online (not yet)'),
-          h('details', { class: 'roster-details small dim' }, h('summary', {}, 'Details'),
+          h('label', { class: 'inline small', title: 'Keep this Avatar in your local roster' }, h('input', { type: 'checkbox', 'aria-label': `${who} in my roster`, checked: enabled[e.id], onchange: (ev) => { enabled[e.id] = ev.target.checked; saveRoster(enabled); if (!ev.target.checked && t.avatarId === e.id) choose(null); else drawPlayers(); } }), ' In my roster'),
+          h('label', { class: 'inline small dim', title: 'Hosting an Avatar player online is not supported yet' }, h('input', { type: 'checkbox', 'aria-label': `${who} available online (not yet)`, disabled: true }), ' Available online (not yet)'),
+          h('details', { class: 'roster-details small dim' }, h('summary', { 'aria-label': `Details for ${who}` }, 'Details'),
             h('div', {}, `Owner: ${e.owner} · package ${e.package.id} ${e.package.revision}${e.package.source ? ` (${e.package.source})` : ''}`),
             h('div', {}, `Renderer: ${e.renderer}`),
             e.aliasSource ? h('div', {}, `Aliases from: ${e.aliasSource}`) : null,
@@ -386,11 +387,18 @@ export class VersusApp {
       }).catch((err) => say(`Red's figure and voice come from Harbor, which is not answering (${err.message}). Red plays as an empty chair with captions until it starts; the match picks it up by itself.${startHint}`));
     };
     checkOwner();
+    // what the chosen figure brings to the music, from its roster capabilities (Review 23 V23-02)
+    const musicNote = h('span', { class: 'dim' });
+    const drawMusic = () => {
+      const s = soundOf(t.avatarId);
+      musicNote.textContent = s.music ? ` ${s.name}'s library alternates with yours.` : s.name ? ` ${s.name} brings no music, so only your library plays.` : ' With no figure, only your library plays.';
+    };
+    drawMusic();
     return h('div', { class: 'table-setup' },
       players,
       ownerNote,
       h('label', { class: 'inline small' }, "The bot seat's moves: ", ctl),
-      h('div', { class: 'small' }, h('b', {}, 'Your tracks (up to 3, alternating with Red\'s): '), chips),
+      h('div', { class: 'small' }, h('b', {}, 'Your tracks (up to 3):'), musicNote, ' ', chips),
       search, results);
   }
 

@@ -107,6 +107,11 @@ export class FramedRedPlayer extends EventTarget {
   unlock() { return this._call('unlock', {}); }
   stop() { this._post({ t: 'stop' }); }
 
+  /**
+   * Release the frame, its listener and every pending call. A load still in progress settles now,
+   * exactly once, as a rejection with `code: 'released'` (Review 23 V23-01): its caller is never left
+   * waiting for a frame that no longer exists, and a late message from that frame is not heard.
+   */
   dispose() {
     if (this.disposed) return;
     this._post({ t: 'dispose' });
@@ -117,5 +122,8 @@ export class FramedRedPlayer extends EventTarget {
     this._calls.clear();
     this.frame?.remove();
     this.frame = null;
+    const l = this._loading;
+    this._loading = null;
+    l?.reject(Object.assign(Error(`${this.name}’s renderer was released while loading`), { code: 'released' }));
   }
 }
