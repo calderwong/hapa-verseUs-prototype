@@ -7,7 +7,7 @@
  * (a friend, a community member, a third-party VPS) may run one; players adopt it as a typed `relay`
  * service (publicKey, optional published endpoint) in their network configuration.
  *
- *   node tools/hapa/relay-serve.mjs [--seed <64-hex seed file>] [--testnet host:port,...] [--port <udp>]
+ *   node tools/hapa/relay-serve.mjs [--seed <64-hex seed file>] [--testnet host:port,...] [--port <udp>] [--public]
  *
  * Prints {"relay": {"publicKey": ...}} once listening. Also importable: `startRelay({ bootstrap })`.
  */
@@ -19,11 +19,14 @@ import b4a from 'b4a';
 import { pathToFileURL } from 'node:url';
 
 /**
- * @param {{ bootstrap?: any[], seed?: Buffer, port?: number }} [o]
+ * @param {{ bootstrap?: any[], seed?: Buffer, port?: number, publicAddress?: boolean }} [o]
  * @returns {Promise<{ publicKey: string, endpoint: () => string|null, close: () => Promise<void>, stats: any }>}
  */
 export async function startRelay(o = {}) {
-  const dht = new DHT({ ...(o.bootstrap ? { bootstrap: o.bootstrap } : {}), ...(o.port ? { port: o.port } : {}) });
+  // publicAddress: the operator states the relay runs on a routable public address, so its DHT starts as
+  // OPEN (not firewalled) — peers behind NATs can then reach it without holepunching. Without it the DHT
+  // detects reachability itself, which takes time and may never conclude in an isolated test network.
+  const dht = new DHT({ ...(o.bootstrap ? { bootstrap: o.bootstrap } : {}), ...(o.port ? { port: o.port } : {}), ...(o.publicAddress ? { firewalled: false, ephemeral: false } : {}) });
   const relay = new RelayServer({ createStream: (opts) => dht.createRawStream({ ...opts, framed: true }) });
   const server = dht.createServer({ shareLocalAddress: false }, (socket) => {
     const session = relay.accept(socket, { id: socket.remotePublicKey });
@@ -47,7 +50,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     seed = Buffer.from(readFileSync(arg('seed'), 'utf8').trim(), 'hex');
   }
   const bootstrap = arg('testnet') ? arg('testnet').split(',').map((hp) => { const [host, port] = hp.split(':'); return { host, port: Number(port) }; }) : undefined;
-  const r = await startRelay({ bootstrap, seed, port: arg('port') ? Number(arg('port')) : undefined });
+  const r = await startRelay({ bootstrap, seed, port: arg('port') ? Number(arg('port')) : undefined, publicAddress: process.argv.includes('--public') });
   console.log(JSON.stringify({ relay: { publicKey: r.publicKey, endpoint: r.endpoint() } }));
   // --stats <file>: what the relay itself observed (sessions, pairings, streams), rewritten every 2 s
   if (arg('stats')) setInterval(() => { try { writeFileSync(arg('stats'), JSON.stringify({ at: new Date().toISOString(), sessions: { ...r.stats.sessions, active: r.stats.sessions.active }, pairings: r.stats.pairings, streams: r.stats.streams })); } catch { /* best effort */ } }, 2000);

@@ -50,7 +50,7 @@ echo '{"peersBehindRandomizedNat":true,"unsolicitedInboundDropped":true,"peerToR
 (cd "$ROOT" && ip netns exec hvd "$NODE" -e "require('hyperdht/testnet')(3, { host: '10.77.5.2' }).then((t) => { console.log(JSON.stringify(t.bootstrap)); setInterval(() => {}, 1e6); })" > "$OUT/testnet.json" 2>"$OUT/testnet.err") &
 for _ in $(seq 1 50); do [ -s "$OUT/testnet.json" ] && break; sleep 0.2; done
 BOOT=$(python3 -c "import json;b=json.load(open('$OUT/testnet.json'))[0];print(f\"{b['host']}:{b['port']}\")")
-ip netns exec hvr "$NODE" "$ROOT/tools/hapa/relay-serve.mjs" --testnet "$BOOT" --port 49740 --stats "$OUT/relay-stats.json" > "$OUT/relay.json" 2>"$OUT/relay.err" &
+ip netns exec hvr "$NODE" "$ROOT/tools/hapa/relay-serve.mjs" --testnet "$BOOT" --port 49740 --public --stats "$OUT/relay-stats.json" > "$OUT/relay.json" 2>"$OUT/relay.err" &
 for _ in $(seq 1 100); do [ -s "$OUT/relay.json" ] && break; sleep 0.2; done
 KEY=$(python3 -c "import json;print(json.load(open('$OUT/relay.json'))['relay']['publicKey'])")
 MODE=single; [ "$STAGE" = 2 ] && MODE=fallback
