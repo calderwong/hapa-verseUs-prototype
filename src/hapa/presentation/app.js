@@ -333,6 +333,7 @@ export class VersusApp {
       t.avatarId = r.avatarId; save();
       note.textContent = r.ok ? '' : `Not selected — ${r.why}.`;
       drawPlayers();
+      checkOwner();
     };
     const players = h('div', { class: 'roster', role: 'radiogroup', 'aria-label': 'Who sits in the bot seat' });
     const drawPlayers = () => players.replaceChildren(
@@ -359,17 +360,32 @@ export class VersusApp {
     t.controller ??= 'heuristic';
     const ctl = h('select', { 'aria-label': "The bot seat's moves", onchange: (e) => { t.controller = e.target.value; save(); } },
       h('option', { value: 'heuristic', selected: t.controller === 'heuristic' }, 'Heuristic bot'),
-      h('option', { value: 'model', selected: t.controller === 'model' }, 'Model-assisted (local model via Harness; heuristic fallback)'));
-    // whether Red's owner answers on this computer, said before the match rather than discovered as an
-    // empty chair (review 18, R18-01); the match itself keeps retrying, so this is information only
+      h('option', { value: 'model', selected: t.controller === 'model' }, 'Model-assisted (Red only: local model via Harness; heuristic fallback)'));
+    // whether the chosen figure's owner answers on this computer, said before the match rather than
+    // discovered as an empty chair (review 18, R18-01); the match keeps retrying, so this is information only
     const ownerNote = h('div', { class: 'small dim owner-note', role: 'status' });
-    fetch('/capabilities').then(async (r) => {
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw Error(j.error || `Harbor ${r.status}`);
-      ownerNote.textContent = j.avatarPackage?.available ? `Red's figure: ${j.avatarPackage.id} ${j.avatarPackage.revision}, ready.` : `Red's figure is unavailable: ${j.avatarPackage?.reason ?? 'no renderer package'}.`;
-    }).catch((e) => {
-      ownerNote.textContent = `Red's figure and voice come from Harbor, which is not answering (${e.message}). Red plays as an empty chair with captions until it starts; the match picks it up by itself.${location.protocol === 'app:' ? ' Configure it in owners.json (see the runbook).' : ' Start the local owners with: npm run owners -- --start'}`;
-    });
+    const startHint = location.protocol === 'app:' ? ' Configure it in owners.json (see the runbook).' : ' Start the local owners with: npm run owners -- --start';
+    let noteGen = 0;
+    const checkOwner = () => {
+      const gen = ++noteGen, e = ROSTER.find((x) => x.id === t.avatarId);
+      const say = (s) => { if (gen === noteGen) ownerNote.textContent = s; };
+      if (!e) { say(''); return; }
+      const name = e.label.split(' / ')[0];
+      if (e.served === 'mesh') {
+        fetch(`/mesh/apps/player/${e.player}/${e.package.file}`).then(async (r) => {
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw Error(j.error || `Mesh Avatar ${r.status}`);
+          say(j.id === e.package.id && j.revision === e.package.revision ? `${name}'s figure: ${j.id} ${j.revision} from Mesh Avatar, ready. ${name} speaks in captions (no voice yet) and brings no music.` : `${name}'s figure is unavailable: Mesh Avatar serves ${j.id} ${j.revision}.`);
+        }).catch((err) => say(`${name}'s figure comes from Mesh Avatar's player node, which is not answering (${err.message}). ${name} plays as an empty chair with captions until it starts; the match picks it up by itself.${startHint}`));
+        return;
+      }
+      fetch('/capabilities').then(async (r) => {
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw Error(j.error || `Harbor ${r.status}`);
+        say(j.avatarPackage?.available ? `Red's figure: ${j.avatarPackage.id} ${j.avatarPackage.revision}, ready.` : `Red's figure is unavailable: ${j.avatarPackage?.reason ?? 'no renderer package'}.`);
+      }).catch((err) => say(`Red's figure and voice come from Harbor, which is not answering (${err.message}). Red plays as an empty chair with captions until it starts; the match picks it up by itself.${startHint}`));
+    };
+    checkOwner();
     return h('div', { class: 'table-setup' },
       players,
       ownerNote,
@@ -520,7 +536,8 @@ export class VersusApp {
   /** The bot seat whose moves a model assists (Milestone C): Red's seat, when chosen at setup. */
   _modelSeat(seats, table, fixture) {
     const bot = ['A', 'B'].filter((s) => seats[s] === 'bot');
-    return !fixture && bot.length === 1 && table?.avatarId && table.controller === 'model' ? bot[0] : null;
+    // the model-assisted controller is bound to Red's identity; another Avatar plays the heuristic bot
+    return !fixture && bot.length === 1 && table?.avatarId === 'red-reaper' && table.controller === 'model' ? bot[0] : null;
   }
 
   /**

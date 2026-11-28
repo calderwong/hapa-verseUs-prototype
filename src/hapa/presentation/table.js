@@ -7,6 +7,7 @@
  * late work.
  */
 import { h } from './dom.js';
+import { shortName } from './roster.js';
 import { AvatarOpponent } from './avatar-opponent.js';
 import { Soundtrack } from './soundtrack.js';
 import { MusicDeck } from './music-deck.js';
@@ -31,7 +32,8 @@ export class Table {
     // the social layer follows the seated figure; music has its own strip (addendum 05 §4.3)
     this.el = h('div', { class: 'table-social' });
     this.musicEl = h('div', { class: 'table-music' });
-    this.hit = h('button', { class: 'opp-hit', tabindex: '-1', 'aria-hidden': 'true', title: 'Talk with Red', onclick: () => this.opponent.toggleConversation() });
+    this.name = o.avatarId ? shortName(o.avatarId) : (o.opponentLabel ?? 'Opponent');
+    this.hit = h('button', { class: 'opp-hit', tabindex: '-1', 'aria-hidden': 'true', title: `Talk with ${this.name}`, onclick: () => this.opponent.toggleConversation() });
     o.world.append(this.hit, this.el, this.musicEl);
     // the social surfaces own their gestures (R11-01): selecting draft text, scrolling the history or
     // dragging a slider never pans, orbits or zooms the board behind them (the inspection view's rule)
@@ -47,7 +49,7 @@ export class Table {
     // a remote human (review 16, R16-07) gets a neutral nameplate: the local music stays, but no Avatar
     // speaks, reacts or plays for a stranger
     this.opponent = o.avatarId ? new AvatarOpponent({ host: this.el, seat: o.avatarSeat, avatarId: o.avatarId, sessionId: o.sessionId, epoch: o.epoch, controller: o.controller }) : new RemoteOpponent({ host: this.el, label: o.opponentLabel ?? 'Opponent' });
-    this.seated = o.scene && o.avatarId ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: 'Red', light: o.light }) : null;
+    this.seated = o.scene && o.avatarId ? new SeatedAvatar({ root: o.scene.root, board: o.scene.board, seat: o.avatarSeat, label: this.name, light: o.light }) : null;
     this.opponent.addEventListener('rendering', (e) => this.seated?.setSource(e.detail.canvas));
     this.opponent.addEventListener('retry', () => { clearTimeout(this._retryTimer); this.retryOwners({ manual: true }); });
     this.music = new Soundtrack({ sessionId: o.sessionId, epoch: o.epoch, listener: { library: 'cj', seat: o.humanSeat, label: 'You' }, controller: true });
@@ -67,7 +69,8 @@ export class Table {
   async start() {
     const epoch = this.epoch;
     // online, only the local listener's own library contributes (no Avatar library, no remote audio)
-    const sources = this.o.avatarId
+    // only Red has an Avatar music library (Red's own); another Avatar brings none, so your library plays
+    const sources = this.o.avatarId === 'red-reaper'
       ? [{ library: 'red', participant: { seat: this.o.avatarSeat, avatarId: this.o.avatarId, label: 'Red' }, max: 3 }, ...(this.o.songIds?.length ? [{ library: 'cj', songIds: this.o.songIds, participant: { seat: this.o.humanSeat, label: 'You' } }] : [])]
       : [{ library: 'cj', participant: { seat: this.o.humanSeat, label: 'You' }, ...(this.o.songIds?.length ? { songIds: this.o.songIds } : { max: 4 }) }];
     const [, queue] = await Promise.all([this.opponent.attach(), this.music.prepare(sources)]);
@@ -75,7 +78,7 @@ export class Table {
     this._scheduleOwnerRetry();
     if (!this.o.avatarId) return;
     const redTracks = queue?.entries.filter((e) => e.fromLibrary === 'red').length ?? 0;
-    this.opponent.say(greeting({ name: 'Red', contributedTracks: redTracks }));
+    this.opponent.say(greeting({ name: this.name, contributedTracks: redTracks }));
   }
 
   /**

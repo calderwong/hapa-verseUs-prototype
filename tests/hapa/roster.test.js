@@ -35,12 +35,22 @@ test('V22-02 / N24-02: a figure removed from the roster cannot stay selected thr
   assert.deepEqual(selectAvatar('red-reaper', loadRoster()), { ok: true, avatarId: 'red-reaper' });
 });
 
-test('N24-02: explicit no-figure, unavailable optional figures and online availability', () => {
+test('N24-02: explicit no-figure, served and unserved optional figures', () => {
   store.clear();
   const enabled = loadRoster();
   assert.deepEqual(selectAvatar(null, enabled), { ok: true, avatarId: null }, 'play without a figure is a valid choice');
   assert.deepEqual(resolveChoice({ avatarId: null }, enabled), { avatarId: null, changed: false });
-  for (const id of ['avatar-8', 'avatar-46', 'avatar-39']) {
+  // Falka and Leo are served by Mesh Avatar's player node: selectable once in the roster, never by default
+  for (const id of ['avatar-8', 'avatar-46']) {
+    const e = ROSTER.find((x) => x.id === id);
+    assert.equal(e.served, 'mesh');
+    assert.equal(enabled[id], false, 'not in the roster on a clean state');
+    assert.equal(selectAvatar(id, enabled).ok, false);
+    assert.match(selectAvatar(id, enabled).why, /In my roster/);
+    assert.deepEqual(selectAvatar(id, { ...enabled, [id]: true }), { ok: true, avatarId: id });
+    assert.equal(statusOf(e, { ...enabled, [id]: true }), 'ready (figure from Mesh Avatar)');
+  }
+  for (const id of ['avatar-39']) {
     const e = ROSTER.find((x) => x.id === id);
     assert.equal(e.served, null);
     // even when the player puts it in the roster, an unserved figure is not selectable and Red is not substituted
@@ -53,4 +63,14 @@ test('N24-02: explicit no-figure, unavailable optional figures and online availa
   }
   assert.equal(selectAvatar('nobody', enabled).ok, false);
   assert.equal(statusOf(ROSTER[0], enabled), 'ready (figure from Harbor)');
+});
+
+test('Mesh Avatar owner route: only the named players\' files, read-only paths, nothing else', async () => {
+  const { matchOwnerRoute, MESH_PLAYERS } = await import('../../src/hapa/host/owner-routes.js');
+  assert.deepEqual(MESH_PLAYERS, ['falka', 'leo']);
+  assert.deepEqual(matchOwnerRoute('/mesh/apps/player/falka/rig.json'), { owner: 'mesh', path: '/apps/player/falka/rig.json' });
+  assert.deepEqual(matchOwnerRoute('/mesh/apps/player/leo/assets/leo-base.png'), { owner: 'mesh', path: '/apps/player/leo/assets/leo-base.png' });
+  for (const p of ['/mesh/apps/player/thor/rig.json', '/mesh/apps/player/falka/../leo/rig.json', '/mesh/apps/player/falka/.hidden', '/mesh/server/api.mjs', '/mesh/v1/control', '/mesh/apps/player/falka/', '/mesh/apps/player/falka/a b.png']) assert.equal(matchOwnerRoute(p), null, p);
+  // the existing owners are unchanged
+  assert.equal(matchOwnerRoute('/puppet/red-player.mjs').owner, 'harbor');
 });

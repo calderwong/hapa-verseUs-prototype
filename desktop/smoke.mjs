@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export async function runSmoke(o) {
   mkdirSync(o.out, { recursive: true });
   o.win.webContents.on('console-message', (e) => { if (o.consoleLines.length < 120 && (e.level === 'warning' || e.level === 'error')) o.consoleLines.push(`${e.level}: ${String(e.message).slice(0, 300)}`); });
-  const result = o.script === 'online' ? await online(o) : o.script === 'observe' ? await observe(o) : o.script === 'lifecycle' ? await lifecycle(o) : o.script === 'red' ? await red(o) : o.script === 'avatar' ? await avatar(o) : await local(o);
+  const result = o.script === 'online' ? await online(o) : o.script === 'observe' ? await observe(o) : o.script === 'lifecycle' ? await lifecycle(o) : o.script === 'red' ? await red(o) : o.script === 'avatar' ? await avatar(o) : o.script === 'mesh' ? await mesh(o) : await local(o);
   writeFileSync(join(o.out, 'smoke.json'), JSON.stringify({ ...result, console: o.consoleLines }, null, 1));
   o.app.quit();
 }
@@ -72,6 +72,30 @@ async function red(o) {
   await shot(o, 'red-home');
   const r = bound ? JSON.parse(bound) : null;
   return { ok: !!r?.player && JSON.parse(after).drawn, script: 'red', seconds: (Date.now() - t0) / 1000, binding: r, after: JSON.parse(after), origin: await js(o, 'location.origin'), about: o.about() };
+}
+
+/**
+ * `mesh`: a Mesh Avatar opponent (Falka `avatar-8`, Leo `avatar-46`; HAPA_VERSUS_SMOKE_AVATAR) chosen
+ * through the roster's own selection path, rendered by Mesh Avatar's player inside the loopback frame
+ * (mesh-frame.html). Waits for the owner figure to bind and draw, captures Home, presses Ready once.
+ * Needs userData/owners.json naming a running Mesh Avatar node and a visible window.
+ */
+async function mesh(o) {
+  const t0 = Date.now();
+  const id = process.env.HAPA_VERSUS_SMOKE_AVATAR || 'avatar-8';
+  await loaded(o);
+  await until(o, `!!window.__versus?.startMatch`, 30_000, 300);
+  await js(o, `(() => { localStorage.setItem('hapa-versus.roster.v1', JSON.stringify({ enabled: { 'red-reaper': true, ${JSON.stringify(id)}: true } })); return window.__versus.startMatch({ table: { avatarId: ${JSON.stringify(id)}, songIds: [] } }).then(() => true); })()`);
+  const bound = await until(o, `(() => { const op = window.__versus?.table?.opponent; return op && (op.player || (op.attempts >= 1 && op.binding.status === 'text-only' && op.bindingError)) ? JSON.stringify({ player: !!op.player, status: op.binding.status, label: op.binding.avatar.label, renderer: op.binding.renderer, error: op.bindingError ?? null, frames: [...document.querySelectorAll('iframe.red-frame')].map((f) => f.src), performers: document.querySelectorAll('.opp-social').length }) : null; })()`, 90_000, 500);
+  const drawn = await until(o, `!!window.__versus?.table?.seated?._hasFrame`, 30_000, 300);
+  await js(o, `window.__versus.cam.home()`); await sleep(2500);
+  await shot(o, `mesh-${id}-home`);
+  const tickBefore = await js(o, `window.__versus.state.tick`);
+  await js(o, `window.__versus._pressReady()`);
+  await until(o, `window.__versus.state.tick > ${tickBefore}`, 60_000, 300);
+  const tickAfter = await js(o, `window.__versus.state.tick`);
+  const r = bound ? JSON.parse(bound) : null;
+  return { ok: !!r?.player && !!drawn && tickAfter > tickBefore, script: 'mesh', avatarId: id, seconds: (Date.now() - t0) / 1000, binding: r, drawn: !!drawn, tickBefore, tickAfter, origin: await js(o, 'location.origin'), about: o.about() };
 }
 
 /**

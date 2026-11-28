@@ -43,7 +43,9 @@ const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inl
 // origin whose content is this game's bridge page plus Harbor's own forwarded routes. Harbor's player
 // mounts its package only on an http(s) page origin, which `app://versus/` is not.
 const RED_HOST = 'red.versus.localhost';
-const RED_CSP = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors app://versus; form-action 'none'";
+// base-uri 'self': mesh-frame.html points its <base> at the Mesh Avatar player directory on this same
+// origin (the owner's renderer resolves its files against the document); no other origin is possible
+const RED_CSP = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors app://versus; form-action 'none'";
 
 /** Owner configuration is explicit (userData/owners.json); none means every optional owner is absent. */
 function ownerConfig() {
@@ -94,6 +96,7 @@ async function handleApp(request) {
     if (local.status !== 404) return local;
   }
   const route = matchOwnerRoute(url.pathname);
+  if (route?.owner === 'mesh' && request.method !== 'GET' && request.method !== 'HEAD') return new Response('method not allowed', { status: 405 }); // read-only owner
   if (route) return serveOwner(request, url, route);
   if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('method not allowed', { status: 405 });
   return new Response('not found', { status: 404 });
@@ -106,12 +109,14 @@ async function handleApp(request) {
 async function handleRedFrame(request) {
   const url = new URL(request.url);
   if (url.host !== RED_HOST) return new Response('not found', { status: 404 });
-  if ((request.method === 'GET' || request.method === 'HEAD') && (url.pathname === '/red-frame.html' || url.pathname.startsWith('/assets/'))) {
+  if ((request.method === 'GET' || request.method === 'HEAD') && (url.pathname === '/red-frame.html' || url.pathname === '/mesh-frame.html' || url.pathname.startsWith('/assets/'))) {
     const local = await serveStatic(url.pathname, RED_CSP);
     if (local.status !== 404) return local;
   }
   const route = matchOwnerRoute(url.pathname);
+  // the frame renders Red (Harbor) or a Mesh Avatar player (Falka, Leo); read-only for Mesh Avatar
   if (route?.owner === 'harbor') return serveOwner(request, url, route);
+  if (route?.owner === 'mesh' && (request.method === 'GET' || request.method === 'HEAD')) return serveOwner(request, url, route);
   return new Response('not found', { status: 404 });
 }
 

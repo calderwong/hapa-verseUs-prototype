@@ -24,7 +24,8 @@
  */
 import { h } from './dom.js';
 import { answer, MODES } from './reactions.js';
-import { FramedRedPlayer } from './red-bridge.js';
+import { FramedRedPlayer, FRAME_ORIGIN } from './red-bridge.js';
+import { entryOf, shortName } from './roster.js';
 
 const STALE_MS = 35000; // a prepared line older than this is not played
 const PREPARE_MS = 30000; // the voice preparation deadline (the owner takes ~9–10 s per line)
@@ -32,7 +33,9 @@ const PUPPET_URL = ['', 'puppet', 'red-player.mjs'].join('/');
 const KEY = 'hapa-versus.opponent-settings.v1';
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export const OPPONENT_AVATARS = { 'red-reaper': { label: 'Red', voice: 'Red · natural' } };
+export const OPPONENT_AVATARS = { 'red-reaper': { label: 'Red', voice: 'Red · natural' }, 'avatar-8': { label: 'Falka', mesh: true }, 'avatar-46': { label: 'Leo', mesh: true } };
+/** Whether this Avatar's figure comes from Mesh Avatar's player node (Falka, Leo) rather than Harbor. */
+const isMesh = (id) => !!OPPONENT_AVATARS[id]?.mesh && entryOf(id)?.served === 'mesh';
 
 /** Local, per-browser social settings (never game state). */
 function loadSettings() {
@@ -93,6 +96,12 @@ export class AvatarOpponent extends EventTarget {
 
   /** The owner renderer: Harbor's module on an http(s) page; the loopback frame bridge in the desktop app. */
   async _makePlayer() {
+    if (isMesh(this.avatarId)) {
+      // Mesh Avatar's renderer always runs in its frame page (it resolves its files against the document)
+      const dir = encodeURIComponent(entryOf(this.avatarId).player);
+      const desktop = location.protocol === 'app:';
+      return new FramedRedPlayer(this.canvas, { name: shortName(this.avatarId), origin: desktop ? FRAME_ORIGIN : location.origin, src: `${desktop ? FRAME_ORIGIN : location.origin}/mesh-frame.html?avatar=${dir}` });
+    }
     if (location.protocol === 'app:') return new FramedRedPlayer(this.canvas);
     const { RedPlayer } = await import(/* @vite-ignore */ PUPPET_URL); // served by Harbor (the renderer owner), not bundled
     return new RedPlayer(this.canvas, { packageURL: '/v1/avatar-package', audioURL: (p) => p });
@@ -103,18 +112,28 @@ export class AvatarOpponent extends EventTarget {
     const live = () => !this.disposed && epoch === this.epoch && gen === this._attachGen;
     let player = null;
     try {
-      const [caps, performer] = await Promise.all([this._get('/capabilities'), this._get('/v1/performer')]);
-      if (performer.avatarId !== this.avatarId) throw Error(`Harbor's admitted Avatar is ${performer.avatarId}, not ${this.avatarId}`);
-      if (!caps.avatarPackage?.available) throw Error(caps.avatarPackage?.reason || 'renderer package unavailable');
-      if (!caps.operations?.includes('utterance')) throw Error('Harbor has no utterance operation');
-      this.binding.avatar.identityRevision = `${performer.puppetRevision}#${performer.revision}`;
-      this.binding.renderer = { owner: 'hapa-harbor-storefront', packageId: caps.avatarPackage.id, revision: caps.avatarPackage.revision, renderer: caps.avatarPackage.renderer, integrity: caps.avatarPackage.integrity };
-      try {
-        const voices = await this._get(`/v1/cms/voices/${encodeURIComponent(this.avatarId)}`);
-        const want = OPPONENT_AVATARS[this.avatarId]?.voice;
-        const card = (voices.cards || []).find((c) => c.title === want) ?? voices.cards?.[0];
-        this.binding.voice = card && voices.provider?.ready ? { cardId: card.id, label: card.title, provider: 'omnivoice', owner: 'hapa-avatar-builder' } : null;
-      } catch (e) { this.binding.voice = null; this.voiceError = e.message; }
+      if (isMesh(this.avatarId)) {
+        // Mesh Avatar serves the figure (read-only): bind exactly the package the roster names
+        const e = entryOf(this.avatarId);
+        const pkg = await this._get(`/mesh/apps/player/${encodeURIComponent(e.player)}/${encodeURIComponent(e.package.file)}`);
+        if (pkg.avatarId !== this.avatarId || pkg.id !== e.package.id || pkg.revision !== e.package.revision) throw Error(`Mesh Avatar serves ${pkg.id} ${pkg.revision} for ${pkg.avatarId}, not ${e.package.id} ${e.package.revision}`);
+        this.binding.avatar.identityRevision = `${pkg.id}@${pkg.revision}`;
+        this.binding.renderer = { owner: 'hapa-mesh-avatar', packageId: pkg.id, revision: pkg.revision, renderer: pkg.renderer, status: pkg.status, integrity: 'package identity checked at bind' };
+        this.binding.voice = null; this.voiceError = `${this.binding.avatar.label} has no voice yet`;
+      } else {
+        const [caps, performer] = await Promise.all([this._get('/capabilities'), this._get('/v1/performer')]);
+        if (performer.avatarId !== this.avatarId) throw Error(`Harbor's admitted Avatar is ${performer.avatarId}, not ${this.avatarId}`);
+        if (!caps.avatarPackage?.available) throw Error(caps.avatarPackage?.reason || 'renderer package unavailable');
+        if (!caps.operations?.includes('utterance')) throw Error('Harbor has no utterance operation');
+        this.binding.avatar.identityRevision = `${performer.puppetRevision}#${performer.revision}`;
+        this.binding.renderer = { owner: 'hapa-harbor-storefront', packageId: caps.avatarPackage.id, revision: caps.avatarPackage.revision, renderer: caps.avatarPackage.renderer, integrity: caps.avatarPackage.integrity };
+        try {
+          const voices = await this._get(`/v1/cms/voices/${encodeURIComponent(this.avatarId)}`);
+          const want = OPPONENT_AVATARS[this.avatarId]?.voice;
+          const card = (voices.cards || []).find((c) => c.title === want) ?? voices.cards?.[0];
+          this.binding.voice = card && voices.provider?.ready ? { cardId: card.id, label: card.title, provider: 'omnivoice', owner: 'hapa-avatar-builder' } : null;
+        } catch (e) { this.binding.voice = null; this.voiceError = e.message; }
+      }
       if (!live()) return false;
       player = await this._makePlayer();
       await player.load();
@@ -168,7 +187,7 @@ export class AvatarOpponent extends EventTarget {
 
   ask(question) {
     this.log.push({ who: 'you', text: question });
-    return this.say(answer(question, { lastOrders: this.lastOrders ?? [], controller: this.controller.label }));
+    return this.say(answer(question, { lastOrders: this.lastOrders ?? [], controller: this.controller.label, name: this.binding.avatar.label }));
   }
 
   async _start(item) {
@@ -317,7 +336,8 @@ export class AvatarOpponent extends EventTarget {
     u.mute = h('button', { title: "Mute only the opponent's voice (captions stay)", onclick: () => { this.settings.voice = !this.settings.voice; if (!this.settings.voice) this.stop(); this._save(); this._render(); } });
     u.stop = h('button', { title: 'Stop speaking now', onclick: () => this.stop() }, 'Stop');
     // the owner renderer is not answering: say so on the plate and offer an immediate retry (R18-01)
-    u.retry = h('button', { class: 'opp-retry', title: "Red's figure and voice come from Harbor on this computer, which is not answering. Try again now (it also retries by itself).", onclick: () => this.retry() }, 'Show Red');
+    const who = this.binding.avatar.label, from = isMesh(this.avatarId) ? "Mesh Avatar's player node" : 'Harbor';
+    u.retry = h('button', { class: 'opp-retry', title: `${who}'s figure comes from ${from} on this computer, which is not answering. Try again now (it also retries by itself).`, onclick: () => this.retry() }, `Show ${who}`);
     u.controls = h('div', { class: 'opp-controls' }, u.retry, u.sound, u.mute, u.stop);
     u.log = h('div', { class: 'opp-log', 'aria-live': 'off' });
     u.input = h('input', { type: 'text', maxlength: 200, placeholder: 'Ask about a move or the music…', 'aria-label': 'Ask your opponent',
@@ -339,7 +359,7 @@ export class AvatarOpponent extends EventTarget {
     this.el.classList.toggle('speaking', this.speaking);
     this.el.classList.toggle('unbound', !this.player);
     u.retry.hidden = !!this.player || !this.bindingError;
-    u.retry.textContent = b.status === 'binding' ? 'Connecting…' : 'Show Red';
+    u.retry.textContent = b.status === 'binding' ? 'Connecting…' : `Show ${b.avatar.label}`;
     this.el.classList.toggle('expanded', !!this.expanded);
     u.name.setAttribute('aria-expanded', String(!!this.expanded));
     u.name.querySelector('.opp-label').textContent = `${b.avatar.label}${this.current?.state === 'preparing-voice' ? ' …' : ''}`;

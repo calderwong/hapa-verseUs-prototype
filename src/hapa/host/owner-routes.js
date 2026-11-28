@@ -13,16 +13,24 @@ import { readFileSync } from 'node:fs';
 export const HARBOR_PATHS = ['/v1', '/capabilities', '/app', '/skill', '/projects', '/assets', '/puppet', '/core', '/tools/preview'];
 /** Only the three participant-game operations of the Harness, never the rest of its API. */
 export const HARNESS_ROUTE = /^\/harness\/game-(decision|decision-cancel|status)$/;
+/**
+ * Mesh Avatar's own player node (Falka, Leo): read-only player files of the named Avatars only, under
+ * `/mesh/apps/player/<dir>/…` on the page, `/apps/player/<dir>/…` at the owner. No other owner route.
+ */
+export const MESH_PLAYERS = ['falka', 'leo'];
+const MESH_ROUTE = new RegExp(`^/mesh(/apps/player/(?:${MESH_PLAYERS.join('|')})/[A-Za-z0-9_./-]+)$`);
 /** Music libraries by name: the human seat's (`cj`) and Red's (`red`); only their peer routes. */
 export const MUSIC_LIBRARIES = ['cj', 'red'];
 
 /**
  * Match a page path to an owner route.
  * @param {string} pathname
- * @returns {{ owner: 'harbor'|'harness'|'music', library?: string, path: string } | null} the owner and the path to request there
+ * @returns {{ owner: 'harbor'|'harness'|'music'|'mesh', library?: string, path: string } | null} the owner and the path to request there
  */
 export function matchOwnerRoute(pathname) {
   if (HARBOR_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return { owner: 'harbor', path: pathname };
+  const mesh = MESH_ROUTE.exec(pathname);
+  if (mesh) return mesh[1].split('/').some((s) => s.startsWith('.')) ? null : { owner: 'mesh', path: mesh[1] };
   if (HARNESS_ROUTE.test(pathname)) return { owner: 'harness', path: pathname.replace(/^\/harness\//, '/v1/harness/') };
   for (const name of MUSIC_LIBRARIES) {
     const pre = `/music/${name}/`;
@@ -43,7 +51,7 @@ export function loopbackUrl(u) {
 
 /**
  * Resolve an owner's endpoint from a configuration object of the shape
- * `{ harbor: { url, tokenFile }, harness: { url, tokenFile }, music: { cj: { url, tokenFile }, red: {...} } }`.
+ * `{ harbor: { url, tokenFile }, harness: { url, tokenFile }, mesh: { url }, music: { cj: { url, tokenFile }, red: {...} } }`.
  * @returns {{ url: string, token: string | null } | null}
  */
 export function ownerEndpoint(config, route) {

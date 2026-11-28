@@ -10,6 +10,9 @@
  *    `human-connected-forward-mesh-r1`, status candidate.
  *  - Leo / The Dig-Lamp (`avatar-46`, a dog): Mesh Avatar package `leo-canine-assisted` 2026-11-17.1,
  *    renderer `canine-forward-mesh-r1`, status candidate.
+ *  Falka and Leo are served by Mesh Avatar's own player node (`/apps/player/falka|leo/`, read-only,
+ *  loopback 8860), forwarded to the game as `/mesh/apps/player/…`; the package file the owner serves
+ *  is checked against these ids and revisions before the figure is seated (mesh-frame.js renders it).
  *  - Thor / The Oranginal (`avatar-39`, a cat): Mesh Avatar package `thor-feline-assisted` 2026-11-17.1,
  *    renderer `feline-forward-mesh-r1`, status candidate.
  *
@@ -24,8 +27,8 @@
  */
 export const ROSTER = [
   { id: 'red-reaper', label: 'Red', aliases: [], species: 'human', owner: 'Harbor', package: { id: 'red-pose-art', revision: '2026-11-02.1', source: 'Mesh Avatar pin a6fc511' }, renderer: '2D mesh over pose art', served: 'harbor', defaultOn: true },
-  { id: 'avatar-8', label: 'Falka', aliases: ['Mimi'], aliasSource: 'Avatar Builder echo cast registry (user-authorized aliases)', species: 'human', owner: 'Mesh Avatar', package: { id: 'falka-human-assisted', revision: '2026-11-17.1' }, renderer: '2D forward mesh (human-connected-forward-mesh-r1), candidate', served: null },
-  { id: 'avatar-46', label: 'Leo / The Dig-Lamp', aliases: [], species: 'dog', owner: 'Mesh Avatar', package: { id: 'leo-canine-assisted', revision: '2026-11-17.1' }, renderer: '2D forward mesh (canine-forward-mesh-r1), candidate', served: null },
+  { id: 'avatar-8', label: 'Falka', aliases: ['Mimi'], aliasSource: 'Avatar Builder echo cast registry (user-authorized aliases)', species: 'human', owner: 'Mesh Avatar', package: { id: 'falka-human-assisted', revision: '2026-11-17.1', file: 'falka-package.json' }, renderer: '2D forward mesh (human-connected-forward-mesh-r1), candidate', served: 'mesh', player: 'falka' },
+  { id: 'avatar-46', label: 'Leo / The Dig-Lamp', aliases: [], species: 'dog', owner: 'Mesh Avatar', package: { id: 'leo-canine-assisted', revision: '2026-11-17.1', file: 'leo-package.json' }, renderer: '2D forward mesh (canine-forward-mesh-r1), candidate', served: 'mesh', player: 'leo' },
   { id: 'avatar-39', label: 'Thor / The Oranginal', aliases: [], species: 'cat', owner: 'Mesh Avatar', package: { id: 'thor-feline-assisted', revision: '2026-11-17.1' }, renderer: '2D forward mesh (feline-forward-mesh-r1), candidate', served: null },
 ];
 
@@ -68,6 +71,11 @@ export function resolveChoice(table, enabled) {
   const r = selectAvatar(table?.avatarId ?? null, enabled);
   return r.ok ? { avatarId: r.avatarId, changed: false } : { avatarId: null, changed: true, why: r.why };
 }
+
+/** The roster entry for an Avatar id (or undefined). */
+export const entryOf = (id) => ROSTER.find((e) => e.id === id);
+/** A short name for speech and the nameplate: "Leo / The Dig-Lamp" → "Leo". */
+export const shortName = (id) => (entryOf(id)?.label ?? 'Opponent').split(' / ')[0];
 
 /** Short status for a roster row; the package/renderer/revision detail lives in its Details disclosure. */
 export function statusOf(entry, enabled) {

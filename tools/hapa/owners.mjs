@@ -22,20 +22,22 @@ const env = process.env;
 const OWNERS = [
   { name: 'Harbor (Red: renderer, voice)', url: env.HAPA_HARBOR_URL ?? 'http://127.0.0.1:8862', probe: '/capabilities', token: resolve(env.HAPA_HARBOR_ROOT ?? join(H, 'Documents/Codex/2026-06-29/can/work/hapa-harbor-storefront'), 'data/api-token'),
     cwd: env.HAPA_HARBOR_ROOT ?? join(H, 'Documents/Codex/2026-06-29/can/work/hapa-harbor-storefront'), cmd: ['node', 'server/main.mjs'], extra: {} },
+  { name: 'Mesh Avatar player node (Falka, Leo)', url: env.HAPA_MESH_URL ?? 'http://127.0.0.1:8860', probe: '/apps/player/falka/falka-package.json', token: null,
+    cwd: env.HAPA_MESH_ROOT ?? join(H, 'hapa-mesh-avatar'), cmd: ['node', 'server/api.mjs'], extra: {} },
   { name: "Red's music library", url: env.HAPA_MUSIC_RED_URL ?? 'http://127.0.0.1:8801', probe: '/api/peer/node', token: env.HAPA_MUSIC_RED_TOKEN ?? join(H, '.hapa-music-libraries/red-reaper/api-token'),
     cwd: join(H, 'Desktop/hapa-song-registry'), cmd: ['node', 'src/api-server.js', '--port', '8801', '--peer-port', '8802'], extra: { HAPA_SONG_REGISTRY_DATA_ROOT: join(H, '.hapa-music-libraries/red-reaper') } },
   { name: 'Your music library', url: env.HAPA_MUSIC_CJ_URL ?? 'http://127.0.0.1:8811', probe: '/api/peer/node', token: env.HAPA_MUSIC_CJ_TOKEN ?? join(H, 'Desktop/hapa-song-registry/data/api-token'),
     cwd: join(H, 'Desktop/hapa-song-registry'), cmd: ['node', 'src/api-server.js', '--port', '8811', '--peer-port', '8812'], extra: {} },
 ];
 
-const readToken = (f) => { try { return readFileSync(f, 'utf8').trim() || null; } catch { return null; } };
+const readToken = (f) => { if (!f) return null; try { return readFileSync(f, 'utf8').trim() || null; } catch { return null; } };
 async function probe(o) {
   try {
     const t = readToken(o.token);
     const r = await fetch(o.url + o.probe, { headers: t ? { authorization: `Bearer ${t}` } : {}, signal: AbortSignal.timeout(3000) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) return { up: true, ok: false, detail: `${r.status} ${j.error ?? ''}`.trim() };
-    return { up: true, ok: true, detail: j.avatarPackage ? `package ${j.avatarPackage.id} ${j.avatarPackage.revision} (${j.avatarPackage.renderer}), ${j.avatarPackage.available ? 'available' : `unavailable: ${j.avatarPackage.reason}`}` : j.label ?? 'answering' };
+    return { up: true, ok: true, detail: j.version === 'hapa.avatar-performance-package.v1' ? `package ${j.id} ${j.revision} (${j.renderer}), ${j.status}` : j.avatarPackage ? `package ${j.avatarPackage.id} ${j.avatarPackage.revision} (${j.avatarPackage.renderer}), ${j.avatarPackage.available ? 'available' : `unavailable: ${j.avatarPackage.reason}`}` : j.label ?? 'answering' };
   } catch (e) { return { up: false, ok: false, detail: e.cause?.code ?? e.name }; }
 }
 

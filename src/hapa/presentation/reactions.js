@@ -75,7 +75,7 @@ export function keptLine(title) {
  */
 export function answer(question, facts) {
   const q = String(question || '').toLowerCase();
-  if (/\bwho\b|how.*(play|decide|think)|\bbot\b|\bmodel\b|\bai\b/.test(q)) return line('question', `My moves this match come from ${facts.controller}. I am still Red either way.`, 'smile', 'rest', []);
+  if (/\bwho\b|how.*(play|decide|think)|\bbot\b|\bmodel\b|\bai\b/.test(q)) return line('question', `My moves this match come from ${facts.controller}. I am still ${facts.name ?? 'Red'} either way.`, 'smile', 'rest', []);
   if (/why|what.*(do|did|doing)|move|plan|order/.test(q)) {
     if (!facts.lastOrders.length) return line('question', 'This Tick I gave no new orders; my parties keep their routes.', 'neutral', 'rest', []);
     return line('question', `This Tick I ${spokenOrders(facts.lastOrders)}. That is the plan I committed.`, 'neutral', 'rest', []);

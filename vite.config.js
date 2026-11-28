@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { HARBOR_PATHS, readToken } from './src/hapa/host/owner-routes.js';
+import { HARBOR_PATHS, MESH_PLAYERS, matchOwnerRoute, readToken } from './src/hapa/host/owner-routes.js';
 
 const ROOT = import.meta.dirname;
 const PORT = 5199;
@@ -22,6 +22,8 @@ const HARBOR = process.env.HAPA_HARBOR_URL ?? 'http://127.0.0.1:8862';
 const HARBOR_ROOT = process.env.HAPA_HARBOR_ROOT ?? resolve(homedir(), 'Documents/Codex/2026-06-29/can/work/hapa-harbor-storefront');
 // Hapa Harness (participant-game view, Milestone C): its bearer token is read from its state root.
 const HARNESS = process.env.HAPA_HARNESS_URL ?? 'http://127.0.0.1:61290';
+// Mesh Avatar's player node (Falka, Leo): read-only, no token
+const MESH = process.env.HAPA_MESH_URL ?? 'http://127.0.0.1:8860';
 const HARNESS_STATE = process.env.HAPA_HARNESS_VERSUS_STATE ?? resolve(homedir(), '.hapa-harness-versus');
 const LIBRARIES = {
   cj: { url: process.env.HAPA_MUSIC_CJ_URL ?? 'http://127.0.0.1:8811', tokenFile: process.env.HAPA_MUSIC_CJ_TOKEN ?? resolve(homedir(), 'Desktop/hapa-song-registry/data/api-token') },
@@ -58,6 +60,8 @@ function ownerProxies() {
   const out = Object.fromEntries(HARBOR_PATHS.map((p) => [`^${p}(/|$)`, harbor]));
   // only the three participant-game operations are forwarded, never the rest of the Harness API
   out['^/harness/game-(decision|decision-cancel|status)$'] = forwarding(HARNESS, () => readToken(resolve(HARNESS_STATE, 'operator.token')), (path) => path.replace(/^\/harness\//, '/v1/harness/'));
+  // only the named Avatars' player files (matchOwnerRoute is the authority for both hosts)
+  out[`^/mesh/apps/player/(${MESH_PLAYERS.join('|')})/`] = { ...forwarding(MESH, () => null, (path) => matchOwnerRoute(path.replace(/\?.*$/, ''))?.path ?? '/refused'), bypass: (req) => (crossSite(req) || !matchOwnerRoute(req.url.replace(/\?.*$/, '')) ? false : undefined) };
   for (const [name, lib] of Object.entries(LIBRARIES)) {
     out[`^/music/${name}/`] = forwarding(lib.url, () => readToken(lib.tokenFile), (path) => path.replace(new RegExp(`^/music/${name}/`), '/api/peer/'));
   }
@@ -74,6 +78,6 @@ export default defineConfig({
     outDir: 'dist',
     target: 'es2022',
     chunkSizeWarningLimit: 2500,
-    rollupOptions: { input: { index: resolve(ROOT, 'index.html'), versus: resolve(ROOT, 'versus.html'), redFrame: resolve(ROOT, 'red-frame.html') } },
+    rollupOptions: { input: { index: resolve(ROOT, 'index.html'), versus: resolve(ROOT, 'versus.html'), redFrame: resolve(ROOT, 'red-frame.html'), meshFrame: resolve(ROOT, 'mesh-frame.html') } },
   },
 });

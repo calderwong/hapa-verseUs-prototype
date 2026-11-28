@@ -48,12 +48,15 @@ The game needs no owner. To connect your own Music Library, Harbor (Red's render
 ```json
 { "harbor": { "url": "http://127.0.0.1:8862", "tokenFile": "/absolute/path/to/harbor/api-token" },
   "harness": { "url": "http://127.0.0.1:61290", "tokenFile": "/absolute/path/to/operator.token" },
+  "mesh": { "url": "http://127.0.0.1:8860" },
   "music": { "cj": { "url": "http://127.0.0.1:8811", "tokenFile": "/absolute/path/to/api-token" } } }
 ```
 
+`mesh` is Mesh Avatar's player node (`cd ~/hapa-mesh-avatar && node server/api.mjs`, or `npm run owners -- --start` from this repository): it serves Falka's and Leo's figures, read-only and without a token. Only `/mesh/apps/player/falka|leo/…` is forwarded.
+
 Only loopback `http://` origins are accepted; tokens are read by the desktop host and never reach the page. Unconfigured owners answer *not configured* and their features stay unavailable.
 
-Known owner dependency: Harbor's Red renderer currently accepts only `http:`/`https:` mount URLs, so inside the desktop app Red stays text-only (voice and music binding still work). It needs either Harbor to admit the `app://versus/` mount or an approved packaged Red snapshot.
+Owner renderers run in an isolated loopback frame inside the desktop app (`http://red.versus.localhost`: `red-frame.html` for Red through Harbor, `mesh-frame.html` for Falka and Leo through Mesh Avatar), so no owner code or media is packaged.
 
 ## 2. Contributor and headless paths (unchanged browser workflow retained)
 

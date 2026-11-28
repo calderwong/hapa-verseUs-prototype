@@ -8,6 +8,10 @@
  * whose only content is `red-frame.html` (this game's bridge page) and Harbor's own routes, forwarded
  * by the host exactly like the `app://versus/` owner routes (token added in main, never in pages).
  *
+ * The same bridge carries a Mesh Avatar opponent (Falka, Leo): `mesh-frame.html?avatar=<dir>` on the
+ * same frame origin in the desktop app, or on this page's own origin in the browser (see
+ * mesh-frame.js). Pass `{ src, origin, name }`; the default is Red's frame.
+ *
  * This module is the game-page half: an object with the small RedPlayer surface AvatarOpponent uses
  * (load, play, stop, unlock, dispose, activity, reduced, audio.volume/currentTime, `playback`
  * events). Frames arrive as ImageBitmaps and are drawn into the caller's canvas, which the seated
@@ -17,10 +21,16 @@ export const FRAME_ORIGIN = 'http://red.versus.localhost';
 const LOAD_MS = 45000;
 
 export class FramedRedPlayer extends EventTarget {
-  /** @param {HTMLCanvasElement} canvas the caller's canvas (the owner's frames are drawn here) */
-  constructor(canvas) {
+  /**
+   * @param {HTMLCanvasElement} canvas the caller's canvas (the owner's frames are drawn here)
+   * @param {{ src?: string, origin?: string, name?: string }} [o] the frame page, its origin and who it renders
+   */
+  constructor(canvas, o = {}) {
     super();
     this.canvas = canvas;
+    this.origin = o.origin ?? FRAME_ORIGIN;
+    this.src = o.src ?? `${FRAME_ORIGIN}/red-frame.html`;
+    this.name = o.name ?? 'Red';
     this.disposed = false;
     this._seq = 0;
     this._calls = new Map();
@@ -39,14 +49,14 @@ export class FramedRedPlayer extends EventTarget {
   load() {
     return new Promise((resolve, reject) => {
       const f = this.frame = document.createElement('iframe');
-      Object.assign(f, { src: `${FRAME_ORIGIN}/red-frame.html`, title: "Red's renderer", tabIndex: -1, className: 'red-frame' });
+      Object.assign(f, { src: this.src, title: `${this.name}'s renderer`, tabIndex: -1, className: 'red-frame' });
       f.setAttribute('allow', 'autoplay');
       f.setAttribute('aria-hidden', 'true');
       this._loading = { resolve, reject };
-      this._timer = setTimeout(() => this._settleLoad(Error("Red's renderer frame did not load in time")), LOAD_MS);
-      this._onMessage = (e) => { if (e.source === f.contentWindow && e.origin === FRAME_ORIGIN) this._message(e.data); };
+      this._timer = setTimeout(() => this._settleLoad(Error(`${this.name}'s renderer frame did not load in time`)), LOAD_MS);
+      this._onMessage = (e) => { if (e.source === f.contentWindow && e.origin === this.origin) this._message(e.data); };
       window.addEventListener('message', this._onMessage);
-      f.addEventListener('error', () => this._settleLoad(Error("Red's renderer frame could not be opened")));
+      f.addEventListener('error', () => this._settleLoad(Error(`${this.name}'s renderer frame could not be opened`)));
       document.body.append(f);
     });
   }
@@ -64,7 +74,7 @@ export class FramedRedPlayer extends EventTarget {
   _message(m) {
     if (this.disposed || !m || typeof m.t !== 'string') return;
     if (m.t === 'loaded') this._settleLoad(null, Array.isArray(m.size) ? m.size.map(Number) : null);
-    else if (m.t === 'failed') this._settleLoad(Error(String(m.error || "Red's renderer failed to load").slice(0, 200)));
+    else if (m.t === 'failed') this._settleLoad(Error(String(m.error || `${this.name}'s renderer failed to load`).slice(0, 200)));
     else if (m.t === 'frame' && m.bitmap) {
       const b = m.bitmap;
       try {
@@ -85,10 +95,10 @@ export class FramedRedPlayer extends EventTarget {
     }
   }
 
-  _post(msg) { if (!this.disposed && this.frame?.contentWindow) this.frame.contentWindow.postMessage(msg, FRAME_ORIGIN); }
+  _post(msg) { if (!this.disposed && this.frame?.contentWindow) this.frame.contentWindow.postMessage(msg, this.origin); }
 
   _call(t, args) {
-    if (this.disposed) return Promise.reject(Error('Red’s renderer was released'));
+    if (this.disposed) return Promise.reject(Error(`${this.name}’s renderer was released`));
     const id = ++this._seq;
     return new Promise((resolve, reject) => { this._calls.set(id, { resolve, reject }); this._post({ t, id, ...args }); });
   }
@@ -103,7 +113,7 @@ export class FramedRedPlayer extends EventTarget {
     this.disposed = true;
     clearTimeout(this._timer);
     window.removeEventListener('message', this._onMessage);
-    for (const c of this._calls.values()) c.reject(Error('Red’s renderer was released'));
+    for (const c of this._calls.values()) c.reject(Error(`${this.name}’s renderer was released`));
     this._calls.clear();
     this.frame?.remove();
     this.frame = null;

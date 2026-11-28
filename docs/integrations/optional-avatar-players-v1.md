@@ -2,7 +2,7 @@
 
 **Date:** 26 November 2026.  
 **Authority:** [Addendum 11](../requirements/2026-11-26-human-feedback-addendum-11.md).  
-**Status:** queued design contract for implementation, not an implemented API or new review.  
+**Status:** partly implemented. Local roster, one coherent choice (Responses 23–24) and served **Falka** and **Leo** through Mesh Avatar's player node ([evidence](../reviews/evidence/2026-11-27/avatar-players/README.md)); Thor, voices and online hosting remain open.  
 **Task:** [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md), after reconciling the current Assignment 20 work.
 
 ## 1. Experience to deliver

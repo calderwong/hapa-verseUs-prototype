@@ -1,0 +1,97 @@
+{
+ "note": "Installed (locally packaged, uncommitted test build) desktop journey; see README.md",
+ "results": [
+  {
+   "avatarId": "avatar-8",
+   "ok": true,
+   "exit": 0,
+   "ownerServed": {
+    "id": "falka-human-assisted",
+    "revision": "2026-11-17.1",
+    "renderer": "human-connected-forward-mesh-r1",
+    "status": "candidate",
+    "avatarId": "avatar-8",
+    "sha256": "bf28b4121349160ee4100b0121522b7a9abdfb70742d8f42df6b99c0d6f456d7",
+    "bytes": 6891
+   },
+   "binding": {
+    "player": true,
+    "status": "ready-text-only",
+    "label": "Falka",
+    "renderer": {
+     "owner": "hapa-mesh-avatar",
+     "packageId": "falka-human-assisted",
+     "revision": "2026-11-17.1",
+     "renderer": "human-connected-forward-mesh-r1",
+     "status": "candidate",
+     "integrity": "package identity checked at bind"
+    },
+    "error": null,
+    "frames": [
+     "http://red.versus.localhost/mesh-frame.html?avatar=falka"
+    ],
+    "performers": 1
+   },
+   "drawn": true,
+   "tickBefore": 1,
+   "tickAfter": 2,
+   "origin": "app://versus",
+   "build": {
+    "source": "17286076bbedac35ee2d85df816c7c4d26a1ed1f",
+    "dirty": true,
+    "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "builtAt": "2026-11-28T07:29:52.074Z",
+    "target": "darwin-arm64"
+   },
+   "seconds": 6.02,
+   "capture": "avatar-8/out/mesh-avatar-8-home.png",
+   "app": null
+  },
+  {
+   "avatarId": "avatar-46",
+   "ok": true,
+   "exit": 0,
+   "ownerServed": {
+    "id": "leo-canine-assisted",
+    "revision": "2026-11-17.1",
+    "renderer": "canine-forward-mesh-r1",
+    "status": "candidate",
+    "avatarId": "avatar-46",
+    "sha256": "16fff911ae49dc0c3e5503022c5e986d8e9bb54d7b2de657d3006e7a4ccf6a33",
+    "bytes": 6694
+   },
+   "binding": {
+    "player": true,
+    "status": "ready-text-only",
+    "label": "Leo",
+    "renderer": {
+     "owner": "hapa-mesh-avatar",
+     "packageId": "leo-canine-assisted",
+     "revision": "2026-11-17.1",
+     "renderer": "canine-forward-mesh-r1",
+     "status": "candidate",
+     "integrity": "package identity checked at bind"
+    },
+    "error": null,
+    "frames": [
+     "http://red.versus.localhost/mesh-frame.html?avatar=leo"
+    ],
+    "performers": 1
+   },
+   "drawn": true,
+   "tickBefore": 1,
+   "tickAfter": 2,
+   "origin": "app://versus",
+   "build": {
+    "source": "17286076bbedac35ee2d85df816c7c4d26a1ed1f",
+    "dirty": true,
+    "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+    "builtAt": "2026-11-28T07:29:52.074Z",
+    "target": "darwin-arm64"
+   },
+   "seconds": 5.406,
+   "capture": "avatar-46/out/mesh-avatar-46-home.png",
+   "app": null
+  }
+ ]
+}
