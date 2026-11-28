@@ -594,7 +594,7 @@ export async function buildScenery(root, b) {
 
   // --- the dance (Addendum 12 HF12-01): what the Home view sees move with the song -------------
   // (a) the rail chase: a light ribbon on the top rail's brass line. Each low-band onset sends a
-  // pulse from the home side's centre round both ways, meeting behind the opponent; fine twinkles
+  // pulse from the home side's corners up both sides, meeting behind the opponent; fine twinkles
   // follow the high band; the line's own level follows the low band and the slow swell. Outside
   // the painted top and the banks: the grid, its colors and every target are untouched.
   const PULSES = 10, rail = { x0: b.x0 - lineIn, x1: b.x1 + lineIn, z0: b.z0 - lineIn, z1: b.z1 + lineIn };
@@ -641,6 +641,9 @@ export async function buildScenery(root, b) {
   })();
   // the home side's centre in that coordinate (the z1 side runs x1 → x0, the z0 side x0 → x1)
   chaseMat.uniforms.uHome.value = nearZ > 0 ? ((rail.x1 - rail.x0) + (rail.z1 - rail.z0) + (rail.x1 - cx)) / railLen : (cx - rail.x0) / railLen;
+  // pulses start at the near corners (the home rail's middle is below the Home frame): an onset is
+  // seen at once, climbing both side rails to meet behind the opponent
+  const cornerU = ((rail.x1 - rail.x0) / 2) / railLen;
   const chase = new THREE.Mesh(chaseGeo, chaseMat);
   chase.renderOrder = 1; chase.visible = false; chase.frustumCulled = false; group.add(chase);
   // (b) terrace ripples: a stronger onset sends a ring of warm light out across the flagstones from
@@ -725,7 +728,7 @@ export async function buildScenery(root, b) {
       if (amp > 0 && key && onsets > lastOnsets) {
         if (expressive || (k >= 0.35 && sincePulse >= 0.25)) {
           const q = pulses.reduce((a, c) => (c.life < a.life ? c : a));
-          Object.assign(q, { s: 0, k: (expressive ? 0.55 + 0.75 * k : 0.25 + 0.35 * k) * (m.busy ? 0.5 : 1), life: 1 });
+          Object.assign(q, { s: cornerU, k: (expressive ? 0.55 + 0.75 * k : 0.25 + 0.35 * k) * (m.busy ? 0.5 : 1), life: 1 });
           sincePulse = 0;
         }
         if (expressive && !m.busy && k >= 0.4 && sinceRing >= 0.3) {
@@ -740,7 +743,7 @@ export async function buildScenery(root, b) {
     const pu = chaseMat.uniforms.uPulse.value, ru = floorMat.uniforms.uRing.value;
     for (let i = 0; i < PULSES; i++) {
       const q = pulses[i];
-      if (q.life > 0 && !still && amp > 0) { q.s += dt * 0.42; q.life = Math.max(0, 1 - q.s / 0.5); }
+      if (q.life > 0 && !still && amp > 0) { q.s += dt * 0.4; q.life = Math.max(0, 1 - (q.s - cornerU) / (0.5 - cornerU)); }
       else if (still || amp === 0) q.life = 0;
       if (q.life > 0) livePulses++;
       pu[i].set(q.s, q.life > 0 ? q.k * Math.pow(q.life, 0.5) : 0, 4.5 + 4 * (1 - q.life), 0);
