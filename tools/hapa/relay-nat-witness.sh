@@ -16,8 +16,11 @@ OUT=${1:?out dir}; STAGE=${2:-1}; mkdir -p "$OUT"
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 NODE=$(command -v node)
 NS="hvr hvd"; PEERS="a b"; [ "$STAGE" = 2 ] && PEERS="a b c"
-cleanup() { for n in hvr hvd; do ip netns del $n 2>/dev/null || true; done; for p in a b c; do ip netns del hvn$p 2>/dev/null || true; ip netns del hvp$p 2>/dev/null || true; done; kill $(jobs -p) 2>/dev/null || true; }
-trap cleanup EXIT
+cleanup() {
+  kill $(jobs -p) 2>/dev/null || true; sleep 1   # stop processes inside the namespaces first
+  for n in hvr hvd hvna hvnb hvnc hvpa hvpb hvpc; do ip netns pids $n 2>/dev/null | xargs -r kill -9 2>/dev/null || true; ip netns del $n 2>/dev/null || true; ip link del v$n 2>/dev/null || true; done
+}
+cleanup; trap cleanup EXIT   # also clears leftovers from an earlier stage
 sysctl -qw net.ipv4.ip_forward=1
 iptables -P FORWARD ACCEPT
 link() { # host <-> namespace public link: link <ns> <index>
