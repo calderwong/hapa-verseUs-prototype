@@ -1,0 +1,15 @@
+npm run check — Response 25 candidate (main after 7b1a509 plus this batch), 2026-11-28T09:28Z
+ℹ tests 203
+ℹ suites 0
+ℹ pass 203
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+  "allAgreed": true,
+  "finalHash": "sha256:1b2af97d09895a7d9d0163cb6be0ee8d111633850c36f0490ee7caa95db0710d",
+  "allAgreed": true,
+  "finalHash": "sha256:1b2af97d09895a7d9d0163cb6be0ee8d111633850c36f0490ee7caa95db0710d",
+ "peersAgree": true
+✔ two-process peer-verified match (3136 ms)
+✔ build (492 ms)
+exit 0

@@ -2,7 +2,7 @@
 
 The target is two people opening bundled apps on two computers and two internet connections.
 
-**Candidate status:** **friend.9 is ready to try with your friend**, following [Review 23](../reviews/2026-11-28-friend-test-and-avatar-review-23.md). The intended test is CJ on Mac and the friend on Windows, each at home on their own internet connection. The released packages have native startup, retained-identity and same-machine invitation/result evidence. Actual consumer launch/security prompts and the two-home human game have not yet been observed — record them on the [evidence form](two-network-evidence-form.md). No extra Hapa app is needed for this human-versus-human test.
+**Candidate status:** **friend.9 is ready to try with your friend**, following [Review 23](../reviews/2026-11-28-friend-test-and-avatar-review-23.md). The intended test is CJ on Mac and the friend on Windows, each at home on their own internet connection. The released packages have native startup, retained-identity and same-machine invitation/result evidence. Actual consumer launch/security prompts and the two-home human game have not yet been observed — record them on the [evidence form](two-network-evidence-form.md). No extra Hapa app is needed for this human-versus-human test. The [handoff sheet](two-home-test-handoff.md) has the two direct downloads, a message for the friend and the session steps.
 
 **Current downloads:** see [Download and play](../../README.md#download-and-play) on the repository's front page. Each file names the computer it is for: **Windows PC (64-bit)** or **Mac with Apple Silicon** (M1 or newer). The intended Windows/Mac interoperability still needs a witnessed two-computer test.
 

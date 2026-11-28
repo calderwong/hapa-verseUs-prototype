@@ -1,0 +1,11 @@
+[versus] Avatar opponent in text-only mode: owner renderer failed
+✔ V23-01 / N25-02: disposing a figure mid-load releases it at once; the replacement binds and the old frame is not heard (1.73375ms)
+✔ V23-01 / N25-02: a load that never completes settles exactly once on dispose; retry and failures keep working (1.287666ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 49.047875

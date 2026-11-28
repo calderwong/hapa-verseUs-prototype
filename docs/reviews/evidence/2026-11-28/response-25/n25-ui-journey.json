@@ -1,0 +1,228 @@
+{
+ "url": "http://127.0.0.1:5199/versus.html?debug=1",
+ "at": "2026-11-28T09:25:36.355Z",
+ "steps": [
+  {
+   "step": "clean setup",
+   "radios": [
+    {
+     "value": null,
+     "name": "Play this game with no figure",
+     "checked": false,
+     "disabled": false
+    },
+    {
+     "value": "red-reaper",
+     "name": "Play this game with Red",
+     "checked": true,
+     "disabled": false
+    },
+    {
+     "value": "avatar-8",
+     "name": "Play this game with Falka",
+     "checked": false,
+     "disabled": true
+    },
+    {
+     "value": "avatar-46",
+     "name": "Play this game with Leo",
+     "checked": false,
+     "disabled": true
+    },
+    {
+     "value": "avatar-39",
+     "name": "Play this game with Thor",
+     "checked": false,
+     "disabled": true
+    }
+   ],
+   "boxes": [
+    {
+     "name": "Red in my roster",
+     "checked": true,
+     "disabled": false
+    },
+    {
+     "name": "Red available online (not yet)",
+     "checked": false,
+     "disabled": true
+    },
+    {
+     "name": "Falka in my roster",
+     "checked": false,
+     "disabled": false
+    },
+    {
+     "name": "Falka available online (not yet)",
+     "checked": false,
+     "disabled": true
+    },
+    {
+     "name": "Leo in my roster",
+     "checked": false,
+     "disabled": false
+    },
+    {
+     "name": "Leo available online (not yet)",
+     "checked": false,
+     "disabled": true
+    },
+    {
+     "name": "Thor in my roster",
+     "checked": false,
+     "disabled": false
+    },
+    {
+     "name": "Thor available online (not yet)",
+     "checked": false,
+     "disabled": true
+    }
+   ],
+   "music": "Your tracks (up to 3): Red's library alternates with yours. none yet",
+   "owner": "Red's figure: red-pose-art 2026-11-02.1, ready.",
+   "summaries": [
+    "Details for Red",
+    "Details for Falka",
+    "Details for Leo",
+    "Details for Thor"
+   ],
+   "accessibilityTree": [
+    "radio: Play this game with no figure",
+    "radio: Play this game with Red",
+    "checkbox: Red in my roster",
+    "checkbox: Red available online (not yet)",
+    "radio: Play this game with Falka",
+    "checkbox: Falka in my roster",
+    "checkbox: Falka available online (not yet)",
+    "radio: Play this game with Leo",
+    "checkbox: Leo in my roster",
+    "checkbox: Leo available online (not yet)",
+    "radio: Play this game with Thor",
+    "checkbox: Thor in my roster",
+    "checkbox: Thor available online (not yet)"
+   ]
+  },
+  {
+   "step": "No figure chosen",
+   "music": "Your tracks (up to 3): With no figure, only your library plays. none yet",
+   "owner": ""
+  },
+  {
+   "step": "No figure started",
+   "status": null,
+   "owner": null,
+   "nameplate": null,
+   "frames": 0,
+   "music": null,
+   "tick": 1
+  },
+  {
+   "step": "avatar-8 chosen and started",
+   "setupMusic": "Your tracks (up to 3): Falka brings no music, so only your library plays. none yet",
+   "setupOwner": "Falka's figure: falka-human-assisted 2026-11-17.1 from Mesh Avatar, ready. Falka speaks in captions (no voice yet) and brings no music.",
+   "status": "ready-text-only",
+   "owner": "hapa-mesh-avatar",
+   "nameplate": "Falka",
+   "frames": 1,
+   "music": [
+    "cj",
+    "cj",
+    "cj",
+    "cj"
+   ],
+   "tick": 1,
+   "whoIsPlaying": "Falka (avatar-8) plays seat B. Moves: the heuristic bot (heuristic-bot/0.2.0), not a model.\nRenderer falka-human-assisted 2026-11-17.1 (human-connected-forward-mesh-r1) via Mesh Avatar's player node.\nVoice unavailable: Falka has no voice yet; captions only.\nMatch epoch 1 · session local-hapa-open-10x9-v3-"
+  },
+  {
+   "step": "avatar-46 chosen and started",
+   "setupMusic": "Your tracks (up to 3): Leo brings no music, so only your library plays. none yet",
+   "setupOwner": "Leo's figure: leo-canine-assisted 2026-11-17.1 from Mesh Avatar, ready. Leo speaks in captions (no voice yet) and brings no music.",
+   "status": "ready-text-only",
+   "owner": "hapa-mesh-avatar",
+   "nameplate": "Leo",
+   "frames": 1,
+   "music": [
+    "cj",
+    "cj",
+    "cj",
+    "cj"
+   ],
+   "tick": 1,
+   "whoIsPlaying": "Leo (avatar-46) plays seat B. Moves: the heuristic bot (heuristic-bot/0.2.0), not a model.\nRenderer leo-canine-assisted 2026-11-17.1 (canine-forward-mesh-r1) via Mesh Avatar's player node.\nVoice unavailable: Leo has no voice yet; captions only.\nMatch epoch 1 · session local-hapa-open-10x9-v3-"
+  },
+  {
+   "step": "avatar-39 chosen and started",
+   "setupMusic": "Your tracks (up to 3): Thor brings no music, so only your library plays. none yet",
+   "setupOwner": "Thor's figure: thor-feline-assisted 2026-11-17.1 from Mesh Avatar, ready. Thor speaks in captions (no voice yet) and brings no music.",
+   "status": "ready-text-only",
+   "owner": "hapa-mesh-avatar",
+   "nameplate": "Thor",
+   "frames": 1,
+   "music": [
+    "cj",
+    "cj",
+    "cj",
+    "cj"
+   ],
+   "tick": 1,
+   "whoIsPlaying": "Thor (avatar-39) plays seat B. Moves: the heuristic bot (heuristic-bot/0.2.0), not a model.\nRenderer thor-feline-assisted 2026-11-17.1 (feline-forward-mesh-r1) via Mesh Avatar's player node.\nVoice unavailable: Thor has no voice yet; captions only.\nMatch epoch 1 · session local-hapa-open-10x9-v3-"
+  },
+  {
+   "step": "red-reaper chosen and started",
+   "setupMusic": "Your tracks (up to 3): Red's library alternates with yours. none yet",
+   "setupOwner": "Red's figure: red-pose-art 2026-11-02.1, ready.",
+   "status": "ready",
+   "owner": "hapa-harbor-storefront",
+   "nameplate": "Red",
+   "frames": 0,
+   "music": [
+    "red",
+    "red",
+    "red"
+   ],
+   "tick": 1,
+   "whoIsPlaying": "Red (red-reaper) plays seat B. Moves: the heuristic bot (heuristic-bot/0.2.0), not a model.\nRenderer red-pose-art 2026-11-02.1 (red-pose-art-speech-v2-idle-v2) via Harbor.\nVoice: Red · natural (Builder Voice Card, omnivoice).\nMatch epoch 1 · session local-hapa-open-10x9-v3-"
+  },
+  {
+   "step": "V23-01: Falka held mid-load, replaced by Leo, held request released",
+   "heldRequests": 1,
+   "during": {
+    "avatar": "avatar-8",
+    "status": "binding",
+    "player": false,
+    "frames": 1,
+    "frameSrc": [
+     "?avatar=falka"
+    ]
+   },
+   "replaced": {
+    "framesRightAfter": 0,
+    "oldDisposed": true,
+    "oldSettledWithin50ms": {
+     "value": false,
+     "ms": 131
+    },
+    "newAvatar": "avatar-46",
+    "newStatus": "ready-text-only",
+    "newBound": true,
+    "framesAfterBind": 1,
+    "frameSrc": [
+     "?avatar=leo"
+    ]
+   },
+   "afterRelease": {
+    "avatar": "avatar-46",
+    "bound": true,
+    "playerDisposed": false,
+    "frames": 1,
+    "tick": 1
+   },
+   "ready": {
+    "from": 1,
+    "to": 2,
+    "stillBound": true
+   }
+  }
+ ],
+ "pageErrors": []
+}

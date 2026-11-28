@@ -37,10 +37,11 @@ launch/security prompts, actual WAN success and CJ acceptance are still pending.
 
 Optional Avatar Slice A is substantially delivered: the local roster, one choice including No figure,
 and actual Red/Falka/Leo/Thor presentations. Online Avatar hosting remains disabled/unbuilt.
-Assignment 25 also carries V23-01 renderer cleanup and V23-02 truthful owner/music wording;
-these may proceed in parallel without delaying the human test. Use focused regressions and,
-if app code changes, at most one integrated final gate for the coherent batch. Reuse unchanged
-relay/delivery evidence. Preserve two seats, actual owner bindings, one authority per seat and
+Response 25 answers Assignment 25: the friend.9 two-home handoff is
+`docs/player/two-home-test-handoff.md` (result pending the humans), and V23-01 renderer cancellation
+and V23-02 truthful owner/music/accessible labels are fixed on main only — friend.9 does not contain
+them and no newer executable is published. The next multiplayer repair comes from the observed
+two-home result or CJ's playtest feedback. Reuse unchanged relay/delivery evidence. Preserve two seats, actual owner bindings, one authority per seat and
 explicit human/Avatar result attribution; optional owners are not a human-game prerequisite.
 
 The `.docx` originals stay local in `reference_documents/` (ignored: large binaries).
