@@ -44,6 +44,13 @@ them and no newer executable is published. The next multiplayer repair comes fro
 two-home result or CJ's playtest feedback. Reuse unchanged relay/delivery evidence. Preserve two seats, actual owner bindings, one authority per seat and
 explicit human/Avatar result attribution; optional owners are not a human-game prerequisite.
 
+CJ's subsequent music-expression feedback selects [Addendum 12](docs/requirements/2026-11-28-human-feedback-addendum-12.md)
+and the [focused music review](docs/reviews/2026-11-28-music-environment-follow-up.md): make the existing
+actual-song response visibly dance from the normal Home camera and retain music with local No figure.
+This is a presentation follow-up alongside Assignment 25; it does not delay the friend.9 human test,
+claim new implementation or replace pending CJ acceptance. Preserve the existing audio ownership,
+Off/Still controls, gameplay semantics and current owner/lifecycle fixes.
+
 The `.docx` originals stay local in `reference_documents/` (ignored: large binaries).
 
 ## Check for recent work first
