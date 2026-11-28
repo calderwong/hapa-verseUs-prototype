@@ -1,0 +1,87 @@
+{
+ "network": "test-invite-mx04q3me",
+ "app": "<scratch>",
+ "build": {
+  "source": "977f14944cdb978a0ab456fc9878ddae4e72f78e",
+  "dirty": false,
+  "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+  "builtAt": "2026-11-28T08:06:20.136Z",
+  "target": "darwin-arm64"
+ },
+ "host": {
+  "exit": 0,
+  "ok": true,
+  "seat": "A",
+  "steps": [
+   "join",
+   "invitationCopied",
+   "tableOpen",
+   "result"
+  ],
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 4,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:7185e75c3822acbee8ec7567e77b5c4e0f727b94dd24a8875ca273fb273690fe",
+  "readyClicks": 4,
+  "fingerprint": "8176-a52a-8631"
+ },
+ "joiner": {
+  "exit": 0,
+  "ok": true,
+  "seat": "B",
+  "steps": [
+   "join",
+   "joinedByInvitation",
+   "tableOpen",
+   "concede",
+   "result"
+  ],
+  "stages": [
+   "finding-player",
+   "negotiating",
+   "opened"
+  ],
+  "outcome": {
+   "result": "win",
+   "winner": "A",
+   "loser": "B",
+   "tick": 4,
+   "reasons": [
+    {
+     "seat": "B",
+     "reason": "conceded"
+    }
+   ]
+  },
+  "finalHash": "sha256:7185e75c3822acbee8ec7567e77b5c4e0f727b94dd24a8875ca273fb273690fe",
+  "readyClicks": 4,
+  "fingerprint": "36fa-40da-bd74"
+ },
+ "reopen": {
+  "hostSameIdentity": true,
+  "joinerSameIdentity": true,
+  "hostRecorded": [
+   "recorded"
+  ],
+  "joinerRecorded": [
+   "recorded"
+  ]
+ },
+ "sameResult": true,
+ "ok": true,
+ "artifact": {
+  "name": "Hapa-Versus-0.1.0-friend9-macOS-AppleSilicon.dmg",
+  "sha256": "91c0ae80adb69e12b51ab771472e55f1fdb0e67e88688d8cea9c07b423230879",
+  "installedFrom": "released DMG (downloaded from the friend.9 pre-release, hash-verified, copied out of the mounted image)"
+ },
+ "securityAgentSeen": false
+}

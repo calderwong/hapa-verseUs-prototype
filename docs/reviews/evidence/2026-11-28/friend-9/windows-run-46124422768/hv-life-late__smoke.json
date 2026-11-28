@@ -1,0 +1,64 @@
+{
+ "ok": true,
+ "script": "lifecycle",
+ "states": [
+  {
+   "t": 0,
+   "state": "starting",
+   "gen": 1,
+   "error": null
+  },
+  {
+   "t": 3972,
+   "state": "restarting",
+   "gen": 1,
+   "error": null
+  },
+  {
+   "t": 4476,
+   "state": "starting",
+   "gen": 2,
+   "error": null
+  },
+  {
+   "t": 4777,
+   "state": "ready",
+   "gen": 2,
+   "error": null
+  }
+ ],
+ "final": "ready",
+ "pageSees": {
+  "state": "ready",
+  "error": null
+ },
+ "call": {
+  "ok": true,
+  "runtime": "hapa-versus-peer-runtime/0.2.0",
+  "fingerprint": "f38e-c731-2c3c"
+ },
+ "about": {
+  "app": "Hapa Versus",
+  "version": "0.1.0",
+  "packaged": true,
+  "electron": "45.3.0",
+  "chrome": "156.0.8078.96",
+  "node": "24.22.2",
+  "platform": "win32",
+  "arch": "x64",
+  "network": "test-lifecycle",
+  "build": {
+   "source": "977f14944cdb978a0ab456fc9878ddae4e72f78e",
+   "dirty": false,
+   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+   "builtAt": "2026-11-28T08:06:30.381Z",
+   "target": "win32-x64"
+  },
+  "peer": {
+   "runtime": "hapa-versus-peer-runtime/0.2.0",
+   "fingerprint": "f38e-c731-2c3c"
+  },
+  "name": "Hapa Versus"
+ },
+ "console": []
+}
