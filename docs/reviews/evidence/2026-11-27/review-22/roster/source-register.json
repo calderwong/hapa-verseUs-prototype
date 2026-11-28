@@ -1,0 +1,19 @@
+{
+  "head": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+  "files": [
+    {
+      "path": "src/hapa/presentation/app.js",
+      "git_blob_sha": "a8f4163de32345e65284a4435255ab360f593a78",
+      "sha256": "1c08d5daa31331e96e3cebe3484d4004f6e7f85666f78a86198c1ace7bc562d8",
+      "size": 256958,
+      "verified": true
+    },
+    {
+      "path": "src/hapa/presentation/roster.js",
+      "git_blob_sha": "e99e97512471cf391758783bc8ff91390342739f",
+      "sha256": "f118480ffdcbbb68abc05f3439de8e3131e177a4a00b6d23ff95c577a0f0d052",
+      "size": 3680,
+      "verified": true
+    }
+  ]
+}

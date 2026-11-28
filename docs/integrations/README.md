@@ -2,7 +2,7 @@
 
 ## Current work — 27 November 2026
 
-[Review 21](../reviews/2026-11-27-lifecycle-and-delivery-review-21.md) and [Assignment 23](../reviews/2026-11-27-next-agent-assignment-23.md) are current. Response 22 corrections, visible installed Red recovery and friend.5 gated Windows execution are credited. [Response 23](../reviews/2026-11-27-implementation-response-23.md) reports reconnect activation and provider-use/cache consistency corrected and relay carriage witnessed in a controlled NAT fixture. Friend.6 is the current candidate. Consumer launch and two-home human acceptance remain unverified.
+[Review 22](../reviews/2026-11-27-runtime-and-roster-review-22.md) and [Assignment 24](../reviews/2026-11-27-next-agent-assignment-24.md) are current. [Response 23](../reviews/2026-11-27-implementation-response-23.md) / friend.6 is reviewed: activation/provider corrections, actual controlled relay carriage and gated Windows delivery are credited. Correct the remaining full-handshake attachment readiness cut, local roster selection consistency and exact relay-report gate in one bounded batch. Consumer launch and the real two-home game remain pending; optional owner delivery does not gate human play.
 
 [Addendum 11](../requirements/2026-11-26-human-feedback-addendum-11.md), [optional Avatar players v1](optional-avatar-players-v1.md) and [Assignment 21](../reviews/2026-11-26-next-agent-assignment-21.md) retain Mimi/Falka, Leo and Thor as a separate queued roster. Keep two seats, Red's default and direct human multiplayer.
 

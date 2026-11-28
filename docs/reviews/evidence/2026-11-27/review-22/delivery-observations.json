@@ -1,0 +1,105 @@
+{
+  "review": "Hapa Versus Review 22 delivery/relay subreview",
+  "source": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+  "release_source": "fe6584ae29d51809c87b128767d11b49f1818da4",
+  "release_tag": "v0.1.0-friend.6",
+  "readiness": "No delivery/relay blocker found for an exploratory two-home CJ Mac / friend Windows test; runtime and visual subreviews still govern the combined verdict.",
+  "closures": [
+    {
+      "id": "V21-04 / N23-03",
+      "state": "controlled-native-carriage-observed",
+      "run": 46101799012,
+      "job": 140845683278,
+      "observations": {
+        "stage1": {
+          "expectedPeers": 2,
+          "presentPeers": 2,
+          "matchedPairings": 1,
+          "allAuthenticatedViaLiveRelay": true
+        },
+        "stage2": {
+          "expectedPeers": 3,
+          "presentPeers": 3,
+          "matchedPairings": 3,
+          "allAuthenticatedViaLiveRelay": true,
+          "unreachablePreferredHandedOnce": true
+        }
+      },
+      "limit": "Private isolated NAT fixture; native exhaustion is not exercised. Unit-level exhaustion evidence remains separately stated. No public relay deployment or arbitrary-home-network result."
+    },
+    {
+      "id": "N23-04 Windows",
+      "state": "primary-run-logs-verified",
+      "run": 46102314253,
+      "job": 140847288357,
+      "observations": {
+        "requiredReports": 6,
+        "failures": 0,
+        "twoLaunchIdentitiesStable": true,
+        "storeGrowth": true,
+        "osUserData": true,
+        "invitationSameFinalHash": true,
+        "resultRetainedOnReopen": true,
+        "lateReadyGeneration": 2,
+        "neverReadyFinalGeneration": 4
+      },
+      "artifact": {
+        "name": "Hapa-Versus-0.1.0-friend6-Windows-x64.zip",
+        "bytes": 167159216,
+        "sha256": "5de102acd5d3846bbdf2e0c374e6d33b0130a177e70e53abee5e90f25a7e1624"
+      },
+      "limit": "Windows Server 2025 CI VM; no consumer browser download/MOTW prompt or independent-home human journey."
+    },
+    {
+      "id": "N23-04 Mac",
+      "state": "submitted-report-inspected",
+      "observations": {
+        "twoLaunchIdentitiesStable": true,
+        "storeGrowth": true,
+        "invitationSameFinalHash": true,
+        "resultRetainedOnReopen": true
+      },
+      "artifact": {
+        "name": "Hapa-Versus-0.1.0-friend6-macOS-AppleSilicon.dmg",
+        "bytes": 124517204,
+        "sha256": "2b48c1cd8d889fee7c0503950f75006218f3b35b75944f4ceab61a2c56557616"
+      },
+      "limit": "Reviewer inspected submitted evidence and release identity; did not independently run macOS app."
+    }
+  ],
+  "findings": [
+    {
+      "id": "D22-01",
+      "priority": "P3",
+      "scope": "qualification-harness-only",
+      "path": "tools/hapa/relay-nat-witness.sh",
+      "lines": "69-71",
+      "finding": "Stage 2 aggregation accepts two peer reports although the stage requires three; missing peer-c report still returns true and exit 0.",
+      "reproduction": "probe-relay-report-gate.py executes the exact embedded aggregator against fields from real successful stage2 reports, with and without peer-c.",
+      "currentRunImpact": "None: the published successful run and its primary logs contain all three expected peers.",
+      "recommendation": "Require exactly the stage's expected peer identities/reports (2 for stage1, 3 for stage2), reject missing/duplicate/invalid reports, and correct stale forceRelay/failure comments. Reuse current run as carriage evidence; no friend.6 rebuild solely for harness repair."
+    }
+  ],
+  "artifact_metadata": [
+    {
+      "run": 46102314253,
+      "id": 15245732195,
+      "bytes": 5443542,
+      "sha256": "acee8b4402e3fa96f2f1cb4ea46d49879f4dd467c4e2ea877f94fe27e6989676"
+    },
+    {
+      "run": 46101799012,
+      "id": 15245781972,
+      "bytes": 8827,
+      "sha256": "393ba5383c1c51e2a076d7fec90e220c6ea50ae1d86286c902b0de275d656834"
+    }
+  ],
+  "verification_method": "Source inspection, GitHub release/tag/run/job/artifact metadata and primary decoded job logs; exact report-aggregator controlled probe. No new CI dispatch, package execution, or independent binary/archive download.",
+  "sources": [
+    "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46102314253/job/140847288357",
+    "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46101799012/job/140845683278",
+    "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46101336764/job/140844228450",
+    "https://github.com/calderwong/hapa-verseUs-prototype/releases/tag/v0.1.0-friend.6",
+    "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/tools/hapa/relay-nat-witness.sh"
+  ]
+}

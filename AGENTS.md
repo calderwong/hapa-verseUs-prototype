@@ -30,8 +30,10 @@ packaging/storage/IPC while existing gameplay and archived records keep their me
 
 Addendum 11 selects optional Mimi/Falka, Leo and Thor Mesh Avatar players through a local roster,
 per-game selection and separately opted-in online participation. Read its companion and queued
-Assignment 21 through the review index. Review 21 evaluates Response 22 and friend.5;
-Response 23 answers Assignment 23 with friend.6 and awaits review.
+Assignment 21 through the review index. Review 22 evaluates Response 23 and friend.6;
+Assignment 24 is current: readiness-aware connection attachment, coherent roster selection,
+and the bounded relay-report gate correction, followed by one integrated qualification.
+Credit the previous activation/provider fixes and actual relay-carriage evidence.
 Preserve in-flight work and the optional roster queue; it does not gate the existing
 human-versus-human friend test. Preserve two seats, actual owner bindings, one authority per seat
 and explicit human/Avatar result attribution.

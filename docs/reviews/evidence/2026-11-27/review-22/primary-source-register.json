@@ -1,0 +1,216 @@
+{
+  "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+  "release_tag": "v0.1.0-friend.6",
+  "release_commit": "fe6584ae29d51809c87b128767d11b49f1818da4",
+  "blobs": [
+    {
+      "path": ".github/workflows/relay-witness.yml",
+      "git_blob_sha": "d8df59725b0d8ddb759a1487aa3224233b6ef856",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/.github/workflows/relay-witness.yml"
+    },
+    {
+      "path": ".github/workflows/windows-smoke.yml",
+      "git_blob_sha": "db6b14e8fc3ac7e747db7ea05384fdcef9ed5dc1",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/.github/workflows/windows-smoke.yml"
+    },
+    {
+      "path": "tools/hapa/relay-nat-witness.sh",
+      "git_blob_sha": "86f9f222272fb30c9bbdce001345ae6bbd0c61a6",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/tools/hapa/relay-nat-witness.sh"
+    },
+    {
+      "path": "tools/hapa/relay-serve.mjs",
+      "git_blob_sha": "ff36535f08df39dc86b91fa4cb991f019aa1a3e0",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/tools/hapa/relay-serve.mjs"
+    },
+    {
+      "path": "tools/hapa/relay-witness-peer.mjs",
+      "git_blob_sha": "af0f376f62fe2d48f1df6eb0c7717ca84f00ff23",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/tools/hapa/relay-witness-peer.mjs"
+    },
+    {
+      "path": "tools/hapa/desktop-smoke.mjs",
+      "git_blob_sha": "f6526b822c9688f156838c3f8694750b20e33c9a",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/tools/hapa/desktop-smoke.mjs"
+    },
+    {
+      "path": "tools/hapa/desktop-invite-journey.mjs",
+      "git_blob_sha": "e48e154f5442374b59bd73404450ea3244e1e160",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/tools/hapa/desktop-invite-journey.mjs"
+    },
+    {
+      "path": "docs/workflows/LOOSE_SCREWS.md",
+      "git_blob_sha": "949fdd2c37f30fba591ba32535e1f32e66c94ef7",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/workflows/LOOSE_SCREWS.md"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/conformance-execution.json",
+      "git_blob_sha": "d3f705f8e96ae22d701b8c35dc0ced2a347289be",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/conformance-execution.json"
+    },
+    {
+      "path": "src/hapa/network/lobby.js",
+      "git_blob_sha": "449a233f25f575b5d0c0696ba66bd645e4a05e79",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/src/hapa/network/lobby.js"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/source.json",
+      "git_blob_sha": "5829ba8918c82b71088eac201229767c35fddba9",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/source.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/summary.json",
+      "git_blob_sha": "5609afa07bcb612f480f1bcd20caac76c6ebbd83",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage1/summary.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/summary.json",
+      "git_blob_sha": "3151ea94439c442cf97556a472ddb5ccc84a9f91",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/relay-witness-46101799012/stage2/summary.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/artifact.json",
+      "git_blob_sha": "d9a9f4034fc4f5fca537cb7bb80a726e2ba8f5fb",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/artifact.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/qualification.json",
+      "git_blob_sha": "100db8c62d814516270d51cf31d269037439fe9d",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/qualification.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/smoke-isolated.json",
+      "git_blob_sha": "ff1380cebf77d751b403c7ae7f5bb7b9c49341ce",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/smoke-isolated.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/smoke-os-data.json",
+      "git_blob_sha": "8b7395390a7285fca8535c74044e2d238e943bdd",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/smoke-os-data.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/invite-journey.json",
+      "git_blob_sha": "31e34c2012dac92e19a9cf8550483cdfb7c700b6",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/invite-journey.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/lifecycle-late.json",
+      "git_blob_sha": "651e6b29e112dd6e18104e1fe8965b2d4cbcbf5c",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/lifecycle-late.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/lifecycle-never.json",
+      "git_blob_sha": "4e08f0cd5e8de0225d30ea1d2ef7022a3668f3c8",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/windows-run-46102314253/lifecycle-never.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/mac-installed-smoke.json",
+      "git_blob_sha": "408447d73988fadeb4c3617063e0eaa7b1587b55",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/mac-installed-smoke.json"
+    },
+    {
+      "path": "docs/reviews/evidence/2026-11-27/response-23/mac-installed-invite-journey.json",
+      "git_blob_sha": "dca4eb64b94238961e8f28f29e1c1ae74823fff5",
+      "source_commit": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/blob/164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536/docs/reviews/evidence/2026-11-27/response-23/mac-installed-invite-journey.json"
+    }
+  ],
+  "runs": [
+    {
+      "id": 46102314253,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46102314253",
+      "head_sha": "fe6584ae29d51809c87b128767d11b49f1818da4",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "jobs": [
+        {
+          "id": 140847288357,
+          "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46102314253/job/140847288357",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 15245732195,
+          "name": "windows-smoke-evidence",
+          "bytes": 5443542,
+          "digest": "sha256:acee8b4402e3fa96f2f1cb4ea46d49879f4dd467c4e2ea877f94fe27e6989676",
+          "expired": false,
+          "archive_url": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/actions/artifacts/15245732195/zip",
+          "scope": "API metadata and job-upload digest verified; archive bytes not independently downloaded by this reviewer."
+        }
+      ]
+    },
+    {
+      "id": 46101799012,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46101799012",
+      "head_sha": "fe6584ae29d51809c87b128767d11b49f1818da4",
+      "conclusion": "success",
+      "run_attempt": 1,
+      "jobs": [
+        {
+          "id": 140845683278,
+          "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46101799012/job/140845683278",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 15245781972,
+          "name": "relay-witness-evidence",
+          "bytes": 8827,
+          "digest": "sha256:393ba5383c1c51e2a076d7fec90e220c6ea50ae1d86286c902b0de275d656834",
+          "expired": false,
+          "archive_url": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/actions/artifacts/15245781972/zip",
+          "scope": "API metadata and job-upload digest verified; archive bytes not independently downloaded by this reviewer."
+        }
+      ]
+    },
+    {
+      "id": 46101336764,
+      "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46101336764",
+      "head_sha": "13e7b1839895a1ed1ee67be6d90cd04baf91c74b",
+      "conclusion": "failure",
+      "run_attempt": 1,
+      "jobs": [
+        {
+          "id": 140844228450,
+          "url": "https://github.com/calderwong/hapa-verseUs-prototype/actions/runs/46101336764/job/140844228450",
+          "conclusion": "failure"
+        }
+      ],
+      "artifacts": [
+        {
+          "id": 15246005442,
+          "name": "relay-witness-evidence",
+          "bytes": 3655,
+          "digest": "sha256:ae728176682b6577a5ee4fe94c385fec0dd0b268845c27e034b34e79f80fad4b",
+          "expired": false,
+          "archive_url": "https://api.github.com/repos/calderwong/hapa-verseUs-prototype/actions/artifacts/15246005442/zip",
+          "scope": "API metadata and job-upload digest verified; archive bytes not independently downloaded by this reviewer."
+        }
+      ]
+    }
+  ]
+}

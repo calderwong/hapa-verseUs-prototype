@@ -1,0 +1,70 @@
+{
+  "source": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+  "method": "Exact pinned _tableSetup method and roster module; controlled element builder, local-storage map and owner-capability response. No browser rendering, real owner call, game runtime or installed-app claim.",
+  "initial": {
+    "selected": "red-reaper",
+    "enabled": {
+      "red-reaper": true,
+      "avatar-8": false,
+      "avatar-46": false,
+      "avatar-39": false
+    },
+    "redChoiceChecked": true,
+    "redChoiceDisabled": false,
+    "masterChecked": true
+  },
+  "enableLeo": {
+    "selected": "red-reaper",
+    "enabled": {
+      "red-reaper": true,
+      "avatar-8": false,
+      "avatar-46": true,
+      "avatar-39": false
+    },
+    "redChoiceChecked": true,
+    "redChoiceDisabled": false,
+    "masterChecked": true,
+    "leoChoiceDisabled": true
+  },
+  "disableRed": {
+    "selected": null,
+    "enabled": {
+      "red-reaper": false,
+      "avatar-8": false,
+      "avatar-46": true,
+      "avatar-39": false
+    },
+    "redChoiceChecked": false,
+    "redChoiceDisabled": true,
+    "masterChecked": false
+  },
+  "reenableViaMaster": {
+    "selected": "red-reaper",
+    "enabled": {
+      "red-reaper": false,
+      "avatar-8": false,
+      "avatar-46": true,
+      "avatar-39": false
+    },
+    "redChoiceChecked": true,
+    "redChoiceDisabled": true,
+    "masterChecked": true
+  },
+  "reopenSurface": {
+    "enabled": {
+      "red-reaper": false,
+      "avatar-8": false,
+      "avatar-46": true,
+      "avatar-39": false
+    },
+    "savedTable": {
+      "avatarId": "red-reaper",
+      "songIds": [],
+      "titles": {},
+      "controller": "heuristic"
+    },
+    "redChoiceChecked": true,
+    "redChoiceDisabled": true
+  },
+  "findingReproduced": true
+}

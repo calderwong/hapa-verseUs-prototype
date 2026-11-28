@@ -1,0 +1,135 @@
+{
+  "repository": "calderwong/hapa-verseUs-prototype",
+  "reviewedHead": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+  "scope": "Controlled exact-source diagnostics; no native, installed, or WAN qualification.",
+  "sourceFiles": [
+    {
+      "path": "src/hapa/rules/encoding.js",
+      "blob": "e7e354d6b407ec5e6fec6beb9d41db0025ee5b12",
+      "sha256": "58fcb62ee318ab6b461a01f6cc108d650807595e1dc2722c2ba8023c7af0396e"
+    },
+    {
+      "path": "src/hapa/network/control.js",
+      "blob": "055bdb0d8f62e986bcb44be53ca064301c0cbd5b",
+      "sha256": "db50d4c8d3f735f7b46cc3d85bc0d3df1e62e16048cac3756eb67380b46940d0"
+    },
+    {
+      "path": "src/hapa/network/services.js",
+      "blob": "4d5f6b10ea93ef41ec51fec7a019d4472a65135f",
+      "sha256": "ecaa7ca5879688a030f4fa27bf39a2595a6e4f0249b7cfda5f4e75286a927870"
+    },
+    {
+      "path": "src/hapa/network/lobby.js",
+      "blob": "449a233f25f575b5d0c0696ba66bd645e4a05e79",
+      "sha256": "f8d0105dc3aeb711742643f9afdee889e4a022ace4acb485d994636485fc9b57"
+    },
+    {
+      "path": "src/hapa/network/runtime.js",
+      "blob": "aa3a009194b38a93f89ff41ce3fb966d9a5a03a4",
+      "sha256": "b8823652c3d0837843d3b70ca48aae3a403296a34c4b538dadf9557cc60e7756"
+    },
+    {
+      "path": "src/hapa/network/online-match.js",
+      "blob": "78539d0f2e7c9df2916c4b930e2827404270cecc",
+      "sha256": "22ca5e75174a06009dfbf46c29220b7f222a6c43b11579f4e89ecb41c57e273e"
+    }
+  ],
+  "results": [
+    {
+      "id": "N23-01_cancel_resend_duplicate",
+      "result": "corrected_at_tested_cut",
+      "actual": {
+        "attempt": "cancelled",
+        "started": 0,
+        "opened": 0,
+        "tombstones": 1,
+        "match": false,
+        "reservation": null,
+        "progress": "abandoned_setup"
+      }
+    },
+    {
+      "id": "N23-01_activated_retransmission",
+      "result": "preserved",
+      "actual": {
+        "activated": true,
+        "reconnectAndDuplicateReplies": 2,
+        "postActivationCancel": "use Leave this match"
+      }
+    },
+    {
+      "id": "N23-02_current_archive_eligibility",
+      "result": "corrected_at_tested_cut",
+      "actual": {
+        "sources": [
+          "explicit"
+        ],
+        "dialed": [
+          "ee"
+        ],
+        "expiredConfiguredDialed": false,
+        "historyUnchanged": true
+      }
+    },
+    {
+      "id": "N23-02_relay_descriptor_identity",
+      "result": "corrected_at_tested_cut",
+      "actual": {
+        "selected": "bb",
+        "confirmed": 0,
+        "lastConfirmed": 0,
+        "suspected": 0,
+        "cooldownUntil": 0
+      }
+    },
+    {
+      "id": "V22_runtime_full_handshake_while_opening",
+      "result": "failure_reproduced",
+      "actual": {
+        "matchStatus": "opening",
+        "ownExists": true,
+        "remoteExists": false,
+        "authenticated": true,
+        "peerAdmitted": true,
+        "startedMessages": 0,
+        "replications": [
+          {
+            "role": "own",
+            "connection": "authenticated-reconnect"
+          }
+        ],
+        "thrown": {
+          "name": "TypeError",
+          "message": "Cannot read properties of undefined (reading 'replicate')",
+          "top": [
+            "TypeError: Cannot read properties of undefined (reading 'replicate')",
+            "    at HeldActualMatch.attach (eval at load (file://<review-evidence>/review-probe.mjs:23:10), <anonymous>:86:17)",
+            "    at PeerRuntime._onConnection (eval at load (file://<review-evidence>/review-probe.mjs:23:10), <anonymous>:304:142)",
+            "    at Object.onConnection (file://<review-evidence>/review-probe.mjs:158:172)",
+            "    at Lobby._handshake (eval at load (file://<review-evidence>/review-probe.mjs:23:10), <anonymous>:247:28)"
+          ]
+        }
+      },
+      "afterRelease": {
+        "matchStatus": "active",
+        "ownAndRemoteExist": true,
+        "replications": [
+          {
+            "role": "own",
+            "connection": "authenticated-reconnect"
+          },
+          {
+            "role": "own",
+            "connection": "authenticated-reconnect"
+          },
+          {
+            "role": "remote",
+            "connection": "authenticated-reconnect"
+          }
+        ],
+        "openedEvents": 0
+      },
+      "scope": "Exact source callback path, signed synthetic handshake, controlled Hypercore readiness and game loops. Exception escapes Lobby._handshake. No claim of native socket failure, worker termination, installed behavior or WAN frequency."
+    }
+  ]
+}

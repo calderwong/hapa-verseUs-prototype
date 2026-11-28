@@ -2,7 +2,7 @@
 
 The target is two people opening bundled apps on two computers and two internet connections.
 
-**Candidate status:** friend.6 ([Response 23](../reviews/2026-11-27-implementation-response-23.md)) carries the reconnect correction [Review 21](../reviews/2026-11-27-lifecycle-and-delivery-review-21.md) asked for; it has not yet been independently reviewed. Friend.6 passed a gated Windows runner check: native startup, retained identity and a same-machine invitation/result journey. Installed Mac checks also passed; installed Mac Red recovery is evidenced from friend.5 (unchanged). Normal consumer downloaded launch and the separate-network human test remain pending. These are the intended player steps, not a claim that the full human journey passed.
+**Candidate status:** friend.6 has now had [Review 22](../reviews/2026-11-27-runtime-and-roster-review-22.md). Its packaged Windows/Mac evidence is credited, but one connection-readiness correction remains before the reviewer recommends a dependable friend test. The current download can be used for an explicitly exploratory test. Normal consumer downloaded launch and the separate-network human game are still pending. [Assignment 24](../reviews/2026-11-27-next-agent-assignment-24.md) is the bounded repair/handoff; these player steps remain the intended journey.
 
 **Current downloads:** see [Download and play](../../README.md#download-and-play) on the repository's front page. Each file names the computer it is for: **Windows PC (64-bit)** or **Mac with Apple Silicon** (M1 or newer). The intended Windows/Mac interoperability still needs a witnessed two-computer test.
 

@@ -1,0 +1,13 @@
+{
+  "reviewed_head": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+  "live_navigation": "blocked_by_browser_connection_http_401",
+  "live_app_state_observed": false,
+  "new_live_screenshot": false,
+  "submitted_screenshot": {
+    "path": "docs/reviews/evidence/2026-11-27/response-23/browser-players-roster.jpg",
+    "git_blob_sha": "0f5c4285b1a4678b16cc589212cf642d2efdeaa6",
+    "sha256": "b9e2325b501c9c7e040307699e5fc6214367a2ce2c16f9b5587f40a2a350477d",
+    "size_bytes": 48939
+  },
+  "inspection": "Submitted setup screenshot visually inspected; shows separate roster/per-game/online controls and dense owner/renderer/package text. No fresh gameplay, animation, native-app or owner-availability result inferred."
+}

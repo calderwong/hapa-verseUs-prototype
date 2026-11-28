@@ -1,0 +1,22 @@
+{
+  "source": "164aa5dc6eb96ee4b4cc4eab6f0cdb2298554536",
+  "kind": "controlled_report_aggregation",
+  "scope": "Exact embedded Python aggregator, supplied report fields from the successful stage 2 run. No live network behavior is exercised.",
+  "cases": [
+    {
+      "missing": null,
+      "reports_present": 3,
+      "expected_pass": true,
+      "actual_pass": true,
+      "exit_code": 0
+    },
+    {
+      "missing": "Peer-c",
+      "reports_present": 2,
+      "expected_pass": false,
+      "actual_pass": true,
+      "exit_code": 0
+    }
+  ],
+  "finding_reproduced": true
+}
