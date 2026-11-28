@@ -75,7 +75,7 @@ async function red(o) {
 }
 
 /**
- * `mesh`: a Mesh Avatar opponent (Falka `avatar-8`, Leo `avatar-46`; HAPA_VERSUS_SMOKE_AVATAR) chosen
+ * `mesh`: a Mesh Avatar opponent (Falka `avatar-8`, Leo `avatar-46`, Thor `avatar-39`; HAPA_VERSUS_SMOKE_AVATAR) chosen
  * through the roster's own selection path, rendered by Mesh Avatar's player inside the loopback frame
  * (mesh-frame.html). Waits for the owner figure to bind and draw, captures Home, presses Ready once.
  * Needs userData/owners.json naming a running Mesh Avatar node and a visible window.

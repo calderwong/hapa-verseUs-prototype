@@ -33,8 +33,8 @@ const PUPPET_URL = ['', 'puppet', 'red-player.mjs'].join('/');
 const KEY = 'hapa-versus.opponent-settings.v1';
 const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export const OPPONENT_AVATARS = { 'red-reaper': { label: 'Red', voice: 'Red · natural' }, 'avatar-8': { label: 'Falka', mesh: true }, 'avatar-46': { label: 'Leo', mesh: true } };
-/** Whether this Avatar's figure comes from Mesh Avatar's player node (Falka, Leo) rather than Harbor. */
+export const OPPONENT_AVATARS = { 'red-reaper': { label: 'Red', voice: 'Red · natural' }, 'avatar-8': { label: 'Falka', mesh: true }, 'avatar-46': { label: 'Leo', mesh: true }, 'avatar-39': { label: 'Thor', mesh: true } };
+/** Whether this Avatar's figure comes from Mesh Avatar's player node (Falka, Leo, Thor) rather than Harbor. */
 const isMesh = (id) => !!OPPONENT_AVATARS[id]?.mesh && entryOf(id)?.served === 'mesh';
 
 /** Local, per-browser social settings (never game state). */

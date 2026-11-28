@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Installed Mesh Avatar opponents (Falka, Leo):
+ * Installed Mesh Avatar opponents (Falka, Leo, Thor):
  *
- *   node tools/hapa/desktop-mesh-journey.mjs --app <path to .app> --work <abs scratch dir> [--avatars avatar-8,avatar-46]
+ *   node tools/hapa/desktop-mesh-journey.mjs --app <path to .app> --work <abs scratch dir> [--avatars avatar-8,avatar-46,avatar-39]
  *
  * Needs Mesh Avatar's player node running on 127.0.0.1:8860 (`npm run owners -- --start`). For each
  * Avatar the packaged app runs visibly with a minimal environment and an isolated data root whose
@@ -18,8 +18,8 @@ const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i > 0 ?
 const app = resolve(arg('app', 'out/Hapa Versus-darwin-arm64/Hapa Versus.app'));
 const exe = join(app, 'Contents', 'MacOS', 'Hapa Versus');
 const work = resolve(arg('work'));
-const avatars = arg('avatars', 'avatar-8,avatar-46').split(',');
-const FILES = { 'avatar-8': 'falka/falka-package.json', 'avatar-46': 'leo/leo-package.json' };
+const avatars = arg('avatars', 'avatar-8,avatar-46,avatar-39').split(',');
+const FILES = { 'avatar-8': 'falka/falka-package.json', 'avatar-46': 'leo/leo-package.json', 'avatar-39': 'thor/thor-package.json' };
 rmSync(work, { recursive: true, force: true });
 const results = [];
 for (const id of avatars) {

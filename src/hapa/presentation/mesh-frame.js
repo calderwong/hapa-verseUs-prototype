@@ -1,5 +1,5 @@
 /**
- * The frame half of a Mesh Avatar opponent's renderer (Falka, Leo): same bridge as Red's
+ * The frame half of a Mesh Avatar opponent's renderer (Falka, Leo, Thor): same bridge as Red's
  * (red-frame.js / red-bridge.js), with Mesh Avatar's own player as the owner.
  *
  * Mesh Avatar serves each Avatar's player files read-only from its node (`/apps/player/<dir>/`,
@@ -25,6 +25,11 @@ const AVATARS = {
     module: 'LeoRenderer',
     crop: [0.07, 0.0, 0.86, 0.94],
     idle: (t, blink, reduced) => ({ turn: reduced ? 0 : 0.22 * Math.sin(t * 0.29), ear: reduced ? 0 : 0.4 * Math.sin(t * 0.9), tail: reduced ? 0 : 0.7 * Math.sin(t * 1.1), breath: reduced ? 0.5 : (Math.sin(t * 1.7) + 1) / 2, relaxed: 0.35, blink }),
+  },
+  thor: {
+    module: 'ThorRenderer',
+    crop: [0.07, 0.0, 0.86, 0.94],
+    idle: (t, blink, reduced) => ({ turn: reduced ? 0 : 0.2 * Math.sin(t * 0.27), ear: reduced ? 0 : 0.35 * Math.sin(t * 0.8), tail: reduced ? 0 : 0.6 * Math.sin(t * 0.95), breath: reduced ? 0.5 : (Math.sin(t * 1.6) + 1) / 2, content: reduced ? 0 : 0.6 * Math.max(0, Math.sin(t * 0.11)) ** 3, blink }), // contentment closes his eyes: an occasional moment
   },
 };
 
@@ -57,13 +62,17 @@ async function boot() {
     base.href = `/mesh/apps/player/${dir}/`;
     document.head.prepend(base);
     // the owner's files resolve against this base; say exactly which one is missing if the owner refuses
+    let rig = null;
     for (const f of ['rig.json', 'expressions.json']) {
       const u = new URL(f, document.baseURI), r = await fetch(u);
       if (!r.ok) throw Error(`${u.pathname} answered ${r.status}${r.status >= 500 ? ` (${(await r.text().catch(() => '')).slice(0, 120)})` : ''}`);
+      if (f === 'rig.json') rig = await r.json();
     }
     const url = ['', 'mesh', 'apps', 'player', dir, 'renderer.mjs'].join('/'); // the owner's module, never bundled here
     const mod = await import(/* @vite-ignore */ url);
-    const own = document.createElement('canvas');
+    // the owner's players draw 760 px wide at the rig's aspect; some size the canvas themselves (Falka,
+    // Leo), others rely on their page's <canvas width/height> (Thor) — size it the same way here
+    const own = Object.assign(document.createElement('canvas'), { width: 760, height: Math.round(760 * rig.height / rig.width) });
     renderer = await mod[AVATARS[dir].module].load(own);
     t0 = performance.now();
     raf = requestAnimationFrame(frame);

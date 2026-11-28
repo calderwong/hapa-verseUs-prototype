@@ -22,7 +22,7 @@ const env = process.env;
 const OWNERS = [
   { name: 'Harbor (Red: renderer, voice)', url: env.HAPA_HARBOR_URL ?? 'http://127.0.0.1:8862', probe: '/capabilities', token: resolve(env.HAPA_HARBOR_ROOT ?? join(H, 'Documents/Codex/2026-06-29/can/work/hapa-harbor-storefront'), 'data/api-token'),
     cwd: env.HAPA_HARBOR_ROOT ?? join(H, 'Documents/Codex/2026-06-29/can/work/hapa-harbor-storefront'), cmd: ['node', 'server/main.mjs'], extra: {} },
-  { name: 'Mesh Avatar player node (Falka, Leo)', url: env.HAPA_MESH_URL ?? 'http://127.0.0.1:8860', probe: '/apps/player/falka/falka-package.json', token: null,
+  { name: 'Mesh Avatar player node (Falka, Leo, Thor)', url: env.HAPA_MESH_URL ?? 'http://127.0.0.1:8860', probe: '/apps/player/falka/falka-package.json', token: null,
     cwd: env.HAPA_MESH_ROOT ?? join(H, 'hapa-mesh-avatar'), cmd: ['node', 'server/api.mjs'], extra: {} },
   { name: "Red's music library", url: env.HAPA_MUSIC_RED_URL ?? 'http://127.0.0.1:8801', probe: '/api/peer/node', token: env.HAPA_MUSIC_RED_TOKEN ?? join(H, '.hapa-music-libraries/red-reaper/api-token'),
     cwd: join(H, 'Desktop/hapa-song-registry'), cmd: ['node', 'src/api-server.js', '--port', '8801', '--peer-port', '8802'], extra: { HAPA_SONG_REGISTRY_DATA_ROOT: join(H, '.hapa-music-libraries/red-reaper') } },

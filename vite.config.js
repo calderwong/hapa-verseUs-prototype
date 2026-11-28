@@ -22,7 +22,7 @@ const HARBOR = process.env.HAPA_HARBOR_URL ?? 'http://127.0.0.1:8862';
 const HARBOR_ROOT = process.env.HAPA_HARBOR_ROOT ?? resolve(homedir(), 'Documents/Codex/2026-06-29/can/work/hapa-harbor-storefront');
 // Hapa Harness (participant-game view, Milestone C): its bearer token is read from its state root.
 const HARNESS = process.env.HAPA_HARNESS_URL ?? 'http://127.0.0.1:61290';
-// Mesh Avatar's player node (Falka, Leo): read-only, no token
+// Mesh Avatar's player node (Falka, Leo, Thor): read-only, no token
 const MESH = process.env.HAPA_MESH_URL ?? 'http://127.0.0.1:8860';
 const HARNESS_STATE = process.env.HAPA_HARNESS_VERSUS_STATE ?? resolve(homedir(), '.hapa-harness-versus');
 const LIBRARIES = {

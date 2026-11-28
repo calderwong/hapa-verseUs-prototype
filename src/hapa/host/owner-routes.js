@@ -14,10 +14,10 @@ export const HARBOR_PATHS = ['/v1', '/capabilities', '/app', '/skill', '/project
 /** Only the three participant-game operations of the Harness, never the rest of its API. */
 export const HARNESS_ROUTE = /^\/harness\/game-(decision|decision-cancel|status)$/;
 /**
- * Mesh Avatar's own player node (Falka, Leo): read-only player files of the named Avatars only, under
+ * Mesh Avatar's own player node (Falka, Leo, Thor): read-only player files of the named Avatars only, under
  * `/mesh/apps/player/<dir>/…` on the page, `/apps/player/<dir>/…` at the owner. No other owner route.
  */
-export const MESH_PLAYERS = ['falka', 'leo'];
+export const MESH_PLAYERS = ['falka', 'leo', 'thor'];
 const MESH_ROUTE = new RegExp(`^/mesh(/apps/player/(?:${MESH_PLAYERS.join('|')})/[A-Za-z0-9_./-]+)$`);
 /** Music libraries by name: the human seat's (`cj`) and Red's (`red`); only their peer routes. */
 export const MUSIC_LIBRARIES = ['cj', 'red'];

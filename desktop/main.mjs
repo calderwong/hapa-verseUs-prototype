@@ -114,7 +114,7 @@ async function handleRedFrame(request) {
     if (local.status !== 404) return local;
   }
   const route = matchOwnerRoute(url.pathname);
-  // the frame renders Red (Harbor) or a Mesh Avatar player (Falka, Leo); read-only for Mesh Avatar
+  // the frame renders Red (Harbor) or a Mesh Avatar player (Falka, Leo, Thor); read-only for Mesh Avatar
   if (route?.owner === 'harbor') return serveOwner(request, url, route);
   if (route?.owner === 'mesh' && (request.method === 'GET' || request.method === 'HEAD')) return serveOwner(request, url, route);
   return new Response('not found', { status: 404 });

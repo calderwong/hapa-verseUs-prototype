@@ -8,7 +8,7 @@
  * whose only content is `red-frame.html` (this game's bridge page) and Harbor's own routes, forwarded
  * by the host exactly like the `app://versus/` owner routes (token added in main, never in pages).
  *
- * The same bridge carries a Mesh Avatar opponent (Falka, Leo): `mesh-frame.html?avatar=<dir>` on the
+ * The same bridge carries a Mesh Avatar opponent (Falka, Leo, Thor): `mesh-frame.html?avatar=<dir>` on the
  * same frame origin in the desktop app, or on this page's own origin in the browser (see
  * mesh-frame.js). Pass `{ src, origin, name }`; the default is Red's frame.
  *
