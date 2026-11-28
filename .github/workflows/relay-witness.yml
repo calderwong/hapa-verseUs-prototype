@@ -1,4 +1,4 @@
-# Native second-relay carriage witness (Review 20 / N22-03, HC-09) on Linux network namespaces.
+# Native relay carriage witness (Review 21 / N23-03, HC-09) on Linux network namespaces with NAT routers.
 # The job FAILS unless every peer authenticates every other peer over a stream observed arriving from
 # the second (live) relay while all peer-to-peer packets are dropped, and the relay reports pairings.
 name: Relay witness (network namespaces)
@@ -17,8 +17,12 @@ jobs:
       - name: Install dependencies (no Electron binary, no install scripts)
         env: { ELECTRON_SKIP_BINARY_DOWNLOAD: '1' }
         run: npm install --ignore-scripts --no-audit --no-fund
-      - name: Run the witness
-        run: sudo env "PATH=$PATH" bash tools/hapa/relay-netns-witness.sh "$RUNNER_TEMP/relay-witness"
+      # N23-03: peers behind randomized NAT routers (changed topology). Stage 1 is the two-peer, one-relay
+      # control; stage 2 (fallback + concurrency) runs only after the control passes.
+      - name: Stage 1 — two peers, one live relay (control)
+        run: sudo env "PATH=$PATH" bash tools/hapa/relay-nat-witness.sh "$RUNNER_TEMP/relay-witness/stage1" 1
+      - name: Stage 2 — unreachable preferred relay, live alternative, three concurrent peers
+        run: sudo env "PATH=$PATH" bash tools/hapa/relay-nat-witness.sh "$RUNNER_TEMP/relay-witness/stage2" 2
       - name: Record source identity
         if: always()
         run: sudo mkdir -p "$RUNNER_TEMP/relay-witness" && echo "{\"commit\":\"$GITHUB_SHA\",\"run\":\"$GITHUB_RUN_ID\",\"node\":\"$(node --version)\"}" | sudo tee "$RUNNER_TEMP/relay-witness/source.json"
