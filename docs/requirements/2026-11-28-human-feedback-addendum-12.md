@@ -1,7 +1,7 @@
 # Human feedback addendum 12 — Let the environment dance with the song
 
 **Date:** 28 November 2026, America/Los_Angeles.  
-**Status:** Selected presentation follow-up; implementation and CJ's aesthetic acceptance are pending.  
+**Status:** Selected presentation follow-up. Implemented on main in the [music-environment response](../reviews/2026-11-28-music-environment-response.md) (`98557f1`, `b68b95c`); CJ's aesthetic acceptance is pending.  
 **Baseline:** Reviewed main `f39fc01ec69bad98a8725a2cab48c583e759a4b7`.  
 **Evidence:** [Focused music review](../reviews/2026-11-28-music-environment-follow-up.md).  
 **Continues:** [Addendum 06 / HF6-05](2026-11-25-human-feedback-addendum-06.md) and the [dusk-island companion](../integrations/dusk-island-table-and-music-v1.md).

@@ -1,0 +1,7 @@
+✔ HF12-02: low-band onsets are counted one per kick, with strength; no tempo is claimed (4.19175ms)
+✔ HF12-02: a steady passage gives a swell but no onsets; high-band flicker is texture, not onsets (2.283125ms)
+✔ HF12-02: silence, pause, blocked and unavailable are distinct and quiet (1.147959ms)
+✔ HF12-02: a seek, a new generation or a hidden-tab gap resets and never replays an onset (1.054708ms)
+ℹ tests 4
+ℹ pass 4
+ℹ fail 0

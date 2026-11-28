@@ -18,6 +18,8 @@ A fresh local browser review rendered Red, Falka, Leo and Thor, verified consist
 
 [Response 25](../reviews/2026-11-28-implementation-response-25.md) fixes V23-01 (a still-loading renderer is released at once and its attach settles) and V23-02 (actual owner in Who is playing, music wording from the chosen figure's capabilities, Avatar-specific accessible names) on main only; friend.9 does not contain them and no newer executable is published. The friend.9 two-home [handoff](../player/two-home-test-handoff.md) is prepared; its result is pending the humans. Online Avatar hosting remains disabled/unbuilt, and owner-side human visual acceptance is still separate. Optional owners are not required for the two-human game. Use focused regressions and at most one integrated final gate if app code changes; preserve unchanged evidence.
 
+The [music-environment response](../reviews/2026-11-28-music-environment-response.md) implements [Addendum 12](../requirements/2026-11-28-human-feedback-addendum-12.md) on main (`98557f1`, `b68b95c`): a v2 music frame with separate onsets, swell and texture (no tempo claimed); rail pulses, terrace ripples and a turning lantern swell visible from Home; music for local No figure games through the same single Soundtrack. No new executable; CJ's aesthetic acceptance is pending.
+
 The immutable Base Node and connectivity bundles remain unchanged. This review publication changes documentation/evidence only; it does not change product code, publish a new executable or update local Overwatch state. The current pointers above supersede historical current-status wording below.
 
 ## Historical Review 18 checkpoint

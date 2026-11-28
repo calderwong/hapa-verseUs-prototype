@@ -1,0 +1,170 @@
+[
+ {
+  "track": 0,
+  "t": 15,
+  "dur": 210,
+  "onsetsPerS": 4,
+  "level": 0.577
+ },
+ {
+  "track": 0,
+  "t": 40,
+  "dur": 210,
+  "onsetsPerS": 4.666666666666667,
+  "level": 0.606
+ },
+ {
+  "track": 0,
+  "t": 65,
+  "dur": 210,
+  "onsetsPerS": 3,
+  "level": 0.422
+ },
+ {
+  "track": 0,
+  "t": 90,
+  "dur": 210,
+  "onsetsPerS": 3.3333333333333335,
+  "level": 0.566
+ },
+ {
+  "track": 0,
+  "t": 115,
+  "dur": 210,
+  "onsetsPerS": 3.3333333333333335,
+  "level": 0.535
+ },
+ {
+  "track": 0,
+  "t": 140,
+  "dur": 210,
+  "onsetsPerS": 3,
+  "level": 0.479
+ },
+ {
+  "track": 0,
+  "t": 165,
+  "dur": 210,
+  "onsetsPerS": 3.6666666666666665,
+  "level": 0.58
+ },
+ {
+  "track": 0,
+  "t": 190,
+  "dur": 210,
+  "onsetsPerS": 3,
+  "level": 0.489
+ },
+ {
+  "track": 2,
+  "t": 15,
+  "dur": 193,
+  "onsetsPerS": 2,
+  "level": 0.542
+ },
+ {
+  "track": 2,
+  "t": 40,
+  "dur": 193,
+  "onsetsPerS": 2.3333333333333335,
+  "level": 0.503
+ },
+ {
+  "track": 2,
+  "t": 65,
+  "dur": 193,
+  "onsetsPerS": 3.3333333333333335,
+  "level": 0.592
+ },
+ {
+  "track": 2,
+  "t": 90,
+  "dur": 193,
+  "onsetsPerS": 3.6666666666666665,
+  "level": 0.571
+ },
+ {
+  "track": 2,
+  "t": 115,
+  "dur": 193,
+  "onsetsPerS": 3.3333333333333335,
+  "level": 0.582
+ },
+ {
+  "track": 2,
+  "t": 140,
+  "dur": 193,
+  "onsetsPerS": 1.3333333333333333,
+  "level": 0.479
+ },
+ {
+  "track": 2,
+  "t": 165,
+  "dur": 193,
+  "onsetsPerS": 3,
+  "level": 0.572
+ },
+ {
+  "track": 3,
+  "t": 15,
+  "dur": 232,
+  "onsetsPerS": 2.3333333333333335,
+  "level": 0.362
+ },
+ {
+  "track": 3,
+  "t": 40,
+  "dur": 232,
+  "onsetsPerS": 4,
+  "level": 0.541
+ },
+ {
+  "track": 3,
+  "t": 65,
+  "dur": 232,
+  "onsetsPerS": 2.6666666666666665,
+  "level": 0.537
+ },
+ {
+  "track": 3,
+  "t": 90,
+  "dur": 232,
+  "onsetsPerS": 1.6666666666666667,
+  "level": 0.604
+ },
+ {
+  "track": 3,
+  "t": 115,
+  "dur": 232,
+  "onsetsPerS": 3.3333333333333335,
+  "level": 0.595
+ },
+ {
+  "track": 3,
+  "t": 140,
+  "dur": 232,
+  "onsetsPerS": 3.6666666666666665,
+  "level": 0.579
+ },
+ {
+  "track": 3,
+  "t": 165,
+  "dur": 232,
+  "onsetsPerS": 2.6666666666666665,
+  "level": 0.503
+ },
+ {
+  "track": 3,
+  "t": 190,
+  "dur": 232,
+  "onsetsPerS": 2,
+  "level": 0.424
+ },
+ {
+  "track": 3,
+  "t": 215,
+  "dur": 232,
+  "onsetsPerS": 2,
+  "level": 0.548
+ }
+]

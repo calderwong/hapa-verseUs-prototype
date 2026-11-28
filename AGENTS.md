@@ -49,7 +49,8 @@ and the [focused music review](docs/reviews/2026-11-28-music-environment-follow-
 actual-song response visibly dance from the normal Home camera and retain music with local No figure.
 This is a presentation follow-up alongside Assignment 25; it does not delay the friend.9 human test,
 claim new implementation or replace pending CJ acceptance. Preserve the existing audio ownership,
-Off/Still controls, gameplay semantics and current owner/lifecycle fixes.
+Off/Still controls, gameplay semantics and current owner/lifecycle fixes. The [music-environment response](docs/reviews/2026-11-28-music-environment-response.md)
+implements it on main (`98557f1`, `b68b95c`; not in friend.9): further tuning follows CJ's watch-and-listen feedback.
 
 The `.docx` originals stay local in `reference_documents/` (ignored: large binaries).
 

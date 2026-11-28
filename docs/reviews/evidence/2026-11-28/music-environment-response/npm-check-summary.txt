@@ -1,0 +1,16 @@
+npm run check — music-environment candidate (main after e86dcbb plus this batch; final scenery tuning included), 2026-11-28
+ℹ tests 207
+ℹ suites 0
+ℹ pass 207
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+  "allAgreed": true,
+  "finalHash": "sha256:6696e4076f0a2e2fd26bc73143840c0ad9b32f0e4386c2b06c288f634a64f347",
+  "allAgreed": true,
+  "finalHash": "sha256:6696e4076f0a2e2fd26bc73143840c0ad9b32f0e4386c2b06c288f634a64f347",
+ "peersAgree": true
+✔ bot-versus-bot smoke match (1414 ms)
+✔ two-process peer-verified match (3225 ms)
+✔ build (471 ms)
+(the peer match id includes Date.now(), so finalHash differs run to run; both peers agree each run)
