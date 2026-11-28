@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { createSocket } from 'node:dgram';
+import Hypercore from 'hypercore';
 import { ServicePolicy, normalizeConfig, PUBLIC_BOOTSTRAP, project, effectivePolicy } from '../../src/hapa/network/services.js';
 import { Lobby } from '../../src/hapa/network/lobby.js';
 import { OnlineMatch } from '../../src/hapa/network/online-match.js';
@@ -395,6 +396,100 @@ test('V21-01 / N23-01: reconnect during initialization never activates the count
     assert.equal(B.reservation.activated, true);
   } finally {
     OnlineMatch.prototype.open = origOpen;
+    for (const r of [A, B]) await r.close().catch(() => {});
+    await testnet.destroy();
+    for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  }
+});
+
+test('V22-01 / N24-01: a full re-authentication while the authority opens defers replication; at readiness both feeds attach to the current connection; a cancelled setup never attaches', { timeout: 300_000 }, async () => {
+  const testnet = await createTestnet(3);
+  const roots = [mkdtempSync(join(tmpdir(), 'hv-rdy-a-')), mkdtempSync(join(tmpdir(), 'hv-rdy-b-'))];
+  const progressOf = (root, id) => readJson(join(root, 'test-readiness', 'matches', id, 'progress.json'));
+  const make = (i) => new PeerRuntime({ root: roots[i], networkId: 'test-readiness', displayName: i ? 'Bea' : 'Ari', bootstrap: testnet.bootstrap, controller: 'bot', retireDelayMs: 200 });
+  const A = make(0), B = make(1);
+  // hold the joiner's real OnlineMatch.open() right after its OWN feed is ready and before the remote
+  // feed exists — the boundary at which a half attach used to throw (Review 22 V22-01)
+  const origOpen = OnlineMatch.prototype.open, origReady = Hypercore.prototype.ready;
+  let gate = null, entered = null, holdNext = false;
+  OnlineMatch.prototype.open = function (...args) { if (gate && this.dir.startsWith(roots[1])) holdNext = true; return origOpen.apply(this, args); };
+  Hypercore.prototype.ready = async function (...args) { if (!holdNext) return origReady.apply(this, args); holdNext = false; const r = await origReady.apply(this, args); entered?.(); await gate; return r; };
+  // observe the runtime's connection callback exactly as Lobby invokes it after authentication
+  const seen = [];
+  const onConn = B._onConnection.bind(B);
+  B._onConnection = (peer, conn) => { const m = B.match; const rec = { conn, ready: !!m?.feedsReady, hasOwn: !!m?.own, hasRemote: !!m?.remote, threw: null }; seen.push(rec); try { return onConn(peer, conn); } catch (e) { rec.threw = e.message; throw e; } };
+  const attaches = [];
+  const origAttach = OnlineMatch.prototype.attach;
+  OnlineMatch.prototype.attach = function (conn) { const r = origAttach.call(this, conn); if (this.dir.startsWith(roots[1])) attaches.push({ matchId: this.matchId, conn, result: r }); return r; };
+  /** drop the live connection and wait for Lobby to authenticate a new one (onPeer 'joined' → onConnection) */
+  const reauthenticate = async () => {
+    const before = B.lobby.peers.get(A.identity.participantId);
+    const n = seen.length;
+    before.ctx.conn.destroy();
+    await until(() => { const p = B.lobby.peers.get(A.identity.participantId); return p && p.ctx !== before.ctx && !p.ctx.dropped && seen.length > n; }, 90_000);
+    return seen.at(-1);
+  };
+  const hold = () => { let release; gate = new Promise((r) => { release = r; }); const inside = new Promise((r) => { entered = r; }); return { inside, release: () => { gate = null; release(); } }; };
+  try {
+    await A.open(); await B.open(); await A.joinLobby({}); await B.joinLobby({});
+    const sent = [];
+    const send = B.lobby.send.bind(B.lobby);
+    B.lobby.send = (pid, msg) => { sent.push(msg.t); return send(pid, msg); };
+
+    // 1) re-authentication while opening, then Cancel: nothing attaches, the setup stays abandoned
+    let h = hold();
+    A.openTable();
+    const c1 = A.reservation.challengeId, m1 = `hv-${c1}`;
+    B.startJoin({ invite: A.reservation.invite, attemptId: 'rdy-cancel-0001' });
+    await h.inside;
+    assert.ok(B.match?.own && !B.match.remote, 'held with the own feed open and no remote feed');
+    const r1 = await reauthenticate();
+    assert.equal(r1.threw, null, 'the full authenticated callback does not throw');
+    assert.equal(r1.ready, false);
+    assert.deepEqual(attaches.filter((a) => a.matchId === m1).map((a) => a.result), ['deferred'], 'declined, not half-attached');
+    assert.equal(B.match.connection, 'waiting', 'not reported connected');
+    assert.equal(sent.filter((x) => x === 'started').length, 0);
+    await B.cancelAttempt({ attemptId: 'rdy-cancel-0001' });
+    h.release();
+    await until(() => !B.match && !B.reservation, 30_000);
+    await new Promise((r) => setTimeout(r, 1500));
+    assert.ok(!attaches.some((a) => a.matchId === m1 && a.result === 'attached'), 'the cancelled authority never attached');
+    assert.equal(progressOf(roots[1], m1).status, 'abandoned_setup');
+    assert.equal(Object.values(B.tombstones.attempts).filter((x) => x.matchId === m1).length, 1, 'one tombstone');
+    assert.equal(sent.filter((x) => x === 'started').length, 0, 'no STARTED');
+    assert.equal(A.match, null, 'the counterpart opened nothing');
+
+    // 2) re-authentication while opening, then readiness: both feeds attach once to the CURRENT connection, and the game plays
+    if (A.reservation) A._reserve(null);
+    h = hold();
+    A.openTable();
+    const m2 = `hv-${A.reservation.challengeId}`;
+    B.startJoin({ invite: A.reservation.invite, attemptId: 'rdy-ready-00002' });
+    await h.inside;
+    const r2 = await reauthenticate();
+    assert.equal(r2.threw, null);
+    assert.equal(r2.ready, false);
+    assert.equal(B.match.connection, 'waiting');
+    h.release();
+    await until(() => B.match?.matchId === m2 && B.match.connection === 'connected' && A.match?.matchId === m2, 90_000);
+    const current = B.lobby.peers.get(A.identity.participantId).ctx.conn;
+    const got = attaches.filter((a) => a.matchId === m2 && a.result === 'attached');
+    assert.equal(got.length, 1, 'attached exactly once');
+    assert.equal(got[0].conn, current, 'to the connection current at readiness');
+    assert.equal(got[0].conn, r2.conn, 'the connection declined while opening is the one attached at readiness');
+    await until(() => B.match.own.peers.length > 0 && B.match.remote.peers.length > 0, 30_000);
+    // activated retransmission still works
+    sent.length = 0;
+    B._onPeer(B.lobby.peers.get(A.identity.participantId), 'joined');
+    assert.ok(sent.includes('started'), 'an activated match retransmits STARTED');
+    // subsequent play reaches a verified result on both sides
+    const plan = B.match.controller.plan.bind(B.match.controller);
+    B.match.controller.plan = (st, ctx) => (st.tick >= 2 ? [{ type: 'concede' }] : plan(st, ctx));
+    await until(() => progressOf(roots[0], m2)?.status === 'recorded' && progressOf(roots[1], m2)?.status === 'recorded', 150_000);
+    assert.equal(progressOf(roots[0], m2).commitment, progressOf(roots[1], m2).commitment, 'the same verified result');
+    assert.ok(seen.every((s) => s.threw === null));
+  } finally {
+    OnlineMatch.prototype.open = origOpen; Hypercore.prototype.ready = origReady; OnlineMatch.prototype.attach = origAttach;
     for (const r of [A, B]) await r.close().catch(() => {});
     await testnet.destroy();
     for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });

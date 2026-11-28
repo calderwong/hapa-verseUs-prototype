@@ -300,7 +300,8 @@ export class PeerRuntime {
   _onConnection(peer, conn) {
     let any = false;
     try { this.contact?.core.replicate(conn); } catch { /* replication already attached */ }
-    for (const m of new Set([this.match, ...this.finishing.values()])) if (m && !m.closed && peer.playerId === m.opponent.participantId) { m.attach(conn); any = true; }
+    // an authority still opening declines ('deferred'); _openMatch attaches the current connection at readiness
+    for (const m of new Set([this.match, ...this.finishing.values()])) if (m && !m.closed && peer.playerId === m.opponent.participantId && m.attach(conn) === 'attached') any = true;
     if (any) this.lobby?.announce();
   }
 
@@ -632,7 +633,7 @@ export class PeerRuntime {
     const session = { descriptor: d, manifest: msg.manifest, sigs: { A: msg.sig, B: sigB }, seat: 'B', phase: 'active' };
     writeJsonAtomic(this.store.path('matches', d.matchId, 'session.json'), session);
     this._reserve({ ...r, phase: 'active' });
-    const m = await this._openMatch(session, { activation: true });
+    const m = await this._openMatch(session, { activation: true, fence: cancelled });
     // a Cancel that arrived while the authority initialized still owns this cut: the authority is closed,
     // the attempt left durably (tombstone, `left`) and nothing is published as opened; no result or loss
     if (cancelled()) { await this._releaseUnstarted('cancelled by you before the match started', { notify: false }); this.lobby.send(peer.playerId, { t: 'decline', challengeId: r.challengeId, reason: 'left' }); return; }
@@ -668,7 +669,7 @@ export class PeerRuntime {
       s.sigs.B = msg.sig; s.phase = 'active';
       writeJsonAtomic(file, s);
       this._reserve({ ...r, phase: 'active' });
-      await this._openMatch(s);
+      await this._openMatch(s, { fence: () => this._tombstoned(r.challengeId, r.matchId) });
       if (this._tombstoned(r.challengeId, r.matchId)) return; // left while opening: never activate
       this._reserve({ ...this.reservation, activated: true });
       this.lobby.send(peer.playerId, { t: 'started', matchId: r.matchId, sig: s.sigs.A });
@@ -698,7 +699,7 @@ export class PeerRuntime {
   }
 
   // --- matches --------------------------------------------------------------------------------
-  async _openMatch(session, { finishing = false, activation = false } = {}) {
+  async _openMatch(session, { finishing = false, activation = false, fence = null } = {}) {
     const id = session.descriptor.matchId;
     if (this.match?.matchId === id) return this.match;
     if (this.finishing.has(id)) return this.finishing.get(id);
@@ -712,9 +713,14 @@ export class PeerRuntime {
       this.match = m;
     }
     await m.open();
+    // cancelled (the attempt's fence) or closed while opening: nothing is attached, joined or published;
+    // the caller owns the release (Review 22 V22-01 — a cancelled setup never starts replicating)
+    if (m.closed || fence?.()) return m;
     this.lobby?.join('match', m.matchId);
+    // readiness boundary (N24-01): attach the connection that is current NOW, if it is still live —
+    // any connection authenticated while the authority opened was declined and is picked up here
     const opp = this.lobby?.peers.get(m.opponent.participantId);
-    if (opp) m.attach(opp.ctx.conn);
+    if (opp && !opp.ctx.dropped) m.attach(opp.ctx.conn);
     this.lobby?.announce();
     // the joiner's first opening is published by _onStart at its activation boundary (after the cancel fence)
     if (!finishing && !activation) this.emit({ type: 'match', matchId: m.matchId, kind: 'opened', seat: m.seat, opponent: m.opponent.label });

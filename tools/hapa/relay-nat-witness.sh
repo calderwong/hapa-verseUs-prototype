@@ -9,8 +9,10 @@
 # own NAT router namespace that masquerades with randomized ports and admits no unsolicited inbound
 # traffic. Both peers are therefore genuinely firewalled and randomized, a combination for which
 # HyperDHT itself refuses holepunching and Hyperswarm falls back to a configured relay — no forced
-# relaying. The relay and a DHT testnet sit on routable segments. Success = each peer authenticates the
-# other(s) over a stream arriving from the live relay's endpoint, and the relay reports matched pairings.
+# relaying. The relay (started with --public, so its own DHT node is OPEN) and a DHT testnet sit on
+# routable segments. Success = the stage's exact peer set (stage 1: Peer-a, Peer-b; stage 2: Peer-a..c)
+# each authenticates every other expected peer over a stream arriving from the live relay's endpoint, and
+# the relay reports matched pairings. Passing evidence: run 46101799012 (Response 23).
 set -euo pipefail
 OUT=${1:?out dir}; STAGE=${2:-1}; mkdir -p "$OUT"
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
@@ -62,16 +64,6 @@ for p in $PEERS; do
   ip netns exec hvp$p env WITNESS_FORCE=0 "$NODE" "$ROOT/tools/hapa/relay-witness-peer.mjs" "Peer-$p" "$BOOT" "$KEY" "10.77.1.2:49740" "$OUT/peer-$p.json" $EXPECT $MODE > /dev/null 2>"$OUT/peer-$p.err" &
 done
 wait $(jobs -p | tail -$N) || true
-python3 - "$OUT" "$STAGE" <<'EOF'
-import json, sys, os
-out, stage = sys.argv[1], sys.argv[2]
-load = lambda f: json.load(open(f)) if os.path.exists(f) else None
-peers = [p for p in (load(f'{out}/peer-{x}.json') for x in 'abc') if p]
-stats = load(f'{out}/relay-stats.json')
-ok = len(peers) >= 2 and all(p['ok'] for p in peers) and bool(stats) and stats['pairings']['matched'] >= (1 if stage == '1' else 3)
-summary = {'ok': ok, 'stage': stage, 'control': load(f'{out}/control.json'), 'relayStats': stats,
-           'peers': [{k: p.get(k) for k in ('name', 'ok', 'seconds', 'roster', 'relays', 'diag', 'firewall')} for p in peers]}
-json.dump(summary, open(f'{out}/summary.json', 'w'), indent=1)
-print(json.dumps(summary, indent=1))
-sys.exit(0 if ok else 1)
-EOF
+# exact expected report set per stage (Review 22 V22-03 / N24-03): missing, duplicated, misidentified or
+# failing reports fail the stage — see tools/hapa/relay-witness-aggregate.mjs
+"$NODE" "$ROOT/tools/hapa/relay-witness-aggregate.mjs" "$OUT" "$STAGE"

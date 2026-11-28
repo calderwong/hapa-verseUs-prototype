@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SUPERSEDED (Response 23): this flat-firewall topology never matched relay pairings (Response 22).
+# The workflow uses relay-nat-witness.sh; this file is kept only as the record of that attempt.
 # Native second-relay carriage witness on Linux network namespaces (Review 20 / N22-03, HC-09).
 #
 #   sudo bash tools/hapa/relay-netns-witness.sh <out dir>

@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 /**
- * One peer of the network-namespace relay witness (Review 20 / N22-03; run by relay-netns-witness.sh).
+ * One peer of the relay NAT witness (Review 21 / N23-03, HC-09; run by relay-nat-witness.sh).
  *
- *   node tools/hapa/relay-witness-peer.mjs <name> <bootstrap host:port> <live relay key> <live relay endpoint> <out.json> <expected peer count>
+ *   node tools/hapa/relay-witness-peer.mjs <name> <bootstrap host:port> <live relay key> <live relay endpoint> <out.json> <expected peer count> [single|fallback]
  *
- * A real PeerRuntime (Hypercore storage, Hyperswarm, HELLO/AUTH) in its own namespace. Its accepted
- * policy lists an unreachable first relay ("gone") and the live relay second; every connection is
- * relayed (forceRelay) and the namespace firewall drops peer-to-peer packets, so an authenticated
- * session can only exist if a relay carries it. Writes what it observed: authenticated players with the
- * observed path and the relay whose published endpoint the stream arrives from, and relay evidence.
+ * A real PeerRuntime (Hypercore storage, Hyperswarm, HELLO/AUTH) in a private subnet behind its own
+ * randomized NAT router namespace. Relaying is NOT forced (WITNESS_FORCE=0 in the witness): HyperDHT
+ * refuses holepunching between two firewalled, randomized peers and Hyperswarm falls back to the
+ * configured relay. `single` lists only the live relay; `fallback` lists an unreachable relay ("gone")
+ * first and the live relay second. Writes what it observed: authenticated players with the observed
+ * path and the relay whose published endpoint the stream arrives from, relay handout evidence, firewall
+ * classification and branch/error instrumentation. relay-witness-aggregate.mjs judges the stage.
  */
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

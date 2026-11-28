@@ -65,6 +65,7 @@ export class OnlineMatch {
     if (b4a.toString(this.own.key, 'hex') !== this.descriptor.feeds[this.seat]) throw new Error('own match feed key differs from the agreed session');
     this.remote = new Hypercore(join(this.dir, 'remote'), b4a.from(this.descriptor.feeds[this.other], 'hex'), { valueEncoding: 'json' });
     await this.remote.ready();
+    this.feedsReady = !this.closed; // the replication readiness boundary (Review 22 V22-01): both feeds exist
     this.remote.on('truncate', (length, fork) => { if (length < this.remoteRead) this._dispute(`the opponent's feed was rewritten below agreed position ${this.remoteRead} (fork ${fork})`); });
     this.ctx = createContext(this.manifest);
     this.state = initializeMatch(this.manifest);
@@ -78,13 +79,23 @@ export class OnlineMatch {
     return this;
   }
 
-  /** Replicate both feeds over an authenticated connection to the opponent. */
+  /**
+   * Replicate both feeds over an authenticated connection to the opponent. Readiness-aware (Review 22
+   * V22-01 / N24-01): while the authority is still opening (either feed missing) the connection is
+   * declined, not half-attached — the opener attaches the then-current connection once both feeds
+   * exist. A closed authority never attaches; the same connection is attached at most once.
+   * @returns {'attached'|'already'|'deferred'|'closed'}
+   */
   attach(conn) {
-    if (this.closed) return;
+    if (this.closed) return 'closed';
+    if (!this.feedsReady) return 'deferred';
+    if ((this._attached ??= new WeakSet()).has(conn)) return 'already';
     this.own.replicate(conn);
     this.remote.replicate(conn);
+    this._attached.add(conn);
     this.connection = 'connected';
     this.emit('connection', { state: 'connected' });
+    return 'attached';
   }
 
   detached() { if (!this.closed && this.status === 'active') { this.connection = 'reconnecting'; this.emit('connection', { state: 'reconnecting' }); } }

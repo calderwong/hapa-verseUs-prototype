@@ -1,9 +1,11 @@
 # Native relay carriage witness (Review 21 / N23-03, HC-09) on Linux network namespaces with NAT routers.
-# The job FAILS unless every peer authenticates every other peer over a stream observed arriving from
-# the second (live) relay while all peer-to-peer packets are dropped, and the relay reports pairings.
+# Peers sit behind randomized NAT routers that drop unsolicited inbound traffic. Each stage FAILS unless
+# its exact expected peer set (stage 1: two peers; stage 2: three) reports, and every peer authenticates
+# every other over a stream observed arriving from the live relay, which reports matched pairings
+# (tools/hapa/relay-witness-aggregate.mjs). Passing run: 46101799012.
 name: Relay witness (network namespaces)
 on:
-  workflow_dispatch:   # run deliberately: it currently fails honestly (pairing never matches; see Response 22)
+  workflow_dispatch:   # run deliberately (a few minutes of a hosted runner); not part of every push
 permissions:
   contents: read
 jobs:

@@ -37,7 +37,7 @@ import { standingOf, fmtBand, bandY } from './terrain-view.js';
 import { snapshot, poseAt, timeline, eventsBeforeMovement } from './playback.js';
 import { loadRenditions, renditionFor, drawCover } from './renditions.js';
 import { h } from './dom.js';
-import { ROSTER, loadRoster, saveRoster, playable } from './roster.js';
+import { ROSTER, loadRoster, saveRoster, selectAvatar, resolveChoice, statusOf } from './roster.js';
 import { VersusSound } from './sound.js';
 import { Table, spokenParty } from './table.js';
 import { buildScenery } from './scenery.js';
@@ -321,24 +321,43 @@ export class VersusApp {
       }, 220);
     } });
     drawChips();
-    const red = h('input', { type: 'checkbox', checked: !!t.avatarId, onchange: (e) => { t.avatarId = e.target.checked ? 'red-reaper' : null; save(); drawPlayers(); } });
-    // the Players roster (Addendum 11, local slice): roster enablement, this game's choice and online
-    // availability are three separate controls; only an owner-served figure can be chosen
+    // the Players roster (Addendum 11): roster enablement, this game's choice and online availability
+    // are three separate controls. One choice (a radio group including "no figure") goes through
+    // selectAvatar; a stored choice is reconciled with the roster each time setup opens (V22-02 / N24-02)
     const enabled = loadRoster();
-    const players = h('div', { class: 'roster' });
-    const drawPlayers = () => players.replaceChildren(h('div', { class: 'small' }, h('b', {}, 'Players'), ' — Avatar players for the bot seat. The moves come from the controller below; the figure is presentation only.'),
+    const note = h('div', { class: 'small dim roster-note', role: 'status' });
+    const fix = resolveChoice(t, enabled);
+    if (fix.changed) { t.avatarId = null; save(); note.textContent = `No figure selected — ${fix.why}.`; }
+    const choose = (id) => {
+      const r = selectAvatar(id, enabled);
+      t.avatarId = r.avatarId; save();
+      note.textContent = r.ok ? '' : `Not selected — ${r.why}.`;
+      drawPlayers();
+    };
+    const players = h('div', { class: 'roster', role: 'radiogroup', 'aria-label': 'Who sits in the bot seat' });
+    const drawPlayers = () => players.replaceChildren(
+      h('div', { class: 'small' }, h('b', {}, 'Players'), ' — who sits in the bot seat: its figure, voice, reactions and music. The moves come from the controller below; the figure is presentation only.'),
+      h('div', { class: `roster-row${t.avatarId == null ? ' chosen' : ''}` },
+        h('label', { class: 'inline small' }, h('input', { type: 'radio', name: 'roster-choice', value: '', checked: t.avatarId == null, onchange: () => choose(null) }), ' Play this game'),
+        h('span', { class: 'small' }, h('b', {}, 'No figure'), ' · the bot plays without an Avatar')),
       ...ROSTER.map((e) => {
-        const can = playable(e, enabled), chosen = t.avatarId === e.id;
-        return h('div', { class: `roster-row${chosen ? ' chosen' : ''}` },
-          h('label', { class: 'inline small', title: 'Keep this Avatar in your local roster' }, h('input', { type: 'checkbox', checked: enabled[e.id], onchange: (ev) => { enabled[e.id] = ev.target.checked; saveRoster(enabled); if (!ev.target.checked && t.avatarId === e.id) { t.avatarId = null; save(); red.checked = false; } drawPlayers(); } }), ' In my roster'),
-          h('label', { class: 'inline small' }, h('input', { type: 'radio', name: 'roster-choice', checked: chosen, disabled: !can.ok, onchange: () => { t.avatarId = e.id; save(); red.checked = true; drawPlayers(); } }), ' Play this game'),
-          h('span', { class: 'small' }, h('b', {}, e.label), e.aliases.length ? ` (also ${e.aliases.join(', ')})` : '', ` · ${e.species} · ${e.renderer}`),
-          h('span', { class: 'dim small' }, can.ok ? ` · figure from ${e.owner}` : ` · ${can.why}`),
-          h('label', { class: 'inline small dim', title: 'Hosting an Avatar player online is not supported yet' }, h('input', { type: 'checkbox', disabled: true }), ' Available online (not yet)'));
-      }));
+        const chosen = t.avatarId === e.id, can = selectAvatar(e.id, enabled);
+        return h('div', { class: `roster-row${chosen ? ' chosen' : ''}`, 'data-avatar': e.id },
+          h('label', { class: 'inline small', title: can.ok ? '' : can.why }, h('input', { type: 'radio', name: 'roster-choice', value: e.id, checked: chosen, disabled: !can.ok, onchange: () => choose(e.id) }), ' Play this game'),
+          h('span', { class: 'small' }, h('b', {}, e.label), e.aliases.length ? ` (also ${e.aliases.join(', ')})` : '', ` · ${e.species}`),
+          h('span', { class: 'dim small' }, ` · ${statusOf(e, enabled)}`),
+          h('div', { class: 'roster-ctl' },
+          h('label', { class: 'inline small', title: 'Keep this Avatar in your local roster' }, h('input', { type: 'checkbox', checked: enabled[e.id], onchange: (ev) => { enabled[e.id] = ev.target.checked; saveRoster(enabled); if (!ev.target.checked && t.avatarId === e.id) choose(null); else drawPlayers(); } }), ' In my roster'),
+          h('label', { class: 'inline small dim', title: 'Hosting an Avatar player online is not supported yet' }, h('input', { type: 'checkbox', disabled: true }), ' Available online (not yet)'),
+          h('details', { class: 'roster-details small dim' }, h('summary', {}, 'Details'),
+            h('div', {}, `Owner: ${e.owner} · package ${e.package.id} ${e.package.revision}${e.package.source ? ` (${e.package.source})` : ''}`),
+            h('div', {}, `Renderer: ${e.renderer}`),
+            e.aliasSource ? h('div', {}, `Aliases from: ${e.aliasSource}`) : null,
+            h('div', {}, `Id: ${e.id}${e.served ? ` · served by ${e.served}` : ' · not served'}`))));
+      }), note);
     drawPlayers();
     t.controller ??= 'heuristic';
-    const ctl = h('select', { 'aria-label': "Red's moves", onchange: (e) => { t.controller = e.target.value; save(); } },
+    const ctl = h('select', { 'aria-label': "The bot seat's moves", onchange: (e) => { t.controller = e.target.value; save(); } },
       h('option', { value: 'heuristic', selected: t.controller === 'heuristic' }, 'Heuristic bot'),
       h('option', { value: 'model', selected: t.controller === 'model' }, 'Model-assisted (local model via Harness; heuristic fallback)'));
     // whether Red's owner answers on this computer, said before the match rather than discovered as an
@@ -352,15 +371,17 @@ export class VersusApp {
       ownerNote.textContent = `Red's figure and voice come from Harbor, which is not answering (${e.message}). Red plays as an empty chair with captions until it starts; the match picks it up by itself.${location.protocol === 'app:' ? ' Configure it in owners.json (see the runbook).' : ' Start the local owners with: npm run owners -- --start'}`;
     });
     return h('div', { class: 'table-setup' },
-      h('label', { class: 'inline' }, red, ' An Avatar plays the bot seat at the table (figure, voice, reactions and the music it brings) — Red by default.'),
       players,
       ownerNote,
-      h('label', { class: 'inline small' }, "Red's moves: ", ctl),
+      h('label', { class: 'inline small' }, "The bot seat's moves: ", ctl),
       h('div', { class: 'small' }, h('b', {}, 'Your tracks (up to 3, alternating with Red\'s): '), chips),
       search, results);
   }
 
   async startMatch({ profileId = DEFAULT_PROFILE_ID, profile: profileObj = null, seats = { A: 'human', B: 'bot' }, seed = 1, watch = false, policies = { A: 'slot_order', B: 'slot_order' }, fixture = null, table = this._tableChoice ?? { avatarId: 'red-reaper', songIds: [] }, online = null }) {
+    // the figure choice is re-checked against the roster at Start (V22-02 / N24-02): an ineligible
+    // choice plays without a figure and says why — it is never swapped for another figure
+    if (table?.avatarId) { const rc = resolveChoice(table, loadRoster()); if (rc.changed) { table = { ...table, avatarId: null }; this._pendingNotice = `Playing without a figure — ${rc.why}.`; } }
     // the new match owns everything from here: the previous match's pending response, playback and
     // continuation are detached so a late answer cannot write into this session (review 03, R3-02)
     const gen = this.generation = (this.generation ?? 0) + 1;
