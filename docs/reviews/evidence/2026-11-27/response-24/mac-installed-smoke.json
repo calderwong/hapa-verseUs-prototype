@@ -1,0 +1,184 @@
+{
+ "app": "<scratch>",
+ "platform": "darwin-arm64",
+ "data": "(isolated test root)",
+ "launches": [
+  {
+   "launch": 1,
+   "exit": 0,
+   "seconds": 8.5,
+   "ok": true,
+   "storeLength": 1,
+   "createdIdentity": true,
+   "fingerprint": "5367-f180-f43b",
+   "page": {
+    "tick": 1,
+    "phase": "planning",
+    "parties": 36,
+    "seats": {
+     "A": "human",
+     "B": "bot"
+    },
+    "canvas": [
+     1430,
+     776
+    ],
+    "bridge": "object",
+    "bridgeKeys": [
+     "kind",
+     "call",
+     "host",
+     "onEvent"
+    ],
+    "nodeInPage": false,
+    "origin": "app://versus",
+    "title": "Hapa Versus"
+   },
+   "transport": {
+    "listened": true,
+    "transportKey": "45c10bf90d4e052c",
+    "ms": 2064,
+    "destroyed": true
+   },
+   "bridge": {
+    "ok": true,
+    "state": "open",
+    "launch": {
+     "index": 0,
+     "length": 1,
+     "coreKey": "e8d5eb44b1c72148"
+    },
+    "fingerprint": "5367-f180-f43b",
+    "hasSecret": false
+   },
+   "refusedUnknownOp": "Error invoking remote method 'versus:call': Error: refused: unknown operation",
+   "ownerRoutes": [
+    503,
+    503,
+    503
+   ],
+   "dataInsideBundle": false,
+   "versions": {
+    "node": "24.22.2",
+    "electron": "45.3.0",
+    "modules": "150"
+   },
+   "about": {
+    "app": "Hapa Versus",
+    "version": "0.1.0",
+    "packaged": true,
+    "electron": "45.3.0",
+    "chrome": "156.0.8078.96",
+    "node": "24.22.2",
+    "platform": "darwin",
+    "arch": "arm64",
+    "network": "test-smoke",
+    "build": {
+     "source": "7efa3b9050cc4061e521c1e202da14b65ab35e9c",
+     "dirty": false,
+     "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+     "builtAt": "2026-11-28T06:44:43.136Z",
+     "target": "darwin-arm64"
+    },
+    "peer": {
+     "runtime": "hapa-versus-peer-runtime/0.2.0",
+     "fingerprint": "5367-f180-f43b"
+    },
+    "name": "Hapa Versus"
+   }
+  },
+  {
+   "launch": 2,
+   "exit": 0,
+   "seconds": 6.8,
+   "ok": true,
+   "storeLength": 2,
+   "createdIdentity": false,
+   "fingerprint": "5367-f180-f43b",
+   "page": {
+    "tick": 1,
+    "phase": "planning",
+    "parties": 36,
+    "seats": {
+     "A": "human",
+     "B": "bot"
+    },
+    "canvas": [
+     1430,
+     776
+    ],
+    "bridge": "object",
+    "bridgeKeys": [
+     "kind",
+     "call",
+     "host",
+     "onEvent"
+    ],
+    "nodeInPage": false,
+    "origin": "app://versus",
+    "title": "Hapa Versus"
+   },
+   "transport": {
+    "listened": true,
+    "transportKey": "d273cd4fe889e991",
+    "ms": 1483,
+    "destroyed": true
+   },
+   "bridge": {
+    "ok": true,
+    "state": "open",
+    "launch": {
+     "index": 1,
+     "length": 2,
+     "coreKey": "e8d5eb44b1c72148"
+    },
+    "fingerprint": "5367-f180-f43b",
+    "hasSecret": false
+   },
+   "refusedUnknownOp": "Error invoking remote method 'versus:call': Error: refused: unknown operation",
+   "ownerRoutes": [
+    503,
+    503,
+    503
+   ],
+   "dataInsideBundle": false,
+   "versions": {
+    "node": "24.22.2",
+    "electron": "45.3.0",
+    "modules": "150"
+   },
+   "about": {
+    "app": "Hapa Versus",
+    "version": "0.1.0",
+    "packaged": true,
+    "electron": "45.3.0",
+    "chrome": "156.0.8078.96",
+    "node": "24.22.2",
+    "platform": "darwin",
+    "arch": "arm64",
+    "network": "test-smoke",
+    "build": {
+     "source": "7efa3b9050cc4061e521c1e202da14b65ab35e9c",
+     "dirty": false,
+     "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+     "builtAt": "2026-11-28T06:44:43.136Z",
+     "target": "darwin-arm64"
+    },
+    "peer": {
+     "runtime": "hapa-versus-peer-runtime/0.2.0",
+     "fingerprint": "5367-f180-f43b"
+    },
+    "name": "Hapa Versus"
+   }
+  }
+ ],
+ "sameIdentity": true,
+ "storeGrewPerLaunch": true,
+ "ok": true,
+ "artifact": {
+  "name": "Hapa-Versus-0.1.0-friend7-macOS-AppleSilicon.dmg",
+  "sha256": "1a43211cddac857783d0994f709ec173146c1ff4d152f97e2e7bc9b3a605467b",
+  "installedFrom": "released DMG (downloaded from the friend.7 pre-release, hash-verified, copied out of the mounted image)"
+ },
+ "securityAgentSeen": false
+}

@@ -1,0 +1,20 @@
+npm run check — source 7efa3b9050cc4061e521c1e202da14b65ab35e9c (run on its exact content just before the commit) — finished 2026-11-28T06:44:09Z
+ℹ tests 200
+ℹ pass 200
+ℹ fail 0
+✔ rules tests (53075 ms)
+✔ two-process peer-verified match (3169 ms)
+✔ build (461 ms)
+✔ HC-09 (N22-03): unconfirmed handouts are not failures; concurrent consumers spread; suspicion needs time and repetition; exhaustion hands out nothing; expiry is read at use
+✔ HC-10 (N20-04): cancelling at discovery, negotiation and after the accept stays cancelled; one tombstone; the next attempt works
+✔ V20-A / N22-01: Cancel during match initialization owns the cut — nothing opens, no STARTED, one durable leave; after activation Cancel answers connected
+✔ V21-01 / N23-01: reconnect during initialization never activates the counterpart; Cancel stays the owner; retransmission works once activated
+✔ V22-01 / N24-01: a full re-authentication while the authority opens defers replication; at readiness both feeds attach to the current connection; a cancelled setup never attaches
+✔ V21-02 / N23-02: an archive that expires after startup is not dialled by a later join; explicit archives keep precedence
+✔ V21-03 / N23-02: a relay replaced under the same id uses the new key and starts with fresh evidence
+✔ lost STARTED: the active joiner is released when the starting challenger leaves; both can start again
+✔ early terminal cut: a side stopped at its terminal step finishes after restart through the reconnected finishing authority
+✔ V22-03 / N24-03: the published run passes with its exact peer sets
+✔ V22-03 / N24-03: missing, duplicated, misidentified, invalid, failing or extra reports fail the stage
+✔ V22-02 / N24-02: a figure removed from the roster cannot stay selected through any path, reopen or Start
+exit 0

@@ -1,0 +1,148 @@
+{
+ "ok": true,
+ "script": "online",
+ "ms": 104811,
+ "about": {
+  "app": "Hapa Versus",
+  "version": "0.1.0",
+  "packaged": true,
+  "electron": "45.3.0",
+  "chrome": "156.0.8078.96",
+  "node": "24.22.2",
+  "platform": "win32",
+  "arch": "x64",
+  "network": "test-invite-mx01tf6p",
+  "build": {
+   "source": "7efa3b9050cc4061e521c1e202da14b65ab35e9c",
+   "dirty": false,
+   "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+   "builtAt": "2026-11-28T06:44:53.282Z",
+   "target": "win32-x64"
+  },
+  "peer": {
+   "runtime": "hapa-versus-peer-runtime/0.2.0",
+   "fingerprint": "145c-36a8-5564"
+  },
+  "name": "Hapa Versus"
+ },
+ "me": "145c-36a8-5564",
+ "seat": "A",
+ "opponent": "Friend",
+ "outcome": {
+  "result": "win",
+  "winner": "A",
+  "loser": "B",
+  "tick": 4,
+  "reasons": [
+   {
+    "seat": "B",
+    "reason": "conceded"
+   }
+  ]
+ },
+ "finalHash": "sha256:2a292134f0417df5772f1b8e60424bed0e0e86c68faeff0bb867ae15c542b43d",
+ "ticksAgreed": 4,
+ "viewMatchesAgreed": true,
+ "readyClicks": 4,
+ "choicesAnswered": 0,
+ "readyAckMs": {
+  "n": 4,
+  "median": 93,
+  "p95": 136,
+  "max": 136
+ },
+ "reloaded": false,
+ "music": {
+  "before": {
+   "deck": true,
+   "status": "unavailable",
+   "remotePlate": "Friend",
+   "avatar": false
+  },
+  "after": {
+   "status": "unavailable",
+   "now": null,
+   "action": "none"
+  }
+ },
+ "feeds": {
+  "own": {
+   "length": 13,
+   "fork": 0
+  },
+  "remote": {
+   "length": 13,
+   "read": 13,
+   "fork": 0
+  }
+ },
+ "ticks": [
+  {
+   "tick": 1,
+   "planned": "3 orders",
+   "readyAckMs": 93,
+   "label": "Resolving…"
+  },
+  {
+   "tick": 2,
+   "planned": "3 orders",
+   "readyAckMs": 37,
+   "label": "Ready · waiting for FriendYour plan is committed · Friend is planning"
+  },
+  {
+   "tick": 3,
+   "planned": "3 orders",
+   "readyAckMs": 136,
+   "label": "Resolving…"
+  },
+  {
+   "tick": 4,
+   "planned": "3 orders",
+   "readyAckMs": 37,
+   "label": "Ready · waiting for FriendYour plan is committed · Friend is planning"
+  }
+ ],
+ "log": [
+  {
+   "t": 423,
+   "step": "join",
+   "auto": true
+  },
+  {
+   "t": 1169,
+   "step": "invitationCopied",
+   "version": "hvinv2"
+  },
+  {
+   "t": 8962,
+   "step": "tableOpen",
+   "seat": "A",
+   "opponent": "Friend",
+   "tick": 1,
+   "seats": {
+    "A": "human",
+    "B": "remote"
+   }
+  },
+  {
+   "t": 102447,
+   "step": "result",
+   "outcome": {
+    "result": "win",
+    "winner": "A",
+    "loser": "B",
+    "tick": 4,
+    "reasons": [
+     {
+      "seat": "B",
+      "reason": "conceded"
+     }
+    ]
+   }
+  }
+ ],
+ "console": [
+  "warning: [versus] music contribution unavailable (cj): music library cj is not configured on this computer",
+  "warning: [versus] music contribution unavailable (cj): music library cj is not configured on this computer"
+ ]
+}

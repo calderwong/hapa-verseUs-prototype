@@ -11,7 +11,7 @@ One form per session. Fill it in from the app; do **not** include IP addresses, 
 | Network, described generally (home broadband / phone hotspot / office) and provider type, no names or addresses | | |
 | Were the two computers on different internet connections in different places? (yes/no) | | |
 | How did you connect? (Challenge from the list / Invitation) | | |
-| Did macOS show a security prompt? Which one, and what did you click? | | |
+| Did your computer show a security prompt (Mac: "cannot verify the developer" / Open Anyway; Windows: "Windows protected your PC" SmartScreen, or a Windows Defender Firewall request)? Which one, and what did you click? | | |
 | Your fingerprint (shown next to your name in Play online) | | |
 | The other player's fingerprint, as shown to you | | |
 | Did both players control their own side and press Ready themselves? | | |
