@@ -1,0 +1,105 @@
+{
+ "ok": true,
+ "stage": "1",
+ "control": {
+  "peersBehindRandomizedNat": true,
+  "unsolicitedInboundDropped": true,
+  "peerToRelay": true
+ },
+ "relayStats": {
+  "at": "2026-11-28T03:14:07.147Z",
+  "sessions": {
+   "accepted": 2,
+   "opened": 2,
+   "closed": 0,
+   "active": 2
+  },
+  "pairings": {
+   "requested": 2,
+   "matched": 1,
+   "cancelled": 0,
+   "pending": 0,
+   "active": 1
+  },
+  "streams": {
+   "opened": 2,
+   "closed": 0,
+   "errors": 0,
+   "active": 2
+  }
+ },
+ "peers": [
+  {
+   "name": "Peer-a",
+   "ok": true,
+   "seconds": 10.012,
+   "roster": [
+    {
+     "label": "Peer-b",
+     "fingerprint": "f14a-35eb-9880",
+     "path": "relayed",
+     "relay": "live"
+    }
+   ],
+   "relays": [
+    {
+     "id": "live",
+     "label": "second relay",
+     "handed": 0,
+     "unconfirmed": 0,
+     "confirmed": 1,
+     "observed": true,
+     "suspected": 0,
+     "coolingMs": 0
+    }
+   ],
+   "diag": {
+    "serverRelayCalls": 1,
+    "clientErrors": {},
+    "serverRelayed": 0
+   },
+   "firewall": {
+    "firewalled": true,
+    "randomized": true,
+    "remoteAddress": null
+   }
+  },
+  {
+   "name": "Peer-b",
+   "ok": true,
+   "seconds": 10.007,
+   "roster": [
+    {
+     "label": "Peer-a",
+     "fingerprint": "980c-ecf7-e81e",
+     "path": "relayed",
+     "relay": "live"
+    }
+   ],
+   "relays": [
+    {
+     "id": "live",
+     "label": "second relay",
+     "handed": 1,
+     "unconfirmed": 0,
+     "confirmed": 1,
+     "observed": true,
+     "suspected": 0,
+     "coolingMs": 0
+    }
+   ],
+   "diag": {
+    "serverRelayCalls": 0,
+    "clientErrors": {
+     "HOLEPUNCH_ABORTED": 1
+    },
+    "serverRelayed": 0
+   },
+   "firewall": {
+    "firewalled": true,
+    "randomized": true,
+    "remoteAddress": null
+   }
+  }
+ ]
+}

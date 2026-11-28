@@ -1,0 +1,193 @@
+{
+ "ok": true,
+ "stage": "2",
+ "control": {
+  "peersBehindRandomizedNat": true,
+  "unsolicitedInboundDropped": true,
+  "peerToRelay": true
+ },
+ "relayStats": {
+  "at": "2026-11-28T03:14:44.609Z",
+  "sessions": {
+   "accepted": 6,
+   "opened": 6,
+   "closed": 4,
+   "active": 2
+  },
+  "pairings": {
+   "requested": 6,
+   "matched": 3,
+   "cancelled": 0,
+   "pending": 0,
+   "active": 1
+  },
+  "streams": {
+   "opened": 6,
+   "closed": 4,
+   "errors": 2,
+   "active": 2
+  }
+ },
+ "peers": [
+  {
+   "name": "Peer-a",
+   "ok": true,
+   "seconds": 18.015,
+   "roster": [
+    {
+     "label": "Peer-b",
+     "fingerprint": "6975-5936-d2b1",
+     "path": "relayed",
+     "relay": "live"
+    },
+    {
+     "label": "Peer-c",
+     "fingerprint": "85da-b26f-ccb3",
+     "path": "relayed",
+     "relay": "live"
+    }
+   ],
+   "relays": [
+    {
+     "id": "gone",
+     "label": "unreachable first relay",
+     "handed": 0,
+     "unconfirmed": 0,
+     "confirmed": 0,
+     "observed": false,
+     "suspected": 0,
+     "coolingMs": 0
+    },
+    {
+     "id": "live",
+     "label": "second relay",
+     "handed": 0,
+     "unconfirmed": 0,
+     "confirmed": 2,
+     "observed": true,
+     "suspected": 0,
+     "coolingMs": 0
+    }
+   ],
+   "diag": {
+    "serverRelayCalls": 3,
+    "clientErrors": {
+     "PEER_NOT_FOUND": 1
+    },
+    "serverRelayed": 0
+   },
+   "firewall": {
+    "firewalled": true,
+    "randomized": true,
+    "remoteAddress": null
+   }
+  },
+  {
+   "name": "Peer-b",
+   "ok": true,
+   "seconds": 12.01,
+   "roster": [
+    {
+     "label": "Peer-c",
+     "fingerprint": "85da-b26f-ccb3",
+     "path": "relayed",
+     "relay": "live"
+    },
+    {
+     "label": "Peer-a",
+     "fingerprint": "94c0-1098-9a25",
+     "path": "relayed",
+     "relay": "live"
+    }
+   ],
+   "relays": [
+    {
+     "id": "gone",
+     "label": "unreachable first relay",
+     "handed": 0,
+     "unconfirmed": 0,
+     "confirmed": 0,
+     "observed": false,
+     "suspected": 0,
+     "coolingMs": 0
+    },
+    {
+     "id": "live",
+     "label": "second relay",
+     "handed": 1,
+     "unconfirmed": 0,
+     "confirmed": 2,
+     "observed": true,
+     "suspected": 0,
+     "coolingMs": 0
+    }
+   ],
+   "diag": {
+    "serverRelayCalls": 1,
+    "clientErrors": {
+     "HOLEPUNCH_ABORTED": 1
+    },
+    "serverRelayed": 0
+   },
+   "firewall": {
+    "firewalled": true,
+    "randomized": true,
+    "remoteAddress": null
+   }
+  },
+  {
+   "name": "Peer-c",
+   "ok": true,
+   "seconds": 18.021,
+   "roster": [
+    {
+     "label": "Peer-b",
+     "fingerprint": "6975-5936-d2b1",
+     "path": "relayed",
+     "relay": "live"
+    },
+    {
+     "label": "Peer-a",
+     "fingerprint": "94c0-1098-9a25",
+     "path": "relayed",
+     "relay": "live"
+    }
+   ],
+   "relays": [
+    {
+     "id": "gone",
+     "label": "unreachable first relay",
+     "handed": 1,
+     "unconfirmed": 1,
+     "confirmed": 0,
+     "observed": false,
+     "suspected": 0,
+     "coolingMs": 0
+    },
+    {
+     "id": "live",
+     "label": "second relay",
+     "handed": 2,
+     "unconfirmed": 0,
+     "confirmed": 2,
+     "observed": true,
+     "suspected": 0,
+     "coolingMs": 0
+    }
+   ],
+   "diag": {
+    "serverRelayCalls": 0,
+    "clientErrors": {
+     "HOLEPUNCH_ABORTED": 3,
+     "PEER_NOT_FOUND": 1
+    },
+    "serverRelayed": 0
+   },
+   "firewall": {
+    "firewalled": true,
+    "randomized": true,
+    "remoteAddress": null
+   }
+  }
+ ]
+}

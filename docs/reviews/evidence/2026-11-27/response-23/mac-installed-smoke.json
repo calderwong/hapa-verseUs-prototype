@@ -1,0 +1,184 @@
+{
+ "app": "<scratch>/inst6/Hapa Versus.app",
+ "platform": "darwin-arm64",
+ "data": "(isolated test root)",
+ "launches": [
+  {
+   "launch": 1,
+   "exit": 0,
+   "seconds": 9.7,
+   "ok": true,
+   "storeLength": 1,
+   "createdIdentity": true,
+   "fingerprint": "8ace-8c77-dc22",
+   "page": {
+    "tick": 1,
+    "phase": "planning",
+    "parties": 36,
+    "seats": {
+     "A": "human",
+     "B": "bot"
+    },
+    "canvas": [
+     1430,
+     776
+    ],
+    "bridge": "object",
+    "bridgeKeys": [
+     "kind",
+     "call",
+     "host",
+     "onEvent"
+    ],
+    "nodeInPage": false,
+    "origin": "app://versus",
+    "title": "Hapa Versus"
+   },
+   "transport": {
+    "listened": true,
+    "transportKey": "42588b496edc1c92",
+    "ms": 2506,
+    "destroyed": true
+   },
+   "bridge": {
+    "ok": true,
+    "state": "open",
+    "launch": {
+     "index": 0,
+     "length": 1,
+     "coreKey": "98496e9baa4ab4bd"
+    },
+    "fingerprint": "8ace-8c77-dc22",
+    "hasSecret": false
+   },
+   "refusedUnknownOp": "Error invoking remote method 'versus:call': Error: refused: unknown operation",
+   "ownerRoutes": [
+    503,
+    503,
+    503
+   ],
+   "dataInsideBundle": false,
+   "versions": {
+    "node": "24.22.2",
+    "electron": "45.3.0",
+    "modules": "150"
+   },
+   "about": {
+    "app": "Hapa Versus",
+    "version": "0.1.0",
+    "packaged": true,
+    "electron": "45.3.0",
+    "chrome": "156.0.8078.96",
+    "node": "24.22.2",
+    "platform": "darwin",
+    "arch": "arm64",
+    "network": "test-smoke",
+    "build": {
+     "source": "fe6584ae29d51809c87b128767d11b49f1818da4",
+     "dirty": false,
+     "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+     "builtAt": "2026-11-28T03:16:49.617Z",
+     "target": "darwin-arm64"
+    },
+    "peer": {
+     "runtime": "hapa-versus-peer-runtime/0.2.0",
+     "fingerprint": "8ace-8c77-dc22"
+    },
+    "name": "Hapa Versus"
+   }
+  },
+  {
+   "launch": 2,
+   "exit": 0,
+   "seconds": 7.1,
+   "ok": true,
+   "storeLength": 2,
+   "createdIdentity": false,
+   "fingerprint": "8ace-8c77-dc22",
+   "page": {
+    "tick": 1,
+    "phase": "planning",
+    "parties": 36,
+    "seats": {
+     "A": "human",
+     "B": "bot"
+    },
+    "canvas": [
+     1430,
+     776
+    ],
+    "bridge": "object",
+    "bridgeKeys": [
+     "kind",
+     "call",
+     "host",
+     "onEvent"
+    ],
+    "nodeInPage": false,
+    "origin": "app://versus",
+    "title": "Hapa Versus"
+   },
+   "transport": {
+    "listened": true,
+    "transportKey": "05bab99e8439744f",
+    "ms": 2526,
+    "destroyed": true
+   },
+   "bridge": {
+    "ok": true,
+    "state": "open",
+    "launch": {
+     "index": 1,
+     "length": 2,
+     "coreKey": "98496e9baa4ab4bd"
+    },
+    "fingerprint": "8ace-8c77-dc22",
+    "hasSecret": false
+   },
+   "refusedUnknownOp": "Error invoking remote method 'versus:call': Error: refused: unknown operation",
+   "ownerRoutes": [
+    503,
+    503,
+    503
+   ],
+   "dataInsideBundle": false,
+   "versions": {
+    "node": "24.22.2",
+    "electron": "45.3.0",
+    "modules": "150"
+   },
+   "about": {
+    "app": "Hapa Versus",
+    "version": "0.1.0",
+    "packaged": true,
+    "electron": "45.3.0",
+    "chrome": "156.0.8078.96",
+    "node": "24.22.2",
+    "platform": "darwin",
+    "arch": "arm64",
+    "network": "test-smoke",
+    "build": {
+     "source": "fe6584ae29d51809c87b128767d11b49f1818da4",
+     "dirty": false,
+     "engine": "ba838cca09ba43afceda0452b63d28df4cbf7f72",
+     "builtAt": "2026-11-28T03:16:49.617Z",
+     "target": "darwin-arm64"
+    },
+    "peer": {
+     "runtime": "hapa-versus-peer-runtime/0.2.0",
+     "fingerprint": "8ace-8c77-dc22"
+    },
+    "name": "Hapa Versus"
+   }
+  }
+ ],
+ "sameIdentity": true,
+ "storeGrewPerLaunch": true,
+ "ok": true,
+ "artifact": {
+  "name": "Hapa-Versus-0.1.0-friend6-macOS-AppleSilicon.dmg",
+  "sha256": "2b48c1cd8d889fee7c0503950f75006218f3b35b75944f4ceab61a2c56557616",
+  "installedFrom": "released DMG (downloaded from the friend.6 pre-release, hash-verified, copied out of the mounted image)"
+ },
+ "securityAgentSeen": false
+}

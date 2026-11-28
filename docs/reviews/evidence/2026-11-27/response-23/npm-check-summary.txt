@@ -1,0 +1,14 @@
+npm run check — source fe6584ae29d51809c87b128767d11b49f1818da4 (release commit; working tree differs only in docs) — 2026-11-28T03:22:58Z
+ℹ tests 195
+ℹ pass 195
+ℹ fail 0
+✔ rules tests (47799 ms)
+✔ two-process peer-verified match (2997 ms)
+✔ build (506 ms)
+✔ HC-09 (N22-03): unconfirmed handouts are not failures; concurrent consumers spread; suspicion needs time and repetition; exhaustion hands out nothing; expiry is read at use
+✔ HC-10 (N20-04): cancelling at discovery, negotiation and after the accept stays cancelled; one tombstone; the next attempt works
+✔ V20-A / N22-01: Cancel during match initialization owns the cut — nothing opens, no STARTED, one durable leave; after activation Cancel answers connected
+✔ V21-01 / N23-01: reconnect during initialization never activates the counterpart; Cancel stays the owner; retransmission works once activated
+✔ V21-02 / N23-02: an archive that expires after startup is not dialled by a later join; explicit archives keep precedence
+✔ V21-03 / N23-02: a relay replaced under the same id uses the new key and starts with fresh evidence
+exit 0

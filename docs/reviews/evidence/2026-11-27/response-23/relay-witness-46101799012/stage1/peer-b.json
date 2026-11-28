@@ -1,0 +1,88 @@
+{
+ "name": "Peer-b",
+ "mode": "single",
+ "diag": {
+  "serverRelayCalls": 0,
+  "clientErrors": {
+   "HOLEPUNCH_ABORTED": 1
+  },
+  "serverRelayed": 0
+ },
+ "firewall": {
+  "firewalled": true,
+  "randomized": true,
+  "remoteAddress": null
+ },
+ "transport": {
+  "state": "online",
+  "error": null,
+  "connections": 1,
+  "peers": 1,
+  "relay": true,
+  "relays": [
+   {
+    "id": "live",
+    "label": "second relay",
+    "handed": 1,
+    "unconfirmed": 0,
+    "confirmed": 1,
+    "observed": true,
+    "suspected": 0,
+    "coolingMs": 0
+   }
+  ],
+  "relaysExhausted": false,
+  "dht": {
+   "bootstrapped": true,
+   "firewalled": true,
+   "randomized": true
+  },
+  "dhtNodes": 3,
+  "dhtHost": "10.77.3.2",
+  "dhtPort": 0,
+  "firewalled": true,
+  "swarmPeers": 1,
+  "connecting": 0,
+  "stats": {
+   "updates": 4,
+   "connects": {
+    "client": {
+     "opened": 1,
+     "closed": 1,
+     "attempted": 2
+    },
+    "server": {
+     "opened": 0,
+     "closed": 0
+    }
+   },
+   "bannedPeers": 0
+  }
+ },
+ "seconds": 10.007,
+ "roster": [
+  {
+   "label": "Peer-a",
+   "fingerprint": "980c-ecf7-e81e",
+   "path": "relayed",
+   "relay": "live"
+  }
+ ],
+ "relays": [
+  {
+   "id": "live",
+   "label": "second relay",
+   "handed": 1,
+   "unconfirmed": 0,
+   "confirmed": 1,
+   "observed": true,
+   "suspected": 0,
+   "coolingMs": 0
+  }
+ ],
+ "exhausted": false,
+ "policyRelays": [
+  "live"
+ ],
+ "ok": true
+}
