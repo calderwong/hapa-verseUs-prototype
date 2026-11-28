@@ -339,3 +339,102 @@ test('V20-A / N22-01: Cancel during match initialization owns the cut — nothin
     for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
 });
+
+test('V21-01 / N23-01: reconnect during initialization never activates the counterpart; Cancel stays the owner; retransmission works once activated', { timeout: 240_000 }, async () => {
+  const testnet = await createTestnet(3);
+  const roots = [mkdtempSync(join(tmpdir(), 'hv-rc-a-')), mkdtempSync(join(tmpdir(), 'hv-rc-b-'))];
+  const aEvents = [];
+  const make = (i) => new PeerRuntime({ root: roots[i], networkId: 'test-reconnect', displayName: i ? 'Bea' : 'Ari', bootstrap: testnet.bootstrap, controller: 'bot', onEvent: i ? undefined : (e) => aEvents.push(e) });
+  let B = make(1);
+  const A = make(0);
+  const origOpen = OnlineMatch.prototype.open;
+  let gate = null, entered = null;
+  OnlineMatch.prototype.open = async function (...args) { if (this.dir.startsWith(roots[1]) && gate) { entered?.(); await gate; } return origOpen.apply(this, args); };
+  try {
+    await A.open(); await B.open(); await A.joinLobby({}); await B.joinLobby({});
+    const sent = [];
+    const send = B.lobby.send.bind(B.lobby);
+    B.lobby.send = (pid, msg) => { sent.push(msg.t); return send(pid, msg); };
+    let release; gate = new Promise((r) => { release = r; });
+    const inside = new Promise((r) => { entered = r; });
+    A.openTable();
+    const challengeId = A.reservation.challengeId, matchId = `hv-${challengeId}`;
+    B.startJoin({ invite: A.reservation.invite, attemptId: 'rc-cancel-00001' });
+    await inside; // B's reservation is active and its authority is initializing
+    const peerA = B.lobby.peers.get(A.identity.participantId);
+    B._onPeer(peerA, 'joined'); // reconnect while opening, BEFORE cancel
+    assert.equal(sent.filter((t) => t === 'started').length, 0, 'no STARTED from an authority still opening');
+    await B.cancelAttempt({ attemptId: 'rc-cancel-00001' });
+    B._onPeer(peerA, 'joined'); // reconnect AFTER cancel, still opening
+    assert.equal(sent.filter((t) => t === 'started').length, 0, 'no STARTED for a cancelled attempt');
+    release(); gate = null;
+    await until(() => !B.match && !B.reservation, 30_000);
+    await new Promise((r) => setTimeout(r, 2000));
+    assert.equal(sent.filter((t) => t === 'started').length, 0);
+    // the counterpart never activated: no match, no opened event, its setup shown as left/stalled
+    assert.equal(A.match, null, 'the counterpart opened nothing');
+    assert.equal(aEvents.filter((e) => e.kind === 'opened').length, 0);
+    assert.ok(!aEvents.some((e) => e.kind === 'resultSaved'), 'no result or loss invented on either side');
+    assert.equal(Object.values(B.tombstones.attempts).filter((t) => t.matchId === matchId).length, 1);
+    // restart: nothing resumes, nothing is re-sent
+    await B.close();
+    B = make(1);
+    await B.open();
+    assert.equal(B.match, null);
+    await B.joinLobby({});
+    // a fresh attempt connects, and after activation a reconnect retransmits STARTED (lost-STARTED recovery kept)
+    if (A.reservation) A._reserve(null);
+    A.openTable();
+    B.startJoin({ invite: A.reservation.invite, attemptId: 'rc-fresh-000002' });
+    await until(() => B.attempt.stage === 'connected' && B.match && A.match, 90_000);
+    const sent2 = [];
+    const send2 = B.lobby.send.bind(B.lobby);
+    B.lobby.send = (pid, msg) => { sent2.push(msg.t); return send2(pid, msg); };
+    B._onPeer(B.lobby.peers.get(A.identity.participantId), 'joined');
+    assert.ok(sent2.includes('started'), 'an activated match still retransmits STARTED on reconnect');
+    assert.equal(B.reservation.activated, true);
+  } finally {
+    OnlineMatch.prototype.open = origOpen;
+    for (const r of [A, B]) await r.close().catch(() => {});
+    await testnet.destroy();
+    for (const r of roots) rmSync(r, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  }
+});
+
+test('V21-02 / N23-02: an archive that expires after startup is not dialled by a later join; explicit archives keep precedence', { timeout: 60_000 }, async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'hv-arch-'));
+  let clock = Date.now();
+  const arch = (c) => ({ player: `hv1:${c.repeat(64)}`, transport: c.repeat(64) });
+  const local = { archives: [], services: [{ id: 'arch-x', role: 'archive', ...arch('a'), expiresAt: clock + 60_000 }] };
+  try {
+    const rt = new PeerRuntime({ root: dir, networkId: 'test-arch', services: { bundled: null, local }, archives: [{ ...arch('e'), label: 'Explicit' }], now: () => clock });
+    await rt.open();
+    assert.deepEqual(rt.archives.map((a) => [a.player.slice(4, 6), a.source]), [['ee', 'explicit'], ['aa', 'configured']]);
+    const records = rt.services.records.length;
+    clock += 120_000; // the configured archive expires while the app runs
+    assert.deepEqual(rt.archives.map((a) => a.source), ['explicit'], 'a new operation sees only what is eligible now');
+    const dialed = [];
+    const { Lobby: L } = await import('../../src/hapa/network/lobby.js');
+    const origDial = L.prototype.dial;
+    L.prototype.dial = function (t) { dialed.push(t); };
+    try { await rt.joinLobby({}); } finally { L.prototype.dial = origDial; }
+    assert.ok(dialed.includes('e'.repeat(64)) && !dialed.includes('a'.repeat(64)), 'the expired configured archive was not dialled');
+    assert.equal(rt._services().find((s) => s.player === arch('a').player), undefined);
+    assert.equal(rt.services.records.length, records, 'expiry appended no adoption event');
+    await rt.close();
+  } finally { rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
+});
+
+test('V21-03 / N23-02: a relay replaced under the same id uses the new key and starts with fresh evidence', () => {
+  const list = [{ id: 'R', key: 'b'.repeat(64), endpoint: '198.51.100.9:9' }];
+  const lobby = new Lobby({ networkId: 'n', relays: () => list });
+  lobby.relayState = new Map();
+  const nowMs = () => Number(process.hrtime.bigint() / 1_000_000n);
+  assert.equal(lobby._nextRelay().toString('hex'), 'b'.repeat(64));
+  const old = lobby.relayState.get('R'); old.lastConfirmed = nowMs(); old.confirmed = 3; old.suspected = 1; old.cooldownUntil = 0;
+  list[0] = { id: 'R', key: 'a'.repeat(64), endpoint: '198.51.100.10:10' }; // operator rotated the relay key/endpoint
+  assert.equal(lobby._nextRelay().toString('hex'), 'a'.repeat(64), 'the new key bytes are handed out');
+  const st = lobby.relayState.get('R');
+  assert.deepEqual([st.confirmed, st.lastConfirmed, st.suspected, st.endpoint], [0, 0, 0, '198.51.100.10:10'], "the old endpoint's evidence is not attributed to the replacement");
+  assert.equal(lobby.transport().relays[0].observed, false);
+});

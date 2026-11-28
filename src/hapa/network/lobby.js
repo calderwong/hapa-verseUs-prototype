@@ -68,8 +68,11 @@ export class Lobby {
     const list = (typeof this.o.relays === 'function' ? this.o.relays() : this.o.relays ?? []).filter((r) => /^[0-9a-f]{64}$/.test(r?.key ?? '')).slice(0, 16);
     return list.map((r) => {
       let st = this.relayState?.get(r.id ?? r.key);
-      if (!st) { st = { handed: 0, awaiting: 0, confirmed: 0, lastConfirmed: 0, suspected: 0, cooldownUntil: 0, handouts: [] }; this.relayState?.set(r.id ?? r.key, st); }
-      return Object.assign(st, { id: r.id ?? r.key.slice(0, 12), key: r.key, endpoint: r.endpoint ?? null, label: r.label ?? r.id, buf: st.buf ?? b4a.from(r.key, 'hex') });
+      // same service id with a new key or endpoint (Review 21 V21-03): new key bytes, and the old
+      // endpoint's confirmations, suspicion and cooldown are not carried over to the replacement
+      if (st && (st.key !== r.key || st.endpoint !== (r.endpoint ?? null))) st = null;
+      if (!st) { st = { handed: 0, awaiting: 0, confirmed: 0, lastConfirmed: 0, suspected: 0, cooldownUntil: 0, handouts: [], key: r.key, endpoint: r.endpoint ?? null, buf: b4a.from(r.key, 'hex') }; this.relayState?.set(r.id ?? r.key, st); }
+      return Object.assign(st, { id: r.id ?? r.key.slice(0, 12), label: r.label ?? r.id });
     });
   }
   get relays() { return this._relayList(); }

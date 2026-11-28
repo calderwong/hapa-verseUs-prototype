@@ -80,7 +80,8 @@ export class PeerRuntime {
     this.match = null;
     this.finishing = new Map(); // matchId → completed authority still owned until its evidence is durable
     this.lastCompleted = null; // lightweight snapshot of the latest completed match (result view)
-    this.archives = (o.archives ?? []).filter((a) => /^hv1:[0-9a-f]{64}$/.test(a?.player ?? '') && /^[0-9a-f]{64}$/.test(a?.transport ?? ''));
+    // archives passed explicitly by the host code (tools, tests): used as given for this process
+    this.explicitArchives = (o.archives ?? []).filter((a) => /^hv1:[0-9a-f]{64}$/.test(a?.player ?? '') && /^[0-9a-f]{64}$/.test(a?.transport ?? '')).map((a) => ({ ...a, source: 'explicit' }));
     this._profileCache = new Map(); // playerId → { at, sync }
     this._syncInFlight = new Map();
   }
@@ -102,8 +103,6 @@ export class PeerRuntime {
     // signed contact history (N19-04): this player's own single-writer core and verified knowledge of others
     this.contact = await new OwnContact({ dir: this.store.path('cores', 'contact'), identity: this.identity, transport: b4a.toString(this._transportKeyPair().publicKey, 'hex'), log: this.log }).open();
     this.contacts = new ContactBook({ dir: this.store.path('contacts'), storeFile: this.store.path('contacts.json'), self: this.identity.participantId, log: this.log });
-    const known = new Set(this.archives.map((a) => a.player));
-    for (const a of this.policy.archives) if (!known.has(a.player)) this.archives.push(a);
     this.compat = compatibility();
     this.results = new ResultIndex(this.store.path('results'));
     this.outbox = readJson(this.store.path('outbox.json'), {});
@@ -179,6 +178,20 @@ export class PeerRuntime {
   _publicReservation() { const r = this.reservation; return r ? { phase: r.phase, role: r.role, challengeId: r.challengeId, matchId: r.matchId ?? null, opponent: r.opponentLabel ?? null, invite: r.phase === 'open' ? r.invite : undefined, stalled: !!r.stalled } : null; }
 
   // --- lobby ----------------------------------------------------------------------------------
+  /**
+   * Archives to dial for a NEW operation (Review 21 V21-02 / N23-02): explicitly supplied archives,
+   * then configured archives that are eligible now (current clock; disabled/retired/expired excluded).
+   * Precedence and lifetime: explicit > configured-now; nothing configured is cached from startup. A peer
+   * that is already connected and advertises the archive role is used opportunistically for public
+   * evidence (verified by every receiver) whatever its configuration — that is a live transport, not an
+   * adoption. The default package configures no archive; none is needed to play.
+   */
+  get archives() {
+    const out = [...(this.explicitArchives ?? [])];
+    for (const a of this._policyNow()?.archives ?? []) if (!out.some((x) => x.player === a.player)) out.push({ ...a, source: 'configured' });
+    return out;
+  }
+
   /** The provider policy as of now (N22-02): expiry is evaluated at each new use, not only at startup. */
   _policyNow() {
     this.policy = this.services?.refresh(this.o.now?.() ?? Date.now()) ?? this.policy;
@@ -263,8 +276,9 @@ export class PeerRuntime {
 
   /** Configured and opportunistic archives with what is actually observed about each. */
   _services() {
-    const out = this.archives.map((a) => ({ label: a.label, player: a.player, configured: true, connected: !!this.lobby?.peers.get(a.player) }));
-    for (const p of this.lobby?.peers.values() ?? []) if (p.presence.role === 'archive' && !this.archives.some((a) => a.player === p.playerId)) out.push({ label: p.player.label, player: p.playerId, configured: false, connected: true });
+    const chosen = this.archives;
+    const out = chosen.map((a) => ({ label: a.label, player: a.player, configured: true, source: a.source, connected: !!this.lobby?.peers.get(a.player) }));
+    for (const p of this.lobby?.peers.values() ?? []) if (p.presence.role === 'archive' && !chosen.some((a) => a.player === p.playerId)) out.push({ label: p.player.label, player: p.playerId, configured: false, source: 'connected', connected: true });
     return out;
   }
 
@@ -604,7 +618,9 @@ export class PeerRuntime {
     const r = this.reservation, d = msg.descriptor;
     if (!r || !d || d.matchId !== r.matchId || r.opponent !== peer.playerId) return;
     const existing = readJson(this.store.path('matches', d.matchId, 'session.json'));
-    if (existing?.sigs?.A && existing?.sigs?.B) { if (fingerprint(existing.descriptor) === fingerprint(d)) this.lobby.send(peer.playerId, { t: 'started', matchId: d.matchId, sig: existing.sigs.B }); return; }
+    // a repeated START for a session we already hold: answer only from an activated, current match
+    // (Review 21 V21-01 — an authority still opening, or a cancelled attempt, never answers)
+    if (existing?.sigs?.A && existing?.sigs?.B) { if (fingerprint(existing.descriptor) === fingerprint(d) && this._activated(r)) this.lobby.send(peer.playerId, { t: 'started', matchId: d.matchId, sig: existing.sigs.B }); return; }
     if (r.phase !== 'accepted') return;
     // activation boundary (Review 20 V20-A / N22-01): until STARTED is sent the joiner's attempt may
     // still be cancelled; a cancelled attempt never writes an active session or opens its authority
@@ -620,7 +636,9 @@ export class PeerRuntime {
     // a Cancel that arrived while the authority initialized still owns this cut: the authority is closed,
     // the attempt left durably (tombstone, `left`) and nothing is published as opened; no result or loss
     if (cancelled()) { await this._releaseUnstarted('cancelled by you before the match started', { notify: false }); this.lobby.send(peer.playerId, { t: 'decline', challengeId: r.challengeId, reason: 'left' }); return; }
-    // activation: from here the match is connected and Cancel answers "already connected"
+    // activation: from here the match is connected and Cancel answers "already connected"; the flag is
+    // persisted with the reservation and is the one owner every STARTED send checks
+    this._reserve({ ...this.reservation, activated: true });
     if (this.attempt?.challengeId === r.challengeId) this._setStage(this.attempt, 'connected');
     this.emit({ type: 'match', matchId: m.matchId, kind: 'opened', seat: m.seat, opponent: m.opponent.label });
     this.lobby.send(peer.playerId, { t: 'started', matchId: d.matchId, sig: sigB });
@@ -651,6 +669,8 @@ export class PeerRuntime {
       writeJsonAtomic(file, s);
       this._reserve({ ...r, phase: 'active' });
       await this._openMatch(s);
+      if (this._tombstoned(r.challengeId, r.matchId)) return; // left while opening: never activate
+      this._reserve({ ...this.reservation, activated: true });
       this.lobby.send(peer.playerId, { t: 'started', matchId: r.matchId, sig: s.sigs.A });
       return;
     }
@@ -662,7 +682,19 @@ export class PeerRuntime {
     if (!r || r.opponent !== peer.playerId) return;
     if (r.phase === 'accepted') this.lobby.send(peer.playerId, { t: 'accept', body: r.accept, sig: r.acceptSig });
     if (r.phase === 'starting') { const s = readJson(this.store.path('matches', r.matchId, 'session.json')); if (s) this.lobby.send(peer.playerId, { t: 'start', descriptor: s.descriptor, manifest: s.manifest, sig: s.sigs.A }); }
-    if (r.phase === 'active' && this.match) { const s = readJson(this.store.path('matches', r.matchId, 'session.json')); this.lobby.send(peer.playerId, { t: 'started', matchId: r.matchId, sig: s?.sigs?.[this.match.seat] }); }
+    // reconnect retransmission repeats an established activation only (V21-01)
+    if (r.phase === 'active' && this._activated(r)) { const s = readJson(this.store.path('matches', r.matchId, 'session.json')); this.lobby.send(peer.playerId, { t: 'started', matchId: r.matchId, sig: s?.sigs?.[this.match.seat] }); }
+  }
+
+  /**
+   * The activation owner (Review 21 V21-01 / N23-01): a reservation may send STARTED only after its
+   * own activation boundary — the joiner after its authority opened and the cancel fence passed, the
+   * challenger after STARTED arrived and its authority opened — and only while it is current: not
+   * tombstoned (cancelled or left), and backed by the open, live authority for that match. An
+   * authority object that is still initializing does not qualify.
+   */
+  _activated(r) {
+    return !!(r && r.activated && r.phase === 'active' && !this._tombstoned(r.challengeId, r.matchId) && this.match && this.match.matchId === r.matchId && !this.match.closed);
   }
 
   // --- matches --------------------------------------------------------------------------------
@@ -711,6 +743,9 @@ export class PeerRuntime {
       try {
         await this._openMatch(s, { finishing: terminal });
         if (terminal) finishing++; else active = true;
+        // a match resumed from its fully signed, untombstoned session is activated (both seats signed it):
+        // this keeps lost-STARTED recovery working after a restart without re-opening a cancelled attempt
+        if (!terminal && this.reservation?.matchId === id && !this.reservation.activated) this._reserve({ ...this.reservation, activated: true });
         this.log(`${terminal ? 'finishing' : 'resumed'} match ${id} as seat ${s.seat}`);
       } catch (e) { this.log(`could not reopen ${id}: ${e.message}`); }
     }
