@@ -1,0 +1,433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:hapa:schema:io-observation:1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "hapa.io.observation/1"
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "node_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "instance_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "boot_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "adapter_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "adapter_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "adapter_id",
+        "adapter_version"
+      ]
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "operation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "attempt_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "session_id",
+        "generation"
+      ]
+    },
+    "resource_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "direction": {
+      "enum": [
+        "inbound",
+        "outbound",
+        "internal"
+      ]
+    },
+    "relationship": {
+      "enum": [
+        "hapa_peer",
+        "centralized_service",
+        "local_storage",
+        "other",
+        "unknown"
+      ]
+    },
+    "locality": {
+      "enum": [
+        "same_device",
+        "local_network",
+        "remote",
+        "unknown"
+      ]
+    },
+    "path": {
+      "enum": [
+        "direct",
+        "relayed",
+        "gateway",
+        "mixed",
+        "unknown"
+      ]
+    },
+    "plane": {
+      "enum": [
+        "application",
+        "discovery",
+        "control",
+        "replication",
+        "telemetry",
+        "diagnostics"
+      ]
+    },
+    "data_kind": {
+      "anyOf": [
+        {
+          "enum": [
+            "operation",
+            "blob",
+            "presence",
+            "identity",
+            "policy",
+            "command",
+            "result",
+            "metric",
+            "discovery",
+            "control",
+            "storage",
+            "telemetry"
+          ]
+        },
+        {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9_]*[.][a-z0-9_.]+$"
+        }
+      ]
+    },
+    "sender_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "recipient_refs": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "observation": {
+      "anyOf": [
+        {
+          "enum": [
+            "queued",
+            "attempted",
+            "transport_sent",
+            "received",
+            "origin_authenticated",
+            "content_verified",
+            "admitted",
+            "applied",
+            "durable_local",
+            "remote_receipt",
+            "replication_observed",
+            "retention_attested",
+            "rejected",
+            "failed",
+            "cancelled",
+            "timed_out",
+            "reconciled",
+            "aggregate",
+            "coverage_gap",
+            "provider_eligibility_changed",
+            "lifecycle_changed"
+          ]
+        },
+        {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9_]*[.][a-z0-9_.]+$"
+        }
+      ]
+    },
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "wire": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "enum": [
+                "application_payload",
+                "encrypted_stream",
+                "http_content",
+                "filesystem",
+                "adapter_reported",
+                "estimated_payload"
+              ]
+            },
+            {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[a-z][a-z0-9_]*[.][a-z0-9_.]+$"
+            }
+          ]
+        }
+      },
+      "required": [
+        "basis"
+      ],
+      "oneOf": [
+        {
+          "required": [
+            "payload"
+          ],
+          "not": {
+            "required": [
+              "wire"
+            ]
+          }
+        },
+        {
+          "required": [
+            "wire"
+          ],
+          "not": {
+            "required": [
+              "payload"
+            ]
+          }
+        }
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "encrypted_stream"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "wire"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "enum": [
+                  "application_payload",
+                  "estimated_payload",
+                  "http_content",
+                  "filesystem"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "payload"
+            ]
+          }
+        }
+      ]
+    },
+    "duration_ms": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "retry_after_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "code"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "endpoint_refs": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trace_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "not": {
+            "const": "00000000000000000000000000000000"
+          }
+        },
+        "span_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$",
+          "not": {
+            "const": "0000000000000000"
+          }
+        }
+      },
+      "required": [
+        "trace_id"
+      ]
+    },
+    "visibility": {
+      "enum": [
+        "local_private",
+        "shared_scoped",
+        "public"
+      ]
+    },
+    "coverage": {
+      "enum": [
+        "observed",
+        "sampled",
+        "aggregate"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "maxProperties": 32,
+      "propertyNames": {
+        "maxLength": 128,
+        "pattern": "^[a-z][a-z0-9_]*[.][a-z0-9_.]+$"
+      },
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "boolean",
+          "null"
+        ],
+        "maxLength": 2048
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "event_id",
+    "observed_at",
+    "node_id",
+    "instance_id",
+    "boot_id",
+    "producer",
+    "sequence",
+    "direction",
+    "relationship",
+    "locality",
+    "path",
+    "plane",
+    "data_kind",
+    "observation",
+    "visibility",
+    "coverage"
+  ]
+}

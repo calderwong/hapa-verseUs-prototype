@@ -1,0 +1,90 @@
+{
+  "schema_version": "hapa.standard.adoption/1",
+  "node": {
+    "definition_id": "hapa-versus",
+    "repository": "calderwong/hapa-verseUs-prototype",
+    "repository_role": "node",
+    "existing_manifest": "hapa-node.json"
+  },
+  "standard": {
+    "standard_id": "hapa.base-node",
+    "target_version": "0.1.0-draft.1",
+    "adopted_pin": null,
+    "adoption_state": "targeting",
+    "bundle_path": "docs/standards/base-hapa-node/0.1.0-draft.1",
+    "bundle_sha256": "ca332bd12c3b38451638165d580db5612cdb7addaf9ee036fc1de0bd7e45e9e2",
+    "release_sha256": "e3f76af3722d35ffaa833834072114d7d2908c96ac664772efcf374d5a453a84",
+    "canonical_source": "https://github.com/calderwong/hapa-second-brain-node/tree/main/docs/standards/base-hapa-node/0.1.0-draft.1",
+    "source_ref": "sha256:e3f76af3722d35ffaa833834072114d7d2908c96ac664772efcf374d5a453a84",
+    "publication_state": "bootstrap_source_only"
+  },
+  "assessment": {
+    "state": "not_assessed",
+    "standard_version": null,
+    "build_ref": null,
+    "evidence_report": null,
+    "scope_note": "Pilot standard mirror; standard implementation and full conformance are not assessed. This addition does not replace the current game requirements, connectivity contract or review assignment."
+  },
+  "registrations": {
+    "kanban": {
+      "state": "unknown",
+      "subject_ref": "hapa-versus",
+      "owner_ref": "hapa-overwatch-kanban",
+      "record_ref": "hapa-node.json#/board",
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "Existing project_id hapa-versus declared in source; live acceptance not verified or changed in this pass."
+    },
+    "quest_keeper": {
+      "state": "unknown",
+      "subject_ref": null,
+      "owner_ref": null,
+      "record_ref": null,
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "This pass did not assess the live owner binding. Resolve existing records before creating anything; no absence or acceptance is inferred."
+    },
+    "telemetry": {
+      "state": "unknown",
+      "subject_ref": null,
+      "owner_ref": null,
+      "record_ref": null,
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "This pass did not assess the live owner binding. Resolve existing records before creating anything; no absence or acceptance is inferred."
+    },
+    "second_brain": {
+      "state": "unknown",
+      "subject_ref": null,
+      "owner_ref": null,
+      "record_ref": null,
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "This pass did not assess the live owner binding. Resolve existing records before creating anything; no absence or acceptance is inferred."
+    },
+    "wiki": {
+      "state": "unknown",
+      "subject_ref": null,
+      "owner_ref": null,
+      "record_ref": null,
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "This pass did not assess the live owner binding. Resolve existing records before creating anything; no absence or acceptance is inferred."
+    }
+  },
+  "recurring_checks": {
+    "state": "specified_not_active",
+    "policy_ref": "docs/standards/base-hapa-node/0.1.0-draft.1/GOVERNANCE.md",
+    "executor_ref": null,
+    "last_attempt_at": null,
+    "last_success_at": null,
+    "next_due_at": null
+  },
+  "local_document": "docs/HAPA_NODE.md",
+  "deviations_ref": null
+}

@@ -1,5 +1,10 @@
 # Hapa Versus
 
+## Base Hapa Node Standard
+
+This repository now carries the [Base Hapa Node Standard draft and local adoption record](docs/HAPA_NODE.md), including the seven pillars, common I/O Bar, conformance cases, and Second Brain update protocol. Status: **targeting; not assessed**. The source-only specification does not certify this node or activate registrations, telemetry export, or recurring jobs.
+
+
 Two opponents command visible armies on a compact 2.5D battlefield. The territory a player holds
 mints **public Minor Arcana**: each card can become movement **Supply**, colored **Mana**, or its
 attached **Card ability** — one use per card. Members stand in a visible **3×3 formation**, and
@@ -173,3 +178,4 @@ Start with [docs/reviews/README.md](docs/reviews/README.md) for the latest desig
 implementation evidence template, and the CJ ↔ reviewer ↔ local coding agent iteration flow.
 The dated notes include the original screenshot, prioritized findings, source references and
 acceptance checks. Overwatch `hapa-versus` remains the canonical task tracker.
+

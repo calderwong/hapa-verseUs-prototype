@@ -1,0 +1,42 @@
+{
+  "capability_id": "example.io.query",
+  "version": "0.1.0",
+  "purpose": "Illustrative capability contract, not an implemented endpoint.",
+  "input_schema_ref": "example:io-query-input",
+  "output_schema_ref": "urn:hapa:schema:io-observation:1",
+  "authority_scope": "Authorized local viewer; subject/resource disclosure policy applies.",
+  "side_effects": [],
+  "idempotency": "Read-only query. Stable pagination snapshot/cursor.",
+  "cancellation": "Cancels pending query without changing stored records.",
+  "receipt_semantics": "Observations with original evidence and coverage; no delivery/retention upgrade.",
+  "limits_ref": "example:query-limits",
+  "runtime_profiles": [
+    "example.desktop"
+  ],
+  "surfaces": {
+    "ui": {
+      "state": "planned",
+      "mapping_ref": null,
+      "evidence_refs": [],
+      "note": "Example only; map the actual owner-supported surface."
+    },
+    "cli": {
+      "state": "planned",
+      "mapping_ref": null,
+      "evidence_refs": [],
+      "note": "Example only; map the actual owner-supported surface."
+    },
+    "api": {
+      "state": "planned",
+      "mapping_ref": null,
+      "evidence_refs": [],
+      "note": "Example only; map the actual owner-supported surface."
+    },
+    "desktop": {
+      "state": "planned",
+      "mapping_ref": null,
+      "evidence_refs": [],
+      "note": "Example only; map the actual owner-supported surface."
+    }
+  }
+}

@@ -121,3 +121,8 @@ and priorities govern. Preserve earlier dated reviews, and record implementation
 evidence using `docs/reviews/IMPLEMENTATION_REPORT_TEMPLATE.md`. Append progress and evidence
 to the existing Overwatch board; these review files do not replace its task state or CJ's Done
 acceptance. The documented review loop does not itself authorize unrelated work or new services.
+
+
+## Base Hapa Node Standard adoption
+
+Read [docs/HAPA_NODE.md](docs/HAPA_NODE.md) and [hapa-standard.json](hapa-standard.json) for the versioned Base Node target and current gaps. Keep the normative mirror byte-identical; local choices belong in the adoption record. Preserve actual identities, owner boundaries and the current selected implementation work. Do not infer conformance, live registration, memory ingestion or scheduler activation from these source files.

@@ -1,0 +1,90 @@
+{
+  "schema_version": "hapa.standard.adoption/1",
+  "node": {
+    "definition_id": null,
+    "repository": "example/replace-with-real-repository",
+    "repository_role": "node",
+    "existing_manifest": null
+  },
+  "standard": {
+    "standard_id": "hapa.base-node",
+    "target_version": "0.1.0-draft.1",
+    "adopted_pin": null,
+    "adoption_state": "unassessed",
+    "bundle_path": "docs/standards/base-hapa-node/0.1.0-draft.1",
+    "bundle_sha256": null,
+    "release_sha256": null,
+    "canonical_source": "https://github.com/calderwong/hapa-second-brain-node/tree/main/docs/standards/base-hapa-node/0.1.0-draft.1",
+    "source_ref": null,
+    "publication_state": "bootstrap_source_only"
+  },
+  "assessment": {
+    "state": "not_assessed",
+    "standard_version": null,
+    "build_ref": null,
+    "evidence_report": null,
+    "scope_note": "Template only. Null pins are permitted only while unassessed; calculate actual hashes before targeting/adoption."
+  },
+  "registrations": {
+    "kanban": {
+      "state": "not_configured",
+      "subject_ref": null,
+      "owner_ref": null,
+      "record_ref": null,
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "Resolve the existing owner binding; this template creates no registration."
+    },
+    "quest_keeper": {
+      "state": "not_configured",
+      "subject_ref": null,
+      "owner_ref": null,
+      "record_ref": null,
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "Resolve the existing owner binding; this template creates no registration."
+    },
+    "telemetry": {
+      "state": "not_configured",
+      "subject_ref": null,
+      "owner_ref": null,
+      "record_ref": null,
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "Resolve the existing owner binding; this template creates no registration."
+    },
+    "second_brain": {
+      "state": "not_configured",
+      "subject_ref": null,
+      "owner_ref": null,
+      "record_ref": null,
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "Resolve the existing owner binding; this template creates no registration."
+    },
+    "wiki": {
+      "state": "not_configured",
+      "subject_ref": null,
+      "owner_ref": null,
+      "record_ref": null,
+      "acceptance_evidence_ref": null,
+      "last_verified_at": null,
+      "reachability": "not_checked",
+      "notes": "Resolve the existing owner binding; this template creates no registration."
+    }
+  },
+  "recurring_checks": {
+    "state": "specified_not_active",
+    "policy_ref": "docs/standards/base-hapa-node/0.1.0-draft.1/GOVERNANCE.md",
+    "executor_ref": null,
+    "last_attempt_at": null,
+    "last_success_at": null,
+    "next_due_at": null
+  },
+  "local_document": "docs/HAPA_NODE.md",
+  "deviations_ref": null
+}

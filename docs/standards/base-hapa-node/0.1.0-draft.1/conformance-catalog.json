@@ -1,0 +1,1021 @@
+{
+  "catalog_schema": "hapa.node.conformance-catalog/1",
+  "standard": {
+    "id": "hapa.base-node",
+    "version": "0.1.0-draft.1",
+    "status": "draft-unratified"
+  },
+  "catalog_kind": "declarative-requirements",
+  "publication_date": "2026-11-27",
+  "execution_status": "not-executed",
+  "certifies_existing_nodes": false,
+  "requirement_count": 42,
+  "semantics": {
+    "mandatory_scope": "All 42 requirements are mandatory within this candidate, subject only to their stated applicability conditions. This candidate is not ratified.",
+    "acceptance_cases": "Scenarios and expected results specify future evidence obligations. They are not execution logs or passing test results.",
+    "evidence_kinds": "Kinds describe different observation boundaries, not a universal ranking. Requirement-level minimum identifies the principal boundary; each case states any other boundary it needs.",
+    "applicability": "A conditional subcase can be inapplicable only with a truthful capability/profile declaration. That does not exempt the entire pillar or an unconditional requirement.",
+    "claims": "Record actual source/build/artifact, environment, method, result, direct evidence references and limits separately. Never infer a broader claim from a narrower journey."
+  },
+  "evidence_kind_definitions": {
+    "source_inspection": "Inspection of exact versioned declarations, source references and current/historical evidence pointers; does not prove execution.",
+    "controlled_integration": "Executed deterministic scenario with explicit real-versus-synthetic boundaries; does not imply native, installed or independent-network execution.",
+    "runtime_integration": "Observed supported runtime/storage/adapter integration for the declared scenario; exact platform/process/network scope is recorded.",
+    "owner_receipt": "Authentic acceptance from the actual registry/board/memory owner, bound to the correct node, request revision/digest and scope; not a simulated fixture or a sent request.",
+    "cross_surface_integration": "Observed common capability or data contract through its declared UI/CLI/API/desktop mappings with matching authority and semantics.",
+    "installed_package": "Execution of the exact identified distributed artifact on the claimed platform; source execution or cross-build alone does not qualify.",
+    "accessibility_inspection": "Observed keyboard, focus, readable/status and supported assistive/reduced-motion interaction, with exact scope and any automated checks stated.",
+    "claim_specific_journey": "Direct evidence for an additional claim such as consumer downloaded launch, independent machines/networks or human acceptance; the actual boundary must be named.",
+    "schema_fixture": "Executed schema/record-shape validation only; does not prove behavior.",
+    "native_runtime": "Observed native storage/transport/runtime components with environment and process scope explicit.",
+    "independent_devices": "Observed interaction between separately running physical or virtual installations; name devices and network scope.",
+    "independent_networks": "Observed interaction across independently administered networks; record actual route and supported journey.",
+    "human_acceptance": "Actual named owner/user acceptance for the stated journey; not inferred from agent test completion."
+  },
+  "requirements": [
+    {
+      "id": "HN-PERSIST-01",
+      "pillar": "persistence",
+      "normative_level": "MUST",
+      "requirement": "Keep authoritative accepted domain history in append-only, cryptographically hashed and authenticated ledgers transferable to authorized peers; identify authoritative, staged, derived, cached and secret stores.",
+      "applicability": "Every node. Secret-key custody is separate from transferable domain history; an independently verified ledger adapter may provide record signatures rather than a redundant per-event signature.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-PERSIST-01-01",
+          "scenario": "Append domain records, restart, transfer retained records to a second authorized instance and verify them.",
+          "expected": "Stable record/resource/writer identities and authenticated history verify; derived state is not substituted for missing authoritative records.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-PERSIST-01-02",
+          "scenario": "Tamper with a record, present an unauthorized writer or unexpected fork/truncation.",
+          "expected": "Reject or quarantine according to declared policy; preserve last accepted history and evidence; do not silently reset identity or reinterpret history.",
+          "minimum_evidence_kind": "controlled_integration"
+        },
+        {
+          "case_id": "HN-PERSIST-01-03",
+          "scenario": "Inspect the persistence map and transferable export.",
+          "expected": "All recovery-essential stores are classified; private signing keys and bearer secrets are excluded from ordinary peer transfer.",
+          "minimum_evidence_kind": "source_inspection"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Verified retained records establish the stated origin/history integrity, not truthful content, permanent availability, public disclosure authorization or a new DID method."
+    },
+    {
+      "id": "HN-PERSIST-02",
+      "pillar": "persistence",
+      "normative_level": "MUST",
+      "requirement": "Preserve accepted local intent and original media bytes durably through interruption, and reconcile uncertain writes by stable operation/content identity before claiming them saved.",
+      "applicability": "Every node for accepted local intent. Original-byte cases apply whenever the node accepts assets, recordings or other dependent content; absence of asset capabilities does not exempt the intent requirement.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-PERSIST-02-01",
+          "scenario": "Interrupt before append, after append before receipt, and during retry; restart the supported runtime.",
+          "expected": "Intent survives supported interruption; reconciliation yields one logical operation and no silently discarded pending work.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-PERSIST-02-02",
+          "scenario": "When assets are accepted, fail their primary save after the UI can render them, then recreate the renderer/service.",
+          "expected": "Original bytes remain recoverable in a durable spool or primary store and retry to verified locators; metadata-only success is not reported as complete save.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-PERSIST-02-03",
+          "scenario": "Apply storage pressure while the last durable original is still needed.",
+          "expected": "Explicit backpressure/recovery state preserves that copy or refuses acceptance honestly; cache eviction cannot silently lose accepted originals.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A durable metadata record or visible cached image does not prove durable original bytes; this requirement does not assert power-loss semantics beyond the declared store guarantee."
+    },
+    {
+      "id": "HN-PERSIST-03",
+      "pillar": "persistence",
+      "normative_level": "MUST",
+      "requirement": "Declare and demonstrate rebuilding supported projections from retained authoritative inputs, assets, permission cuts and verified snapshots with explicit schema/projection versions.",
+      "applicability": "Every node with materialized state. A node that exposes only its ledger still declares interpretation, retained scope and verification of any index/checkpoint it uses.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-PERSIST-03-01",
+          "scenario": "Remove only a disposable projection/index and rebuild through the supported recovery operation.",
+          "expected": "The declared state and relevant permission cut agree with the pre-rebuild state; keys and authoritative records are preserved.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-PERSIST-03-02",
+          "scenario": "Supply a snapshot with wrong source cut/digest/version or with required inputs unavailable.",
+          "expected": "Reject the snapshot or expose precise incomplete recovery; do not label a partial state complete.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Rebuild equivalence is limited to declared retained inputs and versions; a snapshot hash does not establish availability of omitted history or assets."
+    },
+    {
+      "id": "HN-PERSIST-04",
+      "pillar": "persistence",
+      "normative_level": "MUST",
+      "requirement": "Express corrections, supersession, permission changes and migrations as new attributable records; preserve original signatures and schema meaning or an explicit verifiable transformation.",
+      "applicability": "Every node. Authoritative history and required audit records remain append-only. Ephemeral diagnostics are classified at collection time; any separately authorized replica availability change preserves provenance and discloses missing coverage. This standard grants no deletion authority.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-PERSIST-04-01",
+          "scenario": "Correct an accepted record and migrate a supported older schema.",
+          "expected": "New records link to the prior record/version; original evidence remains interpretable and current projection reflects the authorized correction.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-PERSIST-04-02",
+          "scenario": "Interrupt migration or replay a migration request.",
+          "expected": "Resume/reconcile idempotently or retain the prior usable state; do not silently truncate history, duplicate accepted transformations or switch identity.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A tombstone, migration or local erasure cannot recall copies already shared; migration evidence covers only declared source/target versions and retained scope."
+    },
+    {
+      "id": "HN-WORK-01",
+      "pillar": "work",
+      "normative_level": "MUST",
+      "requirement": "Maintain a distinct Hapa Kanban Board bound to the node definition, accountable owner and declared visibility, with links to its repository and adoption work.",
+      "applicability": "Every independently governed node definition, including each distinct node in a monorepo. Shared board infrastructure is allowed; supporting libraries alone are not separate nodes.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-WORK-01-01",
+          "scenario": "Resolve the node's declared board through the actual board owner.",
+          "expected": "An owner-accepted board identity and node binding match the repository/manifest; node-specific work is discoverable.",
+          "minimum_evidence_kind": "owner_receipt"
+        },
+        {
+          "case_id": "HN-WORK-01-02",
+          "scenario": "Restart registration or encounter an unavailable board owner.",
+          "expected": "Reconcile the same board/binding without duplicates; unavailable access is reported separately from the existing accepted binding.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "owner_receipt",
+      "evidence_limit": "A GitHub issue or local board intent is not proof that the Hapa Board exists; board history records work and evidence, not runtime execution permission."
+    },
+    {
+      "id": "HN-WORK-02",
+      "pillar": "work",
+      "normative_level": "MUST",
+      "requirement": "Register the node with Hapa Quest Keeper using an accepted binding for its identity, owner, purpose, capabilities, board and lifecycle state.",
+      "applicability": "Every node definition; private installation-level entries, if used, have separate scope and disclosure policy.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-WORK-02-01",
+          "scenario": "Submit or reconcile a real node registration with the owner-supported adapter.",
+          "expected": "A verifiable owner receipt binds the actual node, service, request revision/digest and accepted scope; retain its record reference.",
+          "minimum_evidence_kind": "owner_receipt"
+        },
+        {
+          "case_id": "HN-WORK-02-02",
+          "scenario": "Present a receipt for another node, service, revision or request digest.",
+          "expected": "It cannot fulfill this registration; the mismatch is explicit and the correct intent remains pending/rejected as appropriate.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "owner_receipt",
+      "evidence_limit": "Sending a request, writing a local manifest or naming Quest Keeper is not acceptance; registration does not certify the listed capabilities."
+    },
+    {
+      "id": "HN-WORK-03",
+      "pillar": "work",
+      "normative_level": "MUST",
+      "requirement": "Distinguish registration intent, accepted binding, freshness and current reachability; use durable idempotent reconciliation with bounded retries.",
+      "applicability": "Every node and every required registry/board integration.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-WORK-03-01",
+          "scenario": "Make registry owners unavailable, queue changes, restart and reconnect.",
+          "expected": "Supported local work continues; durable intents reconcile once to the actual acceptance state without duplicate boards/entries or lost revisions.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-WORK-03-02",
+          "scenario": "Lose an acceptance reply and retry the same operation, then submit genuinely changed content.",
+          "expected": "Identical intent reconciles to the same binding/revision; changed content gets a new revision and truthful status.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A previously accepted binding does not imply current reachability; a failed reachability probe does not by itself revoke the binding."
+    },
+    {
+      "id": "HN-SURFACE-01",
+      "pillar": "surfaces",
+      "normative_level": "MUST",
+      "requirement": "Provide a usable UI, CLI, API and desktop shell for the node's declared capabilities and supported platform profiles.",
+      "applicability": "Every independently operating node. The desktop shell may reuse a supported host/client, and an API may be local; libraries are not used to disguise operating nodes.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-SURFACE-01-01",
+          "scenario": "Launch the supported desktop package and operate a representative capability through UI, CLI and API.",
+          "expected": "All four surfaces are available with documented entry points, the same node/resource binding and inspectable outcomes.",
+          "minimum_evidence_kind": "installed_package"
+        },
+        {
+          "case_id": "HN-SURFACE-01-02",
+          "scenario": "Use a declared reduced runtime profile or unavailable native dependency.",
+          "expected": "The exact unavailable capability and recovery path are visible; the node does not claim full parity for that profile.",
+          "minimum_evidence_kind": "cross_surface_integration"
+        }
+      ],
+      "minimum_evidence_kind": "installed_package",
+      "evidence_limit": "A source directory, build script or screenshot does not establish a working surface; reduced portable/browser profiles do not silently waive the main node's four surfaces."
+    },
+    {
+      "id": "HN-SURFACE-02",
+      "pillar": "surfaces",
+      "normative_level": "MUST",
+      "requirement": "Maintain semantic feature/capability parity, including permissions, validation, outcomes and status, across the four interaction surfaces.",
+      "applicability": "Every declared node capability. Visual gestures may map to semantic commands; temporary gaps remain adoption gaps, not self-issued exceptions.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-SURFACE-02-01",
+          "scenario": "Execute each declared capability's common valid/invalid fixtures through its surface mappings.",
+          "expected": "Results, validation, side effects and permission decisions agree; the capability matrix identifies the exact operation on each surface.",
+          "minimum_evidence_kind": "cross_surface_integration"
+        },
+        {
+          "case_id": "HN-SURFACE-02-02",
+          "scenario": "Attempt a restricted or destructive action through CLI/API after UI rejection.",
+          "expected": "The alternative surface cannot bypass the same authority or declared confirmation policy.",
+          "minimum_evidence_kind": "cross_surface_integration"
+        }
+      ],
+      "minimum_evidence_kind": "cross_surface_integration",
+      "evidence_limit": "Parity concerns authorized capability and outcome, not pixel-identical layouts; a representative scenario alone cannot certify untested capabilities."
+    },
+    {
+      "id": "HN-SURFACE-03",
+      "pillar": "surfaces",
+      "normative_level": "MUST",
+      "requirement": "Publish a versioned typed capability contract with stable IDs, input/output/error schemas, permission scope, side effects, idempotency, cancellation and runtime requirements.",
+      "applicability": "Every node and exposed capability; one implementation can serve multiple surfaces.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-SURFACE-03-01",
+          "scenario": "Discover capabilities and validate supported calls/responses through each mapped adapter.",
+          "expected": "Schemas, versions and runtime requirements are inspectable and match behavior; unknown capabilities/versions fail explicitly.",
+          "minimum_evidence_kind": "cross_surface_integration"
+        },
+        {
+          "case_id": "HN-SURFACE-03-02",
+          "scenario": "Send malformed, oversized or out-of-scope input.",
+          "expected": "Bounded validation rejects it without uncontrolled resource use or unintended side effects; errors retain shared codes/meaning.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "cross_surface_integration",
+      "evidence_limit": "A schema is a contract, not proof that every adapter implements it; a local API does not imply a public service endpoint."
+    },
+    {
+      "id": "HN-DOCS-01",
+      "pillar": "documentation",
+      "normative_level": "MUST",
+      "requirement": "Carry the standard repository documentation pack, including purpose, requirements, architecture, capabilities, persistence/recovery, permissions, operations, releases and conformance/adoption status.",
+      "applicability": "Every repository containing a node definition; a monorepo indexes the pack for each governed node.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-DOCS-01-01",
+          "scenario": "Follow README/contributor links through the required documentation pack.",
+          "expected": "Each required topic and current owner/reference is present and understandable; supporting source/evidence is traceable.",
+          "minimum_evidence_kind": "source_inspection"
+        },
+        {
+          "case_id": "HN-DOCS-01-02",
+          "scenario": "Inspect broken, moved or restricted references and local-only operational instructions.",
+          "expected": "The pack identifies unresolved/private locations without inventing content or implying unavailable documents were reviewed.",
+          "minimum_evidence_kind": "source_inspection"
+        }
+      ],
+      "minimum_evidence_kind": "source_inspection",
+      "evidence_limit": "A complete document pack does not certify implementation; inaccessible/private references must retain accurate visibility and ownership labels."
+    },
+    {
+      "id": "HN-DOCS-02",
+      "pillar": "documentation",
+      "normative_level": "MUST",
+      "requirement": "Preserve attributable 0-to-1 lineage from need and requirements through selected decisions, implementation, verification and current outcome, with supersession rather than invented history.",
+      "applicability": "Every node, including legacy nodes reconstructing available provenance.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-DOCS-02-01",
+          "scenario": "Trace a current capability backward to its requirement, selected decision, source/build and evidence.",
+          "expected": "Known sources, dates/authors and supersession relationships are explicit, and generated summaries identify their source inputs and acceptance state.",
+          "minimum_evidence_kind": "source_inspection"
+        },
+        {
+          "case_id": "HN-DOCS-02-02",
+          "scenario": "Correct an earlier mistaken explanation or find missing origin history.",
+          "expected": "Append a correction/link or mark the gap; do not rewrite an old observation as if it anticipated a later result.",
+          "minimum_evidence_kind": "source_inspection"
+        }
+      ],
+      "minimum_evidence_kind": "source_inspection",
+      "evidence_limit": "Reconstructed summaries are labeled as such; missing historical turns remain unknown. Private reasoning traces and secret material are not required documentation."
+    },
+    {
+      "id": "HN-DOCS-03",
+      "pillar": "documentation",
+      "normative_level": "MUST",
+      "requirement": "Maintain truthful current pointers and evidence-bound status while retaining historical reports; separate planned, implemented, verified and human-accepted claims.",
+      "applicability": "Every node and conformance claim.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-DOCS-03-01",
+          "scenario": "Compare current README/index/manifest links with the selected source/build/artifact and direct evidence.",
+          "expected": "Current pointers agree; each claim names the boundary actually observed and preserves old reports as history.",
+          "minimum_evidence_kind": "source_inspection"
+        },
+        {
+          "case_id": "HN-DOCS-03-02",
+          "scenario": "Offer source-only or same-machine evidence for an installed, two-network or human acceptance claim.",
+          "expected": "The stronger claim remains unverified; related success cannot upgrade the entire requirement or candidate.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "source_inspection",
+      "evidence_limit": "Documentation inspection verifies traceability, not the underlying behavior. Evidence levels and exact artifacts remain explicit."
+    },
+    {
+      "id": "HN-TELEM-01",
+      "pillar": "telemetry",
+      "normative_level": "MUST",
+      "requirement": "Register the node's telemetry contract/catalog with Hapa Telemetry using an authentic accepted node/service binding and declared export/collection policy.",
+      "applicability": "Every node definition; collection and instance export scopes remain separately authorized.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-TELEM-01-01",
+          "scenario": "Resolve the actual telemetry registration.",
+          "expected": "Owner receipt binds the node, catalog/schema version and accepted scope; configured adapters/export policy match its declaration.",
+          "minimum_evidence_kind": "owner_receipt"
+        },
+        {
+          "case_id": "HN-TELEM-01-02",
+          "scenario": "The collector becomes unavailable or registration is still pending.",
+          "expected": "Local status remains inspectable and truthful; normal authorized domain work continues without a fabricated accepted registration.",
+          "minimum_evidence_kind": "runtime_integration"
+        }
+      ],
+      "minimum_evidence_kind": "owner_receipt",
+      "evidence_limit": "Telemetry registration does not authorize external access to private payloads or prove that every metric is instrumented."
+    },
+    {
+      "id": "HN-TELEM-02",
+      "pillar": "telemetry",
+      "normative_level": "MUST",
+      "requirement": "Use the shared vocabulary, units and correlation fields for lifecycle, operation, connection, storage, recovery and I/O observations; namespace domain-specific extensions.",
+      "applicability": "Every node; unavailable measurements remain explicitly unknown/not instrumented rather than zero or success.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-TELEM-02-01",
+          "scenario": "Capture a bounded operation/connection/recovery journey and inspect UI, API and exported observations.",
+          "expected": "Node/build/protocol, operation/attempt/resource correlation, stage, measurement basis and error meanings agree across outputs.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-TELEM-02-02",
+          "scenario": "Encounter unknown route, missing size, reset counter or skewed remote clock.",
+          "expected": "Use unknown/epoch/basis fields; do not invent zero throughput, verified relay use or exact one-way latency.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Telemetry is an observation with defined basis and scope; it does not independently prove a peer's truthfulness or global state."
+    },
+    {
+      "id": "HN-TELEM-03",
+      "pillar": "telemetry",
+      "normative_level": "MUST",
+      "requirement": "Declare privacy, collection/export scope, instrumentation coverage, sampling, retention and resource bounds; expose gaps and enforce redaction before persistence/export.",
+      "applicability": "Every node and telemetry adapter, including local-only collection.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-TELEM-03-01",
+          "scenario": "Exercise sensitive input and export a diagnostic/telemetry sample.",
+          "expected": "Secrets, private payload bodies and disallowed endpoint/path details are absent by default; exported scope follows the declared policy.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-TELEM-03-02",
+          "scenario": "Flood or disable a collector and reach retention/storage limits.",
+          "expected": "Queues/retries/storage remain bounded, omissions are visible and domain progress is not blocked by optional telemetry export.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Redacted telemetry is not a complete domain transcript; declared coverage and sampling limits accompany derived claims."
+    },
+    {
+      "id": "HN-MEMORY-01",
+      "pillar": "memory",
+      "normative_level": "MUST",
+      "requirement": "Maintain authentic accepted Second Brain and Hapa Wiki entries binding the node, owner, canonical source, provenance and current standard/adoption references.",
+      "applicability": "Every node definition; private entries and public projections may have different authorized scopes.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-MEMORY-01-01",
+          "scenario": "Resolve both actual node entries through their owners.",
+          "expected": "Accepted bindings and record references match the node and declared visibility; documentation/provenance links are correct.",
+          "minimum_evidence_kind": "owner_receipt"
+        },
+        {
+          "case_id": "HN-MEMORY-01-02",
+          "scenario": "Present a stale or other-node acceptance receipt or an unavailable projection.",
+          "expected": "Registration, content revision and reachability are distinguished; the wrong receipt cannot fulfill the current binding.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "owner_receipt",
+      "evidence_limit": "A repository file or local update intent is not proof of live Second Brain/Wiki acceptance; a public index need not expose private source content."
+    },
+    {
+      "id": "HN-MEMORY-02",
+      "pillar": "memory",
+      "normative_level": "MUST",
+      "requirement": "Create durable, attributable documentation/memory update intents for meaningful requirement, architecture, capability, protocol, release, incident and conformance changes.",
+      "applicability": "Every node; high-frequency telemetry samples are not individual documentation triggers.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-MEMORY-02-01",
+          "scenario": "Produce a meaningful change while the destination is offline, restart, reconnect and lose one acknowledgment.",
+          "expected": "One stable update intent survives and reconciles to the correct revision without duplicate entries; pending/accepted outcomes stay distinct.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-MEMORY-02-02",
+          "scenario": "Emit many routine telemetry samples and then correct a prior summary.",
+          "expected": "Samples are bounded/coalesced rather than creating task floods; correction preserves the prior source-linked history.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A trigger proves work was queued, not that a memory or Wiki update was accepted. Generated summaries retain their own provenance and review state."
+    },
+    {
+      "id": "HN-MEMORY-03",
+      "pillar": "memory",
+      "normative_level": "MUST",
+      "requirement": "Maintain explicit custody, ownership, visibility and allowed disclosure for node documentation and memory; keep private source material out of broader syndication.",
+      "applicability": "Every node, generated summary and destination projection.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-MEMORY-03-01",
+          "scenario": "Syndicate a node update with restricted source/evidence to authorized private and public projections.",
+          "expected": "Each destination receives only allowed content; public references preserve access boundaries and source ownership.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-MEMORY-03-02",
+          "scenario": "A generated summary or imported trigger requests a broader disclosure or claims owner authority.",
+          "expected": "Existing authorization boundaries remain enforced; untrusted content cannot grant publication permission.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A destination link or accepted entry is not permission to copy private content to another audience; summaries do not erase original custody."
+    },
+    {
+      "id": "HN-IO-01",
+      "pillar": "io-bar",
+      "normative_level": "MUST",
+      "requirement": "Provide collapsed, expanded and hidden I/O Bar modes, top/bottom placement, pause/resume display and a discoverable restore path, with persistent per-device preferences.",
+      "applicability": "Every node UI and desktop shell; CLI/API expose equivalent preference and inspection operations.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IO-01-01",
+          "scenario": "Move, expand, collapse, pause, hide, restore and restart the app.",
+          "expected": "Controls work, preferences survive appropriately and the bar does not obscure critical content or lose the user's input/focus.",
+          "minimum_evidence_kind": "cross_surface_integration"
+        },
+        {
+          "case_id": "HN-IO-01-02",
+          "scenario": "Traffic continues while hidden/paused, then the user returns to live view.",
+          "expected": "Display truthfully shows pause/age and offers jump-to-live without replaying an unbounded animation backlog or changing permissions.",
+          "minimum_evidence_kind": "runtime_integration"
+        }
+      ],
+      "minimum_evidence_kind": "cross_surface_integration",
+      "evidence_limit": "Hiding/pausing is a view setting; it neither stops traffic nor silently changes collection, telemetry export or domain persistence."
+    },
+    {
+      "id": "HN-IO-02",
+      "pillar": "io-bar",
+      "normative_level": "MUST",
+      "requirement": "Classify I/O with separate relationship, locality, path, direction and plane fields; derive LOCAL, P2P and SERVICE colors/labels and preserve OTHER/UNKNOWN when unproven.",
+      "applicability": "Every instrumented I/O adapter. Local-storage or infrastructure events are labeled separately from application peer exchanges.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IO-02-01",
+          "scenario": "Observe local Hapa exchange, remote direct peer exchange, relayed peer exchange and centralized API traffic.",
+          "expected": "Headline classes retain their meanings; relay path is a separate badge and centralized authority is not hidden by transport choice.",
+          "minimum_evidence_kind": "controlled_integration"
+        },
+        {
+          "case_id": "HN-IO-02-02",
+          "scenario": "Use an unknown peer binding, gateway-terminated trust boundary or uninstrumented path.",
+          "expected": "Unknown/other and known limitations remain visible; no guessed verified-local or P2P claim is emitted.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "controlled_integration",
+      "evidence_limit": "Color is a presentation of known facts, not a trust proof. A configured relay, loopback proxy or shared IP prefix does not establish actual route, locality or Hapa identity."
+    },
+    {
+      "id": "HN-IO-03",
+      "pillar": "io-bar",
+      "normative_level": "MUST",
+      "requirement": "Represent queued, sent, received, verified, admitted, applied, durable, remote-receipt and retention observations distinctly and link each to the evidence actually available.",
+      "applicability": "Every I/O observation; absent stages stay unknown and are not inferred from a later-looking label.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IO-03-01",
+          "scenario": "Feed observations for sent-without-reply, local durability, verified blocks and an explicit scoped retention receipt.",
+          "expected": "Each produces only its permitted claim with observer/recipient/content scope; the timeline does not overwrite incomparable facts into one success ladder.",
+          "minimum_evidence_kind": "controlled_integration"
+        },
+        {
+          "case_id": "HN-IO-03-02",
+          "scenario": "Time out after a possibly durable write or exclude a durable contribution by an admission cut.",
+          "expected": "Show pending/unknown or durable-but-excluded correctly; retry retains operation identity and cancellation does not imply rollback.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "controlled_integration",
+      "evidence_limit": "Transport handoff does not prove remote application acceptance; signed head is not block possession; a retention promise is not guaranteed future availability."
+    },
+    {
+      "id": "HN-IO-04",
+      "pillar": "io-bar",
+      "normative_level": "MUST",
+      "requirement": "Define rate windows, units and measurement boundaries; distinguish unique operations, attempts, recipient deliveries, payload bytes and wire bytes without double counting.",
+      "applicability": "Every displayed or exported counter/rate; unknown size or unsupported measurement is explicitly labeled.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IO-04-01",
+          "scenario": "Send one operation to several recipients with retries and overlapping upper/lower-layer observations.",
+          "expected": "Unique operation count remains one; recipient/attempt counts and real transmitted bytes are separate; incompatible byte bases are not summed.",
+          "minimum_evidence_kind": "controlled_integration"
+        },
+        {
+          "case_id": "HN-IO-04-02",
+          "scenario": "Restart counters, drop samples, batch events or omit sizes.",
+          "expected": "Epoch/reset and coverage are explicit; no negative rate or exact-looking invented measurement appears.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "controlled_integration",
+      "evidence_limit": "A rate is valid only for its stated observer, window, counter epoch and byte basis; cross-node timestamps alone do not prove one-way latency."
+    },
+    {
+      "id": "HN-IO-05",
+      "pillar": "io-bar",
+      "normative_level": "MUST",
+      "requirement": "Expose safe typed identity, endpoint, ledger and evidence references with appropriate redaction and deliberate navigation; exclude secrets and private payload capture by default.",
+      "applicability": "Every I/O row, detail view, copied field, URL action and export.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IO-05-01",
+          "scenario": "Inspect and export representative local/private/public events containing identity and endpoint references.",
+          "expected": "References retain correct type and scope; allowed details are inspectable while secrets, invitations and private data remain redacted.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-IO-05-02",
+          "scenario": "Supply a credential-bearing URL, executable scheme, attacker-controlled label or capability-bearing link.",
+          "expected": "Render as inert safe text or require the declared deliberate action; do not auto-fetch/execute, leak credentials or invent a resolver.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A Hypercore key is not automatically a DID; a URL is not authenticated identity. Revealing a reference locally does not authorize exporting it."
+    },
+    {
+      "id": "HN-IO-06",
+      "pillar": "io-bar",
+      "normative_level": "MUST",
+      "requirement": "Make I/O Bar meaning and controls accessible beyond color and motion, with keyboard operation, readable labels, focus handling and reduced-motion behavior.",
+      "applicability": "Every UI and desktop shell embedding the I/O Bar.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IO-06-01",
+          "scenario": "Use keyboard controls and a supported assistive inspection with motion disabled/system reduced-motion enabled.",
+          "expected": "Controls have accessible names/state, essential information remains available statically and focus is usable on expand/close/hide/restore.",
+          "minimum_evidence_kind": "accessibility_inspection"
+        },
+        {
+          "case_id": "HN-IO-06-02",
+          "scenario": "Sustain high event volume and narrow the viewport.",
+          "expected": "No per-event announcement flood, flashing dependence or disappearing essential control; labels and detail navigation remain usable.",
+          "minimum_evidence_kind": "accessibility_inspection"
+        }
+      ],
+      "minimum_evidence_kind": "accessibility_inspection",
+      "evidence_limit": "A still screenshot or automated checker alone does not demonstrate keyboard, screen-reader or reduced-motion interaction."
+    },
+    {
+      "id": "HN-IO-07",
+      "pillar": "io-bar",
+      "normative_level": "MUST",
+      "requirement": "Expose the same I/O observation/filter/detail and preference contract through UI, CLI and API, with the desktop shell using that contract.",
+      "applicability": "Every node; semantic data parity does not require terminal animation.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IO-07-01",
+          "scenario": "Query one event set with equivalent filters through UI, CLI and API, then change a permitted display preference.",
+          "expected": "Event identities, fields, receipt meanings and redaction agree; shell/UI preferences reflect the authorized change.",
+          "minimum_evidence_kind": "cross_surface_integration"
+        },
+        {
+          "case_id": "HN-IO-07-02",
+          "scenario": "Attempt to reveal a field through CLI/API that the same user cannot inspect in UI.",
+          "expected": "The same permission/disclosure rules apply; a different interaction surface is not a privilege escalation.",
+          "minimum_evidence_kind": "cross_surface_integration"
+        }
+      ],
+      "minimum_evidence_kind": "cross_surface_integration",
+      "evidence_limit": "Matching sampled outputs do not prove complete instrumentation; all surfaces retain the same coverage/unknown/redaction limits."
+    },
+    {
+      "id": "HN-IO-08",
+      "pillar": "io-bar",
+      "normative_level": "MUST",
+      "requirement": "Separate authoritative domain history, retained append-only telemetry history and volatile display buffers; declare retention/coverage and bound queues, storage and recursive telemetry.",
+      "applicability": "Every node and collector. Significant retained observations follow their ledger policy; high-rate ephemeral samples may be aggregated rather than retained individually.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IO-08-01",
+          "scenario": "Expand the ledger, follow an evidence link, restart and reach the declared retention boundary.",
+          "expected": "Retained observations/proofs remain inspectable within scope; rotations/gaps and volatile versus durable status are explicit.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-IO-08-02",
+          "scenario": "Flood I/O, stop the exporter and observe telemetry-export traffic itself.",
+          "expected": "Memory/disk/retry remain bounded; sampling/drops are reported; no recursive event explosion or blocked authorized domain action occurs.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A ledger hash without retained payload is not a complete viewable log; losing sampled telemetry must not be confused with losing authoritative domain state."
+    },
+    {
+      "id": "HN-IDENTITY-01",
+      "pillar": "identity",
+      "normative_level": "MUST",
+      "requirement": "Use typed node-definition, instance, subject, resource, writer, transport, session and service identities with explicit authenticated bindings and namespaces.",
+      "applicability": "Every node. Existing legitimate identifiers are preserved; unsupported DID methods are not invented to satisfy this requirement.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IDENTITY-01-01",
+          "scenario": "Inspect a real capability/connection/record journey and resolve its typed bindings.",
+          "expected": "The node, instance, resource, authority, writer and transport are unambiguous and each claimed authenticated binding has actual evidence.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-IDENTITY-01-02",
+          "scenario": "Substitute a same-name subject, another resource's feed or a new endpoint under an old service label.",
+          "expected": "The substitution cannot inherit authority or stale endpoint evidence without an explicit valid binding/adoption revision.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Display names, discovery keys, endpoints and successful connections do not by themselves establish authority or membership."
+    },
+    {
+      "id": "HN-IDENTITY-02",
+      "pillar": "identity",
+      "normative_level": "MUST",
+      "requirement": "Declare and support identity continuity, backup/recovery and authorized key rotation independently of networking/provider changes.",
+      "applicability": "Every node instance with persistent authority or data; recovery procedures respect actual key custody and visibility.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-IDENTITY-02-01",
+          "scenario": "Restart, restore a supported backup and replace an eligible provider.",
+          "expected": "Persistent subject/resource/writer identities and historical verification remain stable according to the declared policy.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-IDENTITY-02-02",
+          "scenario": "Attempt unbound key rotation or present a conflicting recovery lineage.",
+          "expected": "Reject/quarantine or invoke the documented authorized recovery path; do not silently mint a replacement identity to clear a connection error.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A new endpoint/key cannot self-authorize continuity; documented recovery is not proof against compromise outside the declared trust policy."
+    },
+    {
+      "id": "HN-AUTH-01",
+      "pillar": "authorization",
+      "normative_level": "MUST",
+      "requirement": "Bind operations, invitations, channels and records to application namespace, resource, role and compatible protocol; enforce host/secret boundaries and authenticated scoped authorization.",
+      "applicability": "Every node's local and remote interfaces, including loopback bridges and replicas.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-AUTH-01-01",
+          "scenario": "Authenticate an authorized request and attempt cross-resource, expired-invitation and out-of-role operations.",
+          "expected": "Only allowed scope is admitted; connection/discovery success cannot grant arbitrary feed replication or domain permissions.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-AUTH-01-02",
+          "scenario": "Use an unauthorized origin/session capability at a loopback/native boundary.",
+          "expected": "Reject it despite local transport; renderer/export content cannot obtain root secrets or arbitrary host operations.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Cryptographic origin does not establish legal domain behavior; a replica may serve valid history without authority to act as its author."
+    },
+    {
+      "id": "HN-AUTH-02",
+      "pillar": "authorization",
+      "normative_level": "MUST",
+      "requirement": "Deduplicate stable mutating operation identities and reconcile admission at execution/commit boundaries, preserving locally durable but excluded intent for honest recovery.",
+      "applicability": "Every node mutating capability and queued authoritative write.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-AUTH-02-01",
+          "scenario": "Repeat a write before/after lost acknowledgment and reuse its ID with conflicting content.",
+          "expected": "Identical intent returns the same reconciled operation/position; conflict is rejected rather than reauthored or duplicated.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-AUTH-02-02",
+          "scenario": "Change admission while work is queued and while a write becomes durable.",
+          "expected": "Recheck/reconcile accurately; receipt distinguishes local durability from admitted state, and excluded work remains recoverable without bypassing revocation.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Idempotency is scoped to declared identity/resource/payload semantics; local append durability does not establish accepted contribution or remote retention."
+    },
+    {
+      "id": "HN-LIFECYCLE-01",
+      "pillar": "lifecycle",
+      "normative_level": "MUST",
+      "requirement": "Bound startup/readiness and request lifetimes, settling each runtime generation on ready, fatal error, early exit, timeout and shutdown.",
+      "applicability": "Every node with asynchronous initialization, host processes or pending requests.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-LIFECYCLE-01-01",
+          "scenario": "Exit before first ready, never become ready and fail during the initial operation; then start a healthy replacement.",
+          "expected": "Original callers settle or recover within the declared bound, replacement work succeeds and no promise depends on a retired readiness source.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-LIFECYCLE-01-02",
+          "scenario": "Deliver late ready/reply events from a retired generation.",
+          "expected": "They cannot settle or mutate the current generation; pending maps/timers and diagnostics stay consistent.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Controlled lifecycle evidence does not establish every platform's installed startup behavior; targeted installed qualification is separate."
+    },
+    {
+      "id": "HN-LIFECYCLE-02",
+      "pillar": "lifecycle",
+      "normative_level": "MUST",
+      "requirement": "Apply one consistent activation/cancellation ownership rule across initial actions, reconnect, resend, delayed completion and persisted recovery.",
+      "applicability": "Every cancellable/connectable session or asynchronous authority transition.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-LIFECYCLE-02-01",
+          "scenario": "Hold initialization, cancel, reconnect/resend, release delayed work and restart.",
+          "expected": "A cancelled generation cannot first-activate local or remote authority, leak a reservation or mutate the next attempt; fresh work remains possible.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-LIFECYCLE-02-02",
+          "scenario": "Lose an acknowledgment for an already established activation and reconnect.",
+          "expected": "Legitimate idempotent recovery succeeds without a second authority or weakening cancellation/admission checks.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Cancellation does not erase a previously committed effect; disconnect/presence expiry does not by itself prove concession, departure or loss."
+    },
+    {
+      "id": "HN-LIFECYCLE-03",
+      "pillar": "lifecycle",
+      "normative_level": "MUST",
+      "requirement": "Drain durable queues reliably across concurrent enqueue, failures and runtime recovery, with bounded backpressure and without requiring another user action to flush final work.",
+      "applicability": "Every node with queued mutation, media, registration or documentation work.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-LIFECYCLE-03-01",
+          "scenario": "Enqueue additional work during multiple awaited steps of an active drain, release the work and stop input.",
+          "expected": "All eligible final items progress without extra edit/reload; stable identity and ordering requirements remain intact.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-LIFECYCLE-03-02",
+          "scenario": "Interrupt the worker, restore it and exhaust declared queue/storage bounds.",
+          "expected": "Recovery is idempotent with bounded retry; pressure and rejected/pending work are explicit rather than silently lost.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A drained local queue does not by itself prove remote application acceptance; each queue uses its own truthful receipt semantics."
+    },
+    {
+      "id": "HN-CONNECT-01",
+      "pillar": "connectivity",
+      "normative_level": "MUST",
+      "requirement": "Select new service operations from current adopted policy with explicit role, overlay, provenance, expiry/disable/retirement and descriptor-scoped evidence; preserve identity and existing valid data.",
+      "applicability": "Every node's configured bootstrap, relay, replica/archive, gateway and other replaceable providers; unused roles need no deployment.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-CONNECT-01-01",
+          "scenario": "Expire/disable/retire a provider after startup and attempt a new eligible operation.",
+          "expected": "Selection uses current policy and reports no eligible route where appropriate; retired defaults do not resurrect silently.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-CONNECT-01-02",
+          "scenario": "Change a provider key/endpoint under the same service ID and interrupt a policy import.",
+          "expected": "Caches/evidence bind the actual descriptor; incomplete imports do not masquerade as completed adoption or reset identity/history.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A selected/dialed relay is not observed carriage; expiry of discovery policy need not tear down an otherwise authorized healthy application session."
+    },
+    {
+      "id": "HN-CONNECT-02",
+      "pillar": "connectivity",
+      "normative_level": "MUST",
+      "requirement": "Declare supported runtime/transport profiles and adapter guarantees for framing, authentication, authorization, backpressure, cancellation and recovery; keep application rules outside generic transport.",
+      "applicability": "Every node, including offline/browser-only profiles. Unsupported transports or facilities are explicit; no new operated VPS is implied.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-CONNECT-02-01",
+          "scenario": "Exercise each declared profile's supported connection/operation and an incompatible profile/version.",
+          "expected": "Supported adapters enforce their contract; incompatibility is visible and does not cause silent insecure fallback or identity change.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-CONNECT-02-02",
+          "scenario": "Offer an alternative provider/transport whose framing or trust termination differs.",
+          "expected": "Use a declared verified adapter or reject it; do not assume stream compatibility or hide gateway authority behind a P2P label.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "Native/local or fixture success does not prove public-service availability, every NAT topology or a browser's ability to use native UDP."
+    },
+    {
+      "id": "HN-PORTABLE-01",
+      "pillar": "portability",
+      "normative_level": "MUST",
+      "requirement": "Provide an authorized verifiable transfer/export and supported restore path for domain history, required assets, interpretation versions and declared ownership/recovery scope.",
+      "applicability": "Every node. A node with no accepted assets declares that fact; nodes that accept assets must include them or report explicit incompleteness.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-PORTABLE-01-01",
+          "scenario": "Export/transfer the declared scope and restore it in a second supported instance.",
+          "expected": "Required records/assets verify and state is usable with accurate identity/ownership semantics; export names its versions and completeness.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-PORTABLE-01-02",
+          "scenario": "Omit/corrupt an asset, exceed a bound or interrupt transfer.",
+          "expected": "Report specific missing/invalid scope and recover safely; do not label partial content self-contained or complete.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A verified transfer is not proof of future retention or a backup of secret keys; export completeness and private-key recovery have separate policies."
+    },
+    {
+      "id": "HN-PORTABLE-02",
+      "pillar": "portability",
+      "normative_level": "MUST",
+      "requirement": "Provide targeted installed-release qualification for each claimed supported desktop platform, bound to actual artifact/source identities, startup, data placement and supported reopen/recovery behavior.",
+      "applicability": "Every claimed desktop release/platform. Separate independent-network qualification is required only when the node makes that stronger reachability/product-readiness claim; it is not substituted for platform qualification.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-PORTABLE-02-01",
+          "scenario": "Install/open the exact released artifact on each claimed platform, exercise a core capability, close and reopen.",
+          "expected": "Artifact digest/source/environment are recorded; native startup, data outside replaceable install assets, identity and domain-state persistence meet the declared profile.",
+          "minimum_evidence_kind": "installed_package"
+        },
+        {
+          "case_id": "HN-PORTABLE-02-02",
+          "scenario": "Exercise a relevant bounded startup/dependency failure in the installed candidate.",
+          "expected": "Failure/recovery is visible and finite, and accepted data/identity remain intact; missing mandatory reports prevent a passing platform claim.",
+          "minimum_evidence_kind": "installed_package"
+        },
+        {
+          "case_id": "HN-PORTABLE-02-03",
+          "scenario": "Publish a broader consumer-launch, independent-network or human acceptance claim.",
+          "expected": "Attach direct evidence for that additional boundary and exact candidate, or label it unverified; same-machine public-DHT traffic cannot stand in for two networks.",
+          "minimum_evidence_kind": "claim_specific_journey"
+        }
+      ],
+      "minimum_evidence_kind": "installed_package",
+      "evidence_limit": "Cross-building is not execution. Hosted VM execution is not ordinary consumer download handling, two independent networks or human acceptance; report those separately when claimed."
+    },
+    {
+      "id": "HN-UPDATE-01",
+      "pillar": "updates",
+      "normative_level": "MUST",
+      "requirement": "Pin an inspectable complete standard bundle and lock to its canonical Second Brain authority/provenance, exact version/content and adoption state; separate bootstrap source publication from ledger acceptance.",
+      "applicability": "Every node repository. Initial draft mirrors may be bootstrap source only while authentic authority/ledger bindings remain pending.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-UPDATE-01-01",
+          "scenario": "Compare repository mirror/lock with the referenced immutable bundle and inspect its authority/adoption state.",
+          "expected": "All pinned files/digests and version match; canonical source and actual acceptance/ratification status are explicit.",
+          "minimum_evidence_kind": "source_inspection"
+        },
+        {
+          "case_id": "HN-UPDATE-01-02",
+          "scenario": "Interrupt a mirror update or mix old schemas with a new document.",
+          "expected": "Expose/reject incomplete mixed state; retain a complete verified bundle rather than a misleading successful lock.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "source_inspection",
+      "evidence_limit": "An ordinary Git commit or copied standard is not a Second Brain ledger receipt, ratification, implementation or conformance certification."
+    },
+    {
+      "id": "HN-UPDATE-02",
+      "pillar": "updates",
+      "normative_level": "MUST",
+      "requirement": "Implement inspectable recurring standards, mirror, registration and documentation reconciliation with configured cadence, trigger/catch-up behavior, bounded retry and visible check state.",
+      "applicability": "Every responsible node/repository/governance scheduler according to the standard's ownership matrix. A written schedule alone is not an activated scheduler.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-UPDATE-02-01",
+          "scenario": "Run the configured due/triggered checks and inspect recorded last attempt, success, due time, observed release and result.",
+          "expected": "Checks occur under the actual scheduler; drift generates one deduplicated bounded task/proposal, not an unapproved behavioral upgrade.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-UPDATE-02-02",
+          "scenario": "Remain offline across several intervals, change the clock or repeatedly fail a destination.",
+          "expected": "Perform one appropriate catch-up with jitter/backoff, keep last verified state and mark unknown freshness; no retry storm or blocked app startup occurs.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A successful check observes current reachable metadata at a time; it does not prove no unseen later release. Offline periods cannot perform runtime checks."
+    },
+    {
+      "id": "HN-UPDATE-03",
+      "pillar": "updates",
+      "normative_level": "MUST",
+      "requirement": "Verify authorized release integrity and continuity across the entire bundle; separate discovery/caching/proposal from adoption, code execution, disclosure changes and migrations.",
+      "applicability": "Every standards distribution/adoption adapter. Bootstrap unsigned/unbound source stays explicitly unverified for automated trusted adoption until the actual owner binding is established.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-UPDATE-03-01",
+          "scenario": "Fetch the same authorized release through two permitted mirrors and propose adoption.",
+          "expected": "Complete bundle identity and trusted authority verify; proposal preserves existing operation/permissions until the authorized adoption policy applies.",
+          "minimum_evidence_kind": "runtime_integration"
+        },
+        {
+          "case_id": "HN-UPDATE-03-02",
+          "scenario": "Offer tampered files, same-version different bytes, rollback, unbound key rotation or conflicting signed branch.",
+          "expected": "Reject/quarantine and preserve conflict evidence; no downloaded code runs or telemetry scope expands merely from a release notification.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "runtime_integration",
+      "evidence_limit": "A familiar URL, newer version string or valid untrusted signature is not standards authority; this requirement does not claim implementation of any external secure-update framework."
+    },
+    {
+      "id": "HN-UPDATE-04",
+      "pillar": "updates",
+      "normative_level": "MUST",
+      "requirement": "Record requirement-level adoption gaps/deviations with owner, reason, scope, target and evidence; preserve old claims and require an authorized adoption record for changed conformance.",
+      "applicability": "Every node adopting or claiming a standard version; no node can silently waive a mandatory candidate requirement.",
+      "acceptance_cases": [
+        {
+          "case_id": "HN-UPDATE-04-01",
+          "scenario": "Adopt a candidate with known gaps, then fix one requirement and update its evidence.",
+          "expected": "Only the supported requirement/build claim changes; remaining gaps stay explicit and historical standard/evidence versions remain intact.",
+          "minimum_evidence_kind": "source_inspection"
+        },
+        {
+          "case_id": "HN-UPDATE-04-02",
+          "scenario": "Copy the standard, mark difficult requirements not applicable without a rule, or infer pass from a related journey.",
+          "expected": "No meets-standard claim is accepted; applicability and the exact evidence boundary must be justified for each mandatory requirement.",
+          "minimum_evidence_kind": "controlled_integration"
+        }
+      ],
+      "minimum_evidence_kind": "source_inspection",
+      "evidence_limit": "A recorded deviation explains a gap but does not make it conformant. A draft target and declarative case catalog are not executed results or ratified policy."
+    }
+  ]
+}

@@ -1,0 +1,370 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:hapa:schema:standard-conformance:1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "hapa.standard.conformance/1"
+    },
+    "standard_id": {
+      "const": "hapa.base-node"
+    },
+    "standard_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "standard_state": {
+      "enum": [
+        "draft",
+        "released",
+        "superseded",
+        "withdrawn"
+      ]
+    },
+    "node_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "source_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "build_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "artifact_refs": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "platforms": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "profiles": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "environment": {
+          "type": "string",
+          "maxLength": 8192
+        }
+      },
+      "required": [
+        "platforms",
+        "profiles",
+        "environment"
+      ]
+    },
+    "assessment_state": {
+      "enum": [
+        "not_assessed",
+        "partial",
+        "draft_requirements_verified",
+        "meets_released_version"
+      ]
+    },
+    "assessed_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "assessor_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "results": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requirement_id": {
+            "enum": [
+              "HN-PERSIST-01",
+              "HN-PERSIST-02",
+              "HN-PERSIST-03",
+              "HN-PERSIST-04",
+              "HN-WORK-01",
+              "HN-WORK-02",
+              "HN-WORK-03",
+              "HN-SURFACE-01",
+              "HN-SURFACE-02",
+              "HN-SURFACE-03",
+              "HN-DOCS-01",
+              "HN-DOCS-02",
+              "HN-DOCS-03",
+              "HN-TELEM-01",
+              "HN-TELEM-02",
+              "HN-TELEM-03",
+              "HN-MEMORY-01",
+              "HN-MEMORY-02",
+              "HN-MEMORY-03",
+              "HN-IO-01",
+              "HN-IO-02",
+              "HN-IO-03",
+              "HN-IO-04",
+              "HN-IO-05",
+              "HN-IO-06",
+              "HN-IO-07",
+              "HN-IO-08",
+              "HN-IDENTITY-01",
+              "HN-IDENTITY-02",
+              "HN-AUTH-01",
+              "HN-AUTH-02",
+              "HN-LIFECYCLE-01",
+              "HN-LIFECYCLE-02",
+              "HN-LIFECYCLE-03",
+              "HN-CONNECT-01",
+              "HN-CONNECT-02",
+              "HN-PORTABLE-01",
+              "HN-PORTABLE-02",
+              "HN-UPDATE-01",
+              "HN-UPDATE-02",
+              "HN-UPDATE-03",
+              "HN-UPDATE-04"
+            ]
+          },
+          "status": {
+            "enum": [
+              "not_tested",
+              "pass",
+              "fail",
+              "stale",
+              "not_applicable"
+            ]
+          },
+          "case_ids": {
+            "type": "array",
+            "maxItems": 128,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          "evidence_kind": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "source_inspection",
+              "schema_fixture",
+              "controlled_integration",
+              "runtime_integration",
+              "native_runtime",
+              "cross_surface_integration",
+              "accessibility_inspection",
+              "installed_package",
+              "independent_devices",
+              "independent_networks",
+              "owner_receipt",
+              "human_acceptance",
+              "claim_specific_journey",
+              null
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "maxItems": 128,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            }
+          },
+          "observation": {
+            "type": "string",
+            "maxLength": 16384
+          },
+          "limits": {
+            "type": "string",
+            "maxLength": 8192
+          },
+          "applicability_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "requirement_id",
+          "status",
+          "case_ids",
+          "evidence_kind",
+          "evidence_refs",
+          "observation",
+          "limits",
+          "applicability_reason"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "pass"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "evidence_kind": {
+                  "enum": [
+                    "source_inspection",
+                    "schema_fixture",
+                    "controlled_integration",
+                    "runtime_integration",
+                    "native_runtime",
+                    "cross_surface_integration",
+                    "accessibility_inspection",
+                    "installed_package",
+                    "independent_devices",
+                    "independent_networks",
+                    "owner_receipt",
+                    "human_acceptance",
+                    "claim_specific_journey"
+                  ]
+                },
+                "evidence_refs": {
+                  "minItems": 1
+                },
+                "observation": {
+                  "minLength": 1
+                },
+                "case_ids": {
+                  "minItems": 1
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "not_applicable"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "applicability_reason": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "limits": {
+      "type": "string",
+      "maxLength": 16384
+    }
+  },
+  "required": [
+    "schema_version",
+    "standard_id",
+    "standard_version",
+    "standard_state",
+    "node_ref",
+    "source_ref",
+    "build_ref",
+    "artifact_refs",
+    "scope",
+    "assessment_state",
+    "assessed_at",
+    "assessor_ref",
+    "results",
+    "limits"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "assessment_state": {
+            "const": "meets_released_version"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "standard_state": {
+            "enum": [
+              "released",
+              "superseded"
+            ]
+          },
+          "source_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "build_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "assessor_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "assessed_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+          },
+          "results": {
+            "minItems": 42
+          }
+        }
+      }
+    }
+  ]
+}

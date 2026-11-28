@@ -1,0 +1,441 @@
+{
+  "schema_version": "hapa.standard.conformance/1",
+  "standard_id": "hapa.base-node",
+  "standard_version": "0.1.0-draft.1",
+  "standard_state": "draft",
+  "node_ref": null,
+  "source_ref": null,
+  "build_ref": null,
+  "artifact_refs": [],
+  "scope": {
+    "platforms": [],
+    "profiles": [],
+    "environment": "Template only; no execution."
+  },
+  "assessment_state": "not_assessed",
+  "assessed_at": null,
+  "assessor_ref": null,
+  "results": [
+    {
+      "requirement_id": "HN-PERSIST-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-PERSIST-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-PERSIST-03",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-PERSIST-04",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-WORK-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-WORK-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-WORK-03",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-SURFACE-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-SURFACE-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-SURFACE-03",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-DOCS-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-DOCS-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-DOCS-03",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-TELEM-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-TELEM-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-TELEM-03",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-MEMORY-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-MEMORY-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-MEMORY-03",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IO-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IO-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IO-03",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IO-04",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IO-05",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IO-06",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IO-07",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IO-08",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IDENTITY-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-IDENTITY-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-AUTH-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-AUTH-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-LIFECYCLE-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-LIFECYCLE-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-LIFECYCLE-03",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-CONNECT-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-CONNECT-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-PORTABLE-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-PORTABLE-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-UPDATE-01",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-UPDATE-02",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-UPDATE-03",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    },
+    {
+      "requirement_id": "HN-UPDATE-04",
+      "status": "not_tested",
+      "case_ids": [],
+      "evidence_kind": null,
+      "evidence_refs": [],
+      "observation": "",
+      "limits": "No behavior verified by this template.",
+      "applicability_reason": null
+    }
+  ],
+  "limits": "Schema validation proves record shape only. Full conformance needs catalog coverage, authentic evidence, registrations and exact implementation scope."
+}

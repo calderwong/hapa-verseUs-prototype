@@ -1,0 +1,38 @@
+{
+  "schema_version": "hapa.io.observation/1",
+  "event_id": "example.node-a.boot-1.adapter-1.event-7",
+  "observed_at": "2026-11-27T20:00:00Z",
+  "node_id": "example.node-a",
+  "instance_id": "example.installation-a",
+  "boot_id": "example.boot-1",
+  "producer": {
+    "adapter_id": "example.peer-transport",
+    "adapter_version": "0.1.0"
+  },
+  "sequence": 7,
+  "operation_id": "example.node-a.resource-1.op-3",
+  "attempt_id": "example.attempt-2",
+  "direction": "outbound",
+  "relationship": "hapa_peer",
+  "locality": "remote",
+  "path": "relayed",
+  "plane": "application",
+  "data_kind": "operation",
+  "sender_ref": "example:identity/node-a",
+  "recipient_refs": [
+    "example:identity/node-b"
+  ],
+  "observation": "transport_sent",
+  "bytes": {
+    "wire": 2458,
+    "basis": "encrypted_stream"
+  },
+  "evidence_refs": [],
+  "endpoint_refs": [],
+  "visibility": "local_private",
+  "coverage": "observed",
+  "extensions": {
+    "example.synthetic": true,
+    "example.limit": "Rendering fixture only; remote receipt and retention unknown."
+  }
+}

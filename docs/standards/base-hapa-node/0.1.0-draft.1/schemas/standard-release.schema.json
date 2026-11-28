@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:hapa:schema:standard-release:1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "hapa.standard.release/1"
+    },
+    "standard_id": {
+      "const": "hapa.base-node"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "release_state": {
+      "enum": [
+        "draft",
+        "released",
+        "superseded",
+        "withdrawn"
+      ]
+    },
+    "publication_state": {
+      "enum": [
+        "bootstrap_source_only",
+        "ledger_accepted",
+        "signed_released"
+      ]
+    },
+    "prepared_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "custodian": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "canonical_repository": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "canonical_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[\\\\\\t\\r\\n])(?!.*:)(?!.* /)(?!.*\\/$).+$"
+    },
+    "release_sequence": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "predecessor_release_sha256": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "bundle_hash_profile": {
+      "const": "sha256(path-tab-sha256-tab-size-lf,utf8-path-sorted)/1"
+    },
+    "bundle_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*[\\\\\\t\\r\\n])(?!.*:)(?!.* /)(?!.*\\/$).+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "path",
+          "sha256",
+          "size_bytes"
+        ]
+      }
+    },
+    "signer_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "signature_profile": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "signature_sidecar": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "ledger_record_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "owner_decision_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 2048
+    },
+    "compatibility_note": {
+      "type": "string",
+      "maxLength": 8192
+    }
+  },
+  "required": [
+    "schema_version",
+    "standard_id",
+    "version",
+    "release_state",
+    "publication_state",
+    "prepared_on",
+    "custodian",
+    "canonical_repository",
+    "canonical_path",
+    "release_sequence",
+    "predecessor_release_sha256",
+    "bundle_hash_profile",
+    "bundle_sha256",
+    "files",
+    "signer_ref",
+    "signature_profile",
+    "signature_sidecar",
+    "ledger_record_ref",
+    "owner_decision_ref",
+    "compatibility_note"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "publication_state": {
+            "const": "signed_released"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "release_state": {
+            "enum": [
+              "released",
+              "superseded",
+              "withdrawn"
+            ]
+          },
+          "release_sequence": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "signer_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "signature_profile": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "signature_sidecar": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "ledger_record_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "owner_decision_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "release_state": {
+            "enum": [
+              "released",
+              "superseded",
+              "withdrawn"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "publication_state": {
+            "const": "signed_released"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "publication_state": {
+            "const": "ledger_accepted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "ledger_record_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "owner_decision_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        }
+      }
+    }
+  ]
+}

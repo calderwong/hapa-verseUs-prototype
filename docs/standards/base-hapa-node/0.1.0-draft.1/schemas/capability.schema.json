@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:hapa:schema:node-capability:1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "capability_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "input_schema_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "output_schema_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "authority_scope": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "side_effects": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "idempotency": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "cancellation": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "receipt_semantics": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "limits_ref": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "runtime_profiles": {
+      "type": "array",
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2048
+      }
+    },
+    "surfaces": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ui": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "enum": [
+                "implemented",
+                "partial",
+                "planned",
+                "unavailable"
+              ]
+            },
+            "mapping_ref": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048
+            },
+            "evidence_refs": {
+              "type": "array",
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              }
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "state",
+            "mapping_ref",
+            "evidence_refs",
+            "note"
+          ]
+        },
+        "cli": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "enum": [
+                "implemented",
+                "partial",
+                "planned",
+                "unavailable"
+              ]
+            },
+            "mapping_ref": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048
+            },
+            "evidence_refs": {
+              "type": "array",
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              }
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "state",
+            "mapping_ref",
+            "evidence_refs",
+            "note"
+          ]
+        },
+        "api": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "enum": [
+                "implemented",
+                "partial",
+                "planned",
+                "unavailable"
+              ]
+            },
+            "mapping_ref": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048
+            },
+            "evidence_refs": {
+              "type": "array",
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              }
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "state",
+            "mapping_ref",
+            "evidence_refs",
+            "note"
+          ]
+        },
+        "desktop": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "state": {
+              "enum": [
+                "implemented",
+                "partial",
+                "planned",
+                "unavailable"
+              ]
+            },
+            "mapping_ref": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 2048
+            },
+            "evidence_refs": {
+              "type": "array",
+              "maxItems": 128,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              }
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "state",
+            "mapping_ref",
+            "evidence_refs",
+            "note"
+          ]
+        }
+      },
+      "required": [
+        "ui",
+        "cli",
+        "api",
+        "desktop"
+      ]
+    }
+  },
+  "required": [
+    "capability_id",
+    "version",
+    "purpose",
+    "input_schema_ref",
+    "output_schema_ref",
+    "authority_scope",
+    "side_effects",
+    "idempotency",
+    "cancellation",
+    "receipt_semantics",
+    "limits_ref",
+    "runtime_profiles",
+    "surfaces"
+  ]
+}

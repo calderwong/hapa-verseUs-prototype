@@ -1,0 +1,59 @@
+{
+  "schema_version": "hapa.telemetry.vocabulary/1",
+  "standard_version": "0.1.0-draft.1",
+  "status": "proposed",
+  "observation_names": [
+    "queued",
+    "attempted",
+    "transport_sent",
+    "received",
+    "origin_authenticated",
+    "content_verified",
+    "admitted",
+    "applied",
+    "durable_local",
+    "remote_receipt",
+    "replication_observed",
+    "retention_attested",
+    "rejected",
+    "failed",
+    "cancelled",
+    "timed_out",
+    "reconciled",
+    "aggregate",
+    "coverage_gap",
+    "provider_eligibility_changed",
+    "lifecycle_changed"
+  ],
+  "data_kinds": [
+    "operation",
+    "blob",
+    "presence",
+    "identity",
+    "policy",
+    "command",
+    "result",
+    "metric",
+    "discovery",
+    "control",
+    "storage",
+    "telemetry"
+  ],
+  "measurement_bases": [
+    "application_payload",
+    "encrypted_stream",
+    "http_content",
+    "filesystem",
+    "adapter_reported",
+    "estimated_payload"
+  ],
+  "rules": [
+    "Exactly one of payload or wire is present per bytes object. Use separate observations with distinct event IDs for separate boundaries; retain the same logical operation correlation.",
+    "No bytes object means size unknown, not zero. Bytes are non-negative safe integers in this profile; larger counters require a versioned encoding.",
+    "Extensions use a registered namespaced name and a declared meaning. Passing the syntactic namespace pattern is not registration.",
+    "Transport sent means only the named local boundary observed a send; remote receipt, admission, application and retention are separate.",
+    "A single common stage name is never sufficient evidence; each adapter publishes its exact measurement/receipt semantics.",
+    "Sequence is monotonic per node instance, boot and producer. It is not a global order.",
+    "OpenTelemetry is an optional export mapping; a node pins its actual semantic-convention version when used."
+  ]
+}
